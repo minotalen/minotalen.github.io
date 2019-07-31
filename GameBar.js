@@ -1306,8 +1306,13 @@ function processInput(a,b,c){
 			return verbose_logging&&(consoleCacheDump(),consolePrint("CANCEL command executed, cancelling turn.",!0)),backups.push(d),messagetext="",DoUndo(!0,!1),tryPlayCancelSound(),!1;
 		if(0<=level.commandQueue.indexOf("restart"))
 			return verbose_logging&&(consolePrint("RESTART command executed, reverting to restart state."),consoleCacheDump()),backups.push(d),messagetext="",DoRestart(!0),!0;
-		if(0<=level.commandQueue.indexOf("nosave"))
-			return verbose_logging&&(consolePrint("NOSAVE command executed, not saving turn backup."),consoleCacheDump()),messagetext="",!0;
+		if(0<=level.commandQueue.indexOf("nosave")){
+			if(c&&0<=level.commandQueue.indexOf("win")) {
+				return!0;
+			} else {
+				return verbose_logging&&(consolePrint("NOSAVE command executed, not saving turn backup."),consoleCacheDump()),messagetext="",!0;
+			}
+		}
 		if(c&&0<=level.commandQueue.indexOf("win"))
 			return!0;
 		h=!1;

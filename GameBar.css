@@ -7,11 +7,11 @@
 */
 
 :root {
-    --t:0.95;
-    --white:rgba(53, 137, 104, var(--t));         /*#FFF*/
-    --smokewhite: rgba(35, 89, 68, var(--t))    /*#f1f1f1*/;
+    --t:0.98;
+    --white:rgba(10,10,10,var(--t));         /*#FFF*/
+    --smokewhite: rgba(22,22,22,var(--t))    /*#f1f1f1*/;
 
-    --duration:1s;
+    --duration:0.6s;
 
     --scaling:2;
     --basis-width:calc(1vw);
@@ -42,8 +42,8 @@
 }
 
 .balloon, .buttonrow, .buttonbar, #Console div {
-    background-color:var(--smokewhite);
-    color: var(--purple);
+    background-color:var(--white);
+    color: var(--darkblue);
     caret-color: var(--green);
     border-color: currentColor;
     margin:0;
@@ -56,31 +56,36 @@
 
 
 .buttonrow, .balloon, .buttonbar, #Console{
-    /* --green: rgba(254, 172, 228, var(--t))             /*#000FFF*/; */
-    --lightgreen: rgba(86, 188, 134, var(--t))      /*#1982ed*/;
+    --ringgreen: rgba(52, 136, 103, var(--t))          /*#070070*/;
+    --blue: rgba(0,15,255,var(--t))             /*#000FFF*/;
+    --lightblue: rgba(25,130,237,var(--t))      /*#1982ed*/;
     --turquoise: rgba(59,248,222,var(--t))      /*#3bf8de*/;
     --green: rgba(70,244,111,var(--t))          /*#46f46f*/;
     --yellow: rgba(240,248,175,var(--t))        /*#f0f8af*/;
     --lightyellow: rgba(255,249,201,var(--t))   /*#fff9c9*/;
-    --purple: rgba(191, 86, 158, var(--t)) ;
+    --lightgreen: rgba(86, 188, 134, var(--t))      /*#1982ed*/;
+    --purple: rgba(252, 92, 138, var(--t)) ;
+    --eightpurp: rgba(165, 65, 201, var(--t)) ;
+    --text: rgba(51, 225, 189, var(--t)) ;
+    --glowgreen: rgba(78, 230, 171, var(--t))    /*#f1f1f1*/;
 
     max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     border-color: currentColor;
-    border-width: var(--h-4);
-    color:var(--purple);
+    border-width: var(--h-2);
+    color:var(--eightpurp);
 }
 
 
 .button:hover,.button:active,.button:focus,
 .button:hover a,.button:active a,.button:focus a,
 .selected {
-    color: var(--turquoise);
+    color: var(--white);
     text-decoration-color: currentColor;
     text-decoration-style:solid ;
-    background-color: var(--purple);
+    background-color: var(--eightpurp); //confirm hover
     transition-duration: var(--duration);
     cursor:pointer;
     outline: none;
@@ -98,7 +103,7 @@
     text-decoration: underline;
 
     --scaling:0.85;
-    text-decoration-color: var(--lightgreen);
+    text-decoration-color: var(--lightblue);
 }
 
 
@@ -120,11 +125,11 @@
 
 ::-selection {
     background: var(--smokewhite);
-    color: var(--green);
+    color: var(--blue);
 }
 ::-moz-selection {
     background: var(--smokewhite);
-    color: var(--green);
+    color: var(--blue);
 }
 
 @media only screen and (max-width: 350px) {
@@ -145,10 +150,10 @@ div:full-screen #gameCanvas{
 }
 
 .button{
-    background-color: var(--smokewhite);
+    background-color: var(--ringgreen);
     max-width:80%;
     text-align: center;
-    color:var(--green);
+    color:var(--smokewhite);
     border-bottom-style: solid;
     padding:var(--h-2) var(--w2) var(--h-2) var(--w2);
     margin:var(--h1) var(--w2) var(--h1) var(--w1);
@@ -191,7 +196,7 @@ div:full-screen #gameCanvas{
     margin-left: var(--w1);
     padding: var(--h1)  var(--w1)  var(--h1)  var(--w1);
     min-width: calc(var(--w4) + 30px);
-    background-color: var(--smokewhite);
+    background-color: var(--white);
 }
 
 .buttonrow {
@@ -209,13 +214,13 @@ div:full-screen #gameCanvas{
     font-size: 100%;
     margin:unset;
     align-self: stretch;
-    background-color: var(--white);
+    background-color: var(--ringgreen);
 }
 
 .buttonrow .button:hover, .buttonrow .button:active{
-    background-color: var(--green);
+    background-color: var(--eightpurp);
     border-bottom-color: currentColor;
-    color:var(--lightgreen);
+    color:var(--lightyellow);
 }
 
 .buttonbar{
@@ -231,9 +236,9 @@ div:full-screen #gameCanvas{
 }
 
 .selected.button {
-  	background-color: var(--green);
+  	background-color: var(--eightpurp);
     border-color: currentColor;
-    color: var(--purple);
+    color: var(--lightyellow);
 }
 
 .closer {
@@ -259,7 +264,7 @@ div:full-screen #gameCanvas{
 #Console .message{
     pointer-events:all;
     background-color: var(--lightyellow);
-    color: var(--lightgreen);
+    color: var(--yellow);
     border-bottom:var(--h1) solid currentColor;
     margin-bottom:var(--h2);
     padding: var(--h1) var(--w2) var(--h1) var(--w2);
