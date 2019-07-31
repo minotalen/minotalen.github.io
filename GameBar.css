@@ -57,7 +57,7 @@
 
 .buttonrow, .balloon, .buttonbar, #Console{
     --ringgreen: rgba(52, 136, 103, var(--t))          /*#070070*/;
-    --blue: rgba(0,15,255,var(--t))             /*#000FFF*/;
+    --blue: rgba(0,15,255,var(--t))             /*#000FFF*/  ;
     --lightblue: rgba(25,130,237,var(--t))      /*#1982ed*/;
     --turquoise: rgba(59,248,222,var(--t))      /*#3bf8de*/;
     --green: rgba(70,244,111,var(--t))          /*#46f46f*/;
