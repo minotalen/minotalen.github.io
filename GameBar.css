@@ -41,6 +41,11 @@
 
 }
 
+.gameContainer{
+  display: flex;
+  flex-direction: column;
+}
+
 .balloon, .buttonrow, .buttonbar, #Console div {
     background-color:var(--white);
     color: var(--darkblue);

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" type="image/x-icon" href="ico/favicon.ico" />
+
+    <title>Differences from vanilla PuzzleScript - PuzzleScript Documentation</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/bootstrap-theme.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="../../assets/js/html5shiv.js"></script>
+      <script src="../../assets/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html"><img src="../images/mascot_colorful.png"> PuzzleScript</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+              <li><a href="../editor.html">Make A Game</a></li>
+              
+              <li class="active"><a href="documentation.html">Documentation</a></li>
+          </ul>          
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="https://www.patreon.com/increpare">Patreon</a></li>
+            <li><a href="about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+
+<p>
+<ol class="breadcrumb">
+  <li><a href="documentation.html">Documentation</a></li>
+  <li class="active">Differences</li>
+</ol>
+<p>
+ <h1>Differences from vanilla PuzzleScript</h1>
+    <p>
+    This fork of PuzzleScript has a few special tricks.
+    </p>
+    <p>
+        <ul>
+            <li>Support for gamepads (yes, gamepads work in browsers!)</li>
+            <li>Support for opacity in custom colors (for example #ff000080 is semi-transparent red)</li>
+            <li>nosave action - when executed forces engine to not save current state to undo stack</li>
+            <li>sprite_size prelude property - use arbitrary size of sprites</li>
+            <li>case_sensitive prelude property - makes objects and aliases case-sensitive (ie. Moved and MoveD can be two separate objects, and p or P in level can refer to different objects)</li>
+        </ul>
+    </p>
+    <p>
+        <br /><br />Currently, share button in editor is not working. However, you can paste the script manually into <a href="https://gist.github.com/">Gist</a> and use id to make play URL.
+        <br /> For example, <a href="https://gist.github.com/dario-zubovic/4520eedba957293dde46ded354f3126f">https://gist.github.com/dario-zubovic/4520eedba957293dde46ded354f3126f</a> becomes <a href="https://dario-zubovic.github.io/PuzzleScript/play.html?p=4520eedba957293dde46ded354f3126f">https://dario-zubovic.github.io/PuzzleScript/play.html?p=4520eedba957293dde46ded354f3126f</a>.
+    </p>
+
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </body>
+</html>

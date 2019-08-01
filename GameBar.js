@@ -810,10 +810,15 @@ function FullscreenOpen(targetIDsel){
 	} else if(f=e.msRequestFullscreen){ /* IE/Edge */
 		e.msRequestFullscreen();
 	}
+	focusGame();
 
 	//Place the console correctly
 	if(f)
 		ConsoleLoad(targetIDsel);
+}
+
+function focusGame() {
+	document.getElementById('gameCanvas').focus();
 }
 
 function FullscreenClose(){
@@ -1156,7 +1161,7 @@ function GameBar(targetIDsel){
 	var restart=!state.metadata.norestart?ButtonOnClickHTML('↺','checkKey({keyCode:82},!0)'):"";
 
 	var buttons=[
-		// ButtonLinkHTML("How to play?"),
+		ButtonLinkHTML("How to play?"),
 		undo,
 		restart,
 		ButtonOnClickHTML("Select level",'RequestLevelSelector()'),
