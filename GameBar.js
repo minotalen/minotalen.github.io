@@ -1,13 +1,288 @@
-/*
-	Game Bar (c) Pedro PSI 2019
-	MIT License
-	///////////////////////////////////////////////////////
+/*	
+	Game Bar by Pedro PSI 
 	https://pedropsi.github.io/puzzlescript-game-bar#source
+	///////////////////////////////////////////////////////////////////////////////
+	
+	MIT License
+	
+	
+	Copyright (c) 2019 Pedro PSI
+	
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
+	The above copyright notice, the above URL and this permission notice shall be included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+	
 */
 
-var CONTEXT="";
-var DESTINATIONS={};
+
+var stylesheet="/*\
+  Game Bar Theme by Pedro PSI\
+  https://pedropsi.github.io/puzzlescript-game-bar#source\
+  ///////////////////////////////////////////////////////////////////////////////\
+  MIT License\
+*/\
+\
+#gameCanvas{\
+    position:unset;\
+    max-height:96vh;\
+    width:100%;\
+}\
+.game-container{\
+    display:flex;\
+    flex-direction:column;\
+    align-items:center;\
+    justify-content: space-between;\
+}\
+.game-container:fullscreen #gameCanvas{\
+    height:calc(96vh);\
+}\
+.game-container:full-screen #gameCanvas{\
+    height:calc(96vh);\
+}\
+/*Styles*/\
+:root{\
+    --t:0.90;\
+    --white:rgba(255,255,255,var(--t));         /*#FFF*/\
+    --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
+    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
+    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
+    --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
+    --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
+    --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
+  --font:Arial, sans-serif;\
+  --duration:1s;\
+    --scaling:2;\
+    --basis-width:calc(1vw);\
+    --basis-height:calc(1vh);\
+    --w1 :var(--basis-width);\
+    --w2 :calc(var(--w1)  * var(--scaling));\
+    --w4 :calc(var(--w2)  * var(--scaling));\
+    --w8 :calc(var(--w4)  * var(--scaling));\
+    --w16:calc(var(--w8)  * var(--scaling));\
+    --w32:calc(var(--w16) * var(--scaling));\
+    --w64:calc(var(--w32) * var(--scaling));\
+    --w-2:calc(var(--w1)  / var(--scaling));\
+    --w-4:calc(var(--w-2) / var(--scaling));\
+    --w-8:calc(var(--w-4) / var(--scaling));\
+    --h1:var(--basis-height);\
+    --h2 :calc(var(--h1)  * var(--scaling));\
+    --h4 :calc(var(--h2)  * var(--scaling));\
+    --h8 :calc(var(--h4)  * var(--scaling));\
+    --h16:calc(var(--h8)  * var(--scaling));\
+    --h32:calc(var(--h16) * var(--scaling));\
+    --h64:calc(var(--h32) * var(--scaling));\
+    --h-2:calc(var(--h1)  / var(--scaling));\
+    --h-4:calc(var(--h-2) / var(--scaling));\
+    --h-8:calc(var(--h-4) / var(--scaling));\
+}\
+body{\
+ margin: unset;  \
+}\
+\
+@media only screen and (max-width:500px){\
+    body{\
+       word-break:break-all;\
+    }\
+}\
+\
+.balloon *, .buttonbar{\
+    font-family:var(--font);\
+    font-size:calc(10px + var(--w-2));\
+    line-height:calc(12px + var(--w-2));\
+    max-width:100%;\
+    max-height:100%;\
+    display:flex;\
+    flex-direction:column;\
+    align-items:stretch;\
+    border-color:currentColor;\
+    border-width:var(--h-2);\
+    color:var(--darkblue);\
+}\
+\
+.button:hover,.button:active,.button:focus,\
+.button:hover a,.button:active a,.button:focus a,\
+.selected{\
+    color:var(--turquoise);\
+    text-decoration-color:currentColor;\
+    text-decoration-style:solid ;\
+    background-color:var(--darkblue);\
+    transition-duration:var(--duration);\
+    cursor:pointer;\
+    outline:none;\
+}\
+\
+h4{\
+    font-variant-caps:small-caps;\
+    font-weight:bold;\
+    max-width:100%;\
+    font-size:calc(130% * var(--scaling));\
+    line-height:calc(110% + 20% * var(--scaling));\
+    margin-bottom:calc(var(--w1) * var(--scaling));\
+    margin-top:calc(var(--w2) * var(--scaling));\
+    text-decoration:underline;\
+}\
+h4{\
+    --scaling:0.85;\
+    text-decoration-color:var(--lightblue);\
+}\
+@media only screen and (max-width:250px){\
+    h1, h2, h3, h4, h5, h6, p, table{\
+        word-break:break-all;\
+    }\
+}\
+::-selection{\
+    background:var(--smokewhite);\
+    color:var(--blue);\
+}\
+::-moz-selection{\
+    background:var(--smokewhite);\
+    color:var(--blue);\
+}\
+@media only screen and (max-width:350px){\
+    .buttonbar{\
+       word-break:break-all;\
+    }\
+}\
+.button{\
+    background-color:var(--smokewhite);\
+    max-width:80%;\
+    text-align:center;\
+    color:var(--blue);\
+    border-bottom-style:solid;\
+    padding:var(--h-2) var(--w2) var(--h-2) var(--w2);\
+    margin:var(--h1) var(--w2) var(--h1) var(--w1);\
+    align-self:center;\
+    font-weight:bold;\
+    transition-duration:var(--duration);\
+}\
+.button a{\
+    text-decoration:none;\
+    color:inherit;\
+    transition-duration:var(--duration);\
+}\
+.button:hover a{\
+    background-color:transparent;\
+    transition-duration:var(--duration);\
+}\
+\
+.closer{\
+    width:100%;\
+    flex-direction:row;\
+    justify-content:flex-end;\
+}\
+.closer .button{\
+    border:unset;\
+    padding:var(--h2) var(--w2) var(--h2) var(--w2);\
+    margin:unset;\
+    font-size:300%;\
+}\
+.balloon{\
+    position:absolute;\
+    bottom:var(--h16);\
+    right:var(--w4);\
+    max-width:80%;\
+    max-height:80%;\
+    animation:fadein var(--duration);\
+}\
+.baloon-content{\
+    flex-direction:row;\
+    justify-content:flex-start;\
+    background-color:var(--white);\
+    border-bottom:var(--h1) solid var(--turquoise);\
+    padding:var(--h2) var(--w2) var(--h2) var(--w2);\
+    align-items:center;\
+}\
+.baloon-content .avatar{\
+    max-width:calc(var(--w4) + 30px);\
+    background-color:var(--transparent);\
+}\
+.baloon-content .subtitle{\
+  margin-left:var(--w1);\
+    padding:var(--h1)  var(--w1)  var(--h1)  var(--w1);\
+    min-width:calc(var(--w4) + 30px);\
+    background-color:var(--smokewhite);\
+}\
+.buttonrow{\
+    flex-direction:row;\
+    flex-wrap:wrap;\
+    margin-left:var(--w4);\
+    margin-right:var(--w4);\
+    justify-content:center;\
+    align-items:flex-end;\
+}\
+.buttonrow .button{\
+    font-size:100%;\
+    margin:unset;\
+    align-self:stretch;\
+    background-color:var(--white);\
+}\
+.buttonrow .button:hover, .buttonrow .button:active{\
+    background-color:var(--darkblue);\
+    border-bottom-color:currentColor;\
+    color:var(--turquoise);\
+}\
+\
+.buttonbar{\
+    margin-top:0;\
+    justify-content:space-evenly;\
+    flex-wrap:nowrap;\
+    background-color:var(--white);\
+    width:100%;\
+    margin:unset\
+}\
+.buttonbar .button{\
+    flex-grow:1;\
+    border-bottom-width:var(--h-2);\
+}\
+.selected.button{\
+    background-color:var(--blue);\
+    border-color:currentColor;\
+    color:var(--turquoise);\
+}\
+\
+#Console{\
+    pointer-events:none;\
+  position:fixed;\
+  top:0;\
+  margin-top:var(--h1);\
+  width:100%;\
+  z-index:1000;\
+    align-items:center;\
+}\
+#Console .message{\
+    pointer-events:all;\
+    background-color:var(--lightyellow);\
+    color:var(--lightblue);\
+    border-bottom:var(--h1) solid currentColor;\
+    margin-bottom:var(--h2);\
+    padding:var(--h1) var(--w2) var(--h1) var(--w2);\
+    font-weight:bold;\
+}\
+.closing{\
+    opacity:0;\
+  transition:opacity var(--duration) ease-in-out;\
+    -moz-transition:opacity var(--duration) ease-in-out;\
+    -webkit-transition:opacity var(--duration) ease-in-out;\
+    -o-transition:opacity var(--duration) ease-in-out;\
+    -ms-transition:opacity var(--duration) ease-in-out;\
+}\
+.opening{\
+    opacity:1;\
+  transition:opacity var(--duration) ease-in-out;\
+    -moz-transition:opacity var(--duration) ease-in-out;\
+    -webkit-transition:opacity var(--duration) ease-in-out;\
+    -o-transition:opacity var(--duration) ease-in-out;\
+    -ms-transition:opacity var(--duration) ease-in-out;\
+}\
+.button.pulsating,\
+.button.pulsating:hover, .button.pulsating:active, .button.pulsating:focus{\
+    background-color: var(--blue);\
+    --duration:0.001s;\
+";
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //Do nothing
@@ -26,7 +301,6 @@ function FuseObjects(object,extrapropertiesobject){
 	return O;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //Page auto index
 function IDfy(s){
@@ -40,21 +314,11 @@ function IDfy(s){
 function RandomInteger(n){return Math.floor(Math.random() * n)};
 
 function GenerateId(){
-	return String(RandomInteger(999999999))
+	return "i"+String(RandomInteger(999999999));
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
-//Load styles
 
-function LoadStyle(sourcename){
-	var head= document.getElementsByTagName('head')[0];
-	var styleelement= document.createElement('link');
-	styleelement.href= sourcename.replace(".css","")+".css";
-	styleelement.rel="stylesheet";
-	styleelement.type="text/css";
-	head.appendChild(styleelement);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DOM Manipulation
@@ -67,20 +331,37 @@ function MakeElement(html){
 
 HTMLTags=['!DOCTYPE','a','abbr','acronym','abbr','address','applet','embed','object','area','article','aside','audio','b','base','basefont','bdi','bdo','big','blockquote','body','br','button','canvas','caption','center','cite','code','col','colgroup','colgroup','data','datalist','dd','del','details','dfn','dialog','dir','ul','div','dl','dt','em','embed','fieldset','figcaption','figure','figure','font','footer','form','frame','frameset','h1','h6','head','header','hr','html','i','iframe','img','input','ins','kbd','label','input','legend','fieldset','li','link','main','map','mark','meta','meter','nav','noframes','noscript','object','ol','optgroup','option','output','p','param','picture','pre','progress','q','rp','rt','ruby','s','samp','script','section','select','small','source','video','audio','span','strike','del','s','strong','style','sub','summary','details','sup','svg','table','tbody','td','template','textarea','tfoot','th','thead','time','title','tr','track','video','audio','tt','u','ul','var','video','wbr'];
 
-function IsTagClassID(parentIDsel){
-	var classID=parentIDsel.replace(/^\..*/,"").replace(/^\#.*/,"")!==parentIDsel;
-	if(classID)
-		return true;
-	else
-		return HTMLTags.indexOf(parentIDsel)>=0;
+function IsTag(selector){
+	return HTMLTags.indexOf(selector)>=0;
+}
+function IsClass(selector){
+	return selector.replace(/^\./,"")!==selector;
+}
+function IsID(selector){
+	return selector.replace(/^\#/,"")!==selector;
 }
 
-// Add new element to page, under a parent element
-function GetElement(parentIDsel){
-	if(IsTagClassID(parentIDsel))
-		return document.querySelector(parentIDsel);
+function IsQuerySelector(selector){
+	return IsID(selector)||IsClass(selector)||IsTag(selector);
+}
+
+function ParentSelector(targetIDsel){
+	var parentElement=GetElement(targetIDsel).parentElement;
+	if(!parentElement.id)
+		parentElement.id=GenerateId();
+	return parentElement.id;
+}
+
+// Get element based on selectors: .class, #id, idsring, or the element itself
+function GetElement(selector){
+	if(typeof selector==="string"){
+		if(IsQuerySelector(selector))
+			return document.querySelector(selector);
+		else
+			return document.getElementById(selector);
+	}
 	else
-		return document.getElementById(parentIDsel);
+		return selector; //in case the actual element is given in the beginning
 };
 
 // Add new element to page, under a parent element
@@ -92,12 +373,10 @@ function AddElement(html,parentIDsel){
 
 // Add new element to page, after a sibling element
 function AddAfterElement(html,selector){
-	var s=document.querySelectorAll(selector);
-	var e;
-	for(var i=0;i<s.length;i++){
-		e=document.createElement("div");
-		e.innerHTML=html;
-		s[i].insertAdjacentElement('afterend',e.firstChild)};
+	var s=GetElement(selector);
+	var e=document.createElement("div");
+	e.innerHTML=html;
+	s.insertAdjacentElement('afterend',e.firstChild);
 };
 
 // Replace parent element contents with new element
@@ -106,15 +385,6 @@ function ReplaceElement(html,parentID){
 	p.innerHTML=html;
 };
 
-
-// Add HTML Data from external source to page
-function OverwriteData(source,destinationID,Transform){
-	var data = LoadData(source);
-	if(Transform){
-		data = Transform(data);
-	}
-	ReplaceElement(data,destinationID);
-};
 
 
 // Remove Children
@@ -137,7 +407,8 @@ function RemoveElement(elementIDsel){
 // Element Generator
 
 function ReadAttributes(attributesObj){
-	return Object.keys(attributesObj).map(k=>k+"='"+attributesObj[k]+"'").join(" ");
+	function Attrib(k){return k+"='"+attributesObj[k]+"'";};
+	return Object.keys(attributesObj).map(Attrib).join(" ");
 }
 
 function ElementHTML(optionsObj){
@@ -159,6 +430,10 @@ function ButtonHTML(optionsObj){
 	else
 		o.attributes['class']=o.attributes['class'].replace(/\s*button/g,"")+" button";
 	o.txt=o.txt?o.txt:"???";
+	
+	var ao=o.attributes['onclick'];
+	o.attributes['onclick']="PulseSelect(this);"+(ao?ao:"");
+		
 	return ElementHTML(o)
 };
 
@@ -178,7 +453,7 @@ function ButtonLinkHTML(title){
 }
 
 function CloseButtonHTML(targetid){
-	return ButtonHTML({tag:"span",txt:"&times;",attributes:{class:"closer",onclick:'Close(\"'+targetid+'\")'}});
+	return "<div class='closer'>"+ButtonHTML({tag:"span",txt:"&times;",attributes:{onclick:'Close(\"'+targetid+'\")'}})+"</div>";
 	//return '<span class="button closer" onclick="Close(\''+targetid+'\')">&times;</span>'
 }
 
@@ -205,7 +480,7 @@ function PlainMessageHTML(message){
 function ButtonBar(buttonshtml,id){return '<div id="'+id+'" class="buttonbar buttonrow">'+buttonshtml+'</div>'};
 
 ////////////////////////////////////////////////////////////////////////////////
-// DataField and DataPack system : default DataField (customisable), many of which constitute a DataPack
+// DataField and DataPack system : default DataField (customisable), many of which constitute a DataPack 
 
 function DefaultDataField(){
 	return {
@@ -214,38 +489,42 @@ function DefaultDataField(){
 		qvalue:"",						//Field value, by default
 
 		qid:GenerateId(),				//id of the field question
-
+		
 		qchoices:"",					//answer options list
 		executeChoice:Identity,			//immediate changes on toggle receives (id, choice)
+		defaultChoice:DefaultChoice,	//choice formatting, based on itself
 
 		qtype:PlainHTML,				//Format of question :receives a DataField
 		qplaceholder:"❤ Pedro PSI ❤",	//Placeholder answer
 
 		qsubmittable:true, 				//whether the element expects submission (true) or merely presents information (false)
-		qrequired:true,
+		qrequired:true,					
 		qvalidator:IdentityValidator,	//Receives a DataField
 		qerrorcustom:''
 	}
 }
+
+function DefaultChoice(index,choicetxt){return String(index)===String(0);}//choicetxt gives this function flexibility
 
 function DefaultDataPack(){
 	return {
 		fields:[],
 
 		qid:GenerateId(),				//id
-
-		destination:'Feedback',			//Name of data repository
-
+		
 		action:'CheckSubmit', 			//action on submit :receives a qid
 		actionvalid:Identity,	//action on valid submit: receives a DataPack
 		actionText:'Submit',			//text to display instead of "Submit"
-
+		
 		qtargetid:document.body.id,		//Where to introduce form in page?
 		qdisplay:LaunchBalloon,			//Question display function :receives a DataPack
 
 		qonsubmit:Identity,	//Next modal on successful submit: receives a DataPack
 		qonclose:Identity,				//Next modal on close (defaults to nothing): receives a DataPack
-		thanksmessage:"Submitted. Thank you!"
+		thanksmessage:"Submitted. Thank you!",
+		
+		shortcuts:DPShortcutDefauts,	//Base shortcuts (all else is deleted)
+		shortcutExtras:function(DP){return {};}	//Extended shortcuts, to use ad-hoc
 	}
 }
 
@@ -285,6 +564,7 @@ function DPHistoryAdd(DF){
 	DATAPACKHISTORY.push(DF);
 }
 
+
 function UpdateDataPack(DP,obj){
 	return FuseObjects(DP,obj);
 }
@@ -294,7 +574,8 @@ function NewDataPack(obj){
 }
 
 function NewDataPackFields(NamedFieldArray){
-	return {fields:NamedFieldArray.map(ndf=>CustomDataField(ndf[0],ndf[1]))};
+	function CusDaFiel(ndf){return CustomDataField(ndf[0],ndf[1])};
+	return {fields:NamedFieldArray.map(CusDaFiel)};
 }
 
 function RequestDataPack(NamedFieldArray,Options){
@@ -308,10 +589,13 @@ function RequestDataPack(NamedFieldArray,Options){
 		DP=UpdateDataPack(DP,o);
 		DP.fields=DP.fields.map(function(f){var fi=f;fi.pid=DP.qid;return fi});
 		DPHistoryAdd(DP);
-
+		
 		DP.qdisplay(DP);
 
+		FocusElement("#"+DP.qid+" textarea, "+"#"+DP.qid+" input"); //First question
+		SetDatapackShortcuts(DP);
 
+		
 		return DP;
 	}
 };
@@ -336,8 +620,11 @@ function ExclusiveChoiceButtonRowHTML(dataField){
 	function ExclusiveChoiceButtonHTML(choice,dataFiel,i){
 		var selected="";
 		var args='(\''+dataFiel.qfield+'\',\''+choice+'\',\''+dataFiel.pid+'\')';
-		if(i==='0')
+		//console.log(i,choice,typeof i);
+		if(dataFiel.defaultChoice(i,choice)){
 			selected=' selected" onload="SetData'+args; //Default option
+			SetData(dataFiel.qfield,choice,dataFiel.pid);//Actualy choose it
+		}
 		return '<div class="button'+selected+'" onclick="ToggleThisOnly(event,this);SwitchData'+args+'">'+choice+'</div>';
 	};
 	//console.log(dataField.qfield);console.log(dataField.pid);
@@ -362,7 +649,7 @@ function QuestionHTML(DP){
 	//!!! Outgrow for simple DP
 	var SubQuestions=Fields.map(SubQuestionHTML).join("");
 	var SubmissionButton="";
-	if(Fields.some(dp=>dp.qsubmittable))
+	if(Fields.some(function(dp){return dp.qsubmittable}))
 		SubmissionButton=SubmitButtonHTML(DP);
 	return '<div id="'+DP.qid+'">'+SubQuestions+SubmissionButton+"</div>";
 }
@@ -378,12 +665,12 @@ function LaunchBalloon(DP){
 }
 
 function BalloonHTML(avatarsrc,content,id){
-	var b='<div class="balloon" id='+id+'>'+CloseButtonHTML(id)+'<img class="avatar" src="'+avatarsrc+'"/><div class="subtitle">'+content+'</div></div>';
+	var b='<div class="balloon" id='+id+'>'+CloseButtonHTML(id)+'<div class="baloon-content"><img class="avatar" src="'+avatarsrc+'"/><div class="subtitle">'+content+'</div></div></div>';
 	return b;
 }
 
 function OpenBalloon(content,id,targetid){
-	AddElement(BalloonHTML("images/8.png",content,id),targetid);
+	AddElement(BalloonHTML("images/logo.png",content,id),targetid);
 }
 
 function CloseBalloonIn(targetid){
@@ -399,11 +686,30 @@ function HasBalloon(targetid){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Toggling class & buttons
+// Opener & Closer Functions with focus option, 
+// -> to use within Datapack RequestFunctions
+function FocusAndResetFunction(RequestF,FocusF){
+	return function(){
+		if(RequestF.id)
+			RequestF.id=undefined;
+		FocusF();
+	};
+};
 
-function ToggleClass(selector,clas){
-	GetElement(selector).classList.toggle(clas);
+function OpenerCloser(RequestF,ContinueF,FocusF){
+	if(RequestF.id){ //Close on second click
+		var i=RequestF.id; //Retrieves unique id for the request window/balloon/modal
+		Close(i);
+		FocusAndResetFunction(RequestF,FocusF)();
+	}
+	else{
+		RequestF.id=GenerateId(); //Generates unique id for the request window/balloon/modal
+		ContinueF();
+	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Toggling class & buttons
 
 function ToggleThis(ev,thi){
 	if(ev.target.id===thi.id)
@@ -423,9 +729,47 @@ function ToggleThisOnly(ev,thi){
 	}
 }
 
+// Select, Deselect and Toggle - given selector or element itself
+
+function SelectSimple(selectorE,clas){
+	var clas=clas||'selected';
+	var e=GetElement(selectorE);
+	if(e){
+		e.classList.remove(clas);
+		e.classList.add(clas);
+	}
+}
+
+function Select(selectorE,clas){ //With Pulse by default
+	SelectSimple(selectorE,clas);
+	PulseSelect(selectorE);
+}
+
+function Deselect(selectorE,clas){
+	var clas=clas||'selected';
+	var e=GetElement(selectorE);
+	if(e)
+		e.classList.remove(clas);
+}
+
+function Toggle(selectorE,clas){
+	var clas=clas||'selected';
+	var e=GetElement(selectorE);
+	if(e)
+		e.classList.toggle(clas);
+}
+
+// Select Pulse
+
+function PulseSelect(selectorE){
+	var clas="pulsating";
+	SelectSimple(selectorE,clas);
+	setTimeout(function(){Deselect(selectorE,clas);},100);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Closing functions
+
 
 function CloseElement(targetIDsel){
 	var fading=GetElement(targetIDsel);
@@ -433,6 +777,18 @@ function CloseElement(targetIDsel){
 		fading.classList.add("closing");
 		setTimeout(function(){fading.remove();},1000);
 	}
+}
+
+function CloseElementNow(targetIDsel){
+	var fading=GetElement(targetIDsel);
+	if(fading!==null){
+		fading.remove();
+	}
+}
+
+function CloseThis(ev,thi,targetIDsel){
+	if(ev.target.id===thi.id)
+		Close(targetIDsel);
 }
 
 function Close(targetid){
@@ -458,13 +814,28 @@ function CloseAndContinue(DP){
 function FocusElement(targetIDsel){
 	var focussing=GetElement(targetIDsel);
 	if(focussing!==null){
-		focussing.focus();
+		focussing.focus();	
 	}
 };
 
+
+///////////////////////////////////////////////////////////////////////////////
+//Event Listeners
+
+function ListenOnce(ev,fun,target){
+	target=target?target:window; //Improve the defaults
+	if(typeof ev==="string") //Defaults to array in case a single string is
+		ev=[ev];
+	function F(){
+		fun();
+		ev.map(function(e){target.removeEventListener(e,F)})
+	}
+	ev.map(function(e){target.addEventListener(e,F)})
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Data submission in forms
-
 
 function SubmitAnswerSet(DP){
 	DP.actionvalid(DP);
@@ -481,7 +852,7 @@ function CheckSubmit(qid){
 var SUBMISSIONHISTORY=[];
 
 function PreviousSubmission(field){
-	var s=SUBMISSIONHISTORY.filter(datasub=>((typeof datasub[field])!=="undefined"));
+	var s=SUBMISSIONHISTORY.filter(function(datasub){return ((typeof datasub[field])!=="undefined")});
 	if(s.length>0)
 		return s[s.length-1][field];
 	else
@@ -538,6 +909,35 @@ function NodeGetData(field,node){
 }
 
 
+function OverwriteDataField(field,id,newdata){
+	OverwriteDataInNode(field,document.getElementById(id),newdata);
+};
+
+function OverwriteDataInNode(type,node,newdata){
+	//console.log(node);
+	if(typeof node==="null")
+		return undefined;
+	else if(NodeHasData(type,node)){
+		return NodeOverwriteData(type,node,newdata);
+	}
+	else{
+		var children= node.childNodes;
+		var i=0;
+		while((typeof children[i]!=="undefined")){
+			if(typeof FindDataInNode(type,children[i])!=="undefined"){
+				return OverwriteDataInNode(type,children[i],newdata);}
+			i++;
+		}
+		return undefined
+	}
+}
+
+function NodeOverwriteData(field,node,newdata){
+	if((["INPUT","TEXTAREA"].indexOf(node.tagName)>=0)&&typeof node.dataset[field]!=="undefined")
+		return (node.value=newdata);
+	else
+		return (node.dataset[field]=newdata);
+}
 
 ///////////////////////
 
@@ -564,6 +964,7 @@ function GetDefaultData(field,id){
 };
 
 function SetData(field,value,id){
+	//console.log(field,value,id);
 	var DP=GetDataPack(id);
 	if(DP!==undefined)
 		GetDataPack(id)[field]=value;
@@ -576,7 +977,7 @@ function ClearData(field,id){
 function GetField(field,parentid){
 	var DP=GetDataPack(parentid)
 	if(DP!==undefined){
-		var fis=DP.fields.filter(f=>(f.qfield===field));
+		var fis=DP.fields.filter(function(f){return (f.qfield===field)});
 		if(fis.length>0)
 			return fis[0];
 	}
@@ -621,7 +1022,7 @@ function IdentityValidator(DF){return {valid:true,error:"no errors"};}
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//Message Console
+//Message Console 
 
 var consolebuffer=[];
 var consolemax=3;
@@ -641,16 +1042,20 @@ function ConsoleMessageHTML(message,mID){
 	return '<div class="message" id='+mID+'>'+message+'</div>';
 }
 
-function ConsoleAdd(messageHTML,duration){
+function TextReadDuration(textstring){ //by counting number of words, 200ms per word (tagscount but won't hopefully have too many spaces)
+	return Math.min(Math.max(1000,(textstring.split(" ").length)*250),10000);
+}
 
-	if(GetElement("Console")===null){
+function ConsoleAdd(messageHTML,wait,duration){
+	
+	if(GetElement("Console")===null)
 		ConsoleLoad();
-	}
-
-	var delay=duration?Math.max(1000,duration):9000;
+	
+	var duration=duration?Math.max(1000,duration):TextReadDuration(messageHTML);
+	var wait=wait?wait:0;
 	var mID="c-"+GenerateId();//random id
-	AddElement(ConsoleMessageHTML(messageHTML,mID),"Console");
-	setTimeout(function(){CloseElement(mID)},duration);
+	setTimeout(function(){AddElement(ConsoleMessageHTML(messageHTML,mID),"Console")},wait)
+	setTimeout(function(){CloseElement(mID)},duration+wait);
 	consolebuffer.push(mID);
 	while(consolebuffer.length>consolemax){
 		ConsoleRemove(consolebuffer[0]);
@@ -658,14 +1063,27 @@ function ConsoleAdd(messageHTML,duration){
 }
 
 function ConsoleLoad(selector){
-	if(!selector){
-		var parentElement=GetElement(gameElementID).parentElement;
-		if(!parentElement.id)
-			parentElement.id=GenerateId();
-		selector=parentElement.id;
-	}
+	var selector=selector||'.main';
 	RemoveElement("Console");
 	AddElement('<div id="Console"></div>',selector);
+}
+
+function ConsoleAddMany(messagesArray){
+	var delay=0;
+	for (var i=0;i<messagesArray.length;i++){
+		ConsoleAdd(messagesArray[i],delay);
+		delay=delay+TextReadDuration(messagesArray[i]);
+	}
+}
+
+function ConsoleAddOnce(messageHTML,wait,duration){
+	if(!ConsoleAddOnce.messages)
+		ConsoleAddOnce.messages=[];
+	
+	if(ConsoleAddOnce.messages.indexOf(messageHTML)<0){
+		ConsoleAdd(messageHTML,wait,duration)
+		ConsoleAddOnce.messages.push(messageHTML);
+	}	
 }
 
 //DataPack integration in console
@@ -673,121 +1091,9 @@ function LaunchConsoleMessage(DP){
 	ConsoleAdd(QuestionHTML(DP));
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-//Music Control
-
-//Playlist
-function Playlist(i){
-	if(typeof Playlist.p==="undefined"){
-		Playlist.p=document.getElementsByTagName('audio');
-		Playlist.l=Playlist.p.length;
-	}
-	if(typeof i ==="undefined"){
-		return Playlist.p;
-	}
-	else{
-		Playlist.current=i%Playlist.l;
-		return Playlist.p[Playlist.current];
-	}
+function LaunchConsoleThanks(DP){
+	ConsoleAdd(DP.thanksmessage);
 }
-
-Playlist.ConsoleAdd=function(message){ConsoleAdd(message,1500)};
-
-function PlaylistLoad(){
-	document.addEventListener('click',PlaylistStartPlay);
-}
-
-function PlaylistStartPlay(){
-	document.removeEventListener('click',PlaylistStartPlay);
-	PlaySong(Playlist(0));
-	console.log("Music on");
-}
-
-
-//Song
-function PlaySong(song){
-	if((typeof song!=="undefined")&&song.paused){
-		song.play();
-		song.addEventListener('ended',PlayNextF(song));
-
-		window.addEventListener("blur", PlaylistSleep);
-		//console.log("Now playing: "+song);
-	}
-}
-
-function PauseSong(song){
-	if((typeof song!=="undefined")&&!song.paused){
-		song.pause();
-		Playlist.ConsoleAdd("Music paused...");
-
-		window.removeEventListener("blur", PlaylistSleep);
-	}
-}
-
-function ResumeSong(song){
-	if((typeof song!=="undefined")&&song.paused){
-		song.play();
-		Playlist.ConsoleAdd("Resumed playing ♫♪♪ "+NameSong(song));
-
-		window.addEventListener("blur", PlaylistSleep);
-	}
-}
-
-function NameSong(song){
-	return pageRelativePath(song.src).replace(/.*\//,"").replace(/\.mp3$/,"").replace(/\.wav$/,"").replace(/\.ogg$/,"").replace(/\%20/g," ");
-}
-
-function PlayNextF(song){
-	return function(){
-		PlaySong(Playlist(Playlist.current+1));
-		song.removeEventListener('ended',PlayNextF);
-		console.log("Finished playing: "+song);
-	}
-}
-
-
-//Player
-
-function CurrentSong(){
-	if(Playlist.p)
-		return Playlist.p[Playlist.current];
-}
-
-function ToggleCurrentSong(thi){
-
-	if(thi)thi.classList.remove("selected");
-
-	var song=CurrentSong();
-	if(typeof song==="undefined")
-		Playlist.ConsoleAdd("Error: can't find the jukebox...");
-	else if(song.paused){
-		ResumeSong(song);
-	}
-	else {
-		PauseSong(song);
-		if(thi)thi.classList.add("selected");
-	}
-}
-
-function PlaylistSleep(){
-	if(!Playlist.sleep){
-		Playlist.sleep=true;
-		PauseSong(CurrentSong());
-		window.addEventListener("focus", PlaylistAwaken);
-	}
-}
-
-function PlaylistAwaken(){
-	if(Playlist.sleep){
-		Playlist.sleep=false;
-		ResumeSong(CurrentSong());
-		window.removeEventListener("focus", PlaylistAwaken);
-	}
-}
-
-
-PlaylistLoad();
 
 
 
@@ -798,27 +1104,40 @@ function FullscreenAllowed(){
 	return (document.exitFullscreen||document.mozCancelFullScreen||document.webkitExitFullscreen||document.msExitFullscreen||(document.webkitFullscreenElement&&document.webkitExitFullscreen)||false)!==false;
 }
 
+function FullscreenActivate(browserprefix){
+	function Deactivate(){
+		if(!(document.fullscreenElement||document.webkitFullscreenElement))
+			Deselect("FullscreenButton");
+		}
+	//If a change is detected within the next 512 ms, trigger the button
+	[0,1,2,4,8,16,32,64,128,256,512].map(function(timedelay){
+		setTimeout(function(){ListenOnce(browserprefix,Deactivate,document)},timedelay);
+	});
+	return
+};
+
 function FullscreenOpen(targetIDsel){
 	var e = GetElement(targetIDsel);
 	var f;
 	if(f=e.requestFullscreen){
 		e.requestFullscreen();
+		FullscreenActivate("fullscreenchange");
 	} else if(f=e.mozRequestFullScreen){ /* Firefox */
 		e.mozRequestFullScreen();
+		FullscreenActivate("mozfullscreenchange");
 	} else if(f=e.webkitRequestFullscreen){ /* Chrome, Safari and Opera */
 		e.webkitRequestFullscreen();
+		FullscreenActivate("webkitfullscreenchange");
 	} else if(f=e.msRequestFullscreen){ /* IE/Edge */
 		e.msRequestFullscreen();
-	}
-	focusGame();
-
+		FullscreenActivate("msfullscreenchange");
+	} 
+	
 	//Place the console correctly
-	if(f)
+	if(f){
+		Select("FullscreenButton");
 		ConsoleLoad(targetIDsel);
-}
-
-function focusGame() {
-	document.getElementById('gameCanvas').focus();
+	};	
 }
 
 function FullscreenClose(){
@@ -838,14 +1157,15 @@ function FullscreenClose(){
 		document.webkitExitFullscreen();
 		f=true;
 	}
-
-	if(f) ConsoleLoad();
+	
+	if(f) {
+		Deselect("FullscreenButton");
+		ConsoleLoad();
+	};
 }
 
-function ToggleFullscreen(targetIDsel,thi){
+function ToggleFullscreen(targetIDsel){
 	if(FullscreenAllowed()){
-		if(thi)thi.classList.toggle("selected");
-
 		if(document.fullscreenElement||document.webkitFullscreenElement){
 			FullscreenClose();
 		}
@@ -854,322 +1174,175 @@ function ToggleFullscreen(targetIDsel,thi){
 		}
 	}
 	else
-		Playlist.ConsoleAdd("Fullscreen: Please contact Pedro PSI to add your browser, not yet supported!");
+		ConsoleAdd("Fullscreen: Please inform Pedro PSI that your browser is not yet supported!");
 };
 
 
+///////////////////////////////////////////////////////////////////////////////
+//Keyboard Shortcuts
 
+var keyActions={}//By default, there are no shortcuts
 
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Save and Checkpoints
-
-var curcheckpoint=0;
-
-function DocumentURL(){
-	if (typeof pageNoTag==="undefined")
-		return document.URL;
-	else
-		return pageNoTag(document.URL);
+function KeyLookup(key){
+	return KeyCodes[(""+key).toLowerCase()];
 }
 
-function HasCheckpoint(){
-	return void 0!==localStorage[DocumentURL()+"_checkpoint"];
-}
-function HasLevel(){
-	return HasSave()&&void 0!==localStorage[DocumentURL()];
-}
-function HasSave(){
-	return window.localStorage;
+var KeyCodes={
+	'none':0,
+	'break':3,
+	'backspace':8,
+	'tab':9,
+	'clear':12,
+	'enter':13,
+	'shift':16,
+	'ctrl':17,
+	'alt':18,
+	'pause':19,
+	'caps lock':20,
+	'escape':27,
+	'spacebar':32,
+	'page up':33,
+	'page down':34,
+	'end':35,
+	'home':36,
+	'left':37,
+	'up':38,
+	'right':39,
+	'down':40,
+	'select':41,
+	'print':42,
+	'execute':43,
+	'print screen':44,
+	'insert':45,
+	'delete':46,
+	'help':47,
+	'0':48,
+	'1':49,
+	'2':50,
+	'3':51,
+	'4':52,
+	'5':53,
+	'6':54,
+	'7':55,
+	'8':56,
+	'9':57,
+	'ß':63,
+	'a':65,
+	'b':66,
+	'c':67,
+	'd':68,
+	'e':69,
+	'f':70,
+	'g':71,
+	'h':72,
+	'i':73,
+	'j':74,
+	'k':75,
+	'l':76,
+	'm':77,
+	'n':78,
+	'o':79,
+	'p':80,
+	'q':81,
+	'r':82,
+	's':83,
+	't':84,
+	'u':85,
+	'v':86,
+	'w':87,
+	'x':88,
+	'y':89,
+	'z':90
 }
 
-function SetCheckpointStack(newstack){
-	MaxCheckpoint(newstack.length);
-	return localStorage[DocumentURL()+"_checkpoint"]=JSON.stringify(newstack);
-}
-function GetCheckpointStack(){
-	var stack= JSON.parse(localStorage[DocumentURL()+"_checkpoint"]);
-	MaxCheckpoint(stack.length-1);
-	return stack;
+
+function OnKeyDownDefault(event) {
+	event = event || window.event;
+
+	if(keyActions[event.keyCode])
+		keyActions[event.keyCode](event);
 }
 
-function SaveCheckpoint(levelTarget,isReloading){
-	var newstack;
-	if (HasCheckpoint()){
-		var stack=GetCheckpointStack();
-		if(typeof stack.dat==="undefined"){
-			if(isReloading)
-				stack.pop();
-			newstack=EvacuateCheckpointStack(stack,curcheckpoint);
-			newstack=stack.concat([levelTarget]);
-		}
-		else{
-			if(isReloading)
-				newstack=[levelTarget];
-			else{
-				newstack=[stack,levelTarget];
-			}
-		}
+function StopCapturingKeys(OnKeyDown){
+	var OnKeyDown=StopCapturingKeys.last?StopCapturingKeys.last:OnKeyDown;
+	document.removeEventListener('keydown',OnKeyDown);
+}
+function ResumeCapturingKeys(OnKeyDown){
+	var OnKeyDown=OnKeyDown?OnKeyDown:OnKeyDownDefault;
+	StopCapturingKeys.last=OnKeyDown;
+	document.addEventListener('keydown',OnKeyDown);
+}
+
+function SetShortcut(key,Action){
+	var key=(typeof key==="string")?KeyLookup(key):key;
+	keyActions[key]=Action;
+}
+function DeleteShortcut(key){
+	var key=(typeof key==="string")?KeyLookup(key):key;
+	delete keyActions[key];
+}
+
+//Multiple shortcuts
+function AddShortcuts(keyActionsNew){
+	var keys=Object.keys(keyActionsNew);
+	for(var k in keys){
+		//console.log(keys[k],keyActionsNew[keys[k]].toSource());
+		SetShortcut(keys[k],keyActionsNew[keys[k]]);
 	}
-	else
-		newstack=[levelTarget];
-
-	curcheckpoint=newstack.length-1;
-	return SetCheckpointStack(newstack);
-}
-function SaveLevel(curlevel){
-	console.log("saved:"+curlevel);
-	console.log(SolvedLevelIndices());
-	localStorage[DocumentURL()+"_solvedlevels"]=JSON.stringify(SolvedLevelIndices());
-	return localStorage[DocumentURL()]=curlevel;
-};
-
-function UnsaveCheckpoint(){
-	return localStorage.removeItem(DocumentURL()+"_checkpoint");
-};
-function UnsaveLevel(){
-	return localStorage.removeItem(DocumentURL());
-};
-function UnsaveSave(){
-	return HasSave()&&(UnsaveLevel(),UnsaveCheckpoint())
 }
 
-
-function LoadLevel(){
-	SolvedLevelIndices.levels=JSON.parse(localStorage[DocumentURL()+"_solvedlevels"]).map(Number);
-	return curlevel=localStorage[DocumentURL()];
+function OverwriteShortcuts(keyActionsNew){
+	keyActions={};
+	AddShortcuts(keyActionsNew);
 }
-function LoadCheckpoint(n){
-	var stack=GetCheckpointStack();
-	if(typeof stack.dat=="undefined"){
-			if(typeof n==="undefined")
-				curcheckpoint=stack.length-1; //default to last checkpoint
-			else{
-				curcheckpoint=Math.min(Math.max(n,0),stack.length-1);
-				stack=EvacuateCheckpointStack(stack,curcheckpoint);
-		}
-		curlevelTarget=stack[curcheckpoint];
+
+//Datapack Integration
+function SetDatapackShortcuts(DP){
+	OverwriteShortcuts(DP.shortcuts(DP));
+	AddShortcuts(DP.shortcutExtras(DP));
+}
+
+function DPShortcutDefauts(DP){
+	return {
+		"escape":function(){Close(DP.qid);},
+		"enter":function(){CheckSubmit(DP.qid);},
+		"tab":function(){console.log("tab shortcut - TODO");}
 	}
-	else{
-		curcheckpoint=0;
-		curlevelTarget=stack;
-	}
-	var a=[],b;
-	for(b in Object.keys(curlevelTarget.dat))
-		a[b]=curlevelTarget.dat[b];
-	return curlevelTarget.dat=new Int32Array(a)
-}
-
-function EvacuateCheckpointStack(stack,n){
-	var s=stack;
-	var i=s.length-1;
-	while(n<i){
-		i--;
-		s.pop()
-	}
-	return s;
 };
 
-function LoadSave(){
-	if(HasLevel()){
-		if(HasCheckpoint())
-			LoadCheckpoint();
-		return LoadLevel();}
-}
+
+
+
+
+
+
+
+
+
+
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Level navigation
-function GoToLevel(lvl){
-	SaveLevel(lvl);
-	winning=!1;
-	timer=0;
-	textMode=titleScreen=!1;
-	titleSelection=0<curlevel||null!==curlevelTarget?1:0;
-	messageselected=quittingTitleScreen=quittingMessageScreen=titleSelected=!1;
-	titleMode=0;
-	loadLevelFromState(state,lvl);
-	canvasResize();
-	clearInputHistory();
-};
-
-function isLevelMessage(lvl){
-	return typeof state.levels[lvl].message !=="undefined"
-}
-
-function LevelType(level){
-	return typeof level.message==="undefined";
-}
-
-function LevelIndices(){
-	if(LevelIndices.l!==undefined)
-		return LevelIndices.l;
-	else{
-		var l=[];
-		var i;
-		for( i=0;i<state.levels.length;i++){
-			if(LevelType(state.levels[i]))
-				l.push(i);
-		}
-		return LevelIndices.l=l;
-	}
-}
-
-function InLevelIndices(curlevel){
-	return LevelIndices().indexOf(curlevel)!==-1;
-}
-
-function isLastLevel(curlevel){return LevelIndices()[LevelIndices().length-1]===curlevel};
-
-function SolvedLevelIndices(){
-	if(SolvedLevelIndices.levels===undefined){
-		SolvedLevelIndices.levels=[];
-	}
-	return SolvedLevelIndices.levels;
-}
-
-function SortNumber(a,b){return a-b};
-
-function AddToSolvedLevelIndices(curlevel){
-	if(!InSolvedLevelIndices(curlevel)){
-		SolvedLevelIndices.levels.push(Number(curlevel));
-		SolvedLevelIndices.levels=SolvedLevelIndices.levels.sort(SortNumber);
-	}
-	return SolvedLevelIndices();
-}
-
-function InSolvedLevelIndices(curlevel){
-	return SolvedLevelIndices().indexOf(curlevel)!==-1;
-}
-
-function UnSolvedLevelIndices(){
-	return LevelIndices().filter(function(l){return SolvedLevelIndices().indexOf(l)===-1});
-}
-
-function FirstUnsolvedLevel(curlevel){
-	if(UnSolvedLevelIndices().length===0)
-		return 1+LevelIndices()[LevelIndices().length-1];
-	else{
-		var c=LevelIndices().indexOf(UnSolvedLevelIndices()[0]);
-		if(c===0)
-			return 0;
-		else
-			return 1+LevelIndices()[c-1];
-	}
-}
-
-function NextUnsolvedLevel(curlevel){
-	var firstusolve=UnSolvedLevelIndices().filter(x=>x>=curlevel)[0];
-	var lastsolvebefore=LevelIndices().filter(x=>x<firstusolve);
-	return lastsolvebefore[lastsolvebefore.length-1]+1;
-}
-
-function ClearSolvedLevelIndices(){
-	console.log("levels solved cleared.");
-	return SolvedLevelIndices.levels=[];
-}
-
-function SolvedLevelsAll(){
-	return LevelIndices().every(l=>SolvedLevelIndices().indexOf(l)>=0);
-}
-
-function LevelNumber(curlevel){
-	return LevelIndices().filter(function(l){return l<curlevel}).length+1;
-}
-
-function MaxLevel(){
-	MaxLevel.max=MaxLevel.max?Math.max(curlevel,MaxLevel.max):Number(curlevel);
-	return MaxLevel.max;
-}
-
-function MaxCheckpoint(m){
-	if(m===undefined){  //Getter
-		var c=Number(curcheckpoint);
-		MaxCheckpoint.max=MaxCheckpoint.max?Math.max(c,MaxCheckpoint.max):c;
-	}
-	else				//Setter (m)
-		MaxCheckpoint.max=Number(m);
-	return MaxCheckpoint.max;
-}
-
-
-function RequestLevelSelector(){
-	if(!HasCheckpoint()){
-		var type="level";
-		var DPOpts={
-			questionname:"", //"Access one of the "+LevelIndices().length+" levels",
-			qfield:"level",
-			qchoices:LevelIndices().map(l=>(LevelNumber(l)+(InSolvedLevelIndices(l)?"★":"")))
-		}
-	}
-	else{
-		var type="checkpoint";
-		var checkpointIndices=Object.keys(GetCheckpointStack());
-		var DPOpts={
-			questionname:"Reached checkpoints:",
-			qfield:"level",
-			qchoices:checkpointIndices.map(l=>(Number(l)+1)+"")
-		}
-	}
-	RequestDataPack([
-		['exclusivechoice',DPOpts]
-	],
-	{
-		actionvalid:LoadLevelFromDP,
-		actionText:"Go to "+type,
-		qonsubmit:Identity,
-		qdisplay:LaunchBalloon,
-		qtargetid:GetElement(gameElementID||"#gameCanvas").parentElement.id
-	});
-}
-
-function LoadLevelFromDP(DP){
-	var lvl=FindData('level',DP.qid).replace("★","");
-	lvl=Number(lvl);
-	if(!HasCheckpoint()){
-		//Goes to exactly after the level prior to the chosen one, to read all useful messages, including level title
-		var lvlpre=lvl<2?-1:LevelIndices()[lvl-2];
-		GoToLevel(lvlpre+1);
-	}
-	else{
-		GoToLevelCheckpoint(lvl-1);
-	}
-};
-
-
-function GoToLevelCheckpoint(ncheckpoint){
-	if(HasCheckpoint()){
-		LoadCheckpoint(ncheckpoint);
-		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
-		canvasResize();
-}};
-
+// Game Bar
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Game Bar
+// Game Bar
 
 function GameBar(targetIDsel){
-	var undo=!state.metadata.noundo?ButtonOnClickHTML('↶','checkKey({keyCode:85},!0)'):"";
-	var restart=!state.metadata.norestart?ButtonOnClickHTML('↺','checkKey({keyCode:82},!0)'):"";
-
+	var undo=!state.metadata.noundo?ButtonOnClickHTML('↶','CheckRegisterKey({keyCode:85});GameFocus();'):"";
+	var restart=!state.metadata.norestart?ButtonOnClickHTML('↺','CheckRegisterKey({keyCode:82});GameFocus();'):"";
+	
 	var buttons=[
-		ButtonLinkHTML("How to play?"),
+		//ButtonLinkHTML("How to play?"),
 		undo,
 		restart,
 		ButtonOnClickHTML("Select level",'RequestLevelSelector()'),
-		/*ButtonLinkHTML("Credits"),*/
-		// ButtonOnClickHTML("♫",'ToggleCurrentSong(this)'),
-		ButtonOnClickHTML("◱",'ToggleFullscreen("'+targetIDsel+'",this)')
-	].join("")
-
+		//ButtonLinkHTML("Credits"),
+		//ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
+		ButtonHTML({txt:"◱",attributes:{onclick:'ToggleFullscreen("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
+	].join("");
+	
 	return ButtonBar(buttons,"GameBar");
 }
 
@@ -1185,175 +1358,777 @@ function AddGameBar(targetIDsel){
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Focus on Game Canvas
+function GameFocus(DP){
+	window.Mobile.GestureHandler.prototype.fakeCanvasFocus();
+	keyActions=keyActionsGame;
+};
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Save permissions
 
-////////////////////////////////////////////////////////////////////////////////
-//Overwrites
-
-//Fallback values in case of indefinition
-if(!state||!state.metadata)
-	var state={levels:false,metadata:{flickscreen:false}};
-if(!curlevelTarget)
-	var curlevelTarget=null;
-if(!hasUsedCheckpoint)
-	var hasUsedCheckpoint=false;
-if(!sfxCreateMask)
-	var sfxCreateMask={ior:Identity,anyBitsInCommon:Identity,setZero:Identity};
-if(!sfxDestroyMask)
-	var sfxDestroyMask={ior:Identity,anyBitsInCommon:Identity,setZero:Identity};
-if(!clearInputHistory)
-	var clearInputHistory =Identity;
-
-
-function doSetupTitleScreenLevelContinue(){
-	try{LoadSave()}
-	catch(c){}}
-doSetupTitleScreenLevelContinue()
-
-function DoWin() {
-	console.log("won");
-	if (!winning) {
-		AddToSolvedLevelIndices(curlevel);SaveLevel(curlevel);
-		if(typeof customLevelInfo!= "undefined")customLevelInfo();
-		if (againing = !1, tryPlayEndLevelSound(), unitTesting)	return void nextLevel();
-		winning = !0, timer = 0
-	}
-}
-
-
-function nextLevel(){
-	againing=!1;
-	messagetext="";
-	state&&state.levels&&curlevel>state.levels.length&&(curlevel=state.levels.length-1);
-	if(titleScreen)
-		0===titleSelection&&(curlevel=0,curlevelTarget=null),null!==curlevelTarget?loadLevelFromStateTarget(state,curlevel,curlevelTarget):loadLevelFromState(state,curlevel);
-	else if(hasUsedCheckpoint&&(curlevelTarget=null,hasUsedCheckpoint=!1),(curlevel<state.levels.length-1)&&!SolvedLevelsAll()){
-		if(isLevelMessage(curlevel))
-			curlevel++;
-		else if(isLastLevel(curlevel))
-			curlevel=FirstUnsolvedLevel(curlevel);
-		else
-			curlevel=NextUnsolvedLevel(curlevel);
-		console.log("moved");
-		messageselected=quittingMessageScreen=titleScreen=textMode=!1;
-		null!==curlevelTarget?loadLevelFromStateTarget(state,curlevel,curlevelTarget):loadLevelFromState(state,curlevel);
-	}
-	else{
-		try{
-			UnsaveSave()
-		}
-		catch(a){}
-		if(SolvedLevelsAll()) RequestHallOfFame();
-		curlevel=0;
-		curlevelTarget=null;
-		goToTitleScreen();
-		tryPlayEndGameSound();
-	}
-	try{
-		if(HasSave())
-			if(null!==curlevelTarget){
-				restartTarget=level4Serialization();
-				SaveCheckpoint(restartTarget,true)
-			}
-			else UnsaveCheckpoint()
-	}
-	catch(c){}
-	void 0!==state&&void 0!==state.metadata.flickscreen&&(oldflickscreendat=[0,0,Math.min(state.metadata.flickscreen[0],level.width),Math.min(state.metadata.flickscreen[1],level.height)]);
-
-	SaveLevel(curlevel);
-
-	canvasResize();
-	clearInputHistory();
-}
-
-
-function processInput(a,b,c){
-	againing=!1;
-	verbose_logging&&(-1===a?consolePrint("Turn starts with no input."):(consolePrint("======================="),consolePrint("Turn starts with input of "+["up","left","down","right","action"][a]+".")));
-	var d=backupLevel(),e=[];
-	if(4>=a){
-		if(0<=a){
-			switch(a){
-				case 0:a=1;break;
-				case 1:a=4;break;
-				case 2:a=2;break;
-				case 3:a=8;break;
-				case 4:a=16
-			}
-		e=startMovement(a)
-		}
-		var g=0;
-		level.bannedGroup=[];
-		rigidBackups=[];
-		level.commandQueue=[];
-		var h=0,l=!1,p=commitPreservationState();
-
-		sfxCreateMask.setZero();
-		sfxDestroyMask.setZero();
-
-		seedsToPlay_CanMove=[];
-		seedsToPlay_CantMove=[];
-		calculateRowColMasks();
-		do l=!1,g++,verbose_logging&&consolePrint("applying rules"),applyRules(state.rules,state.loopPoint,h,level.bannedGroup),resolveMovements()?(l=!0,restorePreservationState(p)):(verbose_logging&&consolePrint("applying late rules"),applyRules(state.lateRules,state.lateLoopPoint,0)),h=0;
-		while(50>g&&l);
-			50<=g&&consolePrint("looped through 50 times, gave up.  too many loops!");
-		if(0<e.length&&void 0!==state.metadata.require_player_movement){
-			h=!1;
-			for(g=0;g<e.length;g++)
-				if(l=level.getCell(e[g]),state.playerMask.bitsClearInArray(l.data)){
-					h=!0;
-					break
-				}
-				if(!1===h)
-					return verbose_logging&&(consolePrint("require_player_movement set, but no player movement detected, so cancelling turn."),consoleCacheDump()),backups.push(d),DoUndo(!0,!1),!1
-		}
-		if(0<=level.commandQueue.indexOf("cancel"))
-			return verbose_logging&&(consoleCacheDump(),consolePrint("CANCEL command executed, cancelling turn.",!0)),backups.push(d),messagetext="",DoUndo(!0,!1),tryPlayCancelSound(),!1;
-		if(0<=level.commandQueue.indexOf("restart"))
-			return verbose_logging&&(consolePrint("RESTART command executed, reverting to restart state."),consoleCacheDump()),backups.push(d),messagetext="",DoRestart(!0),!0;
-		if(0<=level.commandQueue.indexOf("nosave")){
-			if(c&&0<=level.commandQueue.indexOf("win")) {
-				return!0;
-			} else {
-				return verbose_logging&&(consolePrint("NOSAVE command executed, not saving turn backup."),consoleCacheDump()),messagetext="",!0;
-			}
-		}
-		if(c&&0<=level.commandQueue.indexOf("win"))
-			return!0;
-		h=!1;
-		for(g=0;g<level.objects.length;g++)
-			if(level.objects[g]!==d.dat[g]){
-				if(c)
-					return verbose_logging&&consoleCacheDump(),backups.push(d),DoUndo(!0,!1),!0;-1!==a&&backups.push(d);
-				h=!0;
-				break
-			}
-		if(c)
-			return verbose_logging&&consoleCacheDump(),!1;
-		for(g=0;g<seedsToPlay_CantMove.length;g++)
-			playSound(seedsToPlay_CantMove[g]);
-		for(g=0;g<seedsToPlay_CanMove.length;g++)
-			playSound(seedsToPlay_CanMove[g]);
-
-		for(g=0;g<state.sfx_CreationMasks.length;g++)
-			a=state.sfx_CreationMasks[g],sfxCreateMask.anyBitsInCommon(a.objectMask)&&playSound(a.seed);
-		for(g=0;g<state.sfx_DestructionMasks.length;g++)
-			a=state.sfx_DestructionMasks[g],sfxDestroyMask.anyBitsInCommon(a.objectMask)&&playSound(a.seed);
-
-
-		for(g=0;g<level.commandQueue.length;g++)
-			a=level.commandQueue[g],"f"===a.charAt(1)&&tryPlaySimpleSound(a),!1===unitTesting?"message"===a&&showTempMessage():messagetext="";
-		!1!==textMode||void 0!==b&&!1!==b||(verbose_logging&&consolePrint("Checking win condition."),checkWin());
-		winning||(0<=level.commandQueue.indexOf("checkpoint")&&(verbose_logging&&consolePrint("CHECKPOINT command executed, saving current state to the restart state."),restartTarget=level4Serialization(),hasUsedCheckpoint=!0,SaveCheckpoint(restartTarget),SaveLevel(curlevel)),0<=level.commandQueue.indexOf("again")&&h&&(b=verbose_logging,g=messagetext,verbose_logging=!1,processInput(-1,!0,!0)?((verbose_logging=b)&&consolePrint("AGAIN command executed, with changes detected - will execute another turn."),againing=!0,timer=0):(verbose_logging=b)&&consolePrint("AGAIN command not executed, it wouldn't make any changes."),verbose_logging=b,messagetext=g));level.commandQueue=[]
-	}
-	verbose_logging&&consoleCacheDump();
-	winning&&(againing=!1);
-	return h
-}
+var curcheckpoint=0;
+var savePermission=true;
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Initialise
+// Save Level & Checkpoint
 
-var gameElementID="#gameCanvas";
-AddGameBar(gameElementID);
+function DocumentURL(){
+	if (typeof pageNoTag==="undefined")
+		return document.URL;
+	else
+		return pageNoTag(document.URL);
+}
+function CanSaveLocally(){
+	return window.localStorage;
+}
+function HasCheckpoint(){
+	return void 0!==localStorage[DocumentURL()+"_checkpoint"];
+}
+function HasLevel(){
+	return CanSaveLocally()&&void 0!==localStorage[DocumentURL()];
+}
+
+
+// Localsave = save in local storage
+function LocalsaveLevel(curlevel){
+	if(savePermission){
+		localStorage[DocumentURL()+"_solvedlevels"]=JSON.stringify(SolvedLevelScreens());
+		return localStorage[DocumentURL()]=curlevel;
+	}
+	else
+		EraseLocalsaveLevel();
+};
+
+function LocalsaveCheckpoints(newstack){
+	if(savePermission)
+		return localStorage[DocumentURL()+"_checkpoint"]=JSON.stringify(newstack);
+	else
+		EraseLocalsaveCheckpoints();
+}
+
+function EraseLocalsaveLevel(){
+	return localStorage.removeItem(DocumentURL());
+};
+
+function EraseLocalsaveCheckpoints(){
+	return localStorage.removeItem(DocumentURL()+"_checkpoint");
+};
+
+function EraseLocalsave(){
+	return CanSaveLocally()&&(EraseLocalsaveLevel(),EraseLocalsaveCheckpoints());
+}
+
+
+// Load from memory
+function LoadLevel(){
+	SolvedLevelScreens.levels=JSON.parse(localStorage[DocumentURL()+"_solvedlevels"]).map(Number);
+	return curlevel=localStorage[DocumentURL()];
+}
+
+
+function LocalloadCheckpoints(){
+	var storeddata=localStorage[DocumentURL()+"_checkpoint"];
+	var sta=storeddata?JSON.parse(storeddata):[];
+	sta=sta.dat?[sta]:sta;	//data compatibility (converts single checkpoint to array if needed)
+	return sta;
+}
+
+function GetCheckpoints(){
+	if(GetCheckpoints.stack)
+		return GetCheckpoints.stack;
+	else
+		return GetCheckpoints.stack=LocalloadCheckpoints();
+}
+
+function LoadCheckpoint(n){
+	var stack=GetCheckpoints();
+
+	if(n<stack.length)
+		ConsoleAddOnce("Beware! Saving at a past checkpoint will erase former future progress...");
+	
+	curcheckpoint=Math.min(Math.max(n-1,0),stack.length-1); //decrement 1 unit
+	return curlevelTarget=stack[curcheckpoint];
+}
+
+
+function PushSaveCheckpoint(levelTarget){
+	var stack=GetCheckpoints();
+	
+	function EvacuateCheckpoints(stack,n){
+		var s=stack;
+		var i=s.length-1;
+		while(n<i){
+			i--;
+			s.pop();
+		}
+		return s;
+	};
+	
+	if(curcheckpoint+1<stack.length){
+		stack=EvacuateCheckpoints(stack,curcheckpoint);
+		ConsoleAdd("Saved in a past checkpoint. Future progress erased.")
+	}
+	
+	stack=stack.concat([levelTarget]);
+	curcheckpoint=stack.length-1;
+	
+	return GetCheckpoints.stack=stack;
+}
+
+
+
+function LoadGame(){
+	if(HasLevel()){
+		if(HasCheckpoint()){
+			LoadLastCheckpoint();
+		}
+		return LoadLevel();
+	}
+}
+
+
+// Preserve original level save format (within checkpoint stack)
+
+function FormerLevel4Serialization() { //The original one
+	var ret = {
+		dat : Array.from(level.objects),
+		width : level.width,
+		height : level.height,
+		oldflickscreendat: oldflickscreendat.concat([]),
+		//New
+		lvl:curlevel
+	};
+	return ret;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Level/Message Screen navigation
+
+// Keep track of solved levels
+
+function ScreenMessage(lvl){
+	return typeof state.levels[lvl].message !=="undefined"
+}
+
+function ScreenType(level){
+	return typeof level.message==="undefined";	
+}
+
+function LevelScreens(){
+	if(LevelScreens.l!==undefined)
+		return LevelScreens.l;
+	else{
+		var l=[];
+		for(var i=0;i<state.levels.length;i++){
+			if(ScreenType(state.levels[i]))
+				l.push(i);
+		}
+		return LevelScreens.l=l;
+	}
+}
+
+function SolvedLevelScreens(){
+	if(SolvedLevelScreens.levels===undefined)
+		SolvedLevelScreens.levels=[];
+	return SolvedLevelScreens.levels;
+}
+
+function AddToSolvedScreens(curlevel){
+	function SortNumber(a,b){return a-b};
+	if(!ScreenMessage(curlevel)&&!LevelScreenSolved(curlevel)){
+		SolvedLevelScreens.levels.push(Number(curlevel));
+		SolvedLevelScreens.levels=SolvedLevelScreens.levels.sort(SortNumber);
+	}
+	return SolvedLevelScreens();
+}
+
+function LevelScreenSolved(curlevel){
+	return SolvedLevelScreens().indexOf(curlevel)>=0
+}
+
+function UnSolvedLevelScreens(){
+	return LevelScreens().filter(function(l){return !LevelScreenSolved(l)});
+}
+
+function FirstUnsolvedScreen(curlevel){
+	if(UnSolvedLevelScreens().length===0)
+		return 1+LevelScreens()[LevelScreens().length-1];
+	else{
+		var c=LevelScreens().indexOf(UnSolvedLevelScreens()[0]);
+		if(c===0)
+			return 0;
+		else
+			return 1+LevelScreens()[c-1];
+	}
+}
+
+function NextUnsolvedScreen(curlevel){
+	var firstusolve=UnSolvedLevelScreens().filter(x=>x>=curlevel)[0];
+	var lastsolvebefore=LevelScreens().filter(x=>x<firstusolve);
+	return lastsolvebefore[lastsolvebefore.length-1]+1;
+}
+
+function LastScreen(){return state.levels.length-1;};
+
+function FinalLevelScreen(){
+	var li=LevelScreens(); return li[li.length-1];
+};
+
+function ClearSolvedLevelScreens(){
+	return SolvedLevelScreens.levels=[];
+}
+
+function SolvedAllLevels(){
+	return LevelScreens().every(LevelScreenSolved);
+}
+
+function LevelNumber(curlevel){
+	return LevelScreens().filter(function(l){return l<curlevel}).length+1;
+}
+
+
+// Level Selector
+
+function RequestLevelSelector(){
+	if(!HasCheckpoint()){
+		var type="level";
+		var DPOpts={
+			questionname:"Access one of the "+LevelScreens().length+" levels",
+			qfield:"level",
+			qchoices:LevelScreens().map(StarLevel),
+			defaultChoice:function(i,c){return Number(c)===LevelNumber(curlevel)}
+		}
+	}
+	else{
+		var type="checkpoint";
+		var checkpointIndices=Object.keys(GetCheckpoints());
+		var DPOpts={
+			questionname:"Reached checkpoints:",
+			qfield:"level",
+			qchoices:checkpointIndices.map(l=>(Number(l)+1)+""),
+			defaultChoice:function(i,c){return Number(c)===checkpointIndices.length}
+		}
+	}
+	
+	function RequestLevelSelectorIndeed(){
+		RequestDataPack([
+				['exclusivechoice',DPOpts]
+			],
+			{
+				actionvalid:LoadLevelFromDP,
+				actionText:"Go to "+type,
+				qid:RequestLevelSelector.id,
+				qonsubmit:FocusAndResetFunction(RequestLevelSelector,GameFocus),
+				qonclose:FocusAndResetFunction(RequestLevelSelector,GameFocus),
+				qdisplay:LaunchBalloon,
+				qtargetid:ParentSelector("GameBar"),
+				shortcutExtras:extraShortcutsF
+			});
+	}
+	
+	function extraShortcutsF(DP){return {"L":function(){Close(DP.qid)}}};
+	
+	OpenerCloser(RequestLevelSelector,RequestLevelSelectorIndeed,GameFocus);
+
+}
+
+function MaxLevelDigits(){
+	if(MaxLevelDigits.m)
+		return MaxLevelDigits.m;
+	return MaxLevelDigits.m=Math.ceil(Math.log10(1+LevelScreens().length));
+};
+function StarLevel(l){
+	var n=LevelNumber(l)+"";
+	var padding="0".repeat(MaxLevelDigits()-n.length);
+	return padding+n+(LevelScreenSolved(l)?"★":"");
+}
+function UnstarLevel(l){
+	return Number(l.replace("★",""));
+}
+
+function LoadLevelFromDP(DP){
+	var lvl=UnstarLevel(FindData('level',DP.qid));
+	if(!HasCheckpoint()){
+		//Goes to exactly after the level prior to the chosen one, to read all useful messages, including level title
+		lvl=lvl<2?0:(LevelScreens()[lvl-2]+1);
+		GoToLevel(lvl);
+	}
+	else{
+		GoToLevelCheckpoint(lvl);
+	}
+};
+
+function GoToLevelCheckpoint(n){
+	if(HasCheckpoint()){
+		LoadCheckpoint(n);
+		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
+		canvasResize();
+}};
+
+function GoToLevel(lvl){
+	curlevel=lvl;
+	AdvanceLevel();
+	canvasResize();
+};
+
+
+// Level Progression
+
+function StartLevelFromTitle(){
+	if (titleSelection===0){//new game
+		ResetLevel();
+		ResetCheckpoints();
+	}
+	
+	LoadLastCheckpoint();
+	LoadLevelOrCheckpoint();
+}
+
+function ResetLevel(){
+	curlevel=0;
+	curlevelTarget=null;
+}
+
+
+function LoadLastCheckpoint(){
+	if(HasCheckpoint()){
+		var stack=GetCheckpoints();
+		curcheckpoint=stack.length-1;
+		curlevelTarget=stack[curcheckpoint];
+	}
+}
+
+function ResetCheckpoints(){
+	curcheckpoint=0;
+	EraseLocalsaveCheckpoints();
+	GetCheckpoints.stack=[];
+}
+
+function ResetGame(){
+	EraseLocalsave();
+	ClearSolvedLevelScreens();
+	ResetLevel();
+	ResetCheckpoints();
+	goToTitleScreen();
+	tryPlayEndGameSound();
+}
+
+function AdvanceLevel(){
+	textMode=false;
+	titleScreen=false;
+	quittingMessageScreen=false;
+	messageselected=false;
+	LocalsaveLevel(curlevel);
+	LoadLevelOrCheckpoint();
+}
+
+function AdvanceUnsolvedScreen(){
+	if(ScreenMessage(curlevel)&&curlevel<FinalLevelScreen()){
+		//console.log("from message");
+		curlevel++;
+	}
+	else if(curlevel>=FinalLevelScreen()||!NextUnsolvedScreen(curlevel)){
+		//console.log("from last level");
+		curlevel=FirstUnsolvedScreen(curlevel);
+	}
+	else{
+		//console.log("from anywhere in the middle");
+		curlevel=NextUnsolvedScreen(curlevel);
+	}		
+	AdvanceLevel();	
+}
+
+function AdvanceEndScreen(){
+	if(curlevel>=FinalLevelScreen())
+		curlevel++;
+	else
+		curlevel=FinalLevelScreen()+1;
+	
+	AdvanceLevel();		
+}
+
+function LoadLevelOrCheckpoint(){
+	if ((typeof curlevelTarget!=="undefined")&&(curlevelTarget!==null)){
+		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
+		curlevelTarget=null;
+	}
+	else
+		loadLevelFromState(state,curlevel);
+}
+
+// Preserve this function
+
+function AdjustFlickscreen(){
+	if (state!==undefined && state.metadata.flickscreen!==undefined){
+		oldflickscreendat=[0,0,Math.min(state.metadata.flickscreen[0],level.width),Math.min(state.metadata.flickscreen[1],level.height)];
+	}
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//Key capturing
+
+//Game keybinding profile
+keyActionsGame={
+	//Arrows & Spacebar
+	32:function(ev){prevent(ev);InstructGame(ev)},
+	37:function(ev){prevent(ev);InstructGame(ev)},
+	38:function(ev){prevent(ev);InstructGame(ev)},
+	39:function(ev){prevent(ev);InstructGame(ev)},
+	40:function(ev){prevent(ev);InstructGame(ev)},
+	//WASD
+	65:function(ev){ev.keyCode=37;InstructGame(ev)},
+	87:function(ev){ev.keyCode=38;InstructGame(ev)},
+	68:function(ev){ev.keyCode=39;InstructGame(ev)},
+	83:function(ev){ev.keyCode=40;InstructGame(ev)},	
+	//Enter, C, X
+	13:function(ev){ev.keyCode=88;InstructGame(ev)},	
+	67:function(ev){ev.keyCode=88;InstructGame(ev)},	
+	88:function(ev){ev.keyCode=88;InstructGame(ev)},
+	// Z, U     
+	90:function(ev){ev.keyCode=85;InstructGame(ev)},	
+	85:InstructGame,	
+	// R
+	82:InstructGame,	
+	// Esc
+	27:InstructGame,
+	76:RequestLevelSelector 	//L
+}
+
+//Execute key instructions
+function CheckRegisterKey(event){
+	checkKey(event,true);
+}
+
+
+function InstructGame(event){
+	var key=event.keyCode;
+		
+	//Avoid repetition?
+    if (keybuffer.indexOf(key)>=0) {
+    	return;
+    }
+	
+	//Instruct the game
+    if(lastDownTarget === canvas /*|| (window.Mobile && (lastDownTarget === window.Mobile.focusIndicator) )*/ ){
+    	if (keybuffer.indexOf(key)===-1) {
+    		keybuffer.splice(keyRepeatIndex,0,key);
+	    	keyRepeatTimer=0;
+	    	CheckRegisterKey(event);
+		}
+	}
+}
+
+
+function OnKeyDownGame(event) {
+	event = event || window.event;
+	//Not inside other elements, such as feedback forms, etc...
+	if(event.target.tagName!=="BODY")
+		return;
+	else if(keyActions[event.keyCode])
+		keyActions[event.keyCode](event);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//Overwritten PS functions
+function doSetupTitleScreenLevelContinue(){	LoadGame();};
+
+doSetupTitleScreenLevelContinue()
+
+//DoWin - Level selector - keep track of solved levels 
+function DoWin() {
+	if (!winning) {
+		AddToSolvedScreens(curlevel);
+		LocalsaveLevel(curlevel);
+		if(typeof customLevelInfo!= "undefined")customLevelInfo();
+		if (againing = false, tryPlayEndLevelSound(), unitTesting){
+			ClearLevelRecord();
+			return void nextLevel();
+		}
+		winning = true, timer = 0
+	}
+}
+
+//nextLevel - Level selector - non-linear level navigation "jumping"
+function nextLevel(){
+	againing=false;
+	messagetext="";
+	
+	curlevel=Math.min(curlevel,LastScreen()?LastScreen():curlevel);
+	
+	if (titleScreen)
+		StartLevelFromTitle();
+	else {
+		if(!SolvedAllLevels())
+			AdvanceUnsolvedScreen();
+		else if(curlevel<LastScreen())
+			AdvanceEndScreen();
+		else{
+			RequestHallOfFame();
+			ResetGame();
+		}
+	}
+	
+	AdjustFlickscreen();
+	canvasResize();
+}
+
+
+//level4Serialization - save a full checkpoint stack 
+function level4Serialization() { //Intercept
+	
+	var stack=GetCheckpoints();
+	console.log("restarting",restarting,stack);
+	
+	setTimeout(function(){
+		console.log("saving...",stack);
+		if(!restarting)
+			stack=PushSaveCheckpoint(restartTarget)
+		LocalsaveCheckpoints(stack);
+		LocalsaveLevel(curlevel);
+	},500)
+	
+	return FormerLevel4Serialization();
+}
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//Colour spaces
+
+/*
+function Colour(color){
+	var defaultcolor={space:"HEX",color:"#000000"};
+	var color=color?color:defaultcolor;
+	if(typeof color==="string"){
+		color=color.toUpperCase();
+		if (color.replace(/\#?[0123456789ABCDEF]+/)!==color)
+			color={space:"HEX",color="#"+color.replace("#","")}
+		else
+			color=defaultcolor
+	}
+	else{
+		if(typeof color==="object"){
+			if(color.color)
+				if(!color.space)
+					
+			
+	
+}*/
+
+function ToRGB(hexstring){
+	var HEX=hexstring.replace("#","");
+	var l=HEX.length;
+	if(l===3||l===6){
+		var R=(l===3?HEX[0]:HEX.slice(0,2));
+		var G=(l===3?HEX[1]:HEX.slice(2,4));
+		var B=(l===3?HEX[2]:HEX.slice(4,6));
+		return [To256(R),To256(G),To256(B)];
+	}
+	else
+		return [0,0,0];
+}
+
+function To256(AA){
+	if(AA.length>=2)
+		return ToDecimal(AA[0])*16+ToDecimal(AA[1])
+	else if (AA.length==1)
+		return ToDecimal(AA[0])
+	else
+		return 0;
+}
+
+var HEXDECIMAL=["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"];
+
+function ToDecimal(A){
+	var n=HEXDECIMAL.indexOf(String(A).toUpperCase());
+	return (n===-1)?0:n;
+}
+
+function ToHEX(rgbArray){
+	var rgbA=rgbArray.slice(0,3).map(ToHexadecimal);
+	return "#"+rgbA.join("");
+}
+
+function ToHexadecimal(deci){
+	var deci=Math.round(deci);
+	var big=(deci/16-deci/16%1)%16;
+	var sma=(deci-big*16)%16;
+	return HEXDECIMAL[big]+HEXDECIMAL[sma];
+}
+
+function Brightness(R,G,B){//256
+	return (Math.max(R,G,B)+Math.min(R,G,B))/2/256
+}
+
+function Hue(R,G,B){//256
+	if((R==B)&&(G==B))
+		return 0;
+	if(((R>G)&&(G>=B))||((R>=G)&&(G>B)))
+		return 60*((G-B)/(R-B));
+	else if((G>R)&&(R>=B))
+		return 60*(2-(R-B)/(G-B));
+	else if((G>=B)&&(B>R))
+		return 60*(2+(B-R)/(G-R));
+	else if((B>G)&&(G>R))
+		return 60*(4-(G-R)/(B-R));
+	else if((B>R)&&(R>=G))
+		return 60*(4+(R-G)/(B-G));
+	else if((R>=B)&&(B>G))  
+		return 60*(6-(B-G)/(R-G));
+	else
+		return 0;
+}
+
+function Saturation(R,G,B){//256
+	var  L=Brightness(R,G,B);
+	if(L<1)
+		return (Math.max(R,G,B)-Math.min(R,G,B))/(1-Math.abs(2*L-1))/256;
+	else
+		return 0;
+}
+
+function HSB(RGB){
+	var R=RGB[0];
+	var G=RGB[1];
+	var B=RGB[2];
+	return [Hue(R,G,B),Saturation(R,G,B),Brightness(R,G,B)];
+}
+
+function RGB(HSL){
+	var H=HSL[0];
+	var S=HSL[1];
+	var L=HSL[2];
+    var R,G,B;
+    var i=H*6-H*6%1;
+    var f=H*6-i;
+    var p=L*(1-S);
+    var q=L*(1-f*S);
+    var t=L*(1-(1-f)*S);
+    switch(i%6){
+        case 0:R=L,G=t,B=p; break;
+        case 1:R=q,G=L,B=p; break;
+        case 2:R=p,G=L,B=t; break;
+        case 3:R=p,G=q,B=L; break;
+        case 4:R=t,G=p,B=L; break;
+        case 5:R=L,G=p,B=q; break;
+    }
+    return [R*255,G*255,B*255];
+}
+
+
+function Lighten(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.min(hsb[2]*n,1);
+	console.log(hsb[2]);
+	return ToHEX(RGB(hsb));
+}
+
+function Darken(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.max(hsb[2]/n,0);
+	return ToHEX(RGB(hsb));
+}
+
+function Saturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.min(hsb[1]*n,1);
+	return ToHEX(RGB(hsb));
+}
+
+function Desaturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.max(hsb[1]/n,0);
+	return ToHEX(RGB(hsb));
+}
+
+function ColourRotate(HEX,degrees){
+	var hsb=HSB(ToRGB(HEX));
+	var degrees=degrees?degrees:180;
+	hsb[0]=(hsb[0]+degrees)%256;
+	return ToHEX(RGB(hsb));
+}
+
+function ReplaceColours(stylesheet){
+	
+	var styleSheet=stylesheet;
+	
+	var BackgroundColour=state.fgcolor;
+	var ForegroundColour=state.bgcolor;
+	
+	if(Brightness(BackgroundColour)<=Brightness(ForegroundColour)){
+		function Lighter(color,n){return Darken(color,n)}
+		function Darker(color,n){return Lighten(color,n)}
+	}
+	else{
+		function Lighter(color,n){return Lighten(color,n)}
+		function Darker(color,n){return Darken(color,n)}
+	}
+	
+	styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",BackgroundColour);
+	styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",Darker(BackgroundColour));
+	styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",Darken(ForegroundColour,1.1));
+	styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",ForegroundColour);
+	styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",Lighter(ForegroundColour,1.3));
+	styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",ColourRotate(Lighter(ForegroundColour,1.6),30));
+	styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",ColourRotate(Lighter(ForegroundColour,1.6),120));
+
+	return styleSheet;
+}
+
+ 
+
+////////////////////////////////////////////////////////////////////////////////
+// Adding the bar and its behaviours
+
+function LoadGameBar(gameSelector){
+	StopCapturingKeys(onKeyDown);ResumeCapturingKeys(OnKeyDownGame);
+	AddGameBar(gameSelector);
+	GameFocus();	
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//Load stylesheet
+
+function LoadStyle(styleSheet,gameSelector){
+	if(!IsQuerySelector(gameSelector))
+		gameSelector="#"+gameSelector;
+	
+	var stylesheet=styleSheet.replace(/\#gameCanvas/g,gameSelector).replace(/\.game\-container/g,"#"+ParentSelector(gameSelector));
+	stylesheet=ReplaceColours(stylesheet);
+	
+	ListenOnce('load',function(){AddElement("<style>"+stylesheet+"</style>",'head');});
+}
+
+//Remove mobile tab
+ListenOnce('load',function(){RemoveElement(".tab")});
+
+////////////////////////////////////////////////////////////////////////////////
+// Locate your game here:
+var gameSelector="#gameCanvas";
+LoadGameBar(gameSelector);
+LoadStyle(stylesheet,gameSelector);
