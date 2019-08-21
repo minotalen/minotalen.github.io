@@ -42,10 +42,10 @@ var titletemplate_firstgo = [
 	"..................................",
 	"..........#.start game.#..........",
 	"..................................",
+	"..................................",
 	".arrow keys to move...............",
 	".X to action......................",
 	".Z to undo, R to restart..........",
-	".L opens level select, M to mute..",
 	".................................."];
 
 var titletemplate_firstgo_selected = [
@@ -57,10 +57,10 @@ var titletemplate_firstgo_selected = [
 	"..................................",
 	"###########.start game.###########",
 	"..................................",
+	"..................................",
 	".arrow keys to move...............",
 	".X to action......................",
 	".Z to undo, R to restart..........",
-	".L opens level select, M to mute..",
 	".................................."];
 
 var titletemplate_empty = [
@@ -73,10 +73,10 @@ var titletemplate_empty = [
 	"..................................",
 	"..................................",
 	"..................................",
+	"..................................",
 	".arrow keys to move...............",
 	".X to action......................",
 	".Z to undo, R to restart.........."];
-	".L opens level select, M to mute..",
 
 var title_options = [[
 	".............continue.............",
