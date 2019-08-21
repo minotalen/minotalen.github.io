@@ -1,19 +1,19 @@
-/*
-	Game Bar by Pedro PSI
+/*	
+	Game Bar by Pedro PSI 
 	https://pedropsi.github.io/puzzlescript-game-bar#source
 	///////////////////////////////////////////////////////////////////////////////
-
+	
 	MIT License
-
-
+	
+	
 	Copyright (c) 2019 Pedro PSI
-
+	
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 	The above copyright notice, the above URL and this permission notice shall be included in all copies or substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+	
 */
 
 
@@ -46,8 +46,8 @@ var stylesheet="/*\
     --t:0.90;\
     --white:rgba(255,255,255,var(--t));         /*#FFF*/\
     --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
-    --darkblue:rgba(22, 22, 22,var(--t))          /*#070070*/;\
-    --blue:rgba(55, 55, 55,var(--t))             /*#000FFF*/;\
+    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
+    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
     --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
     --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
     --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
@@ -430,10 +430,10 @@ function ButtonHTML(optionsObj){
 	else
 		o.attributes['class']=o.attributes['class'].replace(/\s*button/g,"")+" button";
 	o.txt=o.txt?o.txt:"???";
-
+	
 	var ao=o.attributes['onclick'];
 	o.attributes['onclick']="PulseSelect(this);"+(ao?ao:"");
-
+		
 	return ElementHTML(o)
 };
 
@@ -480,7 +480,7 @@ function PlainMessageHTML(message){
 function ButtonBar(buttonshtml,id){return '<div id="'+id+'" class="buttonbar buttonrow">'+buttonshtml+'</div>'};
 
 ////////////////////////////////////////////////////////////////////////////////
-// DataField and DataPack system : default DataField (customisable), many of which constitute a DataPack
+// DataField and DataPack system : default DataField (customisable), many of which constitute a DataPack 
 
 function DefaultDataField(){
 	return {
@@ -489,7 +489,7 @@ function DefaultDataField(){
 		qvalue:"",						//Field value, by default
 
 		qid:GenerateId(),				//id of the field question
-
+		
 		qchoices:"",					//answer options list
 		executeChoice:Identity,			//immediate changes on toggle receives (id, choice)
 		defaultChoice:DefaultChoice,	//choice formatting, based on itself
@@ -498,7 +498,7 @@ function DefaultDataField(){
 		qplaceholder:"❤ Pedro PSI ❤",	//Placeholder answer
 
 		qsubmittable:true, 				//whether the element expects submission (true) or merely presents information (false)
-		qrequired:true,
+		qrequired:true,					
 		qvalidator:IdentityValidator,	//Receives a DataField
 		qerrorcustom:''
 	}
@@ -511,18 +511,18 @@ function DefaultDataPack(){
 		fields:[],
 
 		qid:GenerateId(),				//id
-
+		
 		action:'CheckSubmit', 			//action on submit :receives a qid
 		actionvalid:Identity,	//action on valid submit: receives a DataPack
 		actionText:'Submit',			//text to display instead of "Submit"
-
+		
 		qtargetid:document.body.id,		//Where to introduce form in page?
 		qdisplay:LaunchBalloon,			//Question display function :receives a DataPack
 
 		qonsubmit:Identity,	//Next modal on successful submit: receives a DataPack
 		qonclose:Identity,				//Next modal on close (defaults to nothing): receives a DataPack
 		thanksmessage:"Submitted. Thank you!",
-
+		
 		shortcuts:DPShortcutDefauts,	//Base shortcuts (all else is deleted)
 		shortcutExtras:function(DP){return {};}	//Extended shortcuts, to use ad-hoc
 	}
@@ -589,13 +589,13 @@ function RequestDataPack(NamedFieldArray,Options){
 		DP=UpdateDataPack(DP,o);
 		DP.fields=DP.fields.map(function(f){var fi=f;fi.pid=DP.qid;return fi});
 		DPHistoryAdd(DP);
-
+		
 		DP.qdisplay(DP);
 
 		FocusElement("#"+DP.qid+" textarea, "+"#"+DP.qid+" input"); //First question
 		SetDatapackShortcuts(DP);
 
-
+		
 		return DP;
 	}
 };
@@ -664,24 +664,13 @@ function LaunchBalloon(DP){
 	OpenBalloon(QuestionHTML(DP),DP.qid,DP.qtargetid);
 }
 
-var hasLogo=false;
-var avatarsrc="images/logo.png";
-function ImageExists(imageSrc) {
-    var img = new Image();
-    img.onload = function(){hasLogo=true};
-    img.onerror = function(){hasLogo=false};
-    img.src = imageSrc;
-}
-ImageExists(avatarsrc);
-
-function BalloonHTML(content,id){
-	var logo=hasLogo?'<img class="avatar" src="'+avatarsrc+'"/>':'';
-	var b='<div class="balloon" id='+id+'>'+CloseButtonHTML(id)+'<div class="baloon-content">'+logo+'<div class="subtitle">'+content+'</div></div></div>';
+function BalloonHTML(avatarsrc,content,id){
+	var b='<div class="balloon" id='+id+'>'+CloseButtonHTML(id)+'<div class="baloon-content"><img class="avatar" src="'+avatarsrc+'"/><div class="subtitle">'+content+'</div></div></div>';
 	return b;
 }
 
 function OpenBalloon(content,id,targetid){
-	AddElement(BalloonHTML(content,id),targetid);
+	AddElement(BalloonHTML("images/logo.png",content,id),targetid);
 }
 
 function CloseBalloonIn(targetid){
@@ -697,7 +686,7 @@ function HasBalloon(targetid){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Opener & Closer Functions with focus option,
+// Opener & Closer Functions with focus option, 
 // -> to use within Datapack RequestFunctions
 function FocusAndResetFunction(RequestF,FocusF){
 	return function(){
@@ -825,7 +814,7 @@ function CloseAndContinue(DP){
 function FocusElement(targetIDsel){
 	var focussing=GetElement(targetIDsel);
 	if(focussing!==null){
-		focussing.focus();
+		focussing.focus();	
 	}
 };
 
@@ -1033,7 +1022,7 @@ function IdentityValidator(DF){return {valid:true,error:"no errors"};}
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//Message Console
+//Message Console 
 
 var consolebuffer=[];
 var consolemax=3;
@@ -1058,10 +1047,10 @@ function TextReadDuration(textstring){ //by counting number of words, 200ms per 
 }
 
 function ConsoleAdd(messageHTML,wait,duration){
-
+	
 	if(GetElement("Console")===null)
 		ConsoleLoad();
-
+	
 	var duration=duration?Math.max(1000,duration):TextReadDuration(messageHTML);
 	var wait=wait?wait:0;
 	var mID="c-"+GenerateId();//random id
@@ -1090,11 +1079,11 @@ function ConsoleAddMany(messagesArray){
 function ConsoleAddOnce(messageHTML,wait,duration){
 	if(!ConsoleAddOnce.messages)
 		ConsoleAddOnce.messages=[];
-
+	
 	if(ConsoleAddOnce.messages.indexOf(messageHTML)<0){
 		ConsoleAdd(messageHTML,wait,duration)
 		ConsoleAddOnce.messages.push(messageHTML);
-	}
+	}	
 }
 
 //DataPack integration in console
@@ -1142,13 +1131,13 @@ function FullscreenOpen(targetIDsel){
 	} else if(f=e.msRequestFullscreen){ /* IE/Edge */
 		e.msRequestFullscreen();
 		FullscreenActivate("msfullscreenchange");
-	}
-
+	} 
+	
 	//Place the console correctly
 	if(f){
 		Select("FullscreenButton");
 		ConsoleLoad(targetIDsel);
-	};
+	};	
 }
 
 function FullscreenClose(){
@@ -1168,7 +1157,7 @@ function FullscreenClose(){
 		document.webkitExitFullscreen();
 		f=true;
 	}
-
+	
 	if(f) {
 		Deselect("FullscreenButton");
 		ConsoleLoad();
@@ -1343,7 +1332,7 @@ function DPShortcutDefauts(DP){
 function GameBar(targetIDsel){
 	var undo=!state.metadata.noundo?ButtonOnClickHTML('↶','CheckRegisterKey({keyCode:85});GameFocus();'):"";
 	var restart=!state.metadata.norestart?ButtonOnClickHTML('↺','CheckRegisterKey({keyCode:82});GameFocus();'):"";
-
+	
 	var buttons=[
 		//ButtonLinkHTML("How to play?"),
 		undo,
@@ -1353,7 +1342,7 @@ function GameBar(targetIDsel){
 		//ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
 		ButtonHTML({txt:"◱",attributes:{onclick:'ToggleFullscreen("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
 	].join("");
-
+	
 	return ButtonBar(buttons,"GameBar");
 }
 
@@ -1459,7 +1448,7 @@ function LoadCheckpoint(n){
 
 	if(n<stack.length)
 		ConsoleAddOnce("Beware! Saving at a past checkpoint will erase former future progress...");
-
+	
 	curcheckpoint=Math.min(Math.max(n-1,0),stack.length-1); //decrement 1 unit
 	return curlevelTarget=stack[curcheckpoint];
 }
@@ -1467,7 +1456,7 @@ function LoadCheckpoint(n){
 
 function PushSaveCheckpoint(levelTarget){
 	var stack=GetCheckpoints();
-
+	
 	function EvacuateCheckpoints(stack,n){
 		var s=stack;
 		var i=s.length-1;
@@ -1477,15 +1466,15 @@ function PushSaveCheckpoint(levelTarget){
 		}
 		return s;
 	};
-
+	
 	if(curcheckpoint+1<stack.length){
 		stack=EvacuateCheckpoints(stack,curcheckpoint);
 		ConsoleAdd("Saved in a past checkpoint. Future progress erased.")
 	}
-
+	
 	stack=stack.concat([levelTarget]);
 	curcheckpoint=stack.length-1;
-
+	
 	return GetCheckpoints.stack=stack;
 }
 
@@ -1528,7 +1517,7 @@ function ScreenMessage(lvl){
 }
 
 function ScreenType(level){
-	return typeof level.message==="undefined";
+	return typeof level.message==="undefined";	
 }
 
 function LevelScreens(){
@@ -1626,7 +1615,7 @@ function RequestLevelSelector(){
 			defaultChoice:function(i,c){return Number(c)===checkpointIndices.length}
 		}
 	}
-
+	
 	function RequestLevelSelectorIndeed(){
 		RequestDataPack([
 				['exclusivechoice',DPOpts]
@@ -1642,9 +1631,9 @@ function RequestLevelSelector(){
 				shortcutExtras:extraShortcutsF
 			});
 	}
-
+	
 	function extraShortcutsF(DP){return {"L":function(){Close(DP.qid)}}};
-
+	
 	OpenerCloser(RequestLevelSelector,RequestLevelSelectorIndeed,GameFocus);
 
 }
@@ -1696,7 +1685,7 @@ function StartLevelFromTitle(){
 		ResetLevel();
 		ResetCheckpoints();
 	}
-
+	
 	LoadLastCheckpoint();
 	LoadLevelOrCheckpoint();
 }
@@ -1751,8 +1740,8 @@ function AdvanceUnsolvedScreen(){
 	else{
 		//console.log("from anywhere in the middle");
 		curlevel=NextUnsolvedScreen(curlevel);
-	}
-	AdvanceLevel();
+	}		
+	AdvanceLevel();	
 }
 
 function AdvanceEndScreen(){
@@ -1760,8 +1749,8 @@ function AdvanceEndScreen(){
 		curlevel++;
 	else
 		curlevel=FinalLevelScreen()+1;
-
-	AdvanceLevel();
+	
+	AdvanceLevel();		
 }
 
 function LoadLevelOrCheckpoint(){
@@ -1797,16 +1786,16 @@ keyActionsGame={
 	65:function(ev){ev.keyCode=37;InstructGame(ev)},
 	87:function(ev){ev.keyCode=38;InstructGame(ev)},
 	68:function(ev){ev.keyCode=39;InstructGame(ev)},
-	83:function(ev){ev.keyCode=40;InstructGame(ev)},
+	83:function(ev){ev.keyCode=40;InstructGame(ev)},	
 	//Enter, C, X
-	13:function(ev){ev.keyCode=88;InstructGame(ev)},
-	67:function(ev){ev.keyCode=88;InstructGame(ev)},
+	13:function(ev){ev.keyCode=88;InstructGame(ev)},	
+	67:function(ev){ev.keyCode=88;InstructGame(ev)},	
 	88:function(ev){ev.keyCode=88;InstructGame(ev)},
-	// Z, U
-	90:function(ev){ev.keyCode=85;InstructGame(ev)},
-	85:InstructGame,
+	// Z, U     
+	90:function(ev){ev.keyCode=85;InstructGame(ev)},	
+	85:InstructGame,	
 	// R
-	82:InstructGame,
+	82:InstructGame,	
 	// Esc
 	27:InstructGame,
 	76:RequestLevelSelector 	//L
@@ -1820,12 +1809,12 @@ function CheckRegisterKey(event){
 
 function InstructGame(event){
 	var key=event.keyCode;
-
+		
 	//Avoid repetition?
     if (keybuffer.indexOf(key)>=0) {
     	return;
     }
-
+	
 	//Instruct the game
     if(lastDownTarget === canvas /*|| (window.Mobile && (lastDownTarget === window.Mobile.focusIndicator) )*/ ){
     	if (keybuffer.indexOf(key)===-1) {
@@ -1863,7 +1852,7 @@ function doSetupTitleScreenLevelContinue(){	LoadGame();};
 
 doSetupTitleScreenLevelContinue()
 
-//DoWin - Level selector - keep track of solved levels
+//DoWin - Level selector - keep track of solved levels 
 function DoWin() {
 	if (!winning) {
 		AddToSolvedScreens(curlevel);
@@ -1881,9 +1870,9 @@ function DoWin() {
 function nextLevel(){
 	againing=false;
 	messagetext="";
-
+	
 	curlevel=Math.min(curlevel,LastScreen()?LastScreen():curlevel);
-
+	
 	if (titleScreen)
 		StartLevelFromTitle();
 	else {
@@ -1896,18 +1885,18 @@ function nextLevel(){
 			ResetGame();
 		}
 	}
-
+	
 	AdjustFlickscreen();
 	canvasResize();
 }
 
 
-//level4Serialization - save a full checkpoint stack
+//level4Serialization - save a full checkpoint stack 
 function level4Serialization() { //Intercept
-
+	
 	var stack=GetCheckpoints();
 	console.log("restarting",restarting,stack);
-
+	
 	setTimeout(function(){
 		console.log("saving...",stack);
 		if(!restarting)
@@ -1915,7 +1904,7 @@ function level4Serialization() { //Intercept
 		LocalsaveCheckpoints(stack);
 		LocalsaveLevel(curlevel);
 	},500)
-
+	
 	return FormerLevel4Serialization();
 }
 
@@ -1941,9 +1930,9 @@ function Colour(color){
 		if(typeof color==="object"){
 			if(color.color)
 				if(!color.space)
-
-
-
+					
+			
+	
 }*/
 
 function ToRGB(hexstring){
@@ -2004,7 +1993,7 @@ function Hue(R,G,B){//256
 		return 60*(4-(G-R)/(B-R));
 	else if((B>R)&&(R>=G))
 		return 60*(4+(R-G)/(B-G));
-	else if((R>=B)&&(B>G))
+	else if((R>=B)&&(B>G))  
 		return 60*(6-(B-G)/(R-G));
 	else
 		return 0;
@@ -2061,7 +2050,7 @@ function Darken(HEX,n){
 	hsb[2]=Math.max(hsb[2]/n,0);
 	return ToHEX(RGB(hsb));
 }
-/*
+
 function Saturate(HEX,n){
 	var hsb=HSB(ToRGB(HEX));
 	var n=n?n:1.1;
@@ -2081,32 +2070,36 @@ function ColourRotate(HEX,degrees){
 	var degrees=degrees?degrees:180;
 	hsb[0]=(hsb[0]+degrees)%256;
 	return ToHEX(RGB(hsb));
-}*/
+}
 
 function ReplaceColours(stylesheet){
-
+	
 	var styleSheet=stylesheet;
-
+	
 	var BackgroundColour=state.fgcolor;
 	var ForegroundColour=state.bgcolor;
-
+	
 	if(Brightness(BackgroundColour)<=Brightness(ForegroundColour)){
-		BackgroundColour=state.fgcolor;
-		ForegroundColour=state.bgcolor;
+		function Lighter(color,n){return Darken(color,n)}
+		function Darker(color,n){return Lighten(color,n)}
 	}
-
+	else{
+		function Lighter(color,n){return Lighten(color,n)}
+		function Darker(color,n){return Darken(color,n)}
+	}
+	
 	styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",BackgroundColour);
-	styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",Darken(BackgroundColour));
-	styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",Darken(ForegroundColour));
+	styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",Darker(BackgroundColour));
+	styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",Darken(ForegroundColour,1.1));
 	styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",ForegroundColour);
-	styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",Lighten(ForegroundColour,1.1));
-	styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",Lighten(ForegroundColour,1.2));
-	styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",Lighten(ForegroundColour,1.3));
+	styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",Lighter(ForegroundColour,1.3));
+	styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",ColourRotate(Lighter(ForegroundColour,1.6),30));
+	styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",ColourRotate(Lighter(ForegroundColour,1.6),120));
 
 	return styleSheet;
 }
 
-
+ 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Adding the bar and its behaviours
@@ -2114,7 +2107,7 @@ function ReplaceColours(stylesheet){
 function LoadGameBar(gameSelector){
 	StopCapturingKeys(onKeyDown);ResumeCapturingKeys(OnKeyDownGame);
 	AddGameBar(gameSelector);
-	GameFocus();
+	GameFocus();	
 }
 
 
@@ -2124,11 +2117,10 @@ function LoadGameBar(gameSelector){
 function LoadStyle(styleSheet,gameSelector){
 	if(!IsQuerySelector(gameSelector))
 		gameSelector="#"+gameSelector;
-
+	
 	var stylesheet=styleSheet.replace(/\#gameCanvas/g,gameSelector).replace(/\.game\-container/g,"#"+ParentSelector(gameSelector));
-
-	//stylesheet=ReplaceColours(stylesheet);
-
+	stylesheet=ReplaceColours(stylesheet);
+	
 	ListenOnce('load',function(){AddElement("<style>"+stylesheet+"</style>",'head');});
 }
 
