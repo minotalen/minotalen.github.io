@@ -41,18 +41,13 @@ var stylesheet="/*\
 .game-container:full-screen #gameCanvas{\
     height:calc(96vh);\
 }\
-/*Correct footer in PS export*/\
-.footer{\
-	top:93%;\
-	bottom:7%;\
-}\
 /*Styles*/\
 :root{\
     --t:0.90;\
     --white:rgba(255,255,255,var(--t));         /*#FFF*/\
     --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
-    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
-    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
+    --darkblue:rgba(22, 22, 22,var(--t))          /*#070070*/;\
+    --blue:rgba(55, 55, 55,var(--t))             /*#000FFF*/;\
     --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
     --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
     --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
@@ -167,9 +162,7 @@ h4{\
     color:inherit;\
     transition-duration:var(--duration);\
 }\
-.button:hover a\
-.button:active a\
-.button:focus a{\
+.button:hover a{\
     background-color:transparent;\
     transition-duration:var(--duration);\
 }\
@@ -225,9 +218,7 @@ h4{\
     align-self:stretch;\
     background-color:var(--white);\
 }\
-.buttonrow .button:hover,\
-.buttonrow .button:active,\
-.buttonrow .button:focus {\
+.buttonrow .button:hover, .buttonrow .button:active{\
     background-color:var(--darkblue);\
     border-bottom-color:currentColor;\
     color:var(--turquoise);\
@@ -442,9 +433,6 @@ function ButtonHTML(optionsObj){
 
 	var ao=o.attributes['onclick'];
 	o.attributes['onclick']="PulseSelect(this);"+(ao?ao:"");
-	o.attributes['onkeydown']="ExecuteShortcut(this,event)";
-
-	o.attributes['tabindex']="0";
 
 	return ElementHTML(o)
 };
@@ -630,18 +618,14 @@ function ChoiceHTML(dataField,buttontype){
 
 function ExclusiveChoiceButtonRowHTML(dataField){
 	function ExclusiveChoiceButtonHTML(choice,dataFiel,i){
-		var args='(\"'+dataFiel.qfield+'\",\"'+choice+'\",\"'+dataFiel.pid+'\")';
-		var SelectF='ToggleThisOnly(event,this);SwitchData'+args;
-		var buAttribs={'onclick':SelectF,'onfocus':SelectF,'ondblclick':SelectF+';CheckSubmit(\"'+dataFiel.pid+'\")'};
-		var bu;
+		var selected="";
+		var args='(\''+dataFiel.qfield+'\',\''+choice+'\',\''+dataFiel.pid+'\')';
 		//console.log(i,choice,typeof i);
 		if(dataFiel.defaultChoice(i,choice)){
-			bu=ButtonHTML({txt:choice,attributes:FuseObjects(buAttribs,{class:"selected",onload:'SetData'+args})});
+			selected=' selected" onload="SetData'+args; //Default option
 			SetData(dataFiel.qfield,choice,dataFiel.pid);//Actualy choose it
 		}
-		else
-			bu=ButtonHTML({txt:choice,attributes:buAttribs});
-		return bu;
+		return '<div class="button'+selected+'" onclick="ToggleThisOnly(event,this);SwitchData'+args+'">'+choice+'</div>';
 	};
 	//console.log(dataField.qfield);console.log(dataField.pid);
 	ClearData(dataField.qfield,dataField.pid);
@@ -1308,13 +1292,6 @@ function DeleteShortcut(key){
 	var key=(typeof key==="string")?KeyLookup(key):key;
 	delete keyActions[key];
 }
-function ExecuteShortcut(thi,ev){
-	var key=KeyLookup(ev.key);
-	if(keyActions[key])
-		keyActions[key](thi);
-}
-
-
 
 //Multiple shortcuts
 function AddShortcuts(keyActionsNew){
@@ -1339,7 +1316,8 @@ function SetDatapackShortcuts(DP){
 function DPShortcutDefauts(DP){
 	return {
 		"escape":function(){Close(DP.qid);},
-		"enter":function(){CheckSubmit(DP.qid);}
+		"enter":function(){CheckSubmit(DP.qid);},
+		"tab":function(){console.log("tab shortcut - TODO");}
 	}
 };
 
@@ -1457,9 +1435,7 @@ function EraseLocalsave(){
 
 // Load from memory
 function LoadLevel(){
-	var sls=localStorage[DocumentURL()+"_solvedlevels"];
-	if(sls)
-		SolvedLevelScreens.levels=JSON.parse(sls).map(Number);
+	SolvedLevelScreens.levels=JSON.parse(localStorage[DocumentURL()+"_solvedlevels"]).map(Number);
 	return curlevel=localStorage[DocumentURL()];
 }
 
@@ -1942,11 +1918,35 @@ function level4Serialization() { //Intercept
 
 	return FormerLevel4Serialization();
 }
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //Colour spaces
 
-//RGB & HEX
-function RGB_HEX(hexstring){
+/*
+function Colour(color){
+	var defaultcolor={space:"HEX",color:"#000000"};
+	var color=color?color:defaultcolor;
+	if(typeof color==="string"){
+		color=color.toUpperCase();
+		if (color.replace(/\#?[0123456789ABCDEF]+/)!==color)
+			color={space:"HEX",color="#"+color.replace("#","")}
+		else
+			color=defaultcolor
+	}
+	else{
+		if(typeof color==="object"){
+			if(color.color)
+				if(!color.space)
+
+
+
+}*/
+
+function ToRGB(hexstring){
 	var HEX=hexstring.replace("#","");
 	var l=HEX.length;
 	if(l===3||l===6){
@@ -1957,7 +1957,7 @@ function RGB_HEX(hexstring){
 	}
 	else
 		return [0,0,0];
-};
+}
 
 function To256(AA){
 	if(AA.length>=2)
@@ -1975,7 +1975,7 @@ function ToDecimal(A){
 	return (n===-1)?0:n;
 }
 
-function HEX_RGB(rgbArray){
+function ToHEX(rgbArray){
 	var rgbA=rgbArray.slice(0,3).map(ToHexadecimal);
 	return "#"+rgbA.join("");
 }
@@ -1987,27 +1987,11 @@ function ToHexadecimal(deci){
 	return HEXDECIMAL[big]+HEXDECIMAL[sma];
 }
 
-
-//HSL
-function Lightness(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-	var L=(Math.max(R,G,B)+Math.min(R,G,B))/2/256;
-  return (L*1000-(L*1000)%1)/1000;
+function Brightness(R,G,B){//256
+	return (Math.max(R,G,B)+Math.min(R,G,B))/2/256
 }
 
 function Hue(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-
 	if((R==B)&&(G==B))
 		return 0;
 	if(((R>G)&&(G>=B))||((R>=G)&&(G>B)))
@@ -2026,305 +2010,98 @@ function Hue(R,G,B){//256
 		return 0;
 }
 
-function Chroma(R,G,B){
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-  return (Math.max(R,G,B)-Math.min(R,G,B));
-}
-
 function Saturation(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-	var  L=Lightness(R,G,B);
-	if(0<L&&L<1){
-    var S=Chroma(R,G,B)/256/(1-Math.abs(2*L-1));
-    return S;
-  }
+	var  L=Brightness(R,G,B);
+	if(L<1)
+		return (Math.max(R,G,B)-Math.min(R,G,B))/(1-Math.abs(2*L-1))/256;
 	else
 		return 0;
 }
 
-function HSL_RGB(RGB){
+function HSB(RGB){
 	var R=RGB[0];
 	var G=RGB[1];
 	var B=RGB[2];
-	return [Hue(R,G,B),Saturation(R,G,B),Lightness(R,G,B)];
+	return [Hue(R,G,B),Saturation(R,G,B),Brightness(R,G,B)];
+}
+
+function RGB(HSL){
+	var H=HSL[0];
+	var S=HSL[1];
+	var L=HSL[2];
+    var R,G,B;
+    var i=H*6-H*6%1;
+    var f=H*6-i;
+    var p=L*(1-S);
+    var q=L*(1-f*S);
+    var t=L*(1-(1-f)*S);
+    switch(i%6){
+        case 0:R=L,G=t,B=p; break;
+        case 1:R=q,G=L,B=p; break;
+        case 2:R=p,G=L,B=t; break;
+        case 3:R=p,G=q,B=L; break;
+        case 4:R=t,G=p,B=L; break;
+        case 5:R=L,G=p,B=q; break;
+    }
+    return [R*255,G*255,B*255];
 }
 
 
-function RGB_HSL(HSL){
-  var H=HSL[0];
-  var S=HSL[1];
-  var L=HSL[2];
-
-  var C=(1-Math.abs(2*L-1))*S;
-  var H6=(H/60)%6;
-  var X=C*(1-Math.abs(H6%2-1));
-  var M=L-C/2;
-  var R,G,B;
-
-  switch(Math.floor(H6)){
-    case 0:R=C,G=X,B=0; break;
-    case 1:R=X,G=C,B=0; break;
-  case 2:R=0,G=C,B=X; break;
-    case 3:R=0,G=X,B=C; break;
-    case 4:R=X,G=0,B=C; break;
-    case 5:R=C,G=0,B=X; break;
-  }
-
-  return [Math.round((R+M)*255),
-          Math.round((G+M)*255),
-          Math.round((B+M)*255)];
+function Lighten(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.min(hsb[2]*n,1);
+	console.log(hsb[2]);
+	return ToHEX(RGB(hsb));
 }
 
-
-//Colour Manipulation
-
-function Colour(colour){
-	if(!colour){
-		return {space:'RGB',colour:[0,0,0]};
-  }
-  else if(!colour.colour){
-    return Colour({colour:colour});
-  }
-  else if(!colour.space){
-		var c=colour.colour;
-		if(typeof c==="string")
-			return {space:'HEX',colour:CompelHEX(c)};
-		else if(typeof c==="object"){
-			c.push[0];c.push[0];c.push[0];
-			if(c[0]>=0&&c[1]>=0&&c[2]>=0&&c[0]<360&&c[1]<=1&&c[2]<=1)
-				return {space:'HSL',colour:CompelHSL(c)};
-			else
-				return {space:'RGB',colour:CompelRGB(c)};
-		}
-    return {space:'RGB',colour:[0,0,0]};
-	}
-	else
-    return colour;
+function Darken(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.max(hsb[2]/n,0);
+	return ToHEX(RGB(hsb));
+}
+/*
+function Saturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.min(hsb[1]*n,1);
+	return ToHEX(RGB(hsb));
 }
 
-function CompelHEX(hexstring){
-	var hexstring=hexstring.replace("#","");
-	if(hexstring.length===0){
-		return "#000000";
-  }
-
-  if(hexstring.length<3){
-		hexstring=hexstring+"0".repeat(3-hexstring.length);
-  }
-
-	if(hexstring.length===3){
-		hexstring=hexstring[0]+"0"+hexstring[1]+"0"+hexstring[2]+"0";
-  }
-	else{
-		hexstring=(hexstring+"000000").slice(0,6);
-  }
-	return "#"+hexstring;
+function Desaturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.max(hsb[1]/n,0);
+	return ToHEX(RGB(hsb));
 }
 
-function CompelRGB(rgbarray){
-	var rgbarray=rgbarray;
-	if(rgbarray.length===3){
-		function RBGBind(n){return Math.max(Math.min(n,255.999999999),0);};
-		return rgbarray.map(RBGBind);
-	}
-	else{
-		rgbarray.push(0);rgbarray.push(0);rgbarray.push(0);
-		return CompelRGB(rgbarray.slice(0,3));
-	}
-}
-
-function CompelHSL(rgbarray){
-	var rgbarray=rgbarray;
-	if(rgbarray.length===3){
-		rgbarray[0]=Math.max(Math.min(rgbarray[0],359.999999999),0);
-		rgbarray[1]=Math.max(Math.min(rgbarray[1],1),0);
-		rgbarray[2]=Math.max(Math.min(rgbarray[2],1),0);
-		return rgbarray;
-	}
-	else{
-		rgbarray.push(0);rgbarray.push(0);rgbarray.push(0);
-		return CompelRGB(rgbarray.slice(0,3));
-	}
-}
-
-
-function RGB(colour){
-	var colour=Colour(colour);
-	if(colour.space==="RGB"){
-	  return colour;
-	} else if(colour.space==="HEX"){
-		colour.colour=RGB_HEX(colour.colour);
-	} else if(colour.space==="HSL"){
-		colour.colour=RGB_HSL(colour.colour);
-	} else
-		console.log("Colour space not supported",colour);
-
-	colour.space="RGB";
-	return colour;
-}
-
-function HEX(colour){
-	var colour=Colour(colour);
-	if(colour.space==="HEX")
-		return colour;
-	else{
-		colour.colour=HEX_RGB(RGB(colour).colour);
-		colour.space="HEX";
-		return colour;
-	}
-}
-
-function HSL(colour){
-	var colour=Colour(colour);
-	if(colour.space==="HSL")
-		return colour;
-	else{
-		colour.colour=HSL_RGB(RGB(colour).colour);
-		colour.space="HSL";
-		return colour;
-	}
-}
-
-// Colour modification
-
-function Lighten(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=Math.min(Math.max(c[2]*n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Darken(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=(n===0?1:Math.min(Math.max(c[2]/n,0),1));
-  colour.colour=c;
-  return colour;
-}
-
-function LightenTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function DarkenTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=1-Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Saturate(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=Math.min(Math.max(c[1]*n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Desaturate(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=(n===0?1:Math.min(Math.max(c[1]/n,0),1));
-  colour.colour=c;
-  return colour;
-}
-
-function SaturateTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Huen(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=(c[0]+n)%360;
-  colour.colour=c;
-  return colour;
-}
-
-function Dehuen(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=(c[0]-n)%360;
-  colour.colour=c;
-  return colour;
-}
-
-function HueTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=n%360;
-  colour.colour=c;
-  return colour;
-}
-
+function ColourRotate(HEX,degrees){
+	var hsb=HSB(ToRGB(HEX));
+	var degrees=degrees?degrees:180;
+	hsb[0]=(hsb[0]+degrees)%256;
+	return ToHEX(RGB(hsb));
+}*/
 
 function ReplaceColours(stylesheet){
 
 	var styleSheet=stylesheet;
 
-	var ForegroundColour=state.fgcolor;
-	var BackgroundColour=state.bgcolor;
+	var BackgroundColour=state.fgcolor;
+	var ForegroundColour=state.bgcolor;
 
-	var PrimaryDark=ForegroundColour;
-	var PrimaryLight=BackgroundColour;
-
-	// Pick the most saturated colour as text colour
-	if(Saturation(BackgroundColour)===0){
-		PrimaryLight=ForegroundColour;
-	}
-	if(Saturation(ForegroundColour)===0){
-		var PrimaryDark=BackgroundColour;
+	if(Brightness(BackgroundColour)<=Brightness(ForegroundColour)){
+		BackgroundColour=state.fgcolor;
+		ForegroundColour=state.bgcolor;
 	}
 
-
-	//Background
-	var Lmax=Lightness(BackgroundColour);
-
-	//Invert in case of dark background
-	if(Lightness(BackgroundColour)<0.5){
-		styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",	HEX(DarkenTo(PrimaryLight,-Lmax*0.50+0.950)).colour);
-		styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",	HEX(DarkenTo(PrimaryLight,-Lmax*0.50+0.925)).colour);
-
-		styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",		HEX(DarkenTo(PrimaryDark,(-Lmax*0.22+0.22))).colour);
-		styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.40+0.40))).colour);
-		styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.51+0.51))).colour);
-		styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.89+0.89))).colour);
-		styleSheet=styleSheet.replace("rgba(70,244,111,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.91+0.91))).colour);
-		styleSheet=styleSheet.replace("rgba(240,248,175,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.93+0.93))).colour);
-		styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.95+0.95))).colour);
-	}
-	else{
-		styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",	HEX(LightenTo(PrimaryLight,0.925)).colour);
-		styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",	HEX(LightenTo(PrimaryLight,0.900)).colour);
-
-		styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",		HEX(LightenTo(PrimaryDark,(Lmax*0.22))).colour);
-		styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.40))).colour);
-		styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.51))).colour);
-		styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.92))).colour);
-		styleSheet=styleSheet.replace("rgba(70,244,111,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.93))).colour);
-		styleSheet=styleSheet.replace("rgba(240,248,175,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.94))).colour);
-		styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.95))).colour);
-	}
+	styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",BackgroundColour);
+	styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",Darken(BackgroundColour));
+	styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",Darken(ForegroundColour));
+	styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",ForegroundColour);
+	styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",Lighten(ForegroundColour,1.1));
+	styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",Lighten(ForegroundColour,1.2));
+	styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",Lighten(ForegroundColour,1.3));
 
 	return styleSheet;
 }
@@ -2350,8 +2127,7 @@ function LoadStyle(styleSheet,gameSelector){
 
 	var stylesheet=styleSheet.replace(/\#gameCanvas/g,gameSelector).replace(/\.game\-container/g,"#"+ParentSelector(gameSelector));
 
-	if((typeof replaceColours)!=="undefined"&&(replaceColours===true))
-		stylesheet=ReplaceColours(stylesheet);
+	//stylesheet=ReplaceColours(stylesheet);
 
 	ListenOnce('load',function(){AddElement("<style>"+stylesheet+"</style>",'head');});
 }
@@ -2362,7 +2138,5 @@ ListenOnce('load',function(){RemoveElement(".tab")});
 ////////////////////////////////////////////////////////////////////////////////
 // Locate your game here:
 var gameSelector="#gameCanvas";
-var replaceColours=true;
-
 LoadGameBar(gameSelector);
 LoadStyle(stylesheet,gameSelector);
