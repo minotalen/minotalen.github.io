@@ -1,3 +1,8 @@
+level 1:
+stand to the left of the pair of 1
+then push them to the right
+continue combining numbers until you get an 8
+
 level 2:
 create a line of 2s,
 the line is horizontal

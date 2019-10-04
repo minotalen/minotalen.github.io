@@ -14,9 +14,14 @@ function LoaderInFolderGB(folder){
 	}
 }
 
+
+var LevelLookahead=3;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
+var gateLevels=[1, 5, 15, 23, 29]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
+
+
 function DelayUntil(Condition,F,i){
 	var n=Condition.name+F.name+(i?i:0);
-	
+
 	if(!DelayUntil[n])
 		DelayUntil[n]=0;
 	DelayUntil[n]++;
@@ -27,7 +32,7 @@ function DelayUntil(Condition,F,i){
 	}
 	else{
 		console.log(DelayUntil[n]);
-		
+
 		if(DelayUntil[n]<10){
 			function D(){return DelayUntil(Condition,F,i);};
 			setTimeout(D,100*(2**DelayUntil[n]));
@@ -106,7 +111,7 @@ function SupraStyle(gameSelector){
 				height:calc(94vh);\
 			}\
 		}";
-	
+
 	stylesheet=stylesheet.replace(/\#gameCanvas/g,gameSelector).replace(/\.game\-container/g,ParentSelector(gameSelector));
 	AddElement("<style>"+stylesheet+"</style>",document.head);
 }
@@ -114,4 +119,3 @@ function SupraStyle(gameSelector){
 
 function C(){return typeof PrepareGame!=="undefined";};
 DelayUntil(C,GameBarLoad);
-
