@@ -1,15 +1,19 @@
 rules:  combine numbers by pushing into a line of same numbers (1+1,2+2,...) to create the next higher number
-checkpoint:  step onto the flag to create a checkpoint 
-crushing:  press action o a number to lower it by one. 
-crushing a 3   spawns a 1 on the bank and  refreshes a counter
-crushing a 4   spawns a push item which can push a number one tile far
-crushing a 5   spawns the grow item which can grow a number+1 up to 4
-crushing a 6   spawns the pick up item which allows you to pick up a number up to 5 
-generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1 to the left of it 
-hint  using a counter on a generator to spawn a 1 in the right moments can help align bigger numbers.
-hint: only the generators with a white circle have the potential to spawn after the next combination 
-counter:  pressing space on a generator also spawns a 1 but discharges a counter 
-finesse:  if you stand on an empty tile while combining you will spawn a 1 there 
-blockades:  place a blockade on an empty tile with action, discharges  a counter    pick it up the same way 
-place a blockade under you before combining to block finesse
-blockades are also supposed to block generator lanes but that isn't fully working yet 
+use you available potential wisely, everytime you crush you lose valuable resources!
+checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
+crushing:  press action on a number to lower it by one. this always has some additional benefit
+crushing a 2 refreshes a counter
+crushing a 3 spawns a 1 on the bank
+crushing a 4 spawns a push item which can push a number one tile far
+crushing a 5 spawns the grow item which can grow a number+1 (with max. value 4)
+crushing a 6 spawns the pick up item which allows you to pick up a number (with max. value 5)
+generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1.
+generator lanes can be used to push numbers (sometimes they get jammed by high numbers though).
+you can combine generator charges the same way you combine numbers.
+only the generators with a white circle have the potential to spawn after the next combination.
+counter:  pressing space on a generator charges it but discharges a counter
+using counters on a generator to spawn a 1 in the right moments can help align bigger numbers.
+finesse:  if you stand on an empty tile while combining to a number 4 or bigger you will spawn a 1 there.
+during the making of an ideal eight there are 31 finesse triggers, try not to waste those potential resources!
+blockades:  place a blockade on an empty tile with action, discharges a counter. pick it up the same way.
+blockades can be used to stop generator lanes from pushing further. they can also prevent finesse which is sometimes useful.
