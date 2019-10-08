@@ -1,5 +1,4 @@
 rules:  combine numbers by pushing into a line of same numbers (1+1,2+2,...) to create the next higher number
-use you available potential wisely, everytime you crush you lose valuable resources!
 checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
 crushing:  press action on a number to lower it by one. this always has some additional benefit
 crushing a 2 refreshes a counter
@@ -13,7 +12,12 @@ you can combine generator charges the same way you combine numbers.
 only the generators with a white circle have the potential to spawn after the next combination.
 counter:  pressing space on a generator charges it but discharges a counter
 using counters on a generator to spawn a 1 in the right moments can help align bigger numbers.
+
 finesse:  if you stand on an empty tile while combining to a number 4 or bigger you will spawn a 1 there.
+finesse on 7: when you combine a pair of 6s you grow the tile under your cursor +1
 during the making of an ideal eight there are 31 finesse triggers, try not to waste those potential resources!
+
 blockades:  place a blockade on an empty tile with action, discharges a counter. pick it up the same way.
 blockades can be used to stop generator lanes from pushing further. they can also prevent finesse which is sometimes useful.
+
+use you available potential wisely, everytime you crush you lose valuable resources!
