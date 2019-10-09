@@ -1,5 +1,5 @@
 /*
-	Game Bar by Pedro PSI
+	Game Bar by Pedro PSI - v2.1.7 - 19/09/2019
 	https://pedropsi.github.io/puzzlescript-game-bar#source
 	///////////////////////////////////////////////////////////////////////////////
 
@@ -34,12 +34,21 @@ var stylesheet="/*\
     flex-direction:column;\
     align-items:center;\
     justify-content: space-between;\
+	font-family:var(--font);\
 }\
 .game-container:fullscreen #gameCanvas{\
     height:calc(96vh);\
 }\
 .game-container:full-screen #gameCanvas{\
     height:calc(96vh);\
+}\
+@media only screen and (max-width:330px) {\
+    .game-container:fullscreen #gameCanvas{\
+        height:calc(94vh);\
+    }\
+    .game-container:full-screen #gameCanvas{\
+        height:calc(94vh);\
+    }\
 }\
 /*Correct footer in PS export*/\
 .footer{\
@@ -93,7 +102,6 @@ body{\
 }\
 \
 .balloon *, .buttonbar{\
-    font-family:var(--font);\
     font-size:calc(10px + var(--w-2));\
     line-height:calc(12px + var(--w-2));\
     max-width:100%;\
@@ -245,6 +253,11 @@ h4{\
     flex-grow:1;\
     border-bottom-width:var(--h-2);\
 }\
+@media only screen and (max-width:330px) {\
+    .buttonbar{\
+        flex-wrap:wrap;\
+    }\
+}\
 .selected.button{\
     background-color:var(--blue);\
     border-color:currentColor;\
@@ -256,9 +269,7 @@ h4{\
   position:fixed;\
   top:0;\
   margin-top:var(--h1);\
-  width:100%;\
   z-index:1000;\
-    align-items:center;\
 }\
 #Console .message{\
     pointer-events:all;\
@@ -289,7 +300,41 @@ h4{\
 .button.pulsating:hover, .button.pulsating:active, .button.pulsating:focus{\
     background-color: var(--blue);\
     --duration:0.001s;\
+	\
+.nowrap{\
+    flex-wrap: nowrap;\
+}\
+.hint {\
+    margin: var(--w-2) var(--h-2) var(--w-2) var(--h-2);\
+    align-items: center;\
+}\
+.hint img,\
+.hint canvas{\
+    max-height: var(--w32);\
+    max-width: var(--w32);\
+    object-fit:scale-down;\
+    padding: 0;\
+    margin: var(--w-4) var(--h-4) var(--w-4) var(--h-4);\
+    background-color: var(--darkblue);\
+    color: var(--white);\
+}\
+kbd {\
+    border: var(--w-8) solid var(--darkblue);\
+    border-bottom-width: var(--h-2);\
+    border-top-width: var(--h-8);\
+    padding: var(--h-4) var(--w-2) var(--h-4) var(--w-2);\
+    font-weight: bold;\
+    line-height: calc(12px + var(--w-2) + var(--h2) + var(--h1));\
+    font-family: Arial;\
+}\
+.hideCursor{\
+    cursor:none;\
+}\
+.hidden{\
+    display: none;\
+}\
 ";
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -297,9 +342,32 @@ h4{\
 function Identity(){return;};
 
 ///////////////////////////////////////////////////////////////////////////////
-//Find in Array
-function In(array,n){return array.indexOf(n)>=0;};
+//Distinguish Objects and Arrays
+function IsArray(array){
+	return FunctionName(array.constructor)==="Array";
+}
 
+function IsObject(array){
+	return FunctionName(array.constructor)==="Object";
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//Find in Array
+function In(array,n){
+	if(IsArray(array))
+		return array.indexOf(n)>=0;
+	else if(IsObject(array))
+		return Object.keys(array).indexOf(n)>=0;
+	else
+		return false;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//Get Function Name as a string
+function FunctionName(FunctionF){
+	var name=FunctionF.toString().replace(/\(.*/,"").replace("function ","");
+	return name.replace(/\s.*/gm,"");
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //Join Objects, overwriting conflicting properties
@@ -313,6 +381,23 @@ function FuseObjects(object,extrapropertiesobject){
 	}
 	return O;
 }
+
+
+//PageIdentifier
+
+function pageIdentifier(url){
+	if(typeof url==="undefined")
+		return pageIdentifier(""+window.location);
+	else{
+		var identifier=url.replace(/(.*\/)/,"").replace(/.html?.*/,"");
+		if(identifier==="")
+			return "index";
+		else
+			return identifier;
+	}
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //Page auto index
@@ -385,16 +470,22 @@ function GetElement(selector,pSelector){
 
 //Inside
 
+
 function InsideAt(parentSelector,selector){
-	console.log(GetElement(parentSelector),GetElement(selector));
+	if(GetElement(parentSelector)===null||GetElement(selector)===null)
+		return undefined;
 	return Inside(parentSelector,selector)||GetElement(parentSelector).isEqualNode(GetElement(selector));
 }
 
 function Inside(parentSelector,selector){
+	if(GetElement(parentSelector)===null||GetElement(selector)===null)
+		return undefined;
 	return GetElement(parentSelector).contains(GetElement(selector));
 }
 
 function Outside(parentSelector,selector){
+	if(GetElement(parentSelector)===null||GetElement(selector)===null)
+		return undefined;
 	return !InsideAt(parentSelector,selector);
 }
 
@@ -463,8 +554,23 @@ function ElementHTML(optionsObj){
 	return "<"+tag+attributes+">"+txt+"</"+tag+">"		//txt and tag
 };
 
+function SingleElementHTML(optionsObj){
+	var tag=optionsObj.tag?optionsObj.tag:"div";
+	var attributes=(optionsObj.attributes)?' '+ReadAttributes(optionsObj.attributes):'';	//attributes is an Object
+	return "<"+tag+attributes+"/>"
+};
+
 
 // Basic Elements
+
+function ImageHTML(optionsObj){
+	var o=optionsObj?optionsObj:{};
+	o.tag="img";
+	if(!o.attributes)
+		o.attributes={src:"images/splash.png"}
+	return SingleElementHTML(o)
+};
+
 function ButtonHTML(optionsObj){
 	var o=optionsObj?optionsObj:{};
 	o.tag=o.tag?o.tag:"div";			//defaults to div
@@ -479,6 +585,11 @@ function ButtonHTML(optionsObj){
 	var ao=o.attributes['onclick'];
 	o.attributes['onclick']="PulseSelect(this);"+(ao?ao:"");
 	o.attributes['onkeydown']="ExecuteShortcut(this,event)";
+
+	//Context Menu and Select prevention
+	o.attributes['oncontextmenu']="(function(e){e.preventDefault()})(event);";
+	o.attributes['unselectable']="on";
+	o.attributes['onselectstart']="return false;";
 
 	o.attributes['tabindex']="0";
 
@@ -539,7 +650,7 @@ function DefaultDataField(){
 
 		qchoices:"",					//answer options list
 		executeChoice:Identity,			//immediate changes on toggle receives (id, choice)
-		defaultChoice:DefaultChoice,	//choice formatting, based on itself
+		defaultChoice:DefaultChoice,	//choice formatting, based on itself, receives (index,choicetxt)
 
 		qtype:PlainHTML,				//Format of question :receives a DataField
 		qplaceholder:"❤ Pedro PSI ❤",	//Placeholder answer
@@ -567,6 +678,7 @@ function DefaultDataPack(){
 		fields:[],
 
 		qid:GenerateId(),				//id
+		qclass:GenerateId(),			//class
 
 		destination:'Feedback',			//Name of data repository
 		requireConnection:true,			//Does it need a connection?
@@ -602,7 +714,17 @@ function DataFieldTypes(type){
 			qfield:'answer',
 			questionname:"Which one?",
 			qchoices:["on","off"],
-			qtype:ExclusiveChoiceButtonRowHTML})
+			qtype:ExclusiveChoiceButtonRowHTML
+		}),
+		navi:NewDataField({
+			qfield:"navi",
+			qclass:"nowrap",
+			questionname:"",
+			qchoices:["◀","OK","▶"],
+			qtype:ExclusiveChoiceButtonRowHTML,
+			defaultChoice:function(i,txt){return txt==="OK";},
+			qsubmittable:false
+		})
 	}
 	if(typeof type==="undefined")
 		return DFTypes;
@@ -674,19 +796,26 @@ function ChoiceHTML(dataField,buttontype){
 	var clear='onload="ClearData(\''+dataField.qfield+'\',\''+dataField.pid+'\')" ';
 	for(var i in dataField.qchoices)
 		choi=choi+buttontype(dataField.qchoices[i],dataField,i);
-	return '<div class="buttonrow" '+clear+'id="'+dataField.qid+'">'+choi+'</div>';
+	return '<div class="buttonrow '+dataField.qclass+'" '+clear+'id="'+dataField.qid+'">'+choi+'</div>';
 }
 
 
 function ExclusiveChoiceButtonRowHTML(dataField){
 	function ExclusiveChoiceButtonHTML(choice,dataFiel,i){
-		var args='(\"'+dataFiel.qfield+'\",\"'+choice+'\",\"'+dataFiel.pid+'\")';
-		var SelectF='ToggleThisOnly(event,this);SwitchData'+args;
-		var buAttribs={'onclick':SelectF,'onfocus':SelectF,'ondblclick':SelectF+';CheckSubmit(\"'+dataFiel.pid+'\")',id:"choice-"+choice};
+		var args='(\"'+dataFiel.qfield+'\",\"'+choice+'\",\"'+dataFiel.pid+'\");';
+		var SetF='SetData'+args;
+		var ExecuteF='ExecuteChoice'+args;
+		var SelectF='ToggleThisOnly(event,this);'+SetF;
+		//var ExecuteF=SelectF+'CheckSubmit(\"'+dataFiel.pid+'\");';
+		var buAttribs={
+			'onfocus':SelectF,
+			'onclick':ExecuteF,
+			'ondblclick':ExecuteF,
+			id:"choice-"+choice};
 		var bu;
 		//console.log(i,choice,typeof i);
 		if(dataFiel.defaultChoice(i,choice)){
-			bu=ButtonHTML({txt:choice,attributes:FuseObjects(buAttribs,{class:"selected",onload:'SetData'+args})});
+			bu=ButtonHTML({txt:choice,attributes:FuseObjects(buAttribs,{class:"selected",onload:SetF})});
 			SetData(dataFiel.qfield,choice,dataFiel.pid);//Actualy choose it
 		}
 		else
@@ -845,7 +974,7 @@ function PulseSelect(selectorE){
 
 function CloseElement(targetIDsel){
 	var fading=GetElement(targetIDsel);
-	if(fading!==null){
+	if(fading){
 		fading.classList.add("closing");
 		setTimeout(function(){fading.remove();},1000);
 	}
@@ -929,46 +1058,86 @@ function FocusInside(targetIDsel){
 };
 
 
-function FocusPrev(F){
+function FocusPrev(F,bounded){
+	if(F===undefined||typeof F!=="function")
+		var F=Identity;
 	var prev=document.activeElement.previousSibling;
 	if(prev===null)
-		prev=document.activeElement.parentElement.lastChild;
+		if(bounded===true)
+			return console.log("beginning reached");
+		else
+			prev=document.activeElement.parentElement.lastChild;
 	FocusElement(prev);
 	F(prev);
 }
 
-function FocusNext(F){
+function FocusNext(F,bounded){
+	if(F===undefined||typeof F!=="function")
+		var F=Identity;
 	var next=document.activeElement.nextSibling;
 	if(next===null)
+		if(bounded===true)
+			return console.log("end reached");
+		else
 		next=document.activeElement.parentElement.firstChild;
 	FocusElement(next);
 	F(next);
 }
 
+function FocusPrevBounded(F){
+	FocusPrev(F,true)
+}
+
+function FocusNextBounded(F){
+	FocusNext(F,true)
+}
+
+//Click
+function ClickPrevBounded(){
+	FocusPrev(function(elem){console.log(elem);elem.click()},true)
+}
+
+function ClickNextBounded(){
+	FocusNext(function(elem){elem.click()},true)
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //Event Listeners
 
 function ListenOnce(ev,fun,target){
-	target=target?target:window; //Improve the defaults
-	if(typeof ev==="string") //Defaults to array in case a single string is
-		ev=[ev];
-	function F(){
-		fun();
-		ev.map(function(e){target.removeEventListener(e,F)})
-	}
-	ev.map(function(e){target.addEventListener(e,F)})
+	return ListenF(ev,fun,target?target:window,function(eve){return true;});
 }
 
-function ListenOutside(ev,fun,targe){
-	if(typeof ev==="string") //Defaults to array in case a single string is
-		ev=[ev];
-	function F(eve){
-		if(Outside(targe,eve.target)){
-			fun();
-			ev.map(function(e){window.removeEventListener(e,F)})
-		}
-	}
-	ev.map(function(e){window.addEventListener(e,F)})
+function ListenOutside(ev,fun,target){
+	return ListenF(ev,fun,window,function(eve){return Outside(target,eve.target);});
+}
+
+function ListenF(ev,fun,target,ConditionF){
+		var evObj={
+			"ev":IsArray(ev)?ev:[ev],
+			"F":F,
+			"target":GetElement(target)
+		};
+
+		function F(eve){
+			if(ConditionF(eve)){
+				fun();
+				ListenNoMore(evObj);
+			}
+		};
+
+		ListenIndeed(evObj);
+		return evObj;
+}
+
+function ListenNoMore(evObj){
+	evObj["ev"].map(function(e){evObj["target"].removeEventListener(e,evObj["F"])});
+}
+
+function ListenIndeed(evObj){
+	evObj["ev"].map(function(e){evObj["target"].addEventListener(e,evObj["F"])});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1112,7 +1281,7 @@ function ClearData(field,id){
 };
 
 function GetField(field,parentid){
-	var DP=GetDataPack(parentid)
+	var DP=GetDataPack(parentid);
 	if(DP!==undefined){
 		var fis=DP.fields.filter(function(f){return (f.qfield===field)});
 		if(fis.length>0)
@@ -1126,12 +1295,18 @@ function GetFieldValue(field,parentid){
 		return	fi.qvalue;
 }
 
-function ChoiceExecute(field,value,id){
+function ExecuteChoice(field,value,pid){
+	GetField(field,pid).executeChoice(value,pid); //Not dynamically updated. And why should it be?
+};
+
+
+/*
+function ExecuteChoice(field,value,id){
 	GetField(field,id).executeChoice(id,value); //Not dynamically updated. And why should it be?
 };
 
 function ToggleData(field,value,id){
-	ChoiceExecute(field,value,id);
+	ExecuteChoice(field,value,id);
 	var data=GetDefaultData(field,id);
 	if(typeof data==="undefined")
 		SetData(field,value,id);
@@ -1144,9 +1319,9 @@ function ToggleData(field,value,id){
 }
 
 function SwitchData(field,value,id){
-	ChoiceExecute(field,value,id);
+	ExecuteChoice(field,value,id);
 	SetData(field,value,id);
-}
+}*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Form Validators and Modifiers
@@ -1232,6 +1407,7 @@ function LaunchConsoleThanks(DP){
 
 ///////////////////////////////////////////////////////////////////////////////
 //Music Control
+
 
 //Playlist
 function Playlist(i){
@@ -1350,9 +1526,11 @@ function FullscreenAllowed(){
 
 function FullscreenActivate(browserprefix){
 	function Deactivate(){
-		if(!(document.fullscreenElement||document.webkitFullscreenElement))
+		if(!(document.fullscreenElement||document.webkitFullscreenElement)){
 			Deselect("FullscreenButton");
+			FreeFullscreenCursor();
 		}
+	}
 	//If a change is detected within the next 512 ms, trigger the button
 	[0,1,2,4,8,16,32,64,128,256,512].map(function(timedelay){
 		setTimeout(function(){ListenOnce(browserprefix,Deactivate,document)},timedelay);
@@ -1381,6 +1559,7 @@ function FullscreenOpen(targetIDsel){
 	if(f){
 		Select("FullscreenButton");
 		ConsoleLoad(targetIDsel);
+		ShowFullscreenCursor();
 	};
 }
 
@@ -1404,11 +1583,13 @@ function FullscreenClose(){
 
 	if(f) {
 		Deselect("FullscreenButton");
+		FreeFullscreenCursor();
 		ConsoleLoad();
 	};
 }
 
 function FullscreenToggle(targetIDsel){
+	FullscreenElement.selector=targetIDsel;
 	if(FullscreenAllowed()){
 		if(document.fullscreenElement||document.webkitFullscreenElement){
 			FullscreenClose();
@@ -1420,6 +1601,31 @@ function FullscreenToggle(targetIDsel){
 	else
 		ConsoleAdd("Fullscreen: Please inform Pedro PSI that your browser is not yet supported!");
 };
+
+function FullscreenElement(){
+	return GetElement(FullscreenElement.selector);
+}
+
+//Fullscreen cursor
+function HiddenFullscreenCursor(){
+	return Classed(FullscreenElement(),"hideCursor");
+}
+function HideFullscreenCursor(){
+	if(!HiddenFullscreenCursor()){
+		Select(FullscreenElement(),"hideCursor");
+		HideFullscreenCursor.last=ListenOnce('mousemove',ShowFullscreenCursor,FullscreenElement());
+	}
+}
+function ShowFullscreenCursor(){
+	Deselect(FullscreenElement(),"hideCursor");
+	FreeFullscreenCursor.timeout=setTimeout(HideFullscreenCursor,3000);
+}
+function FreeFullscreenCursor(){
+	Deselect(FullscreenElement(),"hideCursor");
+	clearTimeout(FreeFullscreenCursor.timeout);
+	if(HideFullscreenCursor.last)
+		ListenNoMore(HideFullscreenCursor.last);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1569,25 +1775,270 @@ function SetDatapackShortcuts(DP){
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+// AutoRepeat and AutoStop functions
+
+function AutoRepeat(RepeatF,delay){
+	clearTimeout(AutoRepeat[FunctionName(RepeatF)]);
+	AutoRepeat[FunctionName(RepeatF)]=setTimeout(function(){
+		RepeatF();
+		AutoRepeat(RepeatF,delay);
+	},delay);
+}
+
+function AutoStop(RepeatF,delay){
+	clearTimeout(AutoRepeat[FunctionName(RepeatF)]);
+	setTimeout(function(){
+		clearTimeout(AutoRepeat[FunctionName(RepeatF)]);
+	},delay);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Cycle
+
+function ArrayHash(array){
+	return "hash"+JSON.stringify(array).replace(/[^\w]|\d/g,"");
+}
+
+function CyclePosition(array){
+	var arrayhash=ArrayHash(array);
+	if(!Cycle.hashArray||!In(Cycle.hashArray,arrayhash))
+		return 0;
+	else
+		return Cycle.hashArray[arrayhash];
+}
+
+function Cycle(array,n,bounded){
+	var arrayhash="hash"+JSON.stringify(array).replace(/[^\w]|\d/g,"");
+	if(!Cycle.hashArray)
+		Cycle.hashArray={};
+
+	if(!In(Cycle.hashArray,arrayhash))
+		Cycle.hashArray[arrayhash]=0;
+	else{
+		var i=(Cycle.hashArray[arrayhash]+n);
+
+		if(bounded===true)
+			i=Math.max(Math.min(i,array.length-1),0);
+		else
+			i=i%(array.length);
+
+		Cycle.hashArray[arrayhash]=i;
+	}
+	return array[Cycle.hashArray[arrayhash]];
+}
+
+function CycleStay(array){
+	return Cycle(array,0);
+}
+
+function CycleNext(array){
+	return Cycle(array,1);
+}
+
+function CyclePrev(array){
+	return Cycle(array,-1);
+}
+
+function CycleNextBounded(array){
+	return Cycle(array,1,true);
+}
+
+function CyclePrevBounded(array){
+	return Cycle(array,-1,true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//Image
+var ImageExtensions=["apng","bmp","gif","ico","cur","jpg","jpeg","jfif","pjpeg","pjp","png","svg","tif","tiff","webp"];
+
+function LoadImage(fullpath){
+	var loaded=LoadData(fullpath)!==undefined;
+	if(loaded){
+		if(IsGif){
+			gifID=GenerateId();
+			loaded=ImageHTML({attributes:{id:gifID,src:fullpath,onload:'StartGIF('+gifID+')'}});
+		}
+		else
+			loaded=ImageHTML({attributes:{src:fullpath}});
+	}
+	else{
+		console.log("no image found at: ",fullpath);
+		loaded="";
+	}
+	return loaded;
+}
+
+function IsImageReference(ref){
+	return ImageExtensions.some(function(ext){return ref.replace("."+ext,"")!==ref});
+}
+
+//GIF Pause Support
+function IsGif(ref){
+	return ref.replace(".gif","")!==ref;
+}
+
+function StartGIF(gid){
+	var g=GetElement(gid);
+
+	RemoveElement(GetElementIn("CANVAS",g.parentElement));
+	var c=AddElement("<canvas></canvas>",g.parentElement);
+
+	Hide(g);
+	ResizeGIF();
+	c.addEventListener('resize',ResizeGIF);
+	ListenOnce('click',PlayGif(c,gid),c);
+
+	function ResizeGIF(){
+		var g=GetElement(gid);
+		var c=g.nextSibling;
+		var ctx=c.getContext('2d');
+		var w=g.width;
+		var h=g.height;
+		c.width=w;
+		c.height=h;
+		DrawImage({
+			"elem":g,
+			"width":w,
+			"height":h
+		})(ctx);
+
+		var s=(w*h)**0.5/3;
+
+		DrawPolygon({
+			"size":s/2,
+			"fillColor":getComputedStyle(c)["color"],
+			"strokeColor":getComputedStyle(c)["background-color"],
+			"lineWidth":s/20,
+			"n":1,
+			x:w/2,
+			y:h/2
+		})(ctx);
+
+		DrawPolygon({
+			"size":s/2*0.8,
+			"fillColor":getComputedStyle(c)["background-color"],
+			"n":3,
+			x:w/2,
+			y:h/2
+		})(ctx);
+
+	}
+
+}
+
+function PlayGif(c,gid){
+	return function(){
+		var g=GetElement(gid);
+		function SG(){
+			return StartGIF(gid)
+		}
+		ListenOnce('click',SG,g);
+		Show(g);
+		Hide(c);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Canvas Drawing
+
+function DrawImage(txtObj){
+	if(!txtObj.elem)
+		return console.log("no image element in",txtObj);
+
+	var elem=txtObj.elem;
+	var x=txtObj.x?txtObj.x:0;
+	var y=txtObj.y?txtObj.y:0;
+	var width=txtObj.width?txtObj.width:100; //Improve these defaults
+	var height=txtObj.height?txtObj.height:100;
+
+	return function(ctx){
+		ctx.drawImage(elem,x,y,width,height);
+	}
+}
+
+function DrawPolygon(txtObj){
+	var strokeColor=txtObj.strokeColor?txtObj.strokeColor:getComputedStyle(document.body)["strokeColor"];
+	var fillColor=txtObj.fillColor?txtObj.fillColor:getComputedStyle(document.body)["background-strokeColor"];
+
+	var x=txtObj.x?txtObj.x:0;
+	var y=txtObj.y?txtObj.y:0;
+	var size=txtObj.size?txtObj.size:100;
+
+	var lineWidth=txtObj.lineWidth?txtObj.lineWidth:size/20;
+
+	var n=txtObj.n?txtObj.n:3;				//Number of sides
+	var startAngle=txtObj.startAngle?txtObj.startAngle:0;		//StartAngle
+
+	return function(ctx){
+		ctx.beginPath();
+		if(n>=3){
+			for (var i=0;i<n;i++){
+				var angle=startAngle+i*Math.PI*2/n;
+				var xpos=x+size*Math.cos(angle);
+				var ypos=y+size*Math.sin(angle);
+				ctx.lineTo(xpos,ypos);
+			}
+		}
+		else{
+			ctx.arc(x,y,size,0,Math.PI*2);
+		}
+		ctx.closePath();
+		ctx.fillStyle=fillColor;
+		ctx.fill();
+
+		if(txtObj.lineWidth){
+			ctx.lineWidth = lineWidth;
+			ctx.strokeStyle=strokeColor;
+			ctx.stroke();
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//Reduce
+
+function Accumulate(acc,val){return acc+val};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Game Bar
 
-////////////////////////////////////////////////////////////////////////////////
-// Game Bar
+function UndoButton(){
+	var undo=!state.metadata.noundo?ButtonHTML({txt:'↶',attributes:{
+		onclick:'UndoAndFocus();',
+		onmousedown:'AutoRepeat(UndoAndFocus,250);',
+		ontouchstart:'AutoRepeat(UndoAndFocus,250);',
+		onmouseup:'AutoStop(UndoAndFocus);',
+		ontouchend:'AutoStop(UndoAndFocus);',
+		ontouchcancel:'AutoStop(UndoAndFocus);'
+		}}):"";
+	return undo;
+}
+
+function MuteButton(){
+	if(Playlist().length<1)
+		return "";
+	else{
+		canYoutube=false;
+		return ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}});
+	}
+}
 
 function GameBar(targetIDsel){
-	var undo=!state.metadata.noundo?ButtonOnClickHTML('↶','CheckRegisterKey({keyCode:85});GameFocus();'):"";
 	var restart=!state.metadata.norestart?ButtonOnClickHTML('↺','CheckRegisterKey({keyCode:82});GameFocus();'):"";
 
 	var buttons=[
 		//ButtonLinkHTML("How to play?"),
-		undo,
+		HintButton(),
+		UndoButton(),
 		restart,
 		ButtonHTML({txt:"Select level",attributes:{onclick:'RequestLevelSelector();',id:'LevelSelectorButton'}}),
 		//ButtonLinkHTML("Credits"),
-		// ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
-		ButtonHTML({txt:"◱",attributes:{onclick:'FullscreenToggle("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
+		MuteButton(),
+		ButtonHTML({txt:"◱",attributes:{onclick:'RequestGameFullscreen();GameFocus();',id:'FullscreenButton'}}),
 	].join("");
 
 	return ButtonBar(buttons,"GameBar");
@@ -1613,6 +2064,10 @@ function GameFocus(DP){
 	keyActions=keyActionsGame;
 };
 
+function UndoAndFocus(){
+	CheckRegisterKey({keyCode:85});
+	GameFocus();
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1642,7 +2097,7 @@ function HasLevel(){
 }
 
 
-// Localsave = save in local storage
+//Localsave = save in local storage
 function LocalsaveLevel(curlevel){
 	if(savePermission){
 		localStorage[DocumentURL()+"_solvedlevels"]=JSON.stringify(SolvedLevelScreens());
@@ -1659,7 +2114,19 @@ function LocalsaveCheckpoints(newstack){
 		EraseLocalsaveCheckpoints();
 }
 
+function LocalsaveHints(){
+	if(savePermission&&Hints())
+		localStorage[DocumentURL()+"_hintsused"]=JSON.stringify(Hints.used);
+}
+
+function Localsave(){
+	LocalsaveLevel(curlevel);
+	LocalsaveHints();
+	//LocalsaveCheckpoints();
+}
+
 function EraseLocalsaveLevel(){
+	localStorage.removeItem(DocumentURL()+"_solvedlevels");
 	return localStorage.removeItem(DocumentURL());
 };
 
@@ -1667,25 +2134,36 @@ function EraseLocalsaveCheckpoints(){
 	return localStorage.removeItem(DocumentURL()+"_checkpoint");
 };
 
+function EraseLocalsaveHints(){
+	return localStorage.removeItem(DocumentURL()+"_hintsused");
+}
+
 function EraseLocalsave(){
-	return CanSaveLocally()&&(EraseLocalsaveLevel(),EraseLocalsaveCheckpoints());
+	return CanSaveLocally()&&(EraseLocalsaveLevel(),EraseLocalsaveCheckpoints(),EraseLocalsaveHints());
 }
 
 
 // Load from memory
 function LoadLevel(){
+
 	var sls=localStorage[DocumentURL()+"_solvedlevels"];
 	if(sls)
 		SolvedLevelScreens.levels=JSON.parse(sls).map(Number);
+
 	return curlevel=localStorage[DocumentURL()];
 }
-
 
 function LocalloadCheckpoints(){
 	var storeddata=localStorage[DocumentURL()+"_checkpoint"];
 	var sta=storeddata?JSON.parse(storeddata):[];
 	sta=sta.dat?[sta]:sta;	//data compatibility (converts single checkpoint to array if needed)
 	return sta;
+}
+
+function LoadHints(){
+	var h=localStorage[DocumentURL()+"_hintsused"];
+	if(h)
+		return Hints.used=JSON.parse(h).map(Number);
 }
 
 function GetCheckpoints(){
@@ -1857,10 +2335,13 @@ function LevelNumber(curlevel){
 	return LevelScreens().filter(function(l){return l<curlevel}).length+1;
 }
 
+function CurLevelNumber(){
+	return LevelNumber(curlevel);
+}
 
 
 var LevelLookahead=0;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
-var bossLevels=[1, 6, 19, 31, 42, 52, 54, 55]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
+var gateLevels=[]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
 
 function UnlockedLevels(){
 	if(LevelLookahead<1){
@@ -1870,11 +2351,11 @@ function UnlockedLevels(){
 		var lvl=LevelNumber(FirstUnsolvedScreen());
 		var lookahead=1;
 		while(lookahead<=LevelLookahead&&lvl<=Levels().length){
-			if(In(bossLevels,lvl)&&lookahead>1) //Don't reveal boss level until all previous levels are solved
+			if(In(gateLevels,lvl)&&lookahead>1) //Don't reveal gate level until all previous levels are solved
 				break;
 			else if(!LevelSolved(lvl)){
 				showlevels=showlevels.concat(lvl);
-				if(In(bossLevels,lvl))          //Don't reveal more levels while boss level unsolved
+				if(In(gateLevels,lvl))          //Don't reveal more levels while gate level unsolved
 					break;
 				else
 					lookahead++;
@@ -1907,7 +2388,8 @@ function RequestLevelSelector(){
 			questionname:LevelSelectorTitle(),
 			qfield:"level",
 			qchoices:UnlockedLevels().map(StarLevelNumber),
-			defaultChoice:function(i,c){return Number(c)===LevelNumber(curlevel)}
+			executeChoice:ChooseLevelClose,
+			defaultChoice:function(i,c){return UnstarLevel(c)===CurLevelNumber()}
 		}
 	}
 	else{
@@ -1917,6 +2399,7 @@ function RequestLevelSelector(){
 			questionname:"Reached checkpoints:",
 			qfield:"level",
 			qchoices:checkpointIndices.map(function(l){return (Number(l)+1)+"";}),
+			executeChoice:ChooseLevelClose,
 			defaultChoice:function(i,c){return Number(c)===checkpointIndices.length}
 		}
 	}
@@ -1933,17 +2416,21 @@ function RequestLevelSelector(){
 				qonclose:FocusAndResetFunction(RequestLevelSelector,GameFocus),
 				qdisplay:LaunchBalloon,
 				qtargetid:ParentSelector(gameSelector),
-				shortcutExtras:extraShortcutsF,
+				shortcutExtras:LevelSelectorShortcutsF,
 				requireConnection:false,
 				buttonSelector:"LevelSelectorButton"
 			});
 	}
 
-	function extraShortcutsF(DP){
-		return {
+	function LevelSelectorShortcutsF(DP){
+		return FuseObjects(
+			ShortcutsBasicF(DP),
+			{
 			"L":function(){Close(DP.qid)},
-			"left":function(){ FocusPrev(function(bu){SelectLevel(UnstarLevel(bu.innerHTML))})},
-			"right":function(){FocusNext(function(bu){SelectLevel(UnstarLevel(bu.innerHTML))})},
+			"left":FocusPrev,
+			"up":FocusNext,
+			"right":FocusNext,
+			"down":FocusPrev,
 			"1":function(){DelayLevel(1)},
 			"2":function(){DelayLevel(2)},
 			"3":function(){DelayLevel(3)},
@@ -1954,7 +2441,7 @@ function RequestLevelSelector(){
 			"8":function(){DelayLevel(8)},
 			"9":function(){DelayLevel(9)},
 			"0":function(){DelayLevel(0)}
-		}
+		})
 	};
 
 	OpenerCloser(RequestLevelSelector,RequestLevelSelectorIndeed,GameFocus);
@@ -1969,38 +2456,57 @@ function MaxLevelDigits(){
 function StarLevelNumber(n){
 	var m=n+"";
 	var padding="0".repeat(MaxLevelDigits()-m.length);
-	return padding+m+(LevelSolved(n)?"★":"");
+	var star="★";
+	if(Hints()&&UsedHints(n)!==0)
+		star="☆";
+	return padding+m+(LevelSolved(n)?star:"");
 }
 function StarLevel(l){
 	var n=LevelNumber(l);
 	return StarLevelNumber(n);
 }
 function UnstarLevel(l){
-	return Number(l.replace("★",""));
+	return Number(l.replace("★","").replace("☆",""));
 }
 
 function LoadLevelFromDP(DP){
-	var lvl=UnstarLevel(FindData('level',DP.qid));
-	SelectLevel(lvl);
+	ChooseLevel(FindData('level',DP.qid));
+};
+
+function ChooseLevelClose(choice,pid){
+	ChooseLevel(choice);
+	Close(pid);
+};
+
+function ChooseLevel(choice){
+	SelectLevel(UnstarLevel(choice))
 };
 
 function SelectLevel(lvl){
-	if(!HasCheckpoint()){
-		//Goes to exactly after the level prior to the chosen one, to read all useful messages, including level title
-		lvl=lvl<2?0:(LevelScreens()[lvl-2]+1);
-		GoToScreen(lvl);
-	}
-	else{
+	if(HasCheckpoint())
 		GoToScreenCheckpoint(lvl);
-	}
+	else if(In(UnlockedLevels(),lvl))
+		SelectUnlockedLevel(lvl);
+	else
+		console.log("Level "+lvl+" locked!");
+}
+
+function SelectUnlockedLevel(lvl){
+	//Don't return to same level
+	if(lvl===CurLevelNumber()&&!titleScreen)
+		return console.log("stay in lvl ",lvl);
+
+	//Go to exactly after the level prior to the chosen one, to read all useful messages, including level title
+	var n=lvl<2?0:(LevelScreens()[lvl-2]+1);
+	GoToScreen(n);
 };
 
+
 function GoToScreenCheckpoint(n){
-	if(HasCheckpoint()){
-		LoadCheckpoint(n);
-		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
-		canvasResize();
-}};
+	LoadCheckpoint(n);
+	loadLevelFromStateTarget(state,curlevel,curlevelTarget);
+	canvasResize();
+};
 
 function GoToScreen(lvl){
 	curlevel=lvl;
@@ -2011,14 +2517,14 @@ function GoToScreen(lvl){
 
 // Keyboard to Pick Level - records multiple digits within a 2000 ms timeframe to select the level
 
-function IsLevel(n){
-	return In(Levels(),Number(n));
+function IsUnlockedLevel(n){
+	return In(UnlockedLevels(),Number(n));
 }
 
 function DelayLevel(n){
 	clearTimeout(DelayLevel.timer);
 	var t=Date.now();
-	if((!DelayLevel.lastTime)||(t-DelayLevel.lastTime>2000)||!IsLevel(DelayLevel.level+""+n)){ //Restart
+	if((!DelayLevel.lastTime)||(t-DelayLevel.lastTime>2000)||!IsUnlockedLevel(DelayLevel.level+""+n)){ //Restart
 		DelayLevel.level=""+n;
 		DelayLevel.lastTime=Date.now();
 		var n=Number(DelayLevel.level);
@@ -2031,11 +2537,11 @@ function DelayLevel(n){
 
 	FocusElement("choice-"+StarLevelNumber(n));
 
-	DelayLevel.timer=setTimeout(function(){
+	/*DelayLevel.timer=setTimeout(function(){
 		SelectLevel(n);
 		DelayLevel.lastTime=undefined;
 		DelayLevel.level="";
-	},2000);
+	},2000);*/
 }
 
 
@@ -2160,10 +2666,32 @@ keyActionsGame={
 	82:InstructGame,
 	// Esc
 	27:InstructGame,
-	70:function(){FullscreenToggle(ParentSelector(gameSelector))},		//F
+	70:RequestGameFullscreen,	//F
+	72:RequestHint,				//H
 	76:RequestLevelSelector, 	//L
 	77:ToggleCurrentSong		//M
 }
+
+function RequestGameFullscreen(){
+	FullscreenToggle(ParentSelector(gameSelector));
+}
+
+function CloseBeforeF(DP,F){
+	return function(){
+		Close(DP.qid);
+		F()
+	}
+};
+
+function ShortcutsBasicF(DP){
+
+	return {
+		"H":CloseBeforeF(DP,RequestHint),
+		"F":RequestGameFullscreen,
+		"L":CloseBeforeF(DP,RequestLevelSelector),
+		"M":ToggleCurrentSong
+	}
+};
 
 //Execute key instructions
 function CheckRegisterKey(event){
@@ -2664,6 +3192,227 @@ function ReplaceColours(stylesheet){
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+//Hints
+
+function Hints(lvl){
+	if(!Hints.cached){
+		Hints.cached=LoadHintsFile();
+		if(Hints.cached){
+			Hints.cached=ParseHintsFile(Hints.cached);
+			if(!LoadHints())
+				Hints.used=Hints.cached.map(function(x){return 0}); //will add 1s progressively as used
+		}
+	}
+
+	if(lvl===undefined)
+		return Hints.cached;
+	else
+		return Hints.cached[lvl-1];
+}
+
+Hints.path="";			//Place the folder path here, e.g. https://example.com/hints/
+hintFileFullPath=Hints.path+pageIdentifier()+".txt"		//Hint files should match the page html filename, but ending in ."txt"
+
+function LoadHintsFile(){
+	if(!LoadHintsFile.loaded){
+		LoadHintsFile.loaded=true;
+		LoadHintsFile.file=LoadData(Hints.path+pageIdentifier()+".txt");
+	}
+	return LoadHintsFile.file;
+}
+
+function HintDisplay(reference){
+	var fullpath=Hints.path+pageIdentifier()+"/"+reference.replace(/\s*/,"");
+	if(IsImageReference(fullpath)){
+		var img=LoadImage(fullpath);
+		if(img!=="")
+			return img;
+	}
+	return "<p>"+reference+"</p>";
+}
+
+function ParseHintsFile(hintstxt){//ignore most whitespace at junctions
+	var hintsperlevel=hintstxt.split(/(?:\n\s*)(?:\n\s*)+/); //Two or more newlines separate level items. Lines starting by level... are ignored
+	hintsperlevel=hintsperlevel.filter(function(h){return h!=="";}); //ignore empty blocks
+
+	function ParseHintParagraph(hintparagraph){ //One hint per line
+		var hintslines=hintparagraph.replace(/(?:^level.*)/i,"");
+		hintslines=hintslines.split(/\n\s*/);
+
+		hintslines=hintslines.map(ParseHintLine);
+
+		if(hintslines[0]==="")
+			hintslines.shift();
+
+		return hintslines;
+	}
+
+	function ParseHintLine(hintline){ //Remove numeric indicators, optionally split by full stops
+		return hintline.replace(/^(\d+)(\.\d+)*\s*/,"")
+	}
+
+	hintsperlevel=hintsperlevel.map(ParseHintParagraph);
+
+	for(var i=hintsperlevel.length;i<Levels().length;i++)
+		hintsperlevel[i]=[];
+
+	return hintsperlevel
+}
+
+
+
+function CurrentLevelHints(){
+	return Hints(CurLevelNumber());
+}
+
+function SeeHint(lvl,hintN){
+	if(UsedHints(lvl)<hintN&&Hints(lvl).length>=hintN&&!LevelSolved(lvl)){
+		Hints.used[lvl-1]=hintN;
+		LocalsaveHints();
+	}
+}
+
+function AvailableHints(lvl){
+	if(lvl===undefined) //Global
+		return Levels().map(AvailableHints).reduce(Accumulate);
+	else				//In particular level
+		return	Hints(lvl).length;
+}
+
+function UsedHints(lvl){
+	if(lvl===undefined) //Global
+		return Levels().map(UsedHints).reduce(Accumulate);
+	else				//In particular level
+		return	Hints.used[lvl-1];
+}
+
+function HintButton(){
+	if(Hints()===undefined)
+		return "";
+	else
+		return ButtonHTML({txt:"⚿",attributes:{onclick:'RequestHint();',id:'HintButton'}});
+}
+
+function CloseHint(){
+	Close(RequestHint.id);
+}
+
+function RequestNextHint(){
+	CycleNextBounded(CurrentLevelHints());
+	CloseHint();
+	setTimeout(RequestHint,500);
+}
+
+function RequestPrevHint(){
+	CyclePrevBounded(CurrentLevelHints());
+	CloseHint();
+	setTimeout(RequestHint,500);
+}
+
+function HintShortcutsBasicF(DP){
+	return FuseObjects(ShortcutsBasicF(DP),{
+		"H":function(){Close(DP.qid)}
+	})
+};
+
+
+function HintShortcutsLevelF(DP){
+
+	return FuseObjects(HintShortcutsBasicF(DP),{
+		"left":ClickPrevBounded,
+		"up":ClickNextBounded,
+		"right":ClickNextBounded,
+		"down":ClickPrevBounded
+	});
+};
+
+function RequestHint(){
+	if(!Hints())
+		return console.log("hints file not found");
+
+	var HintShortcutsF=HintShortcutsBasicF;
+
+	if(!RequestHint.requested||titleScreen){
+		RequestHint.requested=Hints().map(function(hl){return hl.map(function(x){return false;})});
+		var tip=CycleNextBounded([
+			"<p>Welcome to the <b>Hint Service</b>.</p><p>Press <b>⚿</b> or <b>H</b> anytime to reveal a hint!</p>",
+			"You got this! Now go ahead and play!"
+			]);
+		var DFOpts={questionname:tip};
+		var DPFields=[['plain',DFOpts]];
+	}
+	else if(ScreenMessage(curlevel)){
+		var tip=CycleNext([
+		"Just relax and have fun!",
+		"Send Pedro PSI feedback by pressing ✉, anytime!",
+		"Remember to pause once in a while!",
+		"If you like this game, share it with your friends!"]);
+		var DFOpts={questionname:"<b>General tip:</b> "+HintDisplay(tip)};
+		var DPFields=[['plain',DFOpts]];
+	}
+	else{
+		var curlevelHints=CurrentLevelHints();
+
+		if(curlevelHints.length===0) //Substitute for no hints
+			curlevelHints=["Sorry! No hints for this level... but you can do it!"];
+
+		var tip=CycleStay(curlevelHints);
+		tip=HintDisplay(tip);
+
+		var p=CyclePosition(curlevelHints);
+		SeeHint(CurLevelNumber(),p+1);
+
+		var navichoices=["◀","OK","▶"];
+		var naviactions={
+			"◀":RequestPrevHint,
+			"▶":RequestNextHint,
+			"OK":CloseHint
+		};
+
+		if(p===0){
+			navichoices.shift();
+			delete naviactions["◀"];
+		}
+		if(p===curlevelHints.length-1){
+			navichoices.pop();
+			delete naviactions["▶"];
+		}
+
+		var DFOpts={questionname:tip};
+		var DPFields=[
+			['plain',DFOpts],
+			['navi',{
+				qchoices:navichoices,
+				executeChoice:function(choice,pid){
+					if(In(naviactions,choice))
+						naviactions[choice]();
+				}
+			}]
+		];
+
+		HintShortcutsF=HintShortcutsLevelF;
+	}
+
+	function RequestHintIndeed(){
+		RequestDataPack(DPFields,
+			{
+				qid:RequestHint.id,
+				actionvalid:CloseHint,
+				qonsubmit:FocusAndResetFunction(RequestHint,GameFocus),
+				qonclose:FocusAndResetFunction(RequestHint,GameFocus),
+				qdisplay:LaunchBalloon,
+				qtargetid:ParentSelector(gameSelector),
+				shortcutExtras:HintShortcutsF,
+				requireConnection:false,
+				buttonSelector:"HintButton"
+			});
+	};
+
+	OpenerCloser(RequestHint,RequestHintIndeed,GameFocus);
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Adding the bar and its behaviours
@@ -2673,6 +3422,7 @@ function LoadGameBar(gameSelector){
 	AddGameBar(gameSelector);
 	PlaylistStartPlay();
 	GameFocus();
+	LoadStyle(stylesheet,gameSelector);
 }
 
 
@@ -2688,8 +3438,41 @@ function LoadStyle(styleSheet,gameSelector){
 	if((typeof replaceColours)!=="undefined"&&(replaceColours===true))
 		stylesheet=ReplaceColours(stylesheet);
 
-	ListenOnce('load',function(){AddElement("<style>"+stylesheet+"</style>",'head');});
+	AddElement("<style>"+stylesheet+"</style>",'head');
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//Data Reception
+
+//Fetch data from url
+function LoadDataMaybe(url){
+	var data;
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", url, false);
+    rawFile.onreadystatechange = function (){
+        if(rawFile.readyState === 4){
+            if(rawFile.status === 200 || rawFile.status == 0){
+                data = rawFile.responseText;
+            }
+        }
+    }
+    rawFile.send(null);
+	return data;
+};
+
+function LoadData(url){
+	if(LoadData[url]){
+		console.log("(cached data:",url,")");
+		return LoadData[url];
+	}
+	try{
+		return LoadData[url]=LoadDataMaybe(url);
+	}
+	catch(errorDummy){
+		return undefined;
+	}
+};
+
 
 //Remove mobile tab
 ListenOnce('load',function(){RemoveElement(".tab")});
@@ -2700,4 +3483,3 @@ var gameSelector="#gameCanvas";
 var replaceColours=true;
 
 LoadGameBar(gameSelector);
-LoadStyle(stylesheet,gameSelector);
