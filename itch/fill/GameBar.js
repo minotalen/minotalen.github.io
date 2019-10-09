@@ -1,22 +1,3 @@
-/*
-	Game Bar by Pedro PSI
-	https://pedropsi.github.io/puzzlescript-game-bar#source
-	///////////////////////////////////////////////////////////////////////////////
-
-	MIT License
-
-
-	Copyright (c) 2019 Pedro PSI
-
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-	The above copyright notice, the above URL and this permission notice shall be included in all copies or substantial portions of the Software.
-
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-*/
-
-
 var stylesheet="/*\
   Game Bar Theme by Pedro PSI\
   https://pedropsi.github.io/puzzlescript-game-bar#source\
@@ -41,23 +22,19 @@ var stylesheet="/*\
 .game-container:full-screen #gameCanvas{\
     height:calc(96vh);\
 }\
-/*Correct footer in PS export*/\
-.footer{\
-	top:93%;\
-	bottom:7%;\
-}\
 /*Styles*/\
 :root{\
-    --t:0.90;\
-    --white:rgba(255,255,255,var(--t));         /*#FFF*/\
-    --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
-    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
-    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
-    --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
-    --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
-    --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
+    --t:0.85;\
+    --white:rgba(68, 111, 212, var(--t));         /*#FFF*/\
+    --liiightblue:rgba(44, 152, 230, var(--t))    /*#f1f1f1*/;\
+    --gray:rgba(22, 22, 22,var(--t))          /*#070070*/;\
+    --yellow:rgba(235, 245, 103 ,var(--t))             /*#000FFF*/;\
+    --strongYell:rgba(238, 250, 77 ,var(--t))             /*#000FFF*/;\
+    --lightblue:rgba(35, 69, 157, var(--t))      /*#1982ed*/;\
+    --turquoise:rgba(35, 66, 139, var(--t))      /*#3bf8de*/;\
+    --blue:rgba(30, 83, 176, var(--t))   /*#fff9c9*/;\
   --font:Arial, sans-serif;\
-  --duration:1s;\
+  --duration:0.45s;\
     --scaling:2;\
     --basis-width:calc(1vw);\
     --basis-height:calc(1vh);\
@@ -103,16 +80,16 @@ body{\
     align-items:stretch;\
     border-color:currentColor;\
     border-width:var(--h-2);\
-    color:var(--darkblue);\
+    color:var(--strongYell);\
 }\
 \
 .button:hover,.button:active,.button:focus,\
 .button:hover a,.button:active a,.button:focus a,\
 .selected{\
-    color:var(--turquoise);\
+    color:var(--blue);\
     text-decoration-color:currentColor;\
     text-decoration-style:solid ;\
-    background-color:var(--darkblue);\
+    background-color:var(--blue);\
     transition-duration:var(--duration);\
     cursor:pointer;\
     outline:none;\
@@ -130,7 +107,7 @@ h4{\
 }\
 h4{\
     --scaling:0.85;\
-    text-decoration-color:var(--lightblue);\
+    text-decoration-color:var(--blue);\
 }\
 @media only screen and (max-width:250px){\
     h1, h2, h3, h4, h5, h6, p, table{\
@@ -139,11 +116,11 @@ h4{\
 }\
 ::-selection{\
     background:var(--smokewhite);\
-    color:var(--blue);\
+    color:var(--yellow);\
 }\
 ::-moz-selection{\
     background:var(--smokewhite);\
-    color:var(--blue);\
+    color:var(--yellow);\
 }\
 @media only screen and (max-width:350px){\
     .buttonbar{\
@@ -154,7 +131,7 @@ h4{\
     background-color:var(--smokewhite);\
     max-width:80%;\
     text-align:center;\
-    color:var(--blue);\
+    color:var(--yellow);\
     border-bottom-style:solid;\
     padding:var(--h-2) var(--w2) var(--h-2) var(--w2);\
     margin:var(--h1) var(--w2) var(--h1) var(--w1);\
@@ -167,9 +144,7 @@ h4{\
     color:inherit;\
     transition-duration:var(--duration);\
 }\
-.button:hover a\
-.button:active a\
-.button:focus a{\
+.button:hover a{\
     background-color:transparent;\
     transition-duration:var(--duration);\
 }\
@@ -209,7 +184,7 @@ h4{\
   margin-left:var(--w1);\
     padding:var(--h1)  var(--w1)  var(--h1)  var(--w1);\
     min-width:calc(var(--w4) + 30px);\
-    background-color:var(--smokewhite);\
+    background-color:var(--smokewhite); \
 }\
 .buttonrow{\
     flex-direction:row;\
@@ -225,12 +200,10 @@ h4{\
     align-self:stretch;\
     background-color:var(--white);\
 }\
-.buttonrow .button:hover,\
-.buttonrow .button:active,\
-.buttonrow .button:focus {\
-    background-color:var(--darkblue);\
+.buttonrow .button:hover, .buttonrow .button:active{\
+    background-color:var(--turquoise);\
     border-bottom-color:currentColor;\
-    color:var(--turquoise);\
+    color:var(--liiightblue);\
 }\
 \
 .buttonbar{\
@@ -246,9 +219,9 @@ h4{\
     border-bottom-width:var(--h-2);\
 }\
 .selected.button{\
-    background-color:var(--blue);\
+    background-color:var(--lightblue);\
     border-color:currentColor;\
-    color:var(--turquoise);\
+    color:var(--yellow);\
 }\
 \
 #Console{\
@@ -262,7 +235,7 @@ h4{\
 }\
 #Console .message{\
     pointer-events:all;\
-    background-color:var(--lightyellow);\
+    background-color:var(--blue);\
     color:var(--lightblue);\
     border-bottom:var(--h1) solid currentColor;\
     margin-bottom:var(--h2);\
@@ -287,9 +260,15 @@ h4{\
 }\
 .button.pulsating,\
 .button.pulsating:hover, .button.pulsating:active, .button.pulsating:focus{\
-    background-color: var(--blue);\
+    background-color: var(--yellow);\
     --duration:0.001s;\
 ";
+
+
+
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1859,8 +1838,8 @@ function LevelNumber(curlevel){
 
 
 
-var LevelLookahead=0;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
-var bossLevels=[1, 6, 19, 31, 42, 52, 54, 55]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
+var LevelLookahead=3;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
+var bossLevels=[1, 12]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
 
 function UnlockedLevels(){
 	if(LevelLookahead<1){

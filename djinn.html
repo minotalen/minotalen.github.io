@@ -1,0 +1,181 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+body,td, div,p{font-family:monospace;font-size:10pt;
+               color:#feb8da; cursor:default; background:transparent}
+
+body{padding-left:200px;background:#000;}
+
+div{border-style:solid;border-width:0px;border-color:#25538b;}
+#contextmenu{position:absolute;top:0px;left:0px;}
+table{border-collapse:collapse;}
+
+* {
+     user-select: none;
+    -khtml-user-select: none;
+    -o-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+}
+
+::selection { background: transparent;color:inherit; }
+::-moz-selection { background: transparent;color:inherit; }
+</style>
+</head>
+<body onload="init();"></body>
+<script>
+    function init(){
+        rows = ["Erna","Granhild","Helmut","Erna","Granhild","Helmut","Erna","Granhild","Helmut"];
+        strTable = "";
+        for(c = 0; c < rows.length; c++){
+       strTable += "<tr class=tr><td>"+c+"</td><td>"+rows[c]+"</td></tr>";
+        }
+        document.getElementsByTagName("body")[0].innerHTML += "<table>"+strTable+"</table>"
++ "<div id=dobj style='position:absolute;top:0px;left:0px;width:16px;height:16px;"
++ "background:transparent;border-width:1px;'>&nbsp;</div>"
++ "<div id=contextmenu style=display:none;border-width:1px;>contextmenu</div>";
+
+        table0 = document.getElementsByTagName("table")[0];
+        tl = table0.offsetLeft;
+        tt = table0.offsetTop;
+        tw = table0.offsetWidth;
+        th = table0.offsetHeight;
+   tr = document.getElementsByTagName("tr");
+offset = [];for(i=0;i<tr.length;i++) offset[i] = tr[i].offsetTop;
+}
+
+    var  ie = document.all;
+    var nn6 = document.getElementById&&!document.all;
+
+
+    function cursorrange(e){
+
+        ex = nn6 ? e.clientX : event.clientX;
+if(ex < sx){rl=ex;rw=sx;}else{rl=sx;rw=ex;}
+  dobj.style.width = parseInt(rw-rl+0) + 'px';
+  dobj.style.left  = parseInt(rl+0)    + 'px';
+
+        ey = nn6 ? e.clientY : event.clientY;
+if(ey < sy){rt=ey;rh=sy}else{rt=sy;rh=ey}
+  dobj.style.height = parseInt(rh-rt+0) + 'px';
+  dobj.style.top    = parseInt(rt+0)    + 'px';
+
+if(rl<tl){
+  if(rl+rw<tl) select_none();
+  else{
+    semi_select();
+  }
+}else if(rl>=tl&&rl<=tl+tw) {
+  semi_select();
+}
+else select_none();
+        /**/
+return false;
+    }/**/
+function select_none(){
+ for(i=0;i<tr.length;i++) un_select(i);
+}
+
+
+
+function semi_select(){
+ if(rt+rh < tt) select_none();
+ else if(rt > tt+th) select_none();
+ else{
+   i = 0;
+while(rt > tt+offset[i]) {un_select(i); i++}
+while(rt+rh > tt+offset[i]) {select(i); i++}
+while(i<tr.length)       {un_select(i); i++}
+ }
+}
+
+
+
+function un_select(i){
+ tr[i].style.background = "transparent"; // new_selection[i] = false;
+}
+function select(i){
+ tr[i].style.background = "#c00";
+}
+
+
+    document.onmousedown = startSelect;
+selection = false;
+function startSelect(e){
+
+        sx = nn6 ? e.clientX : event.clientX;
+        sy = nn6 ? e.clientY : event.clientY;
+        with(dobj.style){
+    left = sx + "px";
+             top  = sy + "px";
+        width = "0px";
+height = "0px";
+}alpha("dobj",100)
+selection = true;
+        document.onmousemove = cursorrange;
+        document.onmouseup = function() {
+        document.onmousemove = "";
+             alphaRun("dobj",100,0,400);
+   }
+    }
+
+
+
+
+
+// Das ist die Stackoverflow Antwort darauf, wie man ein Contextmenu macht
+
+document.onkeydown = keyboardDown;
+document.onkeyup = keyboardUp;
+document.oncontextmenu = function(e){
+ var evt = new Object({keyCode:93});
+ stopEvent(e);
+ keyboardUp(evt);
+}
+function stopEvent(event){
+ if(event.preventDefault != undefined)
+  event.preventDefault();
+ if(event.stopPropagation != undefined)
+  event.stopPropagation();
+}
+function keyboardDown(e){
+ if(e.keyCode == 93)alert()
+}
+function keyboardUp(e){
+ if(e.keyCode == 93){
+  with(document.getElementById("contextmenu").style){
+   left = ex + "px";
+   top  = ey + "px";
+   display = "block";
+  }
+ }
+}
+
+
+
+
+
+function alpha(id_a,o_p){
+  if(document.getElementById){
+    with(document.getElementById(id_a).style){
+      filter="alpha(opacity="+o_p+")";
+      KhtmlOpacity=(o_p/100);
+      MozOpacity=(o_p/100);
+      opacity=(o_p/100);
+}}}
+
+
+function alphaRun(id,oStart,oEnd,milliSec){
+  speed = Math.round(milliSec/100);
+  timer = 0;
+
+  if(oStart>oEnd){
+for(al=oStart;al>=oEnd;al--){
+window.setTimeout("alpha('"+id+"',"+al+")",(timer*speed));
+        timer++}}
+
+  else if(oStart<oEnd){
+for(al=oStart;al<=oEnd;al++){
+window.setTimeout("alpha('"+id+"',"+al+")",(timer*speed));
+        timer++}}
+}
+</script></html>

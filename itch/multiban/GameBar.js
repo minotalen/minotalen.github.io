@@ -48,13 +48,13 @@ var stylesheet="/*\
 }\
 /*Styles*/\
 :root{\
-    --t:0.90;\
-    --white:rgba(255,255,255,var(--t));         /*#FFF*/\
-    --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
-    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
-    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
-    --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
-    --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
+    --t:0.950;\
+    --darkblue:rgba(255,128,213,var(--t))          /*#070070*/;\
+    --white:rgba(66,66,66,var(--t));         /*#FFF*/\
+    --smokewhite:rgba(133,133,133,var(--t))    /*#f1f1f1*/;\
+    --blue:rgba(241,241,241,var(--t))             /*#000FFF*/;\
+    --lightblue:rgba(55, 55, 55,var(--t))      /*#1982ed*/;\
+    --turquoise:rgba(12,12,12,var(--t))      /*#3bf8de*/;\
     --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
   --font:Arial, sans-serif;\
   --duration:1s;\
@@ -196,8 +196,8 @@ h4{\
 .baloon-content{\
     flex-direction:row;\
     justify-content:flex-start;\
-    background-color:var(--white);\
-    border-bottom:var(--h1) solid var(--turquoise);\
+    background-color:var(--smokewhite);\
+    border-bottom:var(--h1) solid var(--white);\
     padding:var(--h2) var(--w2) var(--h2) var(--w2);\
     align-items:center;\
 }\
@@ -209,7 +209,7 @@ h4{\
   margin-left:var(--w1);\
     padding:var(--h1)  var(--w1)  var(--h1)  var(--w1);\
     min-width:calc(var(--w4) + 30px);\
-    background-color:var(--smokewhite);\
+    background-color:var(--white);\
 }\
 .buttonrow{\
     flex-direction:row;\
@@ -290,6 +290,11 @@ h4{\
     background-color: var(--blue);\
     --duration:0.001s;\
 ";
+
+
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -382,21 +387,6 @@ function GetElement(selector,pSelector){
 	else
 		return selector; //in case the actual element is given in the beginning
 };
-
-//Inside
-
-function InsideAt(parentSelector,selector){
-	console.log(GetElement(parentSelector),GetElement(selector));
-	return Inside(parentSelector,selector)||GetElement(parentSelector).isEqualNode(GetElement(selector));
-}
-
-function Inside(parentSelector,selector){
-	return GetElement(parentSelector).contains(GetElement(selector));
-}
-
-function Outside(parentSelector,selector){
-	return !InsideAt(parentSelector,selector);
-}
 
 // Get element based on selectors: .class, tag, or the element itself
 function GetElements(selectorString){
@@ -652,10 +642,7 @@ function RequestDataPack(NamedFieldArray,Options){
 
 		DP.qdisplay(DP);
 
-		Select(DP.buttonSelector);		//Activate button
-		FocusInside("#"+DP.qid); 		//Focus on first question
-		setTimeout(function(){ListenOutside("click",function(){Close(DP.qid)},DP.qid)},500); //Click outside to close
-
+		FocusInside("#"+DP.qid); //Focus on first question
 		SetDatapackShortcuts(DP);
 
 		return DP;
@@ -865,19 +852,16 @@ function CloseThis(ev,thi,targetIDsel){
 
 function Close(targetid){
 	//First tries to find the next item to open, then closes
-	var DP=GetDataPack(targetid);
-	if(typeof DP!=="undefined"){
-		Deselect(DP.buttonSelector);
-		var ClosingF=DP.qonclose;
+	if(typeof GetDataPack(targetid)!=="undefined"){
+		var ClosingF=FindData("qonclose",targetid);
 		if(typeof ClosingF!=="undefined")
-			ClosingF(DP);
+			ClosingF(GetDataPack(targetid));
 	}
 	CloseElement(targetid);
 }
 
 function CloseAndContinue(DP){
 	var NextF=DP.qonsubmit;
-	Deselect(DP.buttonSelector);
 	if(typeof NextF!=="undefined")
 		NextF(DP);
 	CloseElement(DP.qid);
@@ -909,7 +893,7 @@ function FocusInside(targetIDsel){
 	if(Focusable(e)){
 		e.focus();
 		return true;
-	}else if(Classed(GetElement(".selected",targetIDsel),"selected")&&GetElement(".selected",targetIDsel).parentNode.isEqualNode(GetElement(targetIDsel))){
+	} else if(Classed(GetElement(".selected",targetIDsel),"selected")){
 		GetElement(".selected",targetIDsel).focus();
 		return true;
 	}else{
@@ -927,7 +911,6 @@ function FocusInside(targetIDsel){
 		return found;
 	}
 };
-
 
 function FocusPrev(F){
 	var prev=document.activeElement.previousSibling;
@@ -959,17 +942,6 @@ function ListenOnce(ev,fun,target){
 	ev.map(function(e){target.addEventListener(e,F)})
 }
 
-function ListenOutside(ev,fun,targe){
-	if(typeof ev==="string") //Defaults to array in case a single string is
-		ev=[ev];
-	function F(eve){
-		if(Outside(targe,eve.target)){
-			fun();
-			ev.map(function(e){window.removeEventListener(e,F)})
-		}
-	}
-	ev.map(function(e){window.addEventListener(e,F)})
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data submission in forms
@@ -1196,7 +1168,7 @@ function ConsoleAdd(messageHTML,wait,duration){
 }
 
 function ConsoleLoad(selector){
-	var selector=selector||ParentSelector(gameSelector);
+	var selector=selector||'.main';
 	RemoveElement("Console");
 	AddElement('<div id="Console"></div>',selector);
 }
@@ -1227,7 +1199,6 @@ function LaunchConsoleMessage(DP){
 function LaunchConsoleThanks(DP){
 	ConsoleAdd(DP.thanksmessage);
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1287,10 +1258,14 @@ function PauseSong(song){
 function ResumeSong(song){
 	if((typeof song!=="undefined")&&song.paused){
 		song.play();
-		ConsoleAdd("Resumed playing ♫♪♪ ");
+		ConsoleAdd("Resumed playing ♫♪♪ "+NameSong(song));
 		Unmute();
 		window.addEventListener("blur", PlaylistSleep);
 	}
+}
+
+function NameSong(song){
+	return pageRelativePath(song.src).replace(/.*\//,"").replace(/\.mp3$/,"").replace(/\.wav$/,"").replace(/\.ogg$/,"").replace(/\%20/g," ");
 }
 
 function PlayNextF(song){
@@ -1584,9 +1559,9 @@ function GameBar(targetIDsel){
 		//ButtonLinkHTML("How to play?"),
 		undo,
 		restart,
-		ButtonHTML({txt:"Select level",attributes:{onclick:'RequestLevelSelector();',id:'LevelSelectorButton'}}),
+		ButtonOnClickHTML("Select level",'RequestLevelSelector()'),
 		//ButtonLinkHTML("Credits"),
-		// ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
+		//ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
 		ButtonHTML({txt:"◱",attributes:{onclick:'FullscreenToggle("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
 	].join("");
 
@@ -1608,12 +1583,9 @@ function AddGameBar(targetIDsel){
 /////////////////////////////////////////////////////////////////////////////////////
 // Focus on Game Canvas
 function GameFocus(DP){
-	document.activeElement.blur();
 	window.Mobile.GestureHandler.prototype.fakeCanvasFocus();
 	keyActions=keyActionsGame;
 };
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Save permissions
@@ -1860,7 +1832,7 @@ function LevelNumber(curlevel){
 
 
 var LevelLookahead=0;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
-var bossLevels=[1, 6, 19, 31, 42, 52, 54, 55]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
+var bossLevels=[]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
 
 function UnlockedLevels(){
 	if(LevelLookahead<1){
@@ -1893,18 +1865,11 @@ function UnlockedLevelScreens(){
 
 // Level Selector
 
-function LevelSelectorTitle(){
-	if(UnlockedLevels().length!==LevelScreens().length)
-		return "Access "+UnlockedLevels().length+" out of "+LevelScreens().length+" levels";
-	else
-		return "Access one of the "+LevelScreens().length+" levels"
-}
-
 function RequestLevelSelector(){
 	if(!HasCheckpoint()){
 		var type="level";
 		var DPOpts={
-			questionname:LevelSelectorTitle(),
+			questionname:"Access "+UnlockedLevels().length+" out of "+LevelScreens().length+" levels",
 			qfield:"level",
 			qchoices:UnlockedLevels().map(StarLevelNumber),
 			defaultChoice:function(i,c){return Number(c)===LevelNumber(curlevel)}
@@ -1934,8 +1899,7 @@ function RequestLevelSelector(){
 				qdisplay:LaunchBalloon,
 				qtargetid:ParentSelector(gameSelector),
 				shortcutExtras:extraShortcutsF,
-				requireConnection:false,
-				buttonSelector:"LevelSelectorButton"
+				requireConnection:false
 			});
 	}
 
@@ -2671,7 +2635,6 @@ function ReplaceColours(stylesheet){
 function LoadGameBar(gameSelector){
 	StopCapturingKeys(onKeyDown);ResumeCapturingKeys(OnKeyDownGame);
 	AddGameBar(gameSelector);
-	PlaylistStartPlay();
 	GameFocus();
 }
 

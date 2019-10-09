@@ -41,21 +41,17 @@ var stylesheet="/*\
 .game-container:full-screen #gameCanvas{\
     height:calc(96vh);\
 }\
-/*Correct footer in PS export*/\
-.footer{\
-	top:93%;\
-	bottom:7%;\
-}\
 /*Styles*/\
 :root{\
-    --t:0.90;\
-    --white:rgba(255,255,255,var(--t));         /*#FFF*/\
-    --smokewhite:rgba(241,241,241,var(--t))    /*#f1f1f1*/;\
-    --darkblue:rgba(7,0,112,var(--t))          /*#070070*/;\
-    --blue:rgba(0,15,255,var(--t))             /*#000FFF*/;\
-    --lightblue:rgba(25,130,237,var(--t))      /*#1982ed*/;\
-    --turquoise:rgba(59,248,222,var(--t))      /*#3bf8de*/;\
-    --lightyellow:rgba(255,249,201,var(--t))   /*#fff9c9*/;\
+    --t:0.85;\
+    --white:rgba(68, 111, 212, var(--t));         /*#FFF*/\
+    --liiightblue:rgba(44, 152, 230, var(--t))    /*#f1f1f1*/;\
+    --gray:rgba(22, 22, 22,var(--t))          /*#070070*/;\
+    --yellow:rgba(235, 245, 103 ,var(--t))             /*#000FFF*/;\
+    --strongYell:rgba(238, 250, 77 ,var(--t))             /*#000FFF*/;\
+    --lightblue:rgba(35, 69, 157, var(--t))      /*#1982ed*/;\
+    --turquoise:rgba(35, 66, 139, var(--t))      /*#3bf8de*/;\
+    --blue:rgba(30, 83, 176, var(--t))   /*#fff9c9*/;\
   --font:Arial, sans-serif;\
   --duration:1s;\
     --scaling:2;\
@@ -103,16 +99,16 @@ body{\
     align-items:stretch;\
     border-color:currentColor;\
     border-width:var(--h-2);\
-    color:var(--darkblue);\
+    color:var(--strongYell);\
 }\
 \
 .button:hover,.button:active,.button:focus,\
 .button:hover a,.button:active a,.button:focus a,\
 .selected{\
-    color:var(--turquoise);\
+    color:var(--blue);\
     text-decoration-color:currentColor;\
     text-decoration-style:solid ;\
-    background-color:var(--darkblue);\
+    background-color:var(--blue);\
     transition-duration:var(--duration);\
     cursor:pointer;\
     outline:none;\
@@ -130,7 +126,7 @@ h4{\
 }\
 h4{\
     --scaling:0.85;\
-    text-decoration-color:var(--lightblue);\
+    text-decoration-color:var(--blue);\
 }\
 @media only screen and (max-width:250px){\
     h1, h2, h3, h4, h5, h6, p, table{\
@@ -139,11 +135,11 @@ h4{\
 }\
 ::-selection{\
     background:var(--smokewhite);\
-    color:var(--blue);\
+    color:var(--yellow);\
 }\
 ::-moz-selection{\
     background:var(--smokewhite);\
-    color:var(--blue);\
+    color:var(--yellow);\
 }\
 @media only screen and (max-width:350px){\
     .buttonbar{\
@@ -154,7 +150,7 @@ h4{\
     background-color:var(--smokewhite);\
     max-width:80%;\
     text-align:center;\
-    color:var(--blue);\
+    color:var(--yellow);\
     border-bottom-style:solid;\
     padding:var(--h-2) var(--w2) var(--h-2) var(--w2);\
     margin:var(--h1) var(--w2) var(--h1) var(--w1);\
@@ -167,9 +163,7 @@ h4{\
     color:inherit;\
     transition-duration:var(--duration);\
 }\
-.button:hover a\
-.button:active a\
-.button:focus a{\
+.button:hover a{\
     background-color:transparent;\
     transition-duration:var(--duration);\
 }\
@@ -209,7 +203,7 @@ h4{\
   margin-left:var(--w1);\
     padding:var(--h1)  var(--w1)  var(--h1)  var(--w1);\
     min-width:calc(var(--w4) + 30px);\
-    background-color:var(--smokewhite);\
+    background-color:var(--smokewhite); \
 }\
 .buttonrow{\
     flex-direction:row;\
@@ -225,12 +219,10 @@ h4{\
     align-self:stretch;\
     background-color:var(--white);\
 }\
-.buttonrow .button:hover,\
-.buttonrow .button:active,\
-.buttonrow .button:focus {\
-    background-color:var(--darkblue);\
+.buttonrow .button:hover, .buttonrow .button:active{\
+    background-color:var(--turquoise);\
     border-bottom-color:currentColor;\
-    color:var(--turquoise);\
+    color:var(--liiightblue);\
 }\
 \
 .buttonbar{\
@@ -246,9 +238,9 @@ h4{\
     border-bottom-width:var(--h-2);\
 }\
 .selected.button{\
-    background-color:var(--blue);\
+    background-color:var(--lightblue);\
     border-color:currentColor;\
-    color:var(--turquoise);\
+    color:var(--yellow);\
 }\
 \
 #Console{\
@@ -262,7 +254,7 @@ h4{\
 }\
 #Console .message{\
     pointer-events:all;\
-    background-color:var(--lightyellow);\
+    background-color:var(--blue);\
     color:var(--lightblue);\
     border-bottom:var(--h1) solid currentColor;\
     margin-bottom:var(--h2);\
@@ -287,19 +279,15 @@ h4{\
 }\
 .button.pulsating,\
 .button.pulsating:hover, .button.pulsating:active, .button.pulsating:focus{\
-    background-color: var(--blue);\
+    background-color: var(--yellow);\
     --duration:0.001s;\
 ";
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //Do nothing
 function Identity(){return;};
-
-///////////////////////////////////////////////////////////////////////////////
-//Find in Array
-function In(array,n){return array.indexOf(n)>=0;};
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //Join Objects, overwriting conflicting properties
@@ -345,7 +333,7 @@ function MakeElement(html){
 HTMLTags=['!DOCTYPE','a','abbr','acronym','abbr','address','applet','embed','object','area','article','aside','audio','b','base','basefont','bdi','bdo','big','blockquote','body','br','button','canvas','caption','center','cite','code','col','colgroup','colgroup','data','datalist','dd','del','details','dfn','dialog','dir','ul','div','dl','dt','em','embed','fieldset','figcaption','figure','figure','font','footer','form','frame','frameset','h1','h6','head','header','hr','html','i','iframe','img','input','ins','kbd','label','input','legend','fieldset','li','link','main','map','mark','meta','meter','nav','noframes','noscript','object','ol','optgroup','option','output','p','param','picture','pre','progress','q','rp','rt','ruby','s','samp','script','section','select','small','source','video','audio','span','strike','del','s','strong','style','sub','summary','details','sup','svg','table','tbody','td','template','textarea','tfoot','th','thead','time','title','tr','track','video','audio','tt','u','ul','var','video','wbr'];
 
 function IsTag(selector){
-	return In(HTMLTags,selector);
+	return HTMLTags.indexOf(selector)>=0;
 }
 function IsClass(selector){
 	return selector.replace(/^\./,"")!==selector;
@@ -366,48 +354,16 @@ function ParentSelector(targetIDsel){
 }
 
 // Get element based on selectors: .class, #id, idsring, or the element itself
-function GetElement(selector,pSelector){
-	if(pSelector){
-		pSelector=GetElement(pSelector);
-	} else {
-		pSelector=document;
-	}
-
+function GetElement(selector){
 	if(typeof selector==="string"){
 		if(IsQuerySelector(selector))
-			return pSelector.querySelector(selector);
+			return document.querySelector(selector);
 		else
-			return pSelector.getElementById(selector);
+			return document.getElementById(selector);
 	}
 	else
 		return selector; //in case the actual element is given in the beginning
 };
-
-//Inside
-
-function InsideAt(parentSelector,selector){
-	console.log(GetElement(parentSelector),GetElement(selector));
-	return Inside(parentSelector,selector)||GetElement(parentSelector).isEqualNode(GetElement(selector));
-}
-
-function Inside(parentSelector,selector){
-	return GetElement(parentSelector).contains(GetElement(selector));
-}
-
-function Outside(parentSelector,selector){
-	return !InsideAt(parentSelector,selector);
-}
-
-// Get element based on selectors: .class, tag, or the element itself
-function GetElements(selectorString){
-	var HTMLCollect;
-	if(IsClass(selectorString))
-		HTMLCollect=document.getElementsByClassName(selectorString.replace(/^\./,""));
-	else if (IsTag(selectorString))
-		HTMLCollect=document.getElementsByTagName(selectorString);
-	return Array.prototype.slice.call(HTMLCollect);
-};
-
 
 // Add new element to page, under a parent element
 function AddElement(html,parentIDsel){
@@ -478,9 +434,6 @@ function ButtonHTML(optionsObj){
 
 	var ao=o.attributes['onclick'];
 	o.attributes['onclick']="PulseSelect(this);"+(ao?ao:"");
-	o.attributes['onkeydown']="ExecuteShortcut(this,event)";
-
-	o.attributes['tabindex']="0";
 
 	return ElementHTML(o)
 };
@@ -502,6 +455,7 @@ function ButtonLinkHTML(title){
 
 function CloseButtonHTML(targetid){
 	return "<div class='closer'>"+ButtonHTML({tag:"span",txt:"&times;",attributes:{onclick:'Close(\"'+targetid+'\")'}})+"</div>";
+	//return '<span class="button closer" onclick="Close(\''+targetid+'\')">&times;</span>'
 }
 
 function OkButtonHTML(targetid){
@@ -544,8 +498,6 @@ function DefaultDataField(){
 		qtype:PlainHTML,				//Format of question :receives a DataField
 		qplaceholder:"❤ Pedro PSI ❤",	//Placeholder answer
 
-		shortcuts:Identity,				//Special shortcuts
-
 		qsubmittable:true, 				//whether the element expects submission (true) or merely presents information (false)
 		qrequired:true,
 		qvalidator:IdentityValidator,	//Receives a DataField
@@ -556,20 +508,10 @@ function DefaultDataField(){
 function DefaultChoice(index,choicetxt){return String(index)===String(0);}//choicetxt gives this function flexibility
 
 function DefaultDataPack(){
-	function DPShortcutDefaults(DP){return {
-			"escape":function(){Close(DP.qid);},
-			"enter":function(){CheckSubmit(DP.qid);}
-			//"ctrl+enter":function(){CheckSubmit(DP.qid);},   //even in inputs, etc...
-		};
-	};
-
 	return {
 		fields:[],
 
 		qid:GenerateId(),				//id
-
-		destination:'Feedback',			//Name of data repository
-		requireConnection:true,			//Does it need a connection?
 
 		action:'CheckSubmit', 			//action on submit :receives a qid
 		actionvalid:Identity,	//action on valid submit: receives a DataPack
@@ -582,10 +524,9 @@ function DefaultDataPack(){
 		qonclose:Identity,				//Next modal on close (defaults to nothing): receives a DataPack
 		thanksmessage:"Submitted. Thank you!",
 
-		shortcuts:DPShortcutDefaults,	//Base shortcuts (all else is deleted)
+		shortcuts:DPShortcutDefauts,	//Base shortcuts (all else is deleted)
 		shortcutExtras:function(DP){return {};}	//Extended shortcuts, to use ad-hoc
 	}
-
 }
 
 function NewDataField(obj){
@@ -652,11 +593,9 @@ function RequestDataPack(NamedFieldArray,Options){
 
 		DP.qdisplay(DP);
 
-		Select(DP.buttonSelector);		//Activate button
-		FocusInside("#"+DP.qid); 		//Focus on first question
-		setTimeout(function(){ListenOutside("click",function(){Close(DP.qid)},DP.qid)},500); //Click outside to close
-
+		FocusElement("#"+DP.qid+" textarea, "+"#"+DP.qid+" input"); //First question
 		SetDatapackShortcuts(DP);
+
 
 		return DP;
 	}
@@ -680,18 +619,14 @@ function ChoiceHTML(dataField,buttontype){
 
 function ExclusiveChoiceButtonRowHTML(dataField){
 	function ExclusiveChoiceButtonHTML(choice,dataFiel,i){
-		var args='(\"'+dataFiel.qfield+'\",\"'+choice+'\",\"'+dataFiel.pid+'\")';
-		var SelectF='ToggleThisOnly(event,this);SwitchData'+args;
-		var buAttribs={'onclick':SelectF,'onfocus':SelectF,'ondblclick':SelectF+';CheckSubmit(\"'+dataFiel.pid+'\")',id:"choice-"+choice};
-		var bu;
+		var selected="";
+		var args='(\''+dataFiel.qfield+'\',\''+choice+'\',\''+dataFiel.pid+'\')';
 		//console.log(i,choice,typeof i);
 		if(dataFiel.defaultChoice(i,choice)){
-			bu=ButtonHTML({txt:choice,attributes:FuseObjects(buAttribs,{class:"selected",onload:'SetData'+args})});
+			selected=' selected" onload="SetData'+args; //Default option
 			SetData(dataFiel.qfield,choice,dataFiel.pid);//Actualy choose it
 		}
-		else
-			bu=ButtonHTML({txt:choice,attributes:buAttribs});
-		return bu;
+		return '<div class="button'+selected+'" onclick="ToggleThisOnly(event,this);SwitchData'+args+'">'+choice+'</div>';
 	};
 	//console.log(dataField.qfield);console.log(dataField.pid);
 	ClearData(dataField.qfield,dataField.pid);
@@ -750,6 +685,17 @@ function OpenBalloon(content,id,targetid){
 	AddElement(BalloonHTML(content,id),targetid);
 }
 
+function CloseBalloonIn(targetid){
+	var ballon=GetElement(targetid).querySelector(".balloon");
+	if(ballon){
+		Close(ballon.id);
+	}
+}
+
+function HasBalloon(targetid){
+	var i=GetElement(targetid);
+	return (i.querySelector(".balloon")!==null);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Opener & Closer Functions with focus option,
@@ -774,27 +720,26 @@ function OpenerCloser(RequestF,ContinueF,FocusF){
 	}
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Toggling class & buttons
 
 function ToggleThis(ev,thi){
 	if(ev.target.id===thi.id)
-		Toggle(thi);
+		thi.classList.toggle("selected");
 }
 
 function ToggleThisOnly(ev,thi){
 	var siblings=thi.parentNode.childNodes;
 	var i=0;
 	while (i<siblings.length){
-		if(siblings[i]!==thi)
-			Deselect(siblings[i]);
-		else
-			Select(siblings[i]);
+		if(siblings[i]!==thi){
+		siblings[i].classList.remove("selected");}
+		else{
+		siblings[i].classList.remove("selected");
+		siblings[i].classList.toggle("selected");}
 		i++;
 	}
 }
-
 
 // Select, Deselect and Toggle - given selector or element itself
 
@@ -819,12 +764,6 @@ function Deselect(selectorE,clas){
 		e.classList.remove(clas);
 }
 
-function Classed(selectorE,clas){
-	var clas=clas||'selected';
-	var e=GetElement(selectorE);
-	return e&&e.classList.contains(clas);
-}
-
 function Toggle(selectorE,clas){
 	var clas=clas||'selected';
 	var e=GetElement(selectorE);
@@ -842,6 +781,7 @@ function PulseSelect(selectorE){
 
 ////////////////////////////////////////////////////////////////////////////////
 // Closing functions
+
 
 function CloseElement(targetIDsel){
 	var fading=GetElement(targetIDsel);
@@ -865,19 +805,16 @@ function CloseThis(ev,thi,targetIDsel){
 
 function Close(targetid){
 	//First tries to find the next item to open, then closes
-	var DP=GetDataPack(targetid);
-	if(typeof DP!=="undefined"){
-		Deselect(DP.buttonSelector);
-		var ClosingF=DP.qonclose;
+	if(typeof GetDataPack(targetid)!=="undefined"){
+		var ClosingF=FindData("qonclose",targetid);
 		if(typeof ClosingF!=="undefined")
-			ClosingF(DP);
+			ClosingF(GetDataPack(targetid));
 	}
 	CloseElement(targetid);
 }
 
 function CloseAndContinue(DP){
 	var NextF=DP.qonsubmit;
-	Deselect(DP.buttonSelector);
 	if(typeof NextF!=="undefined")
 		NextF(DP);
 	CloseElement(DP.qid);
@@ -894,57 +831,6 @@ function FocusElement(targetIDsel){
 };
 
 
-function FocusableInput(e){
-	return In(["INPUT","TEXTAREA"],e.tagName);
-}
-function Focusable(e){
-	return FocusableInput(e)||Classed(e,"button");//List of element and classes
-}
-function UnFocusable(e){
-	return Classed(e,"closer")||Classed(e,"logo");
-}
-
-function FocusInside(targetIDsel){
-	var e=GetElement(targetIDsel);
-	if(Focusable(e)){
-		e.focus();
-		return true;
-	}else if(Classed(GetElement(".selected",targetIDsel),"selected")&&GetElement(".selected",targetIDsel).parentNode.isEqualNode(GetElement(targetIDsel))){
-		GetElement(".selected",targetIDsel).focus();
-		return true;
-	}else{
-		var children=e.children;
-		var found=false;
-		var i=0;
-		while(!found&&i<children.length){
-			if(UnFocusable(children[i])){
-				found=false;
-			} else {
-				found=FocusInside(children[i]);
-			}
-			i++;
-		}
-		return found;
-	}
-};
-
-
-function FocusPrev(F){
-	var prev=document.activeElement.previousSibling;
-	if(prev===null)
-		prev=document.activeElement.parentElement.lastChild;
-	FocusElement(prev);
-	F(prev);
-}
-
-function FocusNext(F){
-	var next=document.activeElement.nextSibling;
-	if(next===null)
-		next=document.activeElement.parentElement.firstChild;
-	FocusElement(next);
-	F(next);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //Event Listeners
 
@@ -959,17 +845,6 @@ function ListenOnce(ev,fun,target){
 	ev.map(function(e){target.addEventListener(e,F)})
 }
 
-function ListenOutside(ev,fun,targe){
-	if(typeof ev==="string") //Defaults to array in case a single string is
-		ev=[ev];
-	function F(eve){
-		if(Outside(targe,eve.target)){
-			fun();
-			ev.map(function(e){window.removeEventListener(e,F)})
-		}
-	}
-	ev.map(function(e){window.addEventListener(e,F)})
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data submission in forms
@@ -1039,7 +914,7 @@ function NodeHasData(field,node){
 }
 
 function NodeGetData(field,node){
-	if(FocusableInput(node)&&typeof node.dataset[field]!=="undefined")
+	if((["INPUT","TEXTAREA"].indexOf(node.tagName)>=0)&&typeof node.dataset[field]!=="undefined")
 		return (node.value)
 	else
 		return (node.dataset[field]);
@@ -1070,7 +945,7 @@ function OverwriteDataInNode(type,node,newdata){
 }
 
 function NodeOverwriteData(field,node,newdata){
-	if(FocusableInput(node)&&typeof node.dataset[field]!=="undefined")
+	if((["INPUT","TEXTAREA"].indexOf(node.tagName)>=0)&&typeof node.dataset[field]!=="undefined")
 		return (node.value=newdata);
 	else
 		return (node.dataset[field]=newdata);
@@ -1148,8 +1023,12 @@ function SwitchData(field,value,id){
 	SetData(field,value,id);
 }
 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Form Validators and Modifiers
+
+// Form Validators
 
 function IdentityValidator(DF){return {valid:true,error:"no errors"};}
 
@@ -1196,7 +1075,7 @@ function ConsoleAdd(messageHTML,wait,duration){
 }
 
 function ConsoleLoad(selector){
-	var selector=selector||ParentSelector(gameSelector);
+	var selector=selector||'.main';
 	RemoveElement("Console");
 	AddElement('<div id="Console"></div>',selector);
 }
@@ -1213,7 +1092,7 @@ function ConsoleAddOnce(messageHTML,wait,duration){
 	if(!ConsoleAddOnce.messages)
 		ConsoleAddOnce.messages=[];
 
-	if(!In(ConsoleAddOnce.messages,messageHTML)){
+	if(ConsoleAddOnce.messages.indexOf(messageHTML)<0){
 		ConsoleAdd(messageHTML,wait,duration)
 		ConsoleAddOnce.messages.push(messageHTML);
 	}
@@ -1228,117 +1107,6 @@ function LaunchConsoleThanks(DP){
 	ConsoleAdd(DP.thanksmessage);
 }
 
-
-
-///////////////////////////////////////////////////////////////////////////////
-//Music Control
-
-//Playlist
-function Playlist(i){
-	if(typeof Playlist.p==="undefined"){
-		Playlist.p=GetElements('.music');
-		Playlist.l=Playlist.p.length;
-	}
-	if(typeof i ==="undefined"){
-		return Playlist.p;
-	}
-	else{
-		Playlist.current=i%Playlist.l;
-		return Playlist.p[Playlist.current];
-	}
-}
-
-function PlaylistStartPlay(){
-	PlaySong(Playlist(0));
-	//console.log("Music on");
-}
-
-
-//Song
-function Muted(){
-	return !Classed(GetElement("MuteButton"),"selected");
-}
-function Mute(){
-	Deselect("MuteButton");
-}
-function Unmute(){
-	Select("MuteButton");
-}
-
-function PlaySong(song){
-	if((typeof song!=="undefined")&&song.paused){
-		song.play();
-		ListenOnce('ended',PlayNextF(song),song);
-		Unmute();
-		window.addEventListener("blur", PlaylistSleep);
-		//console.log("Now playing: "+song);
-	}
-}
-
-function PauseSong(song){
-	if((typeof song!=="undefined")&&!song.paused){
-		song.pause();
-		ConsoleAdd("Music paused...");
-		Mute();
-		window.removeEventListener("blur", PlaylistSleep);
-	}
-}
-
-function ResumeSong(song){
-	if((typeof song!=="undefined")&&song.paused){
-		song.play();
-		ConsoleAdd("Resumed playing ♫♪♪ ");
-		Unmute();
-		window.addEventListener("blur", PlaylistSleep);
-	}
-}
-
-function PlayNextF(song){
-	return function(){
-		PlaySong(Playlist(Playlist.current+1));
-		song.removeEventListener('ended',PlayNextF);
-		//console.log("Finished playing: "+song);
-	}
-}
-
-
-//Player
-
-function CurrentSong(){
-	return Playlist.p[Playlist.current];
-}
-
-function HasSong(){
-	return (typeof Playlist.current)!=="undefined";
-}
-
-function ToggleCurrentSong(){
-	var song=CurrentSong();
-	if(typeof song==="undefined")
-		ConsoleAdd("Error: can't find the jukebox...");
-	else if(song.paused){
-		ResumeSong(song);
-	}
-	else {
-		PauseSong(song);
-	}
-}
-
-function PlaylistSleep(){
-	if(!Playlist.sleep){
-		Playlist.sleep=true;
-		PauseSong(CurrentSong());
-		window.addEventListener("focus", PlaylistAwaken);
-	}
-}
-
-function PlaylistAwaken(){
-	if(Playlist.sleep){
-		Playlist.sleep=false;
-		ResumeSong(CurrentSong());
-		window.removeEventListener("focus", PlaylistAwaken);
-	}
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1408,7 +1176,7 @@ function FullscreenClose(){
 	};
 }
 
-function FullscreenToggle(targetIDsel){
+function ToggleFullscreen(targetIDsel){
 	if(FullscreenAllowed()){
 		if(document.fullscreenElement||document.webkitFullscreenElement){
 			FullscreenClose();
@@ -1450,13 +1218,9 @@ var KeyCodes={
 	'end':35,
 	'home':36,
 	'left':37,
-	'arrowleft':37,
 	'up':38,
-	'arrowup':38,
 	'right':39,
-	'arrowright':39,
 	'down':40,
-	'arrowdown':40,
 	'select':41,
 	'print':42,
 	'execute':43,
@@ -1529,12 +1293,6 @@ function DeleteShortcut(key){
 	var key=(typeof key==="string")?KeyLookup(key):key;
 	delete keyActions[key];
 }
-function ExecuteShortcut(thi,ev){
-	var key=KeyLookup(ev.key);
-	if(keyActions[key])
-		keyActions[key](thi);
-}
-
 
 //Multiple shortcuts
 function AddShortcuts(keyActionsNew){
@@ -1542,14 +1300,6 @@ function AddShortcuts(keyActionsNew){
 	for(var k in keys){
 		//console.log(keys[k],keyActionsNew[keys[k]].toSource());
 		SetShortcut(keys[k],keyActionsNew[keys[k]]);
-	}
-}
-
-function RemoveShortcuts(keyActionsNew){
-	var keys=Object.keys(keyActionsNew);
-	for(var k in keys){
-		//console.log(keys[k],keyActionsNew[keys[k]].toSource());
-		DeleteShortcut(keys[k]);
 	}
 }
 
@@ -1561,12 +1311,27 @@ function OverwriteShortcuts(keyActionsNew){
 //Datapack Integration
 function SetDatapackShortcuts(DP){
 	OverwriteShortcuts(DP.shortcuts(DP));
-	if(SetDatapackShortcuts.extras){
-		RemoveShortcuts(SetDatapackShortcuts.extras);
-	}
-	SetDatapackShortcuts.extras=DP.shortcutExtras(DP);
-	AddShortcuts(SetDatapackShortcuts.extras);
+	AddShortcuts(DP.shortcutExtras(DP));
 }
+
+function DPShortcutDefauts(DP){
+	return {
+		"escape":function(){Close(DP.qid);},
+		"enter":function(){CheckSubmit(DP.qid);},
+		"tab":function(){console.log("tab shortcut - TODO");}
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1584,13 +1349,25 @@ function GameBar(targetIDsel){
 		//ButtonLinkHTML("How to play?"),
 		undo,
 		restart,
-		ButtonHTML({txt:"Select level",attributes:{onclick:'RequestLevelSelector();',id:'LevelSelectorButton'}}),
+		ButtonOnClickHTML("Select level",'RequestLevelSelector()'),
 		//ButtonLinkHTML("Credits"),
-		// ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
-		ButtonHTML({txt:"◱",attributes:{onclick:'FullscreenToggle("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
+		ButtonHTML({txt:"♫",attributes:{onclick:'ToggleCurrentSong();GameFocus();',id:'MuteButton'}}),
+		ButtonHTML({txt:"◱",attributes:{onclick:'ToggleFullscreen("'+targetIDsel+'");GameFocus();',id:'FullscreenButton'}}),
 	].join("");
 
 	return ButtonBar(buttons,"GameBar");
+}
+
+function ToggleCurrentSong(){
+	var song=CurrentSong();
+	if(typeof song==="undefined")
+		ConsoleAdd("Error: can't find the jukebox...");
+	else if(song.paused){
+		ResumeSong(song);
+	}
+	else {
+		PauseSong(song);
+	}
 }
 
 function AddGameBar(targetIDsel){
@@ -1608,12 +1385,9 @@ function AddGameBar(targetIDsel){
 /////////////////////////////////////////////////////////////////////////////////////
 // Focus on Game Canvas
 function GameFocus(DP){
-	document.activeElement.blur();
 	window.Mobile.GestureHandler.prototype.fakeCanvasFocus();
 	keyActions=keyActionsGame;
 };
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Save permissions
@@ -1674,9 +1448,7 @@ function EraseLocalsave(){
 
 // Load from memory
 function LoadLevel(){
-	var sls=localStorage[DocumentURL()+"_solvedlevels"];
-	if(sls)
-		SolvedLevelScreens.levels=JSON.parse(sls).map(Number);
+	SolvedLevelScreens.levels=JSON.parse(localStorage[DocumentURL()+"_solvedlevels"]).map(Number);
 	return curlevel=localStorage[DocumentURL()];
 }
 
@@ -1785,15 +1557,6 @@ function LevelScreens(){
 	}
 }
 
-function Levels(){
-	return LevelScreens().map(LevelNumber);
-}
-
-function LevelScreen(n){
-	return LevelScreens()[n-1];
-}
-
-
 function SolvedLevelScreens(){
 	if(SolvedLevelScreens.levels===undefined)
 		SolvedLevelScreens.levels=[];
@@ -1809,12 +1572,8 @@ function AddToSolvedScreens(curlevel){
 	return SolvedLevelScreens();
 }
 
-function LevelSolved(n){
-	return LevelScreenSolved(LevelScreen(n));
-}
-
 function LevelScreenSolved(curlevel){
-	return In(SolvedLevelScreens(),curlevel);
+	return SolvedLevelScreens().indexOf(curlevel)>=0
 }
 
 function UnSolvedLevelScreens(){
@@ -1834,15 +1593,15 @@ function FirstUnsolvedScreen(curlevel){
 }
 
 function NextUnsolvedScreen(curlevel){
-	var firstusolve=UnSolvedLevelScreens().filter(function(x){return x>=curlevel;})[0];
-	var lastsolvebefore=UnlockedLevelScreens().filter(function(x){return x<firstusolve;});
+	var firstusolve=UnSolvedLevelScreens().filter(x=>x>=curlevel)[0];
+	var lastsolvebefore=LevelScreens().filter(x=>x<firstusolve);
 	return lastsolvebefore[lastsolvebefore.length-1]+1;
 }
 
 function LastScreen(){return state.levels.length-1;};
 
 function FinalLevelScreen(){
-	var li=UnlockedLevelScreens(); return li[li.length-1];
+	var li=LevelScreens(); return li[li.length-1];
 };
 
 function ClearSolvedLevelScreens(){
@@ -1858,55 +1617,15 @@ function LevelNumber(curlevel){
 }
 
 
-
-var LevelLookahead=0;	//Max number of unsolved levels shown, in linear progression: 0 = all  /
-var bossLevels=[1, 6, 19, 31, 42, 52, 54, 55]; 		//Require beating all previous levels to show up; all previous levels + itself to show levels afterwards
-
-function UnlockedLevels(){
-	if(LevelLookahead<1){
-		return Levels();
-	}else{
-		var showlevels=SolvedLevelScreens().map(LevelNumber);
-		var lvl=LevelNumber(FirstUnsolvedScreen());
-		var lookahead=1;
-		while(lookahead<=LevelLookahead&&lvl<=Levels().length){
-			if(In(bossLevels,lvl)&&lookahead>1) //Don't reveal boss level until all previous levels are solved
-				break;
-			else if(!LevelSolved(lvl)){
-				showlevels=showlevels.concat(lvl);
-				if(In(bossLevels,lvl))          //Don't reveal more levels while boss level unsolved
-					break;
-				else
-					lookahead++;
-			}
-			lvl++;
-		}
-		//console.log(showlevels);
-		return showlevels.sort(function(a,b){return a>b;});
-	}
-}
-
-function UnlockedLevelScreens(){
-	return UnlockedLevels().map(LevelScreen);
-}
-
-
 // Level Selector
-
-function LevelSelectorTitle(){
-	if(UnlockedLevels().length!==LevelScreens().length)
-		return "Access "+UnlockedLevels().length+" out of "+LevelScreens().length+" levels";
-	else
-		return "Access one of the "+LevelScreens().length+" levels"
-}
 
 function RequestLevelSelector(){
 	if(!HasCheckpoint()){
 		var type="level";
 		var DPOpts={
-			questionname:LevelSelectorTitle(),
+			questionname:"Access one of the "+LevelScreens().length+" levels",
 			qfield:"level",
-			qchoices:UnlockedLevels().map(StarLevelNumber),
+			qchoices:LevelScreens().map(StarLevel),
 			defaultChoice:function(i,c){return Number(c)===LevelNumber(curlevel)}
 		}
 	}
@@ -1916,7 +1635,7 @@ function RequestLevelSelector(){
 		var DPOpts={
 			questionname:"Reached checkpoints:",
 			qfield:"level",
-			qchoices:checkpointIndices.map(function(l){return (Number(l)+1)+"";}),
+			qchoices:checkpointIndices.map(l=>(Number(l)+1)+""),
 			defaultChoice:function(i,c){return Number(c)===checkpointIndices.length}
 		}
 	}
@@ -1932,32 +1651,15 @@ function RequestLevelSelector(){
 				qonsubmit:FocusAndResetFunction(RequestLevelSelector,GameFocus),
 				qonclose:FocusAndResetFunction(RequestLevelSelector,GameFocus),
 				qdisplay:LaunchBalloon,
-				qtargetid:ParentSelector(gameSelector),
-				shortcutExtras:extraShortcutsF,
-				requireConnection:false,
-				buttonSelector:"LevelSelectorButton"
+				qtargetid:ParentSelector("GameBar"),
+				shortcutExtras:extraShortcutsF
 			});
 	}
 
-	function extraShortcutsF(DP){
-		return {
-			"L":function(){Close(DP.qid)},
-			"left":function(){ FocusPrev(function(bu){SelectLevel(UnstarLevel(bu.innerHTML))})},
-			"right":function(){FocusNext(function(bu){SelectLevel(UnstarLevel(bu.innerHTML))})},
-			"1":function(){DelayLevel(1)},
-			"2":function(){DelayLevel(2)},
-			"3":function(){DelayLevel(3)},
-			"4":function(){DelayLevel(4)},
-			"5":function(){DelayLevel(5)},
-			"6":function(){DelayLevel(6)},
-			"7":function(){DelayLevel(7)},
-			"8":function(){DelayLevel(8)},
-			"9":function(){DelayLevel(9)},
-			"0":function(){DelayLevel(0)}
-		}
-	};
+	function extraShortcutsF(DP){return {"L":function(){Close(DP.qid)}}};
 
 	OpenerCloser(RequestLevelSelector,RequestLevelSelectorIndeed,GameFocus);
+
 }
 
 function MaxLevelDigits(){
@@ -1965,15 +1667,10 @@ function MaxLevelDigits(){
 		return MaxLevelDigits.m;
 	return MaxLevelDigits.m=Math.ceil(Math.log10(1+LevelScreens().length));
 };
-
-function StarLevelNumber(n){
-	var m=n+"";
-	var padding="0".repeat(MaxLevelDigits()-m.length);
-	return padding+m+(LevelSolved(n)?"★":"");
-}
 function StarLevel(l){
-	var n=LevelNumber(l);
-	return StarLevelNumber(n);
+	var n=LevelNumber(l)+"";
+	var padding="0".repeat(MaxLevelDigits()-n.length);
+	return padding+n+(LevelScreenSolved(l)?"★":"");
 }
 function UnstarLevel(l){
 	return Number(l.replace("★",""));
@@ -1981,62 +1678,28 @@ function UnstarLevel(l){
 
 function LoadLevelFromDP(DP){
 	var lvl=UnstarLevel(FindData('level',DP.qid));
-	SelectLevel(lvl);
-};
-
-function SelectLevel(lvl){
 	if(!HasCheckpoint()){
 		//Goes to exactly after the level prior to the chosen one, to read all useful messages, including level title
 		lvl=lvl<2?0:(LevelScreens()[lvl-2]+1);
-		GoToScreen(lvl);
+		GoToLevel(lvl);
 	}
 	else{
-		GoToScreenCheckpoint(lvl);
+		GoToLevelCheckpoint(lvl);
 	}
 };
 
-function GoToScreenCheckpoint(n){
+function GoToLevelCheckpoint(n){
 	if(HasCheckpoint()){
 		LoadCheckpoint(n);
 		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
 		canvasResize();
 }};
 
-function GoToScreen(lvl){
+function GoToLevel(lvl){
 	curlevel=lvl;
 	AdvanceLevel();
 	canvasResize();
 };
-
-
-// Keyboard to Pick Level - records multiple digits within a 2000 ms timeframe to select the level
-
-function IsLevel(n){
-	return In(Levels(),Number(n));
-}
-
-function DelayLevel(n){
-	clearTimeout(DelayLevel.timer);
-	var t=Date.now();
-	if((!DelayLevel.lastTime)||(t-DelayLevel.lastTime>2000)||!IsLevel(DelayLevel.level+""+n)){ //Restart
-		DelayLevel.level=""+n;
-		DelayLevel.lastTime=Date.now();
-		var n=Number(DelayLevel.level);
-	}
-	else{
-		DelayLevel.level=DelayLevel.level+""+n;
-		DelayLevel.lastTime=Date.now();
-		var n=Number(DelayLevel.level);
-	}
-
-	FocusElement("choice-"+StarLevelNumber(n));
-
-	DelayLevel.timer=setTimeout(function(){
-		SelectLevel(n);
-		DelayLevel.lastTime=undefined;
-		DelayLevel.level="";
-	},2000);
-}
 
 
 // Level Progression
@@ -2054,7 +1717,6 @@ function StartLevelFromTitle(){
 function ResetLevel(){
 	curlevel=0;
 	curlevelTarget=null;
-	SolvedLevelScreens.levels=[];
 }
 
 
@@ -2157,12 +1819,11 @@ keyActionsGame={
 	90:function(ev){ev.keyCode=85;InstructGame(ev)},
 	85:InstructGame,
 	// R
+	70:function(ev){ev.keyCode=70;ToggleFullscreen("'+targetIDsel+'");GameFocus();},
 	82:InstructGame,
 	// Esc
 	27:InstructGame,
-	70:function(){FullscreenToggle(ParentSelector(gameSelector))},		//F
-	76:RequestLevelSelector, 	//L
-	77:ToggleCurrentSong		//M
+	76:RequestLevelSelector 	//L
 }
 
 //Execute key instructions
@@ -2175,13 +1836,13 @@ function InstructGame(event){
 	var key=event.keyCode;
 
 	//Avoid repetition?
-    if (In(keybuffer,key)){
+    if (keybuffer.indexOf(key)>=0) {
     	return;
     }
 
 	//Instruct the game
     if(lastDownTarget === canvas /*|| (window.Mobile && (lastDownTarget === window.Mobile.focusIndicator) )*/ ){
-    	if (!In(keybuffer,key)){
+    	if (keybuffer.indexOf(key)===-1) {
     		keybuffer.splice(keyRepeatIndex,0,key);
 	    	keyRepeatTimer=0;
 	    	CheckRegisterKey(event);
@@ -2198,6 +1859,13 @@ function OnKeyDownGame(event) {
 	else if(keyActions[event.keyCode])
 		keyActions[event.keyCode](event);
 }
+
+
+
+
+
+
+
 
 
 
@@ -2264,11 +1932,35 @@ function level4Serialization() { //Intercept
 
 	return FormerLevel4Serialization();
 }
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //Colour spaces
 
-//RGB & HEX
-function RGB_HEX(hexstring){
+/*
+function Colour(color){
+	var defaultcolor={space:"HEX",color:"#000000"};
+	var color=color?color:defaultcolor;
+	if(typeof color==="string"){
+		color=color.toUpperCase();
+		if (color.replace(/\#?[0123456789ABCDEF]+/)!==color)
+			color={space:"HEX",color="#"+color.replace("#","")}
+		else
+			color=defaultcolor
+	}
+	else{
+		if(typeof color==="object"){
+			if(color.color)
+				if(!color.space)
+
+
+
+}*/
+
+function ToRGB(hexstring){
 	var HEX=hexstring.replace("#","");
 	var l=HEX.length;
 	if(l===3||l===6){
@@ -2279,7 +1971,7 @@ function RGB_HEX(hexstring){
 	}
 	else
 		return [0,0,0];
-};
+}
 
 function To256(AA){
 	if(AA.length>=2)
@@ -2297,7 +1989,7 @@ function ToDecimal(A){
 	return (n===-1)?0:n;
 }
 
-function HEX_RGB(rgbArray){
+function ToHEX(rgbArray){
 	var rgbA=rgbArray.slice(0,3).map(ToHexadecimal);
 	return "#"+rgbA.join("");
 }
@@ -2309,27 +2001,11 @@ function ToHexadecimal(deci){
 	return HEXDECIMAL[big]+HEXDECIMAL[sma];
 }
 
-
-//HSL
-function Lightness(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-	var L=(Math.max(R,G,B)+Math.min(R,G,B))/2/256;
-  return (L*1000-(L*1000)%1)/1000;
+function Brightness(R,G,B){//256
+	return (Math.max(R,G,B)+Math.min(R,G,B))/2/256
 }
 
 function Hue(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-
 	if((R==B)&&(G==B))
 		return 0;
 	if(((R>G)&&(G>=B))||((R>=G)&&(G>B)))
@@ -2348,317 +2024,98 @@ function Hue(R,G,B){//256
 		return 0;
 }
 
-function Chroma(R,G,B){
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-  return (Math.max(R,G,B)-Math.min(R,G,B));
-}
-
 function Saturation(R,G,B){//256
-	if(typeof G==="undefined"){
-		var colour=RGB(R).colour;
-		var R=colour[0];
-		var G=colour[1];
-		var B=colour[2];
-	}
-	var  L=Lightness(R,G,B);
-	if(0<L&&L<1){
-    var S=Chroma(R,G,B)/256/(1-Math.abs(2*L-1));
-    return S;
-  }
+	var  L=Brightness(R,G,B);
+	if(L<1)
+		return (Math.max(R,G,B)-Math.min(R,G,B))/(1-Math.abs(2*L-1))/256;
 	else
 		return 0;
 }
 
-function HSL_RGB(RGB){
+function HSB(RGB){
 	var R=RGB[0];
 	var G=RGB[1];
 	var B=RGB[2];
-	return [Hue(R,G,B),Saturation(R,G,B),Lightness(R,G,B)];
+	return [Hue(R,G,B),Saturation(R,G,B),Brightness(R,G,B)];
+}
+
+function RGB(HSL){
+	var H=HSL[0];
+	var S=HSL[1];
+	var L=HSL[2];
+    var R,G,B;
+    var i=H*6-H*6%1;
+    var f=H*6-i;
+    var p=L*(1-S);
+    var q=L*(1-f*S);
+    var t=L*(1-(1-f)*S);
+    switch(i%6){
+        case 0:R=L,G=t,B=p; break;
+        case 1:R=q,G=L,B=p; break;
+        case 2:R=p,G=L,B=t; break;
+        case 3:R=p,G=q,B=L; break;
+        case 4:R=t,G=p,B=L; break;
+        case 5:R=L,G=p,B=q; break;
+    }
+    return [R*255,G*255,B*255];
 }
 
 
-function RGB_HSL(HSL){
-  var H=HSL[0];
-  var S=HSL[1];
-  var L=HSL[2];
-
-  var C=(1-Math.abs(2*L-1))*S;
-  var H6=(H/60)%6;
-  var X=C*(1-Math.abs(H6%2-1));
-  var M=L-C/2;
-  var R,G,B;
-
-  switch(Math.floor(H6)){
-    case 0:R=C,G=X,B=0; break;
-    case 1:R=X,G=C,B=0; break;
-  case 2:R=0,G=C,B=X; break;
-    case 3:R=0,G=X,B=C; break;
-    case 4:R=X,G=0,B=C; break;
-    case 5:R=C,G=0,B=X; break;
-  }
-
-  return [Math.round((R+M)*255),
-          Math.round((G+M)*255),
-          Math.round((B+M)*255)];
+function Lighten(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.min(hsb[2]*n,1);
+	console.log(hsb[2]);
+	return ToHEX(RGB(hsb));
 }
 
-
-//Colour Manipulation
-function ColourExtract(rgbatxt){
-		var ntxt=rgbatxt.match(/([\d]+\,)+([\d]+)/);
-		var RGBAorHSL=ntxt[0].split(",").map(Number);
-		return RGBAorHSL;
+function Darken(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[2]=Math.max(hsb[2]/n,0);
+	return ToHEX(RGB(hsb));
+}
+/*
+function Saturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.min(hsb[1]*n,1);
+	return ToHEX(RGB(hsb));
 }
 
-function Colour(colour){
-	if(!colour){
-		return {space:'RGB',colour:[0,0,0]};
-  }
-  else if(!colour.colour){
-    return Colour({colour:colour});
-  }
-  else if(!colour.space){
-		var c=colour.colour;
-		if(typeof c==="string"){
-			c=c.toLowerCase();
-			if(c.replace("rgb","")!==c)
-				return {space:'RGB',colour:CompelRGB(ColourExtract(c))};
-			else if(c.replace("hsl","")!==c){
-				return {space:'HSL',colour:CompelHSL(ColourExtract(c))};
-			}else
-				return {space:'HEX',colour:CompelHEX(c)};
-		}
-		else if(typeof c==="object"){
-			c.push[0];c.push[0];c.push[0];
-			if(c[0]>=0&&c[1]>=0&&c[2]>=0&&c[0]<360&&c[1]<=1&&c[2]<=1)
-				return {space:'HSL',colour:CompelHSL(c)};
-			else
-				return {space:'RGB',colour:CompelRGB(c)};
-		}
-    return {space:'RGB',colour:[0,0,0]};
-	}
-	else
-    return colour;
+function Desaturate(HEX,n){
+	var hsb=HSB(ToRGB(HEX));
+	var n=n?n:1.1;
+	hsb[1]=Math.max(hsb[1]/n,0);
+	return ToHEX(RGB(hsb));
 }
 
-function CompelHEX(hexstring){
-	var hexstring=hexstring.replace("#","");
-	if(hexstring.length===0){
-		return "#000000";
-  }
-
-  if(hexstring.length<3){
-		hexstring=hexstring+"0".repeat(3-hexstring.length);
-  }
-
-	if(hexstring.length===3){
-		hexstring=hexstring[0]+"0"+hexstring[1]+"0"+hexstring[2]+"0";
-  }
-	else{
-		hexstring=(hexstring+"000000").slice(0,6);
-  }
-	return "#"+hexstring;
-}
-
-function CompelRGB(rgbarray){
-	var rgbarray=rgbarray;
-	if(rgbarray.length===3){
-		function RBGBind(n){return Math.max(Math.min(n,255.999999999),0);};
-		return rgbarray.map(RBGBind);
-	}
-	else{
-		rgbarray.push(0);rgbarray.push(0);rgbarray.push(0);
-		return CompelRGB(rgbarray.slice(0,3));
-	}
-}
-
-function CompelHSL(rgbarray){
-	var rgbarray=rgbarray;
-	if(rgbarray.length===3){
-		rgbarray[0]=Math.max(Math.min(rgbarray[0],359.999999999),0);
-		rgbarray[1]=Math.max(Math.min(rgbarray[1],1),0);
-		rgbarray[2]=Math.max(Math.min(rgbarray[2],1),0);
-		return rgbarray;
-	}
-	else{
-		rgbarray.push(0);rgbarray.push(0);rgbarray.push(0);
-		return CompelRGB(rgbarray.slice(0,3));
-	}
-}
-
-
-function RGB(colour){
-	var colour=Colour(colour);
-	if(colour.space==="RGB"){
-	  return colour;
-	} else if(colour.space==="HEX"){
-		colour.colour=RGB_HEX(colour.colour);
-	} else if(colour.space==="HSL"){
-		colour.colour=RGB_HSL(colour.colour);
-	} else
-		console.log("Colour space not supported",colour);
-
-	colour.space="RGB";
-	return colour;
-}
-
-function HEX(colour){
-	var colour=Colour(colour);
-	if(colour.space==="HEX")
-		return colour;
-	else{
-		colour.colour=HEX_RGB(RGB(colour).colour);
-		colour.space="HEX";
-		return colour;
-	}
-}
-
-function HSL(colour){
-	var colour=Colour(colour);
-	if(colour.space==="HSL")
-		return colour;
-	else{
-		colour.colour=HSL_RGB(RGB(colour).colour);
-		colour.space="HSL";
-		return colour;
-	}
-}
-
-// Colour modification
-
-function Lighten(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=Math.min(Math.max(c[2]*n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Darken(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=(n===0?1:Math.min(Math.max(c[2]/n,0),1));
-  colour.colour=c;
-  return colour;
-}
-
-function LightenTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function DarkenTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[2]=1-Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Saturate(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=Math.min(Math.max(c[1]*n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Desaturate(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=(n===0?1:Math.min(Math.max(c[1]/n,0),1));
-  colour.colour=c;
-  return colour;
-}
-
-function SaturateTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[1]=Math.min(Math.max(n,0),1);
-  colour.colour=c;
-  return colour;
-}
-
-function Huen(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=(c[0]+n)%360;
-  colour.colour=c;
-  return colour;
-}
-
-function Dehuen(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=(c[0]-n)%360;
-  colour.colour=c;
-  return colour;
-}
-
-function HueTo(colour,n){
-  var colour=HSL(colour);
-  var c=colour.colour;
-  c[0]=n%360;
-  colour.colour=c;
-  return colour;
-}
-
+function ColourRotate(HEX,degrees){
+	var hsb=HSB(ToRGB(HEX));
+	var degrees=degrees?degrees:180;
+	hsb[0]=(hsb[0]+degrees)%256;
+	return ToHEX(RGB(hsb));
+}*/
 
 function ReplaceColours(stylesheet){
 
 	var styleSheet=stylesheet;
 
-	var ForegroundColour=state.fgcolor;
-	var BackgroundColour=state.bgcolor;
+	var BackgroundColour=state.fgcolor;
+	var ForegroundColour=state.bgcolor;
 
-	var PrimaryDark=ForegroundColour;
-	var PrimaryLight=BackgroundColour;
-
-	// Pick the most saturated colour as text colour
-	if(Saturation(BackgroundColour)===0){
-		PrimaryLight=ForegroundColour;
-	}
-	if(Saturation(ForegroundColour)===0){
-		var PrimaryDark=BackgroundColour;
+	if(Brightness(BackgroundColour)<=Brightness(ForegroundColour)){
+		BackgroundColour=state.fgcolor;
+		ForegroundColour=state.bgcolor;
 	}
 
-
-	//Background
-	var Lmax=Lightness(BackgroundColour);
-
-	//Invert in case of dark background
-	if(Lightness(BackgroundColour)<0.5){
-		styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",	HEX(DarkenTo(PrimaryLight,-Lmax*0.50+0.950)).colour);
-		styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",	HEX(DarkenTo(PrimaryLight,-Lmax*0.50+0.925)).colour);
-
-		styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",		HEX(DarkenTo(PrimaryDark,(-Lmax*0.22+0.22))).colour);
-		styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.40+0.40))).colour);
-		styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.51+0.51))).colour);
-		styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.89+0.89))).colour);
-		styleSheet=styleSheet.replace("rgba(70,244,111,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.91+0.91))).colour);
-		styleSheet=styleSheet.replace("rgba(240,248,175,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.93+0.93))).colour);
-		styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",	HEX(DarkenTo(PrimaryDark,(-Lmax*0.95+0.95))).colour);
-	}
-	else{
-		styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",	HEX(LightenTo(PrimaryLight,0.925)).colour);
-		styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",	HEX(LightenTo(PrimaryLight,0.900)).colour);
-
-		styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",		HEX(LightenTo(PrimaryDark,(Lmax*0.22))).colour);
-		styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.40))).colour);
-		styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.51))).colour);
-		styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.92))).colour);
-		styleSheet=styleSheet.replace("rgba(70,244,111,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.93))).colour);
-		styleSheet=styleSheet.replace("rgba(240,248,175,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.94))).colour);
-		styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",	HEX(LightenTo(PrimaryDark,(Lmax*0.95))).colour);
-	}
+	styleSheet=styleSheet.replace("rgba(255,255,255,var(--t))",BackgroundColour);
+	styleSheet=styleSheet.replace("rgba(241,241,241,var(--t))",Darken(BackgroundColour));
+	styleSheet=styleSheet.replace("rgba(7,0,112,var(--t))",Darken(ForegroundColour));
+	styleSheet=styleSheet.replace("rgba(0,15,255,var(--t))",ForegroundColour);
+	styleSheet=styleSheet.replace("rgba(25,130,237,var(--t))",Lighten(ForegroundColour,1.1));
+	styleSheet=styleSheet.replace("rgba(59,248,222,var(--t))",Lighten(ForegroundColour,1.2));
+	styleSheet=styleSheet.replace("rgba(255,249,201,var(--t))",Lighten(ForegroundColour,1.3));
 
 	return styleSheet;
 }
@@ -2671,7 +2128,6 @@ function ReplaceColours(stylesheet){
 function LoadGameBar(gameSelector){
 	StopCapturingKeys(onKeyDown);ResumeCapturingKeys(OnKeyDownGame);
 	AddGameBar(gameSelector);
-	PlaylistStartPlay();
 	GameFocus();
 }
 
@@ -2685,8 +2141,7 @@ function LoadStyle(styleSheet,gameSelector){
 
 	var stylesheet=styleSheet.replace(/\#gameCanvas/g,gameSelector).replace(/\.game\-container/g,"#"+ParentSelector(gameSelector));
 
-	if((typeof replaceColours)!=="undefined"&&(replaceColours===true))
-		stylesheet=ReplaceColours(stylesheet);
+	//stylesheet=ReplaceColours(stylesheet);
 
 	ListenOnce('load',function(){AddElement("<style>"+stylesheet+"</style>",'head');});
 }
@@ -2697,7 +2152,5 @@ ListenOnce('load',function(){RemoveElement(".tab")});
 ////////////////////////////////////////////////////////////////////////////////
 // Locate your game here:
 var gameSelector="#gameCanvas";
-var replaceColours=true;
-
 LoadGameBar(gameSelector);
 LoadStyle(stylesheet,gameSelector);

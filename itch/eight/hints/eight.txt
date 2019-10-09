@@ -1,0 +1,39 @@
+level 2:
+create a line of 2s,
+the line is horizontal
+combine those to the right
+
+level 3:
+make a horizontal line of 3s
+all 2s on the right need to combine left
+the other 2 1s combine down, this formation of 2s is called a J
+
+level 4:
+the two rightmost 1s can only combine in a certain direction
+which means the leftmost 2x2 formation of 2s needs to move out of the way
+the 3s are created to the right of the target 4
+
+level 5:
+you need another 5. where does it need to be created?
+if you know where the 5 has to go, where can you create the 2 4s needed for that?
+all 2s and 3s are combined to the left
+
+level 6:
+the 2 leftmost 1s can't go anywhere but right
+you are looking to recreate a shape of 2s
+because of symmetry this can be either an upside-down L or J
+
+level 7:
+start at the goal and work your way backwards
+when combining the 2 1s, where do you want the 2 to end up?|
+place the 1 from the bank to the left of the other 1
+
+level 8:
+start by making a 3 with the 4 1s
+a 2x2 block of same numbers is called an O.
+dropping the 1 on the target 5 creates an O which combines to the left, then up.
+
+level 9:
+have you thought about combining before you place the 1?
+you want to make an L of 1s
+the nose of the L sits on the target
