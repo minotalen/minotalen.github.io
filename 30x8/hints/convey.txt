@@ -1,23 +1,24 @@
 rules:  combine numbers by pushing into a line of same numbers (1+1,2+2,...) to create the next higher number
 checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
 crushing:  press action on a number to lower it by one. this always has some additional benefit
-crushing a 2 refreshes a counter
-crushing a 3 spawns a 1 on the bank
-crushing a 4 spawns a push item which can push a number one tile far
-crushing a 5 spawns the grow item which can grow a number+1 (with max. value 4)
-crushing a 6 spawns the pick up item which allows you to pick up a number (with max. value 5)
+use you available potential wisely, every time you crush you lose valuable resources!
+crush2.gif
+crush3.gif
+crush4.gif
+crush5.gif
+crush6.gif
 generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1.
-generator lanes can be used to push numbers (sometimes they get jammed by high numbers though).
 combine.gif
-only the generators with a white circle have the potential to spawn after the next combination.
 conveyor1.gif
-using counters on a generator to spawn a 1 in the right moments can help align bigger numbers.
+conveyor2.gif
 
+finesse: standing on an empty tile while combining to a 4 or bigger spawns a 1 under the cursor
 finesse4.gif
-finesse on 7: when you combine a pair of 6s you grow the tile under your cursor +1
-during the making of an ideal eight there are 31 finesse triggers, try not to waste those potential resources!
+this round you have fewer resources, so try not wasting any finesse! making an 8 presents 31 chances to make finesse.
 
 blockades:  place a blockade on an empty tile with action, discharges a counter. pick it up the same way.
 blockades can be used to stop generator lanes from pushing further. they can also prevent finesse which is sometimes useful.
+you can diable a blue generator with action
 
-use you available potential wisely, everytime you crush you lose valuable resources!
+7 finesse is special
+7finesse.gif
