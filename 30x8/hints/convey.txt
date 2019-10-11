@@ -8,12 +8,12 @@ crushing a 5 spawns the grow item which can grow a number+1 (with max. value 4)
 crushing a 6 spawns the pick up item which allows you to pick up a number (with max. value 5)
 generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1.
 generator lanes can be used to push numbers (sometimes they get jammed by high numbers though).
-you can combine generator charges the same way you combine numbers.
+combine.gif
 only the generators with a white circle have the potential to spawn after the next combination.
-counter:  pressing space on a generator charges it but discharges a counter
+conveyor1.gif
 using counters on a generator to spawn a 1 in the right moments can help align bigger numbers.
 
-finesse:  if you stand on an empty tile while combining to a number 4 or bigger you will spawn a 1 there.
+finesse4.gif
 finesse on 7: when you combine a pair of 6s you grow the tile under your cursor +1
 during the making of an ideal eight there are 31 finesse triggers, try not to waste those potential resources!
 
