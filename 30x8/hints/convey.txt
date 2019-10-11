@@ -1,5 +1,4 @@
 rules:  combine numbers by pushing into a line of same numbers (1+1,2+2,...) to create the next higher number
-checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
 crushing:  press action on a number to lower it by one. this always has some additional benefit
 use you available potential wisely, every time you crush you lose valuable resources!
 crush2.gif
@@ -7,6 +6,7 @@ crush3.gif
 crush4.gif
 crush5.gif
 crush6.gif
+checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
 generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1.
 combine.gif
 conveyor1.gif
@@ -18,7 +18,7 @@ this round you have fewer resources, so try not wasting any finesse! making an 8
 
 blockades:  place a blockade on an empty tile with action, discharges a counter. pick it up the same way.
 blockades can be used to stop generator lanes from pushing further. they can also prevent finesse which is sometimes useful.
-you can diable a blue generator with action
+you can discharge a blue generator with action
 
-7 finesse is special
-7finesse.gif
+the finesse for 7 is special
+finesse7.gif
