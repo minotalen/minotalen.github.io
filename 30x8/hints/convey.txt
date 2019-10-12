@@ -1,14 +1,13 @@
-rules:  combine numbers by pushing into a line of same numbers (1+1,2+2,...) to create the next higher number
-crushing:  press action on a number to lower it by one. this always has some additional benefit
-use you available potential wisely, every time you crush you lose valuable resources!
+combine numbers by pushing a line of same numbers (1+1,2+2,...) into an empty tile
+crushing: press action on a number to lower it by one. this always has some additional benefit
 crush2.gif
 crush3.gif
 crush4.gif
 crush5.gif
 crush6.gif
+use you available potential wisely, every time you crush you lose valuable resources!
 checkpoint:  step onto the flag to create a checkpoint. previous checkpoints can be selected from the game bar.
 generators: combining numbers charges the generators. a generator that is charged a second time spawns a 1.
-combine.gif
 conveyor1.gif
 conveyor2.gif
 
@@ -22,3 +21,5 @@ you can discharge a blue generator with action
 
 the finesse for 7 is special
 finesse7.gif
+
+this one is only possible if you make good use of generators and finesse
