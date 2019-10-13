@@ -1,5 +1,5 @@
 level 1:
-stand to the left of the pair of 1
+stand to the left of the pair of 1s
 then push them to the right
 continue combining numbers until you get an 8
 
