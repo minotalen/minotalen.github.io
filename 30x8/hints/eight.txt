@@ -1,44 +1,67 @@
 level 1:
-stand to the left of the pair of 1s
-then push them to the right
-continue combining numbers until you get an 8
+step onto the marked tile, then press right
+combine the 2s in the same way
+intro.gif
 
 level 2:
-create a line of 2s,
-the line is horizontal
-combine those to the right
+this time your goal is to make a four
+where does the second 3 go?
+threes.png
 
 level 3:
-make a horizontal line of 3s
-all 2s on the right need to combine left
-the other 2 1s combine down, this formation of 2s is called a J
+l3.1.png
+l3.2.png
+l3.3.png
 
 level 4:
-the two rightmost 1s can only combine in a certain direction
-which means the leftmost 2x2 formation of 2s needs to move out of the way
-the 3s are created to the right of the target 4
+in the last level you created a J shape of 2s
+this time you need to create an L
+l4.1.png
 
 level 5:
-you need another 5. where does it need to be created?
-if you know where the 5 has to go, where can you create the 2 4s needed for that?
-all 2s and 3s are combined to the left
+there are 10 1s on the board, you only need 8 to make a 4
+l5.2.png
+l5.3.png
 
 level 6:
-the 2 leftmost 1s can't go anywhere but right
-you are looking to recreate a shape of 2s
-because of symmetry this can be either an upside-down L or J
+l6.1.gif
+this 2x2 shape is called an O
+you need an O of 3s to create the 5
 
 level 7:
-start at the goal and work your way backwards
-when combining the 2 1s, where do you want the 2 to end up?|
-place the 1 from the bank to the left of the other 1
+you don't need to place the 1 right away
+it is possible to combine a number onto a target tile
+you need to make an L again (check level 4 hint 3)
 
 level 8:
-start by making a 3 with the 4 1s
-a 2x2 block of same numbers is called an O.
-dropping the 1 on the target 5 creates an O which combines to the left, then up.
+you can not make any mistake combining the 1s
+l8.1.png
 
 level 9:
-have you thought about combining before you place the 1?
-you want to make an L of 1s
-the nose of the L sits on the target
+you can make the first 4 without using any numbers from the bank!
+l9.1.png
+l9.2.png
+
+level 10:
+this time you have to make a long distance combination
+consider symmetry
+l11.3.png
+
+think about where you need to create the two 3s
+you can achieve this with an O and a J shape
+l12.2.png
+
+l12.1.png
+l12.3.png
+
+see where you could make the second 7, then work backwards from that
+l13.1.png
+
+think long distance again
+you know where the 3s have to go
+l14.3.png
+
+l15.1.png
+l15.2.png
+
+from here on you are on your own (until I finish the hints!)
