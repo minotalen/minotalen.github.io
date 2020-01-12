@@ -99,9 +99,15 @@ function draw() {
       }
     }
   }
-  for(let i = 0; i < nextNumbers.length; i++) {
+  if(checkAllSame()) {
+    for(let i = path.length-1; i < nextNumbers.length; i++) {
+     text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
+   }
+ } else {
+   for(let i = 0; i < nextNumbers.length; i++) {
     text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
   }
+ }
   text(score, width/2, height-offset/2);
 }
 
@@ -118,7 +124,6 @@ function mousePressed() {
 function mouseDragged() {
   // get mouse position as grid coordinates
   if ( mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset ) {
-    console.log("out of bounds");
     for(let remove = 0; remove < path.length; remove++) {
       Grid.map[path[remove][0]][path[remove][1]].deselect();
     }
@@ -151,7 +156,6 @@ function mouseDragged() {
           for(let i = 1; i < path.length; i++){
             let prevCol = path[path.length-1-i][0]
             let prevRow = path[path.length-1-i][1]
-            console.log(prevCol, prevRow);
             Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
           }
         }
@@ -164,11 +168,9 @@ function checkAllSame() {
   for(let element = 0; element < path.length-1; element++){
       if( Grid.map[ path[element][0] ] [ path[element][1] ].value
       != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value) {
-          console.log("nope");
           return false;
       }
   }
-  console.log("yub");
   return true;
 }
 function sameAsPrev(toComp) {

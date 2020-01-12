@@ -42,9 +42,11 @@ function createGrid(cols, rows) {
     let rowTemp = [];
     for(let col = 0; col < newGrid.cols; col++){
       rowTemp.push(newCell(row,col));
-      // console.log("pushing" + row, col);
     }
     newGrid.map.push(rowTemp);
+    // for(let nums in newGrid[row]) {
+    //   newGrid.map[col][row6].value = 1;
+    // }
   }
   return newGrid;
 }
