@@ -49,4 +49,4 @@ function createGrid(cols, rows) {
   return newGrid;
 }
 
-let Grid = createGrid(5, 5);
+let Grid = createGrid(4, 4);

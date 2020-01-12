@@ -6,7 +6,7 @@ let d;
 let x, y;
 let b;
 let offset = 150;
-let nextNumbers = [0, 0, 0, 0, 0];
+let nextNumbers = [0, 0, 0, 0];
 let score = 0;
 
 function setup() {
@@ -88,6 +88,11 @@ function draw() {
       rect(x+offset, y+offset, cw, rh);
       fill(0, 0, 0);
       if(Grid.map[cn][rn].preview == 0) {
+        if(Grid.map[cn][rn].value >= 100) {
+          textSize(66);
+        } else {
+          textSize(82);
+        }
         text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset);
       } else {
         text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset);
@@ -147,7 +152,7 @@ function mouseDragged() {
             let prevCol = path[path.length-1-i][0]
             let prevRow = path[path.length-1-i][1]
             console.log(prevCol, prevRow);
-            Grid.map[prevCol][prevRow].preview = nextNumbers[i-1];
+            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
           }
         }
       }
