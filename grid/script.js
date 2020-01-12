@@ -88,7 +88,9 @@ function draw() {
       rect(x+offset, y+offset, cw, rh);
       fill(0, 0, 0);
       if(Grid.map[cn][rn].preview == 0) {
-        if(Grid.map[cn][rn].value >= 100) {
+        if(Grid.map[cn][rn].value >= 10){
+          textSize(76);
+      } else if(Grid.map[cn][rn].value >= 100) {
           textSize(66);
         } else {
           textSize(82);
