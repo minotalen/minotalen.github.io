@@ -12,9 +12,10 @@ let nextNumbers = [0, 0, 0, 0];
 let score = 0;
 
 function setup() {
-  createCanvas(800, 800);
+  if(displayHeight > displayWidth)createCanvas(displayWidth, displayWidth);
+  if(displayWidth > displayHeight)createCanvas(displayHeight, displayHeight);
+  textFont('Fredoka One');
   textAlign(CENTER, CENTER);
-  textSize(77);
 }
 
 function draw() {
@@ -93,16 +94,19 @@ function draw() {
       rect(x+offset, y+offset, cw, rh);
       fill(0, 0, 0);
       if(Grid.map[cn][rn].preview == 0) {
-        if(Grid.map[cn][rn].value >= 10){
-          textSize(76);
+        // different text sizes for different digits
+        if(Grid.map[cn][rn].value >= 1000) {
+        textSize(52);
       } else if(Grid.map[cn][rn].value >= 100) {
-          textSize(66);
+        textSize(66);
+        } else if(Grid.map[cn][rn].value >= 10){
+          textSize(74);
         } else {
-          textSize(82);
+          textSize(88);
         }
-        text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset);
+        text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset+4);
       } else {
-        text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset);
+        text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset+4);
       }
     }
   }
@@ -122,6 +126,9 @@ function keyPressed() {
   if (key == 'r') {
     console.log('r');
     restart();
+  }
+  if (key == '5') {
+    restart5();
   }
 }
 
@@ -192,6 +199,7 @@ function mouseReleased() {
   path = [];
 }
 
+// same for touch
 function touchStarted() {
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
@@ -285,6 +293,12 @@ function combineNumbers(combine) {
     if(position != combine.length-1){
       Grid.map[ combine[position][0]][combine[position][1] ].newValue();
     }
+    // increase score if preview length reached
+    let bonus = Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
+    if(position > nextNumbers.length) {
+      score += bonus;
+      console.log(bonus);
+    }
   }
 }
 
@@ -298,12 +312,38 @@ function generateNext(amount=1) {
     return parseInt(fiFo);
   }
 }
-
 generateNext(5);
 
 function restart() {
-  console.log("restarting.");
-  Grid = 0;
   Grid = createGrid(4, 4);
+  score = 0;
+  nextNumbers = [0, 0, 0, 0];
   generateNext(5);
 }
+
+function restart5() {
+  Grid = createGrid(5, 5);
+  score = 0;
+  nextNumbers = [0, 0, 0, 0, 0];
+  generateNext(5);
+}
+
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+//    make a bag with 10 of each to give fairer numbers
+function newBag() {
+  let bag = [];
+  for(let i = 1; i<=3; i++) {
+    for(let j = 0; j < 10; j++) {
+      bag.push(i);
+    }
+  }
+  return bag;
+}
+let thirtyBag = newBag();
