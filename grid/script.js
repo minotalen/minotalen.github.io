@@ -12,8 +12,9 @@ let nextNumbers = [0, 0, 0, 0];
 let score = 0;
 
 function setup() {
-  if(displayHeight > displayWidth)createCanvas(displayWidth, displayWidth);
-  if(displayWidth > displayHeight)createCanvas(displayHeight, displayHeight);
+  // if(displayHeight > displayWidth)createCanvas(displayWidth, displayWidth);
+  // if(displayWidth > displayHeight)createCanvas(displayHeight, displayHeight);
+  createCanvas(900, 900);
   textFont('Fredoka One');
   textAlign(CENTER, CENTER);
 }
