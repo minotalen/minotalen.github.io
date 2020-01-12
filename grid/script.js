@@ -1,3 +1,5 @@
+// ver 0.1
+
 //p5p5p5p5p5p5p5p5
 let w, h;
 let cw, ch; //column width, height
