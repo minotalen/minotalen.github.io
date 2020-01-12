@@ -44,9 +44,6 @@ function createGrid(cols, rows) {
       rowTemp.push(newCell(row,col));
     }
     newGrid.map.push(rowTemp);
-    // for(let nums in newGrid[row]) {
-    //   newGrid.map[col][row6].value = 1;
-    // }
   }
   return newGrid;
 }

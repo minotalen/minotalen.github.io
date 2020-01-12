@@ -84,6 +84,9 @@ function draw() {
         case 1:
           fill(255, 204, 0);
           break;
+        case 2:
+          fill(206, 149, 0);
+          break;
         }
       let x = cn * cw;
       let y = rn * rh;
@@ -115,24 +118,33 @@ function draw() {
   text(score, width/2, height-offset/2);
 }
 
+function keyPressed() {
+  if (key == 'r') {
+    console.log('r');
+    restart();
+  }
+}
+
 let path = [];
 let allSame;
 function mousePressed() {
-  let col = Math.floor((mouseX-offset)/cw);
-  let row = Math.floor((mouseY-offset)/rh);
-  allSame = true;
-  Grid.map[col][row].select();
-  path.push([col, row]);
+  if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
+    let col = Math.floor((mouseX-offset)/cw);
+    let row = Math.floor((mouseY-offset)/rh);
+    allSame = true;
+    Grid.map[col][row].select();
+    path.push([col, row]);
+  }
 }
 
 function mouseDragged() {
-  // get mouse position as grid coordinates
   if ( mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset ) {
     for(let remove = 0; remove < path.length; remove++) {
       Grid.map[path[remove][0]][path[remove][1]].deselect();
     }
     path = [];
   } else {
+    // get mouse position as grid coordinates
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
 
@@ -154,7 +166,9 @@ function mouseDragged() {
         Grid.map[col][row].select()
         path.push([col, row]);
         Grid.map[path[path.length-2][0]][path[path.length-2][1]].preview = 0;
+        Grid.map[path[path.length-2][0]][path[path.length-2][1]].color = 2;
         if(checkAllSame()){
+          // preview combined number
           Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
           // preview next numbers
           for(let i = 1; i < path.length; i++){
@@ -168,18 +182,6 @@ function mouseDragged() {
   }
 }
 
-function checkAllSame() {
-  for(let element = 0; element < path.length-1; element++){
-      if( Grid.map[ path[element][0] ] [ path[element][1] ].value
-      != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value) {
-          return false;
-      }
-  }
-  return true;
-}
-function sameAsPrev(toComp) {
-}
-
 function mouseReleased() {
   for(let row in Grid.map) {
     for(let col in Grid.map[row]) {
@@ -188,6 +190,81 @@ function mouseReleased() {
   }
   if(path.length > 1) combineNumbers(path);
   path = [];
+}
+
+function touchStarted() {
+  if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
+    let col = Math.floor((mouseX-offset)/cw);
+    let row = Math.floor((mouseY-offset)/rh);
+    allSame = true;
+    Grid.map[col][row].select();
+    path.push([col, row]);
+  }
+}
+
+function touchMoved() {
+  if ( mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset ) {
+    for(let remove = 0; remove < path.length; remove++) {
+      Grid.map[path[remove][0]][path[remove][1]].deselect();
+    }
+    path = [];
+  } else {
+    // get mouse position as grid coordinates
+    let col = Math.floor((mouseX-offset)/cw);
+    let row = Math.floor((mouseY-offset)/rh);
+
+    // check if the drag crosses itself
+    for(let element = 0; element < path.length-1; element++){
+      if(path[element][0] == col && path[element][1] == row){
+        // remove all objects after intersection
+        for(let remove = element+1; remove < path.length; remove++) {
+          Grid.map[path[remove][0]][path[remove][1]].deselect();
+        }
+        path.splice(element+1);
+        if(checkAllSame()) Grid.map[path[element][0]][path[element][1]].preview = Grid.map[col][row].value * path.length;
+      }
+    }
+
+    // adding a cell to the array
+    if(path[path.length-1][0] != col || path[path.length-1][1] != row){
+      if(Grid.map[col][row].isNeighborOf(path[path.length-1][0], path[path.length-1][1])) {
+        Grid.map[col][row].select()
+        path.push([col, row]);
+        Grid.map[path[path.length-2][0]][path[path.length-2][1]].preview = 0;
+        Grid.map[path[path.length-2][0]][path[path.length-2][1]].color = 2;
+        if(checkAllSame()){
+          // preview combined number
+          Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
+          // preview next numbers
+          for(let i = 1; i < path.length; i++){
+            let prevCol = path[path.length-1-i][0]
+            let prevRow = path[path.length-1-i][1]
+            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
+          }
+        }
+      }
+    }
+  }
+}
+
+function touchEnded() {
+  for(let row in Grid.map) {
+    for(let col in Grid.map[row]) {
+      Grid.map[col][row].deselect()
+    }
+  }
+  if(path.length > 1) combineNumbers(path);
+  path = [];
+}
+
+function checkAllSame() {
+  for(let element = 0; element < path.length-1; element++){
+      if( Grid.map[ path[element][0] ] [ path[element][1] ].value
+      != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value) {
+          return false;
+      }
+  }
+  return true;
 }
 
 //combine function takes an array of positions and combines to the last
@@ -221,4 +298,12 @@ function generateNext(amount=1) {
     return parseInt(fiFo);
   }
 }
+
 generateNext(5);
+
+function restart() {
+  console.log("restarting.");
+  Grid = 0;
+  Grid = createGrid(4, 4);
+  generateNext(5);
+}
