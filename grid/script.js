@@ -10,6 +10,7 @@ let b;
 let offset = 150;
 let nextNumbers = [0, 0, 0, 0];
 let score = 0;
+let Bag = newBag();
 
 function setup() {
   // if(displayHeight > displayWidth)createCanvas(displayWidth, displayWidth);
@@ -97,9 +98,9 @@ function draw() {
       if(Grid.map[cn][rn].preview == 0) {
         // different text sizes for different digits
         if(Grid.map[cn][rn].value >= 1000) {
-        textSize(52);
-      } else if(Grid.map[cn][rn].value >= 100) {
-        textSize(66);
+          textSize(52);
+        } else if(Grid.map[cn][rn].value >= 100) {
+          textSize(66);
         } else if(Grid.map[cn][rn].value >= 10){
           textSize(74);
         } else {
@@ -107,10 +108,20 @@ function draw() {
         }
         text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset+4);
       } else {
+        if(Grid.map[cn][rn].preview >= 1000) {
+          textSize(52);
+        } else if(Grid.map[cn][rn].preview >= 100) {
+          textSize(66);
+        } else if(Grid.map[cn][rn].preview >= 10){
+          textSize(74);
+        } else {
+          textSize(88);
+        }
         text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset+4);
       }
     }
   }
+  textSize(80);
   if(checkAllSame()) {
     for(let i = path.length-1; i < nextNumbers.length; i++) {
      text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
@@ -120,7 +131,7 @@ function draw() {
     text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
   }
  }
-  text(score, width/2, height-offset/2);
+  text(score, width/2+offset, height-offset/2);
 }
 
 function keyPressed() {
@@ -307,7 +318,7 @@ function generateNext(amount=1) {
   let fiFo;
   for(let i = 0; i < amount; i++) {
     fiFo = nextNumbers.splice(0,1);
-    nextNumbers.push(Math.floor(Math.random()*3)+1);
+    nextNumbers.push(drawBag());
   }
   if(amount == 1) {
     return parseInt(fiFo);
@@ -337,14 +348,19 @@ function shuffle(a) {
     return a;
 }
 
-//    make a bag with 10 of each to give fairer numbers
+// TODO
+//    make a bag with 5 of each to give fairer numbers
 function newBag() {
   let bag = [];
   for(let i = 1; i<=3; i++) {
-    for(let j = 0; j < 10; j++) {
+    for(let j = 0; j < 5; j++) {
       bag.push(i);
+      bag = shuffle(bag);
     }
   }
   return bag;
 }
-let thirtyBag = newBag();
+function drawBag() {
+  if(Bag.length == 0) Bag = newBag();
+  return Bag.splice(0,1);
+}
