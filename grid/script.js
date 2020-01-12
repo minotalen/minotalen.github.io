@@ -173,9 +173,14 @@ function mouseDragged() {
           Grid.map[path[remove][0]][path[remove][1]].deselect();
         }
         path.splice(element+1);
-
         if(checkAllSame()) {
           Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
+          // preview next numbers
+          for(let i = 1; i < path.length; i++){
+            let prevCol = path[path.length-1-i][0]
+            let prevRow = path[path.length-1-i][1]
+            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
+          }
         }
       }
     }
