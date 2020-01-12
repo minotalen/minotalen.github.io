@@ -145,12 +145,10 @@ function keyPressed() {
 }
 
 let path = [];
-let allSame;
 function mousePressed() {
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
-    allSame = true;
     Grid.map[col][row].select();
     path.push([col, row]);
   }
@@ -175,7 +173,10 @@ function mouseDragged() {
           Grid.map[path[remove][0]][path[remove][1]].deselect();
         }
         path.splice(element+1);
-        if(checkAllSame()) Grid.map[path[element][0]][path[element][1]].preview = Grid.map[col][row].value * path.length;
+
+        if(checkAllSame()) {
+          Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
+        }
       }
     }
 
@@ -195,6 +196,10 @@ function mouseDragged() {
             let prevRow = path[path.length-1-i][1]
             Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
           }
+        } else {
+          for(let i = 0; i < path.length-1; i++) {
+            Grid.map[path[i][0]][path[i][1]].preview = 0;
+          }
         }
       }
     }
@@ -209,6 +214,7 @@ function mouseReleased() {
   }
   if(path.length > 1) combineNumbers(path);
   path = [];
+  console.log(Bag);
 }
 
 // same for touch
@@ -331,6 +337,8 @@ function restart() {
   score = 0;
   nextNumbers = [0, 0, 0, 0];
   generateNext(5);
+  Bag = newBag();
+
 }
 
 function restart5() {
@@ -338,6 +346,8 @@ function restart5() {
   score = 0;
   nextNumbers = [0, 0, 0, 0, 0];
   generateNext(5);
+  Bag = newBag();
+
 }
 
 function shuffle(a) {
