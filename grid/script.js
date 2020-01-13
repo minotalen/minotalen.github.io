@@ -1,6 +1,14 @@
 // ver 0.1
+/*
+TODO:
+put touch events
+prevent touch scroll
 
-//p5p5p5p5p5p5p5p5
+non-square grid
+
+
+*/
+
 let w, h;
 let cw, ch; //column width, height
 let rw, rh; // row width, height
@@ -13,7 +21,7 @@ let scores = [];
 let scoreShow = false;
 
 let Bag = newBag();
-let nextNumbers = [0, 0, 0, 0];
+let nextNumbers = [0, 0, 0];
 
 function setup() {
   createCanvas(1100, 1100);
@@ -94,8 +102,10 @@ function draw() {
         }
       let x = cn * cw;
       let y = rn * rh;
+      strokeWeight(6);
       rect(x+offset, y+offset, cw, rh);
       fill(0, 0, 0);
+
       if(Grid.map[cn][rn].preview == 0) {
         // different text sizes for different digits
         if(Grid.map[cn][rn].value >= 1000) {
@@ -124,13 +134,14 @@ function draw() {
   }
   // display preview
   textSize(80);
+  strokeWeight(1);
   if(checkAllSame() && path.length != 0) {
     for(let i = path.length; i <= nextNumbers.length; i++) {
-     text(nextNumbers[i-1], (i-1)*cw+offset+cw/2, 0+offset/2);
+     text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
    }
  } else {
    for(let i = 0; i < nextNumbers.length; i++) {
-    text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
+    text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
   }
  }
  // display score
@@ -179,7 +190,8 @@ function mousePressed() {
 }
 
 function mouseDragged() {
-  if ( mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset ) {
+
+  if ( bounds() ) {
     for(let remove = 0; remove < path.length; remove++) {
       Grid.map[path[remove][0]][path[remove][1]].deselect();
     }
@@ -231,7 +243,6 @@ function drawPreview() {
   for(let i = 1; i < path.length; i++){
     let prevCol = path[path.length-1-i][0]
     let prevRow = path[path.length-1-i][1]
-    console.log(path.length-i-1);
     if(path.length-i-1 >= nextNumbers.length) {
       Grid.map[prevCol][prevRow].preview = "?";
     } else {
@@ -250,6 +261,7 @@ function mouseReleased() {
   path = [];
 }
 
+// checks if all numbers are equal
 function checkAllSame() {
   for(let element = 0; element < path.length-1; element++){
       if( Grid.map[ path[element][0] ] [ path[element][1] ].value
@@ -287,17 +299,7 @@ function combineNumbers(combine) {
   }
 }
 
-function generateNext(amount=1) {
-  let fiFo;
-  for(let i = 0; i < amount; i++) {
-    fiFo = nextNumbers.splice(0,1);
-    nextNumbers.push(drawBag());
-  }
-  if(amount == 1) {
-    return parseInt(fiFo);
-  }
-}
-
+// get the average score
 function average(average) {
     let sum = 0;
     for(let i = 0; i < average.length; i++) sum += average[i];
@@ -306,12 +308,13 @@ function average(average) {
 
 generateNext(5);
 
+// restart the game
 function restart() {
   Grid = createGrid(4, 4);
   if(score != 0) scores.push(score);
   console.log(score, average(scores));
   score = 0;
-  nextNumbers = [0, 0, 0, 0];
+  nextNumbers = [0, 0, 0];
   generateNext(5);
   Bag = newBag();
 
@@ -320,18 +323,15 @@ function restart() {
 function restart5() {
   Grid = createGrid(5, 5);
   score = 0;
-  nextNumbers = [0, 0, 0, 0, 0];
+  nextNumbers = [0, 0, 0, 0];
   generateNext(5);
   Bag = newBag();
 
 }
 
-function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
+function bounds() {
+  if (mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) return true;
+  return false;
 }
 
 // TODO
@@ -347,7 +347,27 @@ function newBag() {
   return bag;
 }
 
+// draws and returns a number from the bag
 function drawBag() {
   if(Bag.length == 0) Bag = newBag();
   return Bag.splice(0,1);
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateNext(amount=1) {
+  let fiFo;
+  for(let i = 0; i < amount; i++) {
+    fiFo = nextNumbers.splice(0,1);
+    nextNumbers.push(drawBag());
+  }
+  if(amount == 1) {
+    return parseInt(fiFo);
+  }
 }
