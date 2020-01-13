@@ -200,11 +200,7 @@ function mouseDragged() {
         if(checkAllSame()) {
           Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
           // preview next numbers
-          for(let i = 1; i < path.length; i++){
-            let prevCol = path[path.length-1-i][0]
-            let prevRow = path[path.length-1-i][1]
-            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
-          }
+          drawPreview();
         }
       }
     }
@@ -220,17 +216,26 @@ function mouseDragged() {
           // preview combined number
           Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
           // preview next numbers
-          for(let i = 1; i < path.length; i++){
-            let prevCol = path[path.length-1-i][0]
-            let prevRow = path[path.length-1-i][1]
-            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
-          }
+          drawPreview();
         } else {
           for(let i = 0; i < path.length-1; i++) {
             Grid.map[path[i][0]][path[i][1]].preview = 0;
           }
         }
       }
+    }
+  }
+}
+
+function drawPreview() {
+  for(let i = 1; i < path.length; i++){
+    let prevCol = path[path.length-1-i][0]
+    let prevRow = path[path.length-1-i][1]
+    console.log(path.length-i-1);
+    if(path.length-i-1 >= nextNumbers.length) {
+      Grid.map[prevCol][prevRow].preview = "?";
+    } else {
+      Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
     }
   }
 }
