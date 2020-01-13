@@ -7,15 +7,16 @@ let rw, rh; // row width, height
 let d;
 let x, y;
 let b;
-let offset = 150;
-let nextNumbers = [0, 0, 0, 0];
+let offset = 120;
 let score = 0;
+let scores = [];
+let scoreShow = false;
+
 let Bag = newBag();
+let nextNumbers = [0, 0, 0, 0];
 
 function setup() {
-  // if(displayHeight > displayWidth)createCanvas(displayWidth, displayWidth);
-  // if(displayWidth > displayHeight)createCanvas(displayHeight, displayHeight);
-  createCanvas(900, 900);
+  createCanvas(1100, 1100);
   textFont('Fredoka One');
   textAlign(CENTER, CENTER);
 }
@@ -98,40 +99,50 @@ function draw() {
       if(Grid.map[cn][rn].preview == 0) {
         // different text sizes for different digits
         if(Grid.map[cn][rn].value >= 1000) {
-          textSize(52);
+          textSize(73);
         } else if(Grid.map[cn][rn].value >= 100) {
-          textSize(66);
-        } else if(Grid.map[cn][rn].value >= 10){
-          textSize(74);
-        } else {
           textSize(88);
+        } else if(Grid.map[cn][rn].value >= 10){
+          textSize(99);
+        } else {
+          textSize(110);
         }
         text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset+4);
       } else {
         if(Grid.map[cn][rn].preview >= 1000) {
-          textSize(52);
+          textSize(73);
         } else if(Grid.map[cn][rn].preview >= 100) {
-          textSize(66);
-        } else if(Grid.map[cn][rn].preview >= 10){
-          textSize(74);
-        } else {
           textSize(88);
+        } else if(Grid.map[cn][rn].preview >= 10){
+          textSize(99);
+        } else {
+          textSize(110);
         }
         text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset+4);
       }
     }
   }
+  // display preview
   textSize(80);
-  if(checkAllSame()) {
-    for(let i = path.length-1; i < nextNumbers.length; i++) {
-     text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
+  if(checkAllSame() && path.length != 0) {
+    for(let i = path.length; i <= nextNumbers.length; i++) {
+     text(nextNumbers[i-1], (i-1)*cw+offset+cw/2, 0+offset/2);
    }
  } else {
    for(let i = 0; i < nextNumbers.length; i++) {
     text(nextNumbers[i], i*cw+offset+cw/2, 0+offset/2);
   }
  }
-  text(score, width/2+offset, height-offset/2);
+ // display score
+ textAlign(RIGHT, CENTER);
+  if(scoreShow){
+    // if(score < average(scores)) fill(RED);
+    text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
+    // fill(BLACK);
+  } else {
+    text(score, width-offset, height-offset/2);
+  }
+  textAlign(CENTER, CENTER);
 }
 
 function keyPressed() {
@@ -142,15 +153,28 @@ function keyPressed() {
   if (key == '5') {
     restart5();
   }
+  if (key == 'x') {
+    scores = [];
+  }
+  if (key == 's') {
+    scoreShow = !scoreShow;
+  }
 }
 
 let path = [];
+let lastGrid = 0;
+let lastNext = 0;
 function mousePressed() {
+  lastGrid = Grid;
+  lastNext = nextNumbers;
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
     Grid.map[col][row].select();
     path.push([col, row]);
+  }
+  if (mouseButton === RIGHT) {
+      path = [];
   }
 }
 
@@ -219,73 +243,6 @@ function mouseReleased() {
   }
   if(path.length > 1) combineNumbers(path);
   path = [];
-  console.log(Bag);
-}
-
-// same for touch
-function touchStarted() {
-  if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
-    let col = Math.floor((mouseX-offset)/cw);
-    let row = Math.floor((mouseY-offset)/rh);
-    allSame = true;
-    Grid.map[col][row].select();
-    path.push([col, row]);
-  }
-}
-
-function touchMoved() {
-  if ( mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset ) {
-    for(let remove = 0; remove < path.length; remove++) {
-      Grid.map[path[remove][0]][path[remove][1]].deselect();
-    }
-    path = [];
-  } else {
-    // get mouse position as grid coordinates
-    let col = Math.floor((mouseX-offset)/cw);
-    let row = Math.floor((mouseY-offset)/rh);
-
-    // check if the drag crosses itself
-    for(let element = 0; element < path.length-1; element++){
-      if(path[element][0] == col && path[element][1] == row){
-        // remove all objects after intersection
-        for(let remove = element+1; remove < path.length; remove++) {
-          Grid.map[path[remove][0]][path[remove][1]].deselect();
-        }
-        path.splice(element+1);
-        if(checkAllSame()) Grid.map[path[element][0]][path[element][1]].preview = Grid.map[col][row].value * path.length;
-      }
-    }
-
-    // adding a cell to the array
-    if(path[path.length-1][0] != col || path[path.length-1][1] != row){
-      if(Grid.map[col][row].isNeighborOf(path[path.length-1][0], path[path.length-1][1])) {
-        Grid.map[col][row].select()
-        path.push([col, row]);
-        Grid.map[path[path.length-2][0]][path[path.length-2][1]].preview = 0;
-        Grid.map[path[path.length-2][0]][path[path.length-2][1]].color = 2;
-        if(checkAllSame()){
-          // preview combined number
-          Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
-          // preview next numbers
-          for(let i = 1; i < path.length; i++){
-            let prevCol = path[path.length-1-i][0]
-            let prevRow = path[path.length-1-i][1]
-            Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
-          }
-        }
-      }
-    }
-  }
-}
-
-function touchEnded() {
-  for(let row in Grid.map) {
-    for(let col in Grid.map[row]) {
-      Grid.map[col][row].deselect()
-    }
-  }
-  if(path.length > 1) combineNumbers(path);
-  path = [];
 }
 
 function checkAllSame() {
@@ -335,10 +292,19 @@ function generateNext(amount=1) {
     return parseInt(fiFo);
   }
 }
+
+function average(average) {
+    let sum = 0;
+    for(let i = 0; i < average.length; i++) sum += average[i];
+    return Math.floor(sum/average.length);
+}
+
 generateNext(5);
 
 function restart() {
   Grid = createGrid(4, 4);
+  if(score != 0) scores.push(score);
+  console.log(score, average(scores));
   score = 0;
   nextNumbers = [0, 0, 0, 0];
   generateNext(5);
@@ -375,6 +341,7 @@ function newBag() {
   }
   return bag;
 }
+
 function drawBag() {
   if(Bag.length == 0) Bag = newBag();
   return Bag.splice(0,1);
