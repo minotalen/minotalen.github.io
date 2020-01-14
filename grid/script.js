@@ -301,11 +301,11 @@ function release() {
     }
   }
   // add the last move to the undo stack
+  justUndone = false;
   if(path.length > 1){
     combineNumbers(path);
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
     firstUndo = true;
-    justUndone = false;
   }
   path = [];
 }
@@ -373,20 +373,22 @@ generateNext(5);
 function restart() {
   Grid = createGrid(4, 4);
   if(score != 0) scores.push(score);
-  console.log(score, average(scores));
+  backup = [];
+  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0];
-  backups = [];
   timesUndone = 0;
+  firstUndo = true;
   generateNext(5);
   Bag = newBag();
 }
 
 function restart5() {
   Grid = createGrid(5, 5);
+  backup = [];
+  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0, 0];
-  backups = [];
   timesUndone = 0;
   generateNext(5);
   Bag = newBag();
@@ -422,25 +424,26 @@ function addToUndo(grid, next, bag, score) {
 let firstUndo = true;
 function undo() {
   // update grid values from backup array
-  if(backup.length > 0 && backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0) {
-    if(firstUndo) backup.splice(backup.length-1);
-    // update grid values
-    for(let row = 0; row < Grid.rows; row++){
-      for(let col = 0; col < Grid.cols; col++){
-        Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
+  if(backup.length > 0) {
+    if( backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0 || backup[backup.length-1].score < 48 ) {
+      if(firstUndo && backup.length > 2) backup.splice(backup.length-1);
+      // update grid values
+      for(let row = 0; row < Grid.rows; row++){
+        for(let col = 0; col < Grid.cols; col++){
+          Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
+        }
       }
-    }
-    nextNumbers = backup[backup.length-1].next;
-    Bag = backup[backup.length-1].bag;
-    score = backup[backup.length-1].score;
-    backup.splice(backup.length-1);
-    timesUndone++;
-    justUndone = true;
-    firstUndo = false;
-    if(Math.floor(5*Math.pow(1.18, timesUndone)) < 50) {
-      score -= Math.floor(5*Math.pow(1.18, timesUndone));
-    } else {
-      score -= 50;
+      nextNumbers = backup[backup.length-1].next;
+      Bag = backup[backup.length-1].bag;
+      score = backup[backup.length-1].score;
+
+      firstUndo = false;
+      if (backup.length > 1) backup.splice(backup.length-1); //leave the last restart as safestate
+      if(score > 48) {
+        timesUndone++;
+        justUndone = true;
+        // score -= Math.floor(5*Math.pow(1.18, timesUndone));
+      }
     }
   }
 
