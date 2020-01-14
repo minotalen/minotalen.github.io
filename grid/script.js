@@ -286,7 +286,7 @@ function dragged() {
 }
 
 function release() {
-  if (mouseY >= height-offset) undo();
+  if (mouseY >= height-offset && !justUndone) undo();
   if (mouseY <= offset) {
     if (score != 0 && restartConfirm) {
       restartConfirm = false;
