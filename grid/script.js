@@ -222,15 +222,6 @@ function touchEnded() {
 
 restartConfirm = false;
 function pressed() {
-  if (mouseY >= height-offset) undo();
-  if (mouseY <= offset) {
-    if (score != 0 && restartConfirm) {
-      restartConfirm = false;
-      restart();
-    } else if (score != 0) {
-      restartConfirm = true;
-    } else restart();
-  }
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= height-offset) ) {
     restartConfirm = false;
 
@@ -295,6 +286,15 @@ function dragged() {
 }
 
 function release() {
+  if (mouseY >= height-offset) undo();
+  if (mouseY <= offset) {
+    if (score != 0 && restartConfirm) {
+      restartConfirm = false;
+      restart();
+    } else if (score != 0) {
+      restartConfirm = true;
+    } else restart();
+  }
   for(let row in Grid.map) {
     for(let col in Grid.map[row]) {
       Grid.map[col][row].deselect()
