@@ -19,6 +19,7 @@ let offset = 120;
 let score = 0;
 let scores = [];
 let scoreShow = false;
+let path = [];
 
 //undo storage
 let backup = [];
@@ -181,8 +182,32 @@ function keyPressed() {
   }
 }
 
-let path = [];
 function mousePressed() {
+  pressed();
+}
+
+function mouseDragged() {
+  dragged();
+}
+
+function mouseReleased() {
+  release();
+}
+
+function touchStarted() {
+  pressed();
+}
+
+function touchMoved() {
+  dragged();
+  return false;
+}
+
+function touchEnded() {
+  release();
+}
+
+function pressed() {
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
@@ -194,8 +219,8 @@ function mousePressed() {
   }
 }
 
-function mouseDragged() {
-
+function dragged() {
+  // mouse oputside of grid
   if ( bounds() ) {
     for(let remove = 0; remove < path.length; remove++) {
       Grid.map[path[remove][0]][path[remove][1]].deselect();
@@ -244,6 +269,18 @@ function mouseDragged() {
   }
 }
 
+function release() {
+  for(let row in Grid.map) {
+    for(let col in Grid.map[row]) {
+      Grid.map[col][row].deselect()
+    }
+  }
+  // add the last move to the undo stack
+  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
+  if(path.length > 1) combineNumbers(path);
+  path = [];
+}
+
 function drawPreview() {
   for(let i = 1; i < path.length; i++){
     let prevCol = path[path.length-1-i][0]
@@ -254,18 +291,6 @@ function drawPreview() {
       Grid.map[prevCol][prevRow].preview = nextNumbers[path.length-i-1];
     }
   }
-}
-
-function mouseReleased() {
-  for(let row in Grid.map) {
-    for(let col in Grid.map[row]) {
-      Grid.map[col][row].deselect()
-    }
-  }
-  // add the last move to the undo stack
-  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
-  if(path.length > 1) combineNumbers(path);
-  path = [];
 }
 
 // checks if all numbers are equal
@@ -366,10 +391,7 @@ function addToUndo(grid, next, bag, score) {
 }
 
 function undo() {
-  console.log(Grid);
   // update grid values from backup array
-
-  console.log(backup.length);
   if(backup.length > 0 && backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0) {
     // update grid values
     for(let row = 0; row < Grid.rows; row++){
@@ -383,12 +405,9 @@ function undo() {
     backup.splice(backup.length-1);
     timesUndone++;
     score -= Math.floor(5*Math.pow(1.18, timesUndone));
-  } else {
-    console.log("no backups");
   }
 
 }
-
 
 function newBag() {
   let bag = [];
