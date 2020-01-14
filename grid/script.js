@@ -30,6 +30,7 @@ let nextNumbers = [0, 0, 0];
 
 function setup() {
   createCanvas(1100, 1100);
+  createCanvas(1100, 1100);
   textFont('Fredoka One');
   textAlign(CENTER, CENTER);
 }
@@ -145,8 +146,10 @@ function draw() {
      text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
    }
  } else {
-   for(let i = 0; i < nextNumbers.length; i++) {
-    text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
+   if (score != 0) {
+     for(let i = 0; i < nextNumbers.length; i++) {
+      text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
+    }
   }
  }
  // display score
@@ -156,7 +159,10 @@ function draw() {
     text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
     // fill(BLACK);
   } else if (score == 0 ){
-    text("r to restart, u to undo", width-offset, height-offset/2);
+    textAlign(RIGHT, CENTER);
+    text("tap or u to undo", width-offset, height-offset/2);
+    textAlign(LEFT, CENTER);
+    text("tap or r to restart", offset, offset/2);
   } else {
     text(score, width-offset, height-offset/2);
   }
@@ -185,11 +191,9 @@ function keyPressed() {
 function mousePressed() {
   pressed();
 }
-
 function mouseDragged() {
   dragged();
 }
-
 function mouseReleased() {
   release();
 }
@@ -197,18 +201,18 @@ function mouseReleased() {
 function touchStarted() {
   pressed();
 }
-
 function touchMoved() {
   dragged();
   return false;
 }
-
 function touchEnded() {
   release();
 }
 
 function pressed() {
-  if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
+  if (mouseY >= height-offset) undo();
+  if (mouseY <= height-offset) restart();
+  if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= height-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
     Grid.map[col][row].select();
@@ -276,8 +280,11 @@ function release() {
     }
   }
   // add the last move to the undo stack
-  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
-  if(path.length > 1) combineNumbers(path);
+  if(path.length > 1){
+    combineNumbers(path);
+    backup.push(addToUndo(Grid, nextNumbers, Bag, score));
+    firstUndo = true;
+  }
   path = [];
 }
 
@@ -373,6 +380,7 @@ function bounds() {
 function addToUndo(grid, next, bag, score) {
   // make a backup of grid values
   let gridCopy = [];
+  if( path.length > nextNumbers.length) gridCopy = [];
   for(let row = 0; row < Grid.rows; row++){
     let rowTemp = [];
     for(let col = 0; col < Grid.cols; col++){
@@ -390,9 +398,12 @@ function addToUndo(grid, next, bag, score) {
   return state;
 }
 
+let firstUndo = true;
 function undo() {
   // update grid values from backup array
   if(backup.length > 0 && backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0) {
+    if(firstUndo) backup.splice(backup.length-1);
+    firstUndo = false;
     // update grid values
     for(let row = 0; row < Grid.rows; row++){
       for(let col = 0; col < Grid.cols; col++){
@@ -404,7 +415,11 @@ function undo() {
     score = backup[backup.length-1].score;
     backup.splice(backup.length-1);
     timesUndone++;
-    score -= Math.floor(5*Math.pow(1.18, timesUndone));
+    if(Math.floor(5*Math.pow(1.18, timesUndone)) < 50) {
+      score -= Math.floor(5*Math.pow(1.18, timesUndone));
+    } else {
+      score -= 50;
+    }
   }
 
 }
@@ -423,7 +438,7 @@ function newBag() {
 // draws and returns a number from the bag
 function drawBag() {
   if(Bag.length == 0) Bag = newBag();
-  Bag = shuffle(Bag);
+  // Bag = shuffle(Bag);
   return Bag.splice(0,1);
 }
 
