@@ -209,16 +209,16 @@ function mouseReleased() {
   release();
 }
 
-// function touchStarted() {
-//   pressed();
-// }
+function touchStarted() {
+  pressed();
+}
 function touchMoved() {
   dragged();
   return false;
 }
-// function touchEnded() {
-//   release();
-// }
+function touchEnded() {
+  release();
+}
 
 restartConfirm = false;
 function pressed() {
@@ -303,9 +303,8 @@ function release() {
   // add the last move to the undo stack
   justUndone = false;
   if(path.length > 1){
-    combineNumbers(path);
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
-    firstUndo = true;
+    combineNumbers(path);
   }
   path = [];
 }
@@ -426,7 +425,6 @@ function undo() {
   // update grid values from backup array
   if(backup.length > 0) {
     if( backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0 || backup[backup.length-1].score < 48 ) {
-      if(firstUndo && backup.length > 2) backup.splice(backup.length-1);
       // update grid values
       for(let row = 0; row < Grid.rows; row++){
         for(let col = 0; col < Grid.cols; col++){
@@ -437,7 +435,6 @@ function undo() {
       Bag = backup[backup.length-1].bag;
       score = backup[backup.length-1].score;
 
-      firstUndo = false;
       if (backup.length > 1) backup.splice(backup.length-1); //leave the last restart as safestate
       if(score > 48) {
         timesUndone++;
