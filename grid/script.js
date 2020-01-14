@@ -24,6 +24,7 @@ let path = [];
 //undo storage
 let backup = [];
 let timesUndone = 0;
+let justUndone = false;
 
 let Bag = newBag();
 let nextNumbers = [0, 0, 0];
@@ -141,30 +142,40 @@ function draw() {
   // display preview
   textSize(80);
   strokeWeight(1);
-  if(checkAllSame() && path.length != 0) {
-    for(let i = path.length; i <= nextNumbers.length; i++) {
-     text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
-   }
- } else {
-   if (score != 0) {
-     for(let i = 0; i < nextNumbers.length; i++) {
-      text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
+  if(!restartConfirm){
+    if(checkAllSame() && path.length != 0) {
+      for(let i = path.length; i <= nextNumbers.length; i++) {
+        text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
+      }
+    } else {
+      if (score != 0) {
+        for(let i = 0; i < nextNumbers.length; i++) {
+          text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
+        }
+      }
     }
   }
- }
  // display score
  textAlign(RIGHT, CENTER);
   if(scoreShow){
     // if(score < average(scores)) fill(RED);
     text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
     // fill(BLACK);
-  } else if (score == 0 ){
+  } else if ((score == 0 && path.length == 0) || restartConfirm){
     textAlign(RIGHT, CENTER);
     text("tap or u to undo", width-offset, height-offset/2);
     textAlign(LEFT, CENTER);
-    text("tap or r to restart", offset, offset/2);
+    if(restartConfirm) {
+      text("tap again to restart", offset, offset/2);
+    } else {
+      text("tap or r to restart", offset, offset/2);
+    }
   } else {
-    text(score, width-offset, height-offset/2);
+    if(justUndone) {
+      text(score + " -" + Math.floor(5*Math.pow(1.18, timesUndone)) , width-offset, height-offset/2);
+    } else {
+      text(score, width-offset, height-offset/2);
+    }
   }
   textAlign(CENTER, CENTER);
 }
@@ -209,10 +220,20 @@ function touchEnded() {
   release();
 }
 
+restartConfirm = false;
 function pressed() {
   if (mouseY >= height-offset) undo();
-  if (mouseY <= height-offset) restart();
+  if (mouseY <= offset) {
+    if (score != 0 && restartConfirm) {
+      restartConfirm = false;
+      restart();
+    } else if (score != 0) {
+      restartConfirm = true;
+    } else restart();
+  }
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= height-offset) ) {
+    restartConfirm = false;
+
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
     Grid.map[col][row].select();
@@ -284,6 +305,7 @@ function release() {
     combineNumbers(path);
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
     firstUndo = true;
+    justUndone = false;
   }
   path = [];
 }
@@ -358,7 +380,6 @@ function restart() {
   timesUndone = 0;
   generateNext(5);
   Bag = newBag();
-
 }
 
 function restart5() {
@@ -403,7 +424,6 @@ function undo() {
   // update grid values from backup array
   if(backup.length > 0 && backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0) {
     if(firstUndo) backup.splice(backup.length-1);
-    firstUndo = false;
     // update grid values
     for(let row = 0; row < Grid.rows; row++){
       for(let col = 0; col < Grid.cols; col++){
@@ -415,6 +435,8 @@ function undo() {
     score = backup[backup.length-1].score;
     backup.splice(backup.length-1);
     timesUndone++;
+    justUndone = true;
+    firstUndo = false;
     if(Math.floor(5*Math.pow(1.18, timesUndone)) < 50) {
       score -= Math.floor(5*Math.pow(1.18, timesUndone));
     } else {
