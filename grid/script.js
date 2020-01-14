@@ -5,8 +5,8 @@ put touch events
 prevent touch scroll
 
 non-square grid
-
-
+sumOfneighbors%3+1
+shuffle bag every turn
 */
 
 let w, h;
@@ -19,6 +19,10 @@ let offset = 120;
 let score = 0;
 let scores = [];
 let scoreShow = false;
+
+//undo storage
+let backup = [];
+let timesUndone = 0;
 
 let Bag = newBag();
 let nextNumbers = [0, 0, 0];
@@ -150,6 +154,8 @@ function draw() {
     // if(score < average(scores)) fill(RED);
     text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
     // fill(BLACK);
+  } else if (score == 0 ){
+    text("r to restart, u to undo", width-offset, height-offset/2);
   } else {
     text(score, width-offset, height-offset/2);
   }
@@ -170,14 +176,13 @@ function keyPressed() {
   if (key == 's') {
     scoreShow = !scoreShow;
   }
+  if (key == 'u') {
+    undo();
+  }
 }
 
 let path = [];
-let lastGrid = 0;
-let lastNext = 0;
 function mousePressed() {
-  lastGrid = Grid;
-  lastNext = nextNumbers;
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) ) {
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
@@ -257,6 +262,8 @@ function mouseReleased() {
       Grid.map[col][row].deselect()
     }
   }
+  // add the last move to the undo stack
+  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   if(path.length > 1) combineNumbers(path);
   path = [];
 }
@@ -315,6 +322,8 @@ function restart() {
   console.log(score, average(scores));
   score = 0;
   nextNumbers = [0, 0, 0];
+  backups = [];
+  timesUndone = 0;
   generateNext(5);
   Bag = newBag();
 
@@ -324,6 +333,8 @@ function restart5() {
   Grid = createGrid(5, 5);
   score = 0;
   nextNumbers = [0, 0, 0, 0];
+  backups = [];
+  timesUndone = 0;
   generateNext(5);
   Bag = newBag();
 
@@ -334,8 +345,51 @@ function bounds() {
   return false;
 }
 
-// TODO
-//    make a bag with 5 of each to give fairer numbers
+function addToUndo(grid, next, bag, score) {
+  // make a backup of grid values
+  let gridCopy = [];
+  for(let row = 0; row < Grid.rows; row++){
+    let rowTemp = [];
+    for(let col = 0; col < Grid.cols; col++){
+      rowTemp.push(Grid.map[row][col].value);
+    }
+    gridCopy.push(rowTemp);
+  }
+
+  let state = {
+    "grid": gridCopy,
+    "next": JSON.parse(JSON.stringify(next)),
+    "bag": JSON.parse(JSON.stringify(bag)),
+    "score": score
+  }
+  return state;
+}
+
+function undo() {
+  console.log(Grid);
+  // update grid values from backup array
+
+  console.log(backup.length);
+  if(backup.length > 0 && backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0) {
+    // update grid values
+    for(let row = 0; row < Grid.rows; row++){
+      for(let col = 0; col < Grid.cols; col++){
+        Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
+      }
+    }
+    nextNumbers = backup[backup.length-1].next;
+    Bag = backup[backup.length-1].bag;
+    score = backup[backup.length-1].score;
+    backup.splice(backup.length-1);
+    timesUndone++;
+    score -= Math.floor(5*Math.pow(1.18, timesUndone));
+  } else {
+    console.log("no backups");
+  }
+
+}
+
+
 function newBag() {
   let bag = [];
   for(let i = 1; i<=3; i++) {
@@ -350,6 +404,7 @@ function newBag() {
 // draws and returns a number from the bag
 function drawBag() {
   if(Bag.length == 0) Bag = newBag();
+  Bag = shuffle(Bag);
   return Bag.splice(0,1);
 }
 

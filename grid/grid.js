@@ -36,7 +36,6 @@ function createGrid(cols, rows) {
     "cols": cols,
     "rows": rows,
     "map": [],
-
   }
   for(let row = 0; row < newGrid.rows; row++){
     let rowTemp = [];
