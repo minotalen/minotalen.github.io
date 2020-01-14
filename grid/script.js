@@ -209,16 +209,16 @@ function mouseReleased() {
   release();
 }
 
-function touchStarted() {
-  pressed();
-}
+// function touchStarted() {
+//   pressed();
+// }
 function touchMoved() {
   dragged();
   return false;
 }
-function touchEnded() {
-  release();
-}
+// function touchEnded() {
+//   release();
+// }
 
 restartConfirm = false;
 function pressed() {
