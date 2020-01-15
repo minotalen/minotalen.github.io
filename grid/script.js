@@ -277,7 +277,7 @@ function pressed() {
         activeItem = 1;
       } else {
         itemMode = 0;
-        activeItem = 1;
+        activeItem = 0;
       }
     }
   } else if( cw+offset+cw/2 < mouseX && mouseX < offset+cw/2+cw*2 && 0 < mouseY && mouseY < offset ){
@@ -287,7 +287,7 @@ function pressed() {
         activeItem = 2;
       } else {
         itemMode = 0;
-        activeItem = 2;
+        activeItem = 0;
       }
     }
   } else if( cw*2+offset+cw/2 < mouseX && mouseX < offset+cw/2+cw*3 && 0 < mouseY && mouseY < offset ){
@@ -297,7 +297,7 @@ function pressed() {
         activeItem = 3;
       } else {
         itemMode = 0;
-        activeItem = 3;
+        activeItem = 0;
       }
     }
   }
@@ -587,7 +587,7 @@ function itemFinal(){
           Grid.map[path[0][0]][1].value = Grid.map[path[0][0]][0].value;
           Grid.map[path[0][0]][0].value = placeHold;
           maxLength(0);
-          Items[activeItem].charge--;
+          Items[activeItem-1].charge--;
           activeItem = 0;
           itemMode = 0;
         }
@@ -598,7 +598,7 @@ function itemFinal(){
         let swap = Grid.map[path[0][0]][path[0][1]].value
         Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
         Grid.map[path[1][0]][path[1][1]].value = swap;
-        Items[activeItem].charge--;
+        Items[activeItem-1].charge--;
         activeItem = 0;
         maxLength(0);
         itemMode = 0;
@@ -606,13 +606,17 @@ function itemFinal(){
       path = [];
       break;
     case "grow":
-      if(path.length != 0) {
+      if(path.length == 1) {
         Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[0][0]][path[0][1]].value+1;
-        Items[activeItem].charge--;
+        Items[activeItem-1].charge--;
         activeItem = 0;
+        maxLength(0);
+        itemMode = 0;
+      } else if (!bounds()) {
+        activeItem == 0;
+        itemMode = 0;
+        maxLength(0);
       }
-      maxLength(0);
-      itemMode = 0;
       break;
   }
 }
