@@ -5,8 +5,6 @@ put touch events
 prevent touch scroll
 
 non-square grid
-sumOfneighbors%3+1
-shuffle bag every turn
 */
 
 let w, h;
@@ -20,11 +18,16 @@ let score = 0;
 let scores = [];
 let scoreShow = false;
 let path = [];
+let rowPreview = false;
+let colPreview = false;
+let activeItem = 0;
 
 //undo storage
 let backup = [];
+let firstUndo = true;
 let timesUndone = 0;
 let justUndone = false;
+restartConfirm = false;
 
 let Bag = newBag();
 let nextNumbers = [0, 0, 0];
@@ -38,12 +41,10 @@ function setup() {
 
 function draw() {
   background(220);
-
   cw = (width-offset*2) / Grid.cols;
   ch = height;
   rw = width;
   rh = (width-offset*2) / Grid.rows;
-
   for (cn = 0; cn < Grid.cols; cn++) {
     for (rn = 0; rn < Grid.rows; rn++) {
       switch(Grid.map[cn][rn].color){
@@ -106,6 +107,13 @@ function draw() {
         case 2:
           fill(206, 149, 0);
           break;
+        case 3: // col, row
+          fill('#aaf99a');
+          break;
+        case "swap": // swap
+          fill(171, 236, 106);
+          break;
+
         }
       let x = cn * cw;
       let y = rn * rh;
@@ -155,27 +163,28 @@ function draw() {
       }
     }
   }
- // display score
- textAlign(RIGHT, CENTER);
-  if(scoreShow){
-    // if(score < average(scores)) fill(RED);
-    text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
-    // fill(BLACK);
-  } else if ((score == 0 && path.length == 0) || restartConfirm){
-    textAlign(RIGHT, CENTER);
-    text("tap or u to undo", width-offset, height-offset/2);
-    textAlign(LEFT, CENTER);
-    if(restartConfirm) {
+  textAlign(RIGHT, CENTER);
+  // display score
+  if(path.length == 0) {
+    if(restartConfirm && path.length == 0) {
       text("tap again to restart", offset, offset/2);
-    } else {
+    } else if (score == 0) {
+      textAlign(LEFT, CENTER);
       text("tap or r to restart", offset, offset/2);
+      textAlign(RIGHT, CENTER);
+      text("tap or u to undo", width-offset, height-offset/2);
     }
-  } else {
-    if(justUndone) {
-      text(score + " -" + Math.floor(5*Math.pow(1.18, timesUndone)) , width-offset, height-offset/2);
-    } else {
-      text(score, width-offset, height-offset/2);
-    }
+  }
+  textAlign(RIGHT, CENTER);
+  if(scoreShow && itemMode == 0){
+    text("amt: " + scores.length + " avg: " + average(scores), width-offset, height-offset/2);
+  } else if(itemMode != 0) {
+    //show item text
+    text(itemMode + ": " + Items[activeItem-1].charge, width-offset, height-offset/2);
+  } else if(justUndone) {
+    text(score + " -" + Math.floor(5*Math.pow(1.18, timesUndone)) , width-offset, height-offset/2);
+  } else if(score != 0){
+    text(score, width-offset, height-offset/2);
   }
   textAlign(CENTER, CENTER);
 }
@@ -196,6 +205,45 @@ function keyPressed() {
   }
   if (key == 'u') {
     undo();
+  }
+  if (key == '1' && Items[0].charge > 0) {
+    if(activeItem != 1) {
+      itemMode = Items[0].type;
+      activeItem = 1;
+    } else {
+      itemMode = 0;
+      activeItem = 1;
+    }
+  }
+  if (key == '2' && Items[1].charge > 0) {
+    if(activeItem != 2) {
+      itemMode = Items[1].type;
+      activeItem = 2;
+    } else {
+      itemMode = 0;
+      activeItem = 2;
+    }
+  }
+  if (key == '3' && Items[2].charge > 0) {
+    if(activeItem != 3) {
+      itemMode = Items[2].type;
+      activeItem = 3;
+    } else {
+      itemMode = 0;
+      activeItem = 3;
+    }
+  }
+  if (key == '6') {
+    itemMode = "swap";
+  }
+  if (key == '7') {
+    itemMode = "col";
+  }
+  if (key == '8') {
+    itemMode = "row";
+  }
+  if (key == '9') {
+    itemMode = "grow";
   }
 }
 
@@ -220,56 +268,73 @@ function touchEnded() {
   release();
 }
 
-restartConfirm = false;
 function pressed() {
+  if( offset+cw/2 < mouseX && mouseX < offset+cw/2+cw && 0 < mouseY && mouseY < offset ){
+    console.log(1);
+    if (Items[0].charge > 0) {
+      if(activeItem != 1) {
+        itemMode = Items[0].type;
+        activeItem = 1;
+      } else {
+        itemMode = 0;
+        activeItem = 1;
+      }
+    }
+  } else if( cw+offset+cw/2 < mouseX && mouseX < offset+cw/2+cw*2 && 0 < mouseY && mouseY < offset ){
+    if (Items[1].charge > 0) {
+      if(activeItem != 2) {
+        itemMode = Items[1].type;
+        activeItem = 2;
+      } else {
+        itemMode = 0;
+        activeItem = 2;
+      }
+    }
+  } else if( cw*2+offset+cw/2 < mouseX && mouseX < offset+cw/2+cw*3 && 0 < mouseY && mouseY < offset ){
+    if (Items[2].charge > 0) {
+      if(activeItem != 3) {
+        itemMode = Items[2].type;
+        activeItem = 3;
+      } else {
+        itemMode = 0;
+        activeItem = 3;
+      }
+    }
+  }
   if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= height-offset) ) {
-    restartConfirm = false;
 
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
     Grid.map[col][row].select();
+    restartConfirm = false;
     path.push([col, row]);
   }
   if (mouseButton === RIGHT) {
-      path = [];
+    path = [];
   }
+  itemClick();
 }
-
 function dragged() {
   // mouse oputside of grid
   if ( bounds() ) {
-    for(let remove = 0; remove < path.length; remove++) {
-      Grid.map[path[remove][0]][path[remove][1]].deselect();
-    }
-    path = [];
+    maxLength(0);
   } else {
     // get mouse position as grid coordinates
     let col = Math.floor((mouseX-offset)/cw);
     let row = Math.floor((mouseY-offset)/rh);
 
     // check if the drag crosses itself
-    for(let element = 0; element < path.length-1; element++){
-      if(path[element][0] == col && path[element][1] == row){
-        // remove all objects after intersection
-        for(let remove = element+1; remove < path.length; remove++) {
-          Grid.map[path[remove][0]][path[remove][1]].deselect();
-        }
-        path.splice(element+1);
-        if(checkAllSame()) {
-          Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
-          // preview next numbers
-          drawPreview();
-        }
-      }
-    }
+    dragCross(col, row);
 
     // adding a cell to the array
-    if(path[path.length-1][0] != col || path[path.length-1][1] != row){
-      if(Grid.map[col][row].isNeighborOf(path[path.length-1][0], path[path.length-1][1])) {
-        Grid.map[col][row].select()
-        path.push([col, row]);
-        Grid.map[path[path.length-2][0]][path[path.length-2][1]].preview = 0;
-        Grid.map[path[path.length-2][0]][path[path.length-2][1]].color = 2;
+    if(path.length > 0 && Grid.map[col][row].isNeighborOf(path[path.length-1][0], path[path.length-1][1])) {
+      Grid.map[col][row].select()
+      path.push([col, row]);
+      if( itemMode == 0 ) {
+        if(path.length-2 >= 0) {
+          Grid.map[path[path.length-2][0]][path[path.length-2][1]].color = 2;
+          Grid.map[path[path.length-2][0]][path[path.length-2][1]].preview = 0;
+        }
         if(checkAllSame()){
           // preview combined number
           Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
@@ -282,9 +347,22 @@ function dragged() {
         }
       }
     }
+    if(itemMode) itemDrag();
   }
 }
-
+function dragCross(col, row) {
+  for(let element = 0; element < path.length-1; element++){
+    if(path[element][0] == col && path[element][1] == row){
+      // remove all objects after intersection
+      maxLength(element+1);
+      if(checkAllSame()) {
+        Grid.map[col][row].preview = Grid.map[col][row].value * path.length;
+        // preview next numbers
+        drawPreview();
+      }
+    }
+  }
+}
 function release() {
   if (mouseY >= height-offset && !justUndone) undo();
   if (mouseY <= offset) {
@@ -292,9 +370,11 @@ function release() {
       restartConfirm = false;
       restart();
     } else if (score != 0) {
-      restartConfirm = true;
-    } else restart();
+      // restartConfirm = true;
+    } else if(score==0) restart();
   }
+  //execute Item abilities
+  itemFinal();
   for(let row in Grid.map) {
     for(let col in Grid.map[row]) {
       Grid.map[col][row].deselect()
@@ -302,6 +382,7 @@ function release() {
   }
   // add the last move to the undo stack
   justUndone = false;
+
   if(path.length > 1){
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
     combineNumbers(path);
@@ -309,6 +390,234 @@ function release() {
   path = [];
 }
 
+function maxLength(length) {
+  if(colPreview && length <= 1) {
+    Grid.map[path[0][0]][0].deselect;
+    Grid.map[path[0][0]][1].deselect;
+    Grid.map[path[0][0]][2].deselect;
+    Grid.map[path[0][0]][3].deselect;
+    Grid.map[path[0][0]][0].preview = Grid.map[path[0][0]][0].value;
+    Grid.map[path[0][0]][1].preview = Grid.map[path[0][0]][1].value;
+    Grid.map[path[0][0]][2].preview = Grid.map[path[0][0]][2].value;
+    Grid.map[path[0][0]][3].preview = Grid.map[path[0][0]][3].value;
+    console.log("wiping col preview");
+    colPreview = false;
+  }
+  if(rowPreview && length == 1) {
+    Grid.map[0][path[0][0]].deselect;
+    Grid.map[1][path[0][0]].deselect;
+    Grid.map[2][path[0][0]].deselect;
+    Grid.map[3][path[0][0]].deselect;
+    Grid.map[0][path[0][0]].preview = Grid.map[0][path[0][0]].value;
+    Grid.map[1][path[0][0]].preview = Grid.map[1][path[0][0]].value;
+    Grid.map[2][path[0][0]].preview = Grid.map[2][path[0][0]].value;
+    Grid.map[3][path[0][0]].preview = Grid.map[3][path[0][0]].value;
+    console.log("wiping row preview");
+    rowPreview = false;
+  }
+  while(path.length > length) {
+    Grid.map[path[path.length-1][0]][path[path.length-1][1]].deselect();
+    path.splice(path.length-1);
+  }
+}
+
+function itemClick() {
+  switch(itemMode) {
+    case "row":
+      rowPreview = true;
+      if(path.length != 0) {
+        Grid.map[0][path[0][1]].color = 3;
+        Grid.map[1][path[0][1]].color = 3;
+        Grid.map[2][path[0][1]].color = 3;
+        Grid.map[3][path[0][1]].color = 3;
+      }
+      break;
+    case "col":
+      colPreview = true;
+      if(path.length != 0) {
+        Grid.map[path[0][0]][0].color = 3;
+        Grid.map[path[0][0]][1].color = 3;
+        Grid.map[path[0][0]][2].color = 3;
+        Grid.map[path[0][0]][3].color = 3;
+      }
+      break;
+    case "swap":
+      if(path.length != 0) Grid.map[path[0][0]][path[0][1]].color = "swap";
+      break;
+    case "grow":
+      Grid.map[path[0][0]][path[0][1]].color = "swap";
+      Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value+1;
+      break;
+    }
+
+}
+function itemDrag() {
+  switch(itemMode) {
+    case "row":
+      maxLength(2);
+      rowPreview = true;
+      if(path.length != 0) {
+        Grid.map[0][path[0][1]].color = 3;
+        Grid.map[1][path[0][1]].color = 3;
+        Grid.map[2][path[0][1]].color = 3;
+        Grid.map[3][path[0][1]].color = 3;
+      }
+      if(path.length > 1){
+        if(!(path[0][0] == path[1][0]+1 || path[0][0] == path[1][0]-1)) {
+          maxLength(1);
+        } else if(path[0][0] == path[1][0]+1) {
+          console.log("row left");
+          Grid.map[0][path[1][1]].color = 1;
+          Grid.map[1][path[1][1]].color = 3;
+          Grid.map[2][path[1][1]].color = 3;
+          Grid.map[3][path[1][1]].color = 3;
+          Grid.map[3][path[0][1]].preview = Grid.map[0][path[0][1]].value;
+          Grid.map[0][path[0][1]].preview = Grid.map[1][path[0][1]].value;
+          Grid.map[1][path[0][1]].preview = Grid.map[2][path[0][1]].value;
+          Grid.map[2][path[0][1]].preview = Grid.map[3][path[0][1]].value;
+        } else if(path[0][0] == path[1][0]-1) {
+          console.log("row right");
+          Grid.map[0][path[1][1]].color = 3;
+          Grid.map[1][path[1][1]].color = 3;
+          Grid.map[2][path[1][1]].color = 3;
+          Grid.map[3][path[1][1]].color = 1;
+          Grid.map[3][path[0][1]].preview = Grid.map[2][path[0][1]].value;
+          Grid.map[2][path[0][1]].preview = Grid.map[1][path[0][1]].value;
+          Grid.map[1][path[0][1]].preview = Grid.map[0][path[0][1]].value;
+          Grid.map[0][path[0][1]].preview = Grid.map[3][path[0][1]].value;
+        }
+      }
+      break;
+    case "col":
+      maxLength(2);
+      colPreview = true;
+      if(path.length != 0) {
+        Grid.map[path[0][0]][0].color = 3;
+        Grid.map[path[0][0]][1].color = 3;
+        Grid.map[path[0][0]][2].color = 3;
+        Grid.map[path[0][0]][3].color = 3;
+      }
+      if(path.length > 1){
+        if(!(path[0][1] == path[1][1]+1 || path[0][1] == path[1][1]-1)) {
+          maxLength(1);
+        } else if(path[0][1] == path[1][1]+1) {
+          console.log("up");
+          Grid.map[path[0][0]][0].color = 3;
+          Grid.map[path[0][0]][1].color = 3;
+          Grid.map[path[0][0]][2].color = 3;
+          Grid.map[path[0][0]][3].color = 3;
+          Grid.map[path[0][0]][0].preview = Grid.map[path[0][0]][1].value;
+          Grid.map[path[0][0]][1].preview = Grid.map[path[0][0]][2].value;
+          Grid.map[path[0][0]][2].preview = Grid.map[path[0][0]][3].value;
+          Grid.map[path[0][0]][3].preview = Grid.map[path[0][0]][0].value;
+        } else if(path[0][1] == path[1][1]-1) {
+          console.log("down");
+          Grid.map[path[0][0]][0].color = 3;
+          Grid.map[path[0][0]][1].color = 3;
+          Grid.map[path[0][0]][2].color = 3;
+          Grid.map[path[0][0]][3].color = 3;
+          Grid.map[path[0][0]][0].preview = Grid.map[path[0][0]][3].value;
+          Grid.map[path[0][0]][1].preview = Grid.map[path[0][0]][0].value;
+          Grid.map[path[0][0]][2].preview = Grid.map[path[0][0]][1].value;
+          Grid.map[path[0][0]][3].preview = Grid.map[path[0][0]][2].value;
+        }
+      }
+      break;
+    case "swap":
+      console.log(path.length);
+      maxLength(2);
+      if(path.length != 0) Grid.map[path[0][0]][path[0][1]].color = "swap";
+      if(path.length == 2) {
+        Grid.map[path[1][0]][path[1][1]].color = "swap";
+        Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[0][0]][path[0][1]].value;
+      }
+      break;
+    case "grow":
+      if(path.length > 1) maxLength(0);
+      break;
+  }
+}
+function itemFinal(){
+  switch(itemMode) {
+    case "row":
+    if(path.length > 1){
+      if(!(path[0][0] == path[1][0]+1 || path[0][0] == path[1][0]-1)) {
+        maxLength(1);
+        console.log("canceling row...");
+      } else if(path[0][0] == path[1][0]+1) {
+        let placeHold = Grid.map[3][path[0][1]].value;
+        Grid.map[3][path[0][1]].value = Grid.map[0][path[0][1]].value;
+        Grid.map[0][path[0][1]].value = Grid.map[1][path[0][1]].value;
+        Grid.map[1][path[0][1]].value = Grid.map[2][path[0][1]].value;
+        Grid.map[2][path[0][1]].value = placeHold;
+        maxLength(0);
+        itemMode = 0;
+      } else if(path[0][0] == path[1][0]-1) {
+        let placeHold = Grid.map[3][path[0][1]].value;
+        Grid.map[3][path[0][1]].value = Grid.map[2][path[0][1]].value;
+        Grid.map[2][path[0][1]].value = Grid.map[1][path[0][1]].value;
+        Grid.map[1][path[0][1]].value = Grid.map[0][path[0][1]].value;
+        Grid.map[0][path[0][1]].value = placeHold;
+        maxLength(0);
+        Items[activeItem-1].charge--;
+        activeItem = 0;
+        itemMode = 0;
+      }
+    }
+      break;
+    case "col":
+      if(path.length > 1){
+        if(!(path[0][1] == path[1][1]+1 || path[0][1] == path[1][1]-1)) {
+          maxLength(1);
+        } else if(path[0][1] == path[1][1]+1) {
+          console.log("up");
+          let placeHold = Grid.map[path[0][0]][3].value;
+          Grid.map[path[0][0]][3].value = Grid.map[path[0][0]][0].value;
+          Grid.map[path[0][0]][0].value = Grid.map[path[0][0]][1].value;
+          Grid.map[path[0][0]][1].value = Grid.map[path[0][0]][2].value;
+          Grid.map[path[0][0]][2].value = placeHold;
+          maxLength(0);
+          itemMode = 0;
+        } else if(path[0][1] == path[1][1]-1) {
+          console.log("down");
+          let placeHold = Grid.map[path[0][0]][3].value;
+          Grid.map[path[0][0]][3].value = Grid.map[path[0][0]][2].value;
+          Grid.map[path[0][0]][2].value = Grid.map[path[0][0]][1].value;
+          Grid.map[path[0][0]][1].value = Grid.map[path[0][0]][0].value;
+          Grid.map[path[0][0]][0].value = placeHold;
+          maxLength(0);
+          Items[activeItem].charge--;
+          activeItem = 0;
+          itemMode = 0;
+        }
+      }
+      break;
+    case "swap":
+      if(path.length == 2 && Grid.map[path[0][0]][path[0][1]].value != Grid.map[path[1][0]][path[1][1]].value) {
+        let swap = Grid.map[path[0][0]][path[0][1]].value
+        Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].value = swap;
+        Items[activeItem].charge--;
+        activeItem = 0;
+        maxLength(0);
+        itemMode = 0;
+      }
+      path = [];
+      break;
+    case "grow":
+      if(path.length != 0) {
+        Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[0][0]][path[0][1]].value+1;
+        Items[activeItem].charge--;
+        activeItem = 0;
+      }
+      maxLength(0);
+      itemMode = 0;
+      break;
+  }
+}
+
+//draws the ongrid piece previews
 function drawPreview() {
   for(let i = 1; i < path.length; i++){
     let prevCol = path[path.length-1-i][0]
@@ -380,8 +689,9 @@ function restart() {
   firstUndo = true;
   generateNext(5);
   Bag = newBag();
+  Items = [0,0,0];
+  Items = initItem(Items);
 }
-
 function restart5() {
   Grid = createGrid(5, 5);
   backup = [];
@@ -391,7 +701,8 @@ function restart5() {
   timesUndone = 0;
   generateNext(5);
   Bag = newBag();
-
+  Items = [0,0,0];
+  Items = initItem(Items);
 }
 
 function bounds() {
@@ -399,28 +710,6 @@ function bounds() {
   return false;
 }
 
-function addToUndo(grid, next, bag, score) {
-  // make a backup of grid values
-  let gridCopy = [];
-  if( path.length > nextNumbers.length) gridCopy = [];
-  for(let row = 0; row < Grid.rows; row++){
-    let rowTemp = [];
-    for(let col = 0; col < Grid.cols; col++){
-      rowTemp.push(Grid.map[row][col].value);
-    }
-    gridCopy.push(rowTemp);
-  }
-
-  let state = {
-    "grid": gridCopy,
-    "next": JSON.parse(JSON.stringify(next)),
-    "bag": JSON.parse(JSON.stringify(bag)),
-    "score": score
-  }
-  return state;
-}
-
-let firstUndo = true;
 function undo() {
   // update grid values from backup array
   if(backup.length > 0) {
@@ -445,25 +734,42 @@ function undo() {
   }
 
 }
+function addToUndo(grid, next, bag, score) {
+  // make a backup of grid values
+  let gridCopy = [];
+  if( path.length > nextNumbers.length) gridCopy = [];
+  for(let row = 0; row < Grid.rows; row++){
+    let rowTemp = [];
+    for(let col = 0; col < Grid.cols; col++){
+      rowTemp.push(Grid.map[row][col].value);
+    }
+    gridCopy.push(rowTemp);
+  }
 
-function newBag() {
-  let bag = [];
+  let state = {
+    "grid": gridCopy,
+    "next": JSON.parse(JSON.stringify(next)),
+    "bag": JSON.parse(JSON.stringify(bag)),
+    "score": score
+  }
+  return state;
+}
+
+function newBag(bag = []) {
   for(let i = 1; i<=3; i++) {
-    for(let j = 0; j < 5; j++) {
+    for(let j = 0; j < 3; j++) {
       bag.push(i);
       bag = shuffle(bag);
     }
   }
   return bag;
 }
-
 // draws and returns a number from the bag
 function drawBag() {
-  if(Bag.length == 0) Bag = newBag();
+  if(Bag.length <= 3) Bag = newBag(Bag);
   // Bag = shuffle(Bag);
   return Bag.splice(0,1);
 }
-
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -471,7 +777,6 @@ function shuffle(a) {
   }
   return a;
 }
-
 function generateNext(amount=1) {
   let fiFo;
   for(let i = 0; i < amount; i++) {
