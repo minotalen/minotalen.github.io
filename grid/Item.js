@@ -1,5 +1,5 @@
-function createItem(init = "rand", charge = getRandomInt(4)+2) {
-  let types = ["row", "col", "swap", "grow"];
+function createItem(init = "rand", charge = getRandomInt(3)+3) {
+  let types = ["row", "col", "swap", "grow", "shift"];
   // shift, clone1234
   let thisType;
   if (init == "rand") {
