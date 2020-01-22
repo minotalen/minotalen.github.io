@@ -40,91 +40,6 @@ function setup() {
   textAlign(CENTER, CENTER);
   gameState = "main";
 }
-
-function drawItems(){
-  let itemOff = 30;
-  //item display
-  fill(133);
-  for(let i = 0; i < Items.length; i++) {
-    if (Items[i] != 0) if(Items[i].charge > 0) {
-      textAlign(CENTER,CENTER);
-      textSize(55);
-      let from = color('#7A1328');
-      let to = color('#EC7474');
-      if(Items[i].charge < 4) {
-        fill(lerpColor(from, to,Items[i].charge /4));
-      }
-      rect(0+itemOff/2, i*((width-offset*2) / 3)+offset, (cw-itemOff)/2, (width-offset*2) / 3);
-      fill(0);
-      textSize(85);
-      switch(Items[i].type) {
-        case "grow":
-          text("+", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "swap":
-          text("x", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "col":
-          text("|", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "row":
-          text("-", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "shift":
-          text("<", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "sum":
-          fill(0);
-          text("4", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-        case "sum6":
-          text("6", 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
-          break;
-      }
-      fill(133);
-    }
-  }
-  fill(0);
-}
-
-function itemPressed() {
-  let itemHeight = ((width-offset*2) / 3);
-  if(score!=0){
-    if( 0 < mouseX && mouseX < offset && offset < mouseY && mouseY < offset+itemHeight ){
-      console.log(1);
-      if (Items[0].charge > 0) {
-        if(activeItem != 1) {
-          itemMode = Items[0].type;
-          activeItem = 1;
-        } else {
-          itemMode = 0;
-          activeItem = 0;
-        }
-      }
-    } else if( 0 < mouseX && mouseX < offset && offset+itemHeight < mouseY && mouseY < offset+itemHeight*2 ){
-      if (Items[1].charge > 0) {
-        if(activeItem != 2) {
-          itemMode = Items[1].type;
-          activeItem = 2;
-        } else {
-          itemMode = 0;
-          activeItem = 0;
-        }
-      }
-    } else if( 0 < mouseX && mouseX < offset && offset+itemHeight*2 < mouseY && mouseY < offset+itemHeight*3 ){
-      if (Items[2].charge > 0) {
-        if(activeItem != 3) {
-          itemMode = Items[2].type;
-          activeItem = 3;
-        } else {
-          itemMode = 0;
-          activeItem = 0;
-        }
-      }
-    }
-  }
-}
-
 function draw() {
   background(220);
   cw = (width-offset*2) / Grid.cols;
@@ -219,6 +134,7 @@ function draw() {
         } else {
           textSize(110);
         }
+        strokeWeight(0);
         text(Grid.map[cn][rn].value, x+cw/2+offset, y+rh/2+offset+4);
       } else {
         if(Grid.map[cn][rn].preview >= 1000) {
@@ -230,17 +146,18 @@ function draw() {
         } else {
           textSize(110);
         }
+        strokeWeight(0);
         text(Grid.map[cn][rn].preview, x+cw/2+offset, y+rh/2+offset+4);
       }
     }
   }
 
-  drawItems();
+  itemDraw();
 
   // display preview
   textSize(80);
   strokeWeight(1);
-  if(!restartConfirm){
+  if(!restartConfirm && gameState=="main"){
     if(checkAllSame() && path.length != 0) {
       for(let i = path.length; i <= nextNumbers.length; i++) {
         text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
@@ -252,6 +169,8 @@ function draw() {
         }
       }
     }
+  } else if (gameState == "level") {
+    text("reached " + levelVal[level], offset+cw, 0+offset/2);
   }
   textAlign(RIGHT, CENTER);
   // display score
@@ -278,57 +197,10 @@ function draw() {
   }
   textAlign(CENTER, CENTER);
   if(gameState == "level"){
-    levelDialog(selection);
+    itemDialog(selection);
   }
 }
 
-// item selection dialog
-function levelDialog(selection) {
-  // console.log(selection);
-  for(let item = 0; item <= selection.length-1; item++) {
-    let extraOff = 30;
-    let xOffset = ( (width-(offset+extraOff)*2) /selection.length)
-    let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2
-    fill('#32cd60');
-    rectMode(CORNER);
-    rect(offset+extraOff+xOffset*item,height/3,xOffset,height/3);
-    textAlign(CENTER, CENTER);
-    fill('#174023');
-    // console.log(xOffset, xShift);
-    if(selection[item].hasOwnProperty('type')) {
-      text(selection[item].type,xOffset*item+xShift,(height)*1.5/3-100);
-      text(selection[item].charge,xOffset*item+xShift,(height)*1.5/3+100);
-    } else {
-      text(selection[item],xOffset*item+xShift,(height)*1.5/3);
-    }
-  }
-}
-
-function levelPress(x, y) {
-  // console.log(offset+extraOff+xOffset*item, x, );
-  for(let item = 0; item <= selection.length-1; item++) {
-    let extraOff = 30;
-    let xOffset = ( (width-(offset+extraOff)*2) /selection.length)
-    let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2
-    if(x > offset+extraOff+xOffset*item && x < offset+extraOff+xOffset*(item+1)) {
-      if(selection[item].hasOwnProperty('type')) {
-        for(itm in Items) {
-          if(Items[itm]==0 || Items[itm].depleted == true){
-            Items[itm] = selection[item];
-            selection = 0;
-            break;
-          }
-        }
-      } else {
-        Items[Math.floor(Math.random()*Items.length)].charge += selection[item];
-        selection = 0;
-      }
-    }
-  }
-  level++;
-  gameState = 'main';
-  isLeveled(lastComboVal);
-}
 
 function keyPressed() {
   if (key == 'r') {
@@ -472,8 +344,6 @@ function release() {
       // restartConfirm = true;
     } else if(score==0) restart();
   }
-  //execute Item abilities
-  itemFinal();
   for(let row in Grid.map) {
     for(let col in Grid.map[row]) {
       Grid.map[col][row].deselect()
@@ -486,6 +356,8 @@ function release() {
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
     combineNumbers(path);
   }
+  //execute Item abilities
+  itemFinal();
   path = [];
 }
 
@@ -525,10 +397,15 @@ function itemClick() {
     case "grow":
       Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value+1;
       break;
+    case "pick":
+      let temp = nextNumbers.pop();
+      nextNumbers.unshift([Grid.map[path[0][0]][path[0][1]].value]);
+      Grid.map[path[0][0]][path[0][1]].value = temp[0];
+      itemDeplete();
+      break;
     case "shift":
-      let temp = nextNumbers.shift();
-      console.log(temp);
-      nextNumbers.push(temp);
+      let temp2 = nextNumbers.shift();
+      nextNumbers.push(temp2[0]);
       itemDeplete();
       break;
     }
@@ -658,10 +535,15 @@ function itemDrag() {
           Grid.map[path[0][0]][path[0][1]].preview = nextNumbers[0];
         }
       }
+      if(path.length == 2){
+        if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value== 6) {
+          unequal = true;
+          Grid.map[path[1][0]][path[1][1]].preview = 6;
+          Grid.map[path[0][0]][path[0][1]].preview = nextNumbers[0];
+        }
+      }
       break;
     case "grow":
-      if(path.length > 1) maxLength(0);
-      break;
   }
 }
 function itemFinal(){
@@ -754,14 +636,20 @@ function itemFinal(){
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
           unequal = false;
           itemDeplete();
-        } else {
-          maxLength(3);
         }
       }
       if(path.length == 3){
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value == 6) {
           Grid.map[path[2][0]][path[2][1]].value = 6;
           Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
+          Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
+          unequal = false;
+          itemDeplete();
+        }
+      }
+      if(path.length == 2){
+        if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value == 6) {
+          Grid.map[path[1][0]][path[1][1]].value = 6;
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
           unequal = false;
           itemDeplete();
@@ -782,11 +670,186 @@ function itemFinal(){
   }
 }
 
+// returns the icon for the item type
+function itemIcon(type) {
+  let toShow = " ";
+  switch(type) {
+    case "grow":
+    toShow = "+"
+    break;
+    case "swap":
+    toShow = "x";
+    break;
+    case "col":
+    toShow = "|";
+    break;
+    case "row":
+    toShow = "-";
+    break;
+    case "shift":
+    toShow = "<";
+    break;
+    case "pick":
+    toShow = ">";
+    break;
+    case "sum":
+    toShow = "4";
+    break;
+    case "sum6":
+    toShow = "6";
+    break;
+  }
+  return toShow;
+}
+// reduce item charge by 1
 function itemDeplete() {
-  Items[activeItem-1].charge--;
+  if(Items[activeItem-1].charge>=1){
+    Items[activeItem-1].charge--;
+  } else {
+    Items[activeItem-1].charge = 0;
+    Items[activeItem-1].depleted = true;
+  }
   activeItem = 0;
   itemMode = 0;
 }
+// item side display
+function itemDraw(){
+  let itemOff = 30;
+  //item display
+  fill(133);
+  stroke(0);
+  for(let i = 0; i < Items.length; i++) {
+    if (Items[i] != 0) if(Items[i].charge > 0) {
+      textAlign(CENTER,CENTER);
+      textSize(55);
+      let from = color('#D9889C');
+      let to = color('#5D768B');
+      if(Items[i].charge < 6) {
+        fill(lerpColor(from, to,Items[i].charge /6));
+      }
+      strokeWeight(8);
+      rect(0+itemOff/2, i*((width-offset*2) / 3)+offset, (cw-itemOff)/2, (width-offset*2) / 3);
+      textSize(85);
+      fill(0);
+      strokeWeight(0);
+      text(itemIcon(Items[i].type), 0+itemOff*3/4, (i+.5)*((width-offset*2) / 3)+offset, (cw-itemOff)/2);
+      fill(133);
+    }
+  }
+  fill(0);
+}
+// item selection dialog draw
+function itemDialog(selection) {
+  // console.log(selection);
+  for(let item = 0; item <= selection.length-1; item++) {
+    let extraOff = 30;
+    let xOffset = ( (width-(offset+extraOff)*2) /selection.length)
+    let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2
+    fill('#32cd60');
+    rectMode(CORNER);
+    strokeWeight(10);
+    rect(offset+extraOff+xOffset*item,height/3,xOffset,height/3);
+    if(selection[item].hasOwnProperty('type')) {
+      strokeWeight(25);
+      stroke('#0e5e07');
+      fill('#073116');
+      textSize(166);
+      textAlign(CENTER, CENTER);
+      text(itemIcon(selection[item].type),xOffset*item+xShift,(height)*1.5/3+20);
+      strokeWeight(0);
+      fill('#123420');
+      textSize(72);
+      textAlign(LEFT, CENTER);
+      text(selection[item].type,xOffset*item+offset+extraOff*2,(height)*1.5/3-130);
+      textAlign(RIGHT, CENTER);
+      text("x" + selection[item].charge,xOffset*item+offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length)*.9,(height)*1.5/3+122);
+    } else {
+      strokeWeight(0);
+      fill('#123420');
+      textSize(72);
+      textAlign(LEFT, CENTER);
+      text("chg",xOffset*item+offset+extraOff*2,(height)*1.5/3-130);
+      textAlign(RIGHT, CENTER);
+      text("+" + selection[item],xOffset*item+offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length)*.9,(height)*1.5/3+122);
+    }
+    stroke(0);
+    textAlign(CENTER, CENTER);
+  }
+}
+function levelPress(x, y) {
+  // console.log(offset+extraOff+xOffset*item, x, );
+  let extraOff = 30;
+  let xOffset = ( (width-(offset+extraOff)*2) /selection.length)
+  let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2
+  for(let item = 0; item <= selection.length-1; item++) {
+    if(x > offset+extraOff+xOffset*item && x < offset+extraOff+xOffset*(item+1)) {
+      if(selection[item].hasOwnProperty('type')) {
+        for(itm in Items) {
+          if(Items[itm].type == selection[item].type) {
+            console.log("type match ", selection[item].type);
+            Items[itm].charge = selection[item].charge;
+            selection = 0;
+            break;
+          }
+        }
+        for(itm in Items) {
+          if(Items[itm]==0 || Items[itm].depleted == true){
+            Items[itm] = selection[item];
+            selection = 0;
+            break;
+          }
+        }
+      } else {
+        Items[Math.floor(Math.random()*Items.length)].charge += selection[item];
+        selection = 0;
+      }
+    }
+  }
+  if(x > offset+extraOff && x<width-(offset+extraOff)) {
+    level++;
+    gameState = 'main';
+    isLeveled(lastComboVal);
+  }
+}
+// clicking on a sidebar item activates it
+function itemPressed() {
+  let itemHeight = ((width-offset*2) / 3);
+  if(score!=0){
+    if( 0 < mouseX && mouseX < offset && offset < mouseY && mouseY < offset+itemHeight ){
+      console.log(1);
+      if (Items[0].charge > 0) {
+        if(activeItem != 1) {
+          itemMode = Items[0].type;
+          activeItem = 1;
+        } else {
+          itemMode = 0;
+          activeItem = 0;
+        }
+      }
+    } else if( 0 < mouseX && mouseX < offset && offset+itemHeight < mouseY && mouseY < offset+itemHeight*2 ){
+      if (Items[1].charge > 0) {
+        if(activeItem != 2) {
+          itemMode = Items[1].type;
+          activeItem = 2;
+        } else {
+          itemMode = 0;
+          activeItem = 0;
+        }
+      }
+    } else if( 0 < mouseX && mouseX < offset && offset+itemHeight*2 < mouseY && mouseY < offset+itemHeight*3 ){
+      if (Items[2].charge > 0) {
+        if(activeItem != 3) {
+          itemMode = Items[2].type;
+          activeItem = 3;
+        } else {
+          itemMode = 0;
+          activeItem = 0;
+        }
+      }
+    }
+  }
+}
+
 //check if a drag selection crosses itself
 function dragCross(col, row) {
   for(let element = 0; element < path.length-1; element++){
@@ -898,12 +961,14 @@ function bounds() {
 function restart() {
   Grid = createGrid(4, 4);
   if(score != 0) scores.push(score);
+  level = 0;
   backup = [];
   backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0];
   timesUndone = 0;
   firstUndo = true;
+  gameState = "main";
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];
@@ -911,11 +976,14 @@ function restart() {
 }
 function restart5() {
   Grid = createGrid(5, 5);
+  level = 0;
   backup = [];
   backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0, 0];
   timesUndone = 0;
+  firstUndo = true;
+  gameState = "main";
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];

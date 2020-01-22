@@ -1,5 +1,5 @@
 function createItem(init = "rand", charge = getRandomInt(3)+3) {
-  let types = ["row", "col", "swap", "grow", "shift", "sum", "sum6"];
+  let types = ["row", "col", "swap", "grow", "shift", "pick", "sum", "sum6"];
   // shift, clone1234
   let thisType;
   if (init == "rand") {
@@ -7,6 +7,7 @@ function createItem(init = "rand", charge = getRandomInt(3)+3) {
   } else {
     thisType = types[init];
   }
+  if(init == "pick" || init == "sum" || init == "sum6") charge -= 1;
   let newItem = {
     "charge": charge,
     "type": thisType,
@@ -37,8 +38,8 @@ function getRandomInt(max) {
 
 function initItem(items) {
   for(item = 0 ; item < items.length; item++) {
-    items[item] = createItem();
-    // items[item] = 0;
+    // items[item] = createItem();
+    items[item] = 0;
   }
   return items;
 }
@@ -59,7 +60,6 @@ function isLeveled(value) {
   lastComboVal = value;
   if(value >= levelVal[level]) {
     selection = loadSelection(level);
-    console.log("reached " + levelVal[level]);
     if (selection.length == 1) {
       for(itm in Items) {
         if(Items[itm]==0) {
@@ -77,7 +77,7 @@ function isLeveled(value) {
       }
       // if all three slots are full convert to charges
       if (selection != 0) {
-        let randItem = Math.floor(Math.random(3));
+        let randItem = Math.floor(Math.random(selection.length));
         Items[randItem].charge += selection[0].charge-1;
       }
       console.log(Items);
@@ -91,6 +91,7 @@ function isLeveled(value) {
 
 //make a charge item
 function loadSelection(level) {
+  //level 1&2 have 1/2 choices, afterwards give 3
   if (level <= 1) choiceAmt = level+1;
   else choiceAmt = 2;
   let selection = [];
@@ -99,9 +100,17 @@ function loadSelection(level) {
     let randomChg = levelNeed[level] + Math.floor(Math.random()*3);
     let itemChoice = createItem("rand", randomChg);
     selection.push(itemChoice);
+    console.log(i);
+    if(selection.length == 2){
+      if(selection[0].type == selection[1].type){
+        console.log("both items type " + selection[0].type + ". rerolling!");
+        selection = [];
+        i = -1;
+      }
+    }
  }
   // and a charge
-  let generatedChg = levelNeed[level]+Math.floor(Math.random()*2)-1;
+  let generatedChg = levelNeed[level]+Math.max(Math.floor(Math.random()*2)-1,1);
   if (level>=2) selection.push(generatedChg)
   return selection;
 }
