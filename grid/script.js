@@ -724,8 +724,8 @@ function itemDraw(){
       textSize(55);
       let from = color('#D9889C');
       let to = color('#5D768B');
-      if(Items[i].charge < 6) {
-        fill(lerpColor(from, to,Items[i].charge /6));
+      if(Items[i].charge < 7) {
+        fill(lerpColor(from, to,Items[i].charge /7));
       }
       strokeWeight(8);
       rect(0+itemOff/2, i*((width-offset*2) / 3)+offset, (cw-itemOff)/2, (width-offset*2) / 3);
@@ -752,23 +752,25 @@ function itemDialog(selection) {
     if(selection[item].hasOwnProperty('type')) {
       strokeWeight(25);
       stroke('#0e5e07');
-      fill('#073116');
       textSize(166);
       textAlign(CENTER, CENTER);
+      fill('#070707');
       text(itemIcon(selection[item].type),xOffset*item+xShift,(height)*1.5/3+20);
       strokeWeight(0);
-      fill('#123420');
       textSize(72);
+      fill('#092717');
       textAlign(LEFT, CENTER);
       text(selection[item].type,xOffset*item+offset+extraOff*2,(height)*1.5/3-130);
+      fill('#123420');
       textAlign(RIGHT, CENTER);
       text("x" + selection[item].charge,xOffset*item+offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length)*.9,(height)*1.5/3+122);
     } else {
       strokeWeight(0);
-      fill('#123420');
       textSize(72);
       textAlign(LEFT, CENTER);
+      fill('#092717');
       text("chg",xOffset*item+offset+extraOff*2,(height)*1.5/3-130);
+      fill('#123420');
       textAlign(RIGHT, CENTER);
       text("+" + selection[item],xOffset*item+offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length)*.9,(height)*1.5/3+122);
     }
@@ -776,27 +778,33 @@ function itemDialog(selection) {
     textAlign(CENTER, CENTER);
   }
 }
+
 function levelPress(x, y) {
   // console.log(offset+extraOff+xOffset*item, x, );
   let extraOff = 30;
-  let xOffset = ( (width-(offset+extraOff)*2) /selection.length)
-  let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2
+  let xOffset = ( (width-(offset+extraOff)*2) /selection.length);
+  let xShift = offset+extraOff+ ( (width-(offset+extraOff)*2) /selection.length) /2;
   for(let item = 0; item <= selection.length-1; item++) {
     if(x > offset+extraOff+xOffset*item && x < offset+extraOff+xOffset*(item+1)) {
+      // selection[item] is the selected item
       if(selection[item].hasOwnProperty('type')) {
         for(itm in Items) {
-          if(Items[itm].type == selection[item].type) {
-            console.log("type match ", selection[item].type);
-            Items[itm].charge = selection[item].charge;
-            selection = 0;
-            break;
+          if(Items[itm].hasOwnProperty("type") && Items[itm].hasOwnProperty('charge')){
+            if(Items[itm].type == selection[item].type) {
+              console.log("type match ", selection[item].type);
+              Items[itm].charge += selection[item].charge-1;
+              selection = 0;
+              break;
+            }
           }
         }
-        for(itm in Items) {
-          if(Items[itm]==0 || Items[itm].depleted == true){
-            Items[itm] = selection[item];
-            selection = 0;
-            break;
+        if(selection!=0){
+          for(itm in Items) {
+            if(Items[itm]==0 || Items[itm].depleted == true){
+              Items[itm] = selection[item];
+              selection = 0;
+              break;
+            }
           }
         }
       } else {
@@ -811,6 +819,7 @@ function levelPress(x, y) {
     isLeveled(lastComboVal);
   }
 }
+
 // clicking on a sidebar item activates it
 function itemPressed() {
   let itemHeight = ((width-offset*2) / 3);
