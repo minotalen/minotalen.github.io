@@ -353,6 +353,7 @@ function release() {
   justUndone = false;
 
   if(path.length > 1 && !unequal){
+    console.log("combining...");
     backup.push(addToUndo(Grid, nextNumbers, Bag, score));
     combineNumbers(path);
   }
@@ -404,8 +405,9 @@ function itemClick() {
       itemDeplete();
       break;
     case "shift":
+      // Items[0].type = "shift"
       let temp2 = nextNumbers.shift();
-      nextNumbers.push(temp2[0]);
+      nextNumbers.push(temp2);
       itemDeplete();
       break;
     }
@@ -544,6 +546,20 @@ function itemDrag() {
       }
       break;
     case "grow":
+      if(path.length > 1) maxLength(0);
+      break;
+    case "sort":
+      if(path.length > 4) maxLength(4);
+      let toSort = [];
+      for(elem in path){
+        toSort.push(Grid.map[path[elem][0]][path[elem][1]].value);
+      }
+      console.log(toSort);
+      toSort.sort();
+      for(elem in path){
+        Grid.map[path[elem][0]][path[elem][1]].preview = toSort[elem];
+      }
+      break;
   }
 }
 function itemFinal(){
@@ -559,7 +575,7 @@ function itemFinal(){
         Grid.map[1][path[0][1]].value = Grid.map[2][path[0][1]].value;
         Grid.map[2][path[0][1]].value = placeHold;
         maxLength(0);
-        itemMode = 0;
+        itemDeplete();
       } else if(path[0][0] == path[1][0]-1) {
         let placeHold = Grid.map[3][path[0][1]].value;
         Grid.map[3][path[0][1]].value = Grid.map[2][path[0][1]].value;
@@ -582,7 +598,7 @@ function itemFinal(){
           Grid.map[path[0][0]][1].value = Grid.map[path[0][0]][2].value;
           Grid.map[path[0][0]][2].value = placeHold;
           maxLength(0);
-          itemMode = 0;
+          itemDeplete();
         } else if(path[0][1] == path[1][1]-1) {
           let placeHold = Grid.map[path[0][0]][3].value;
           Grid.map[path[0][0]][3].value = Grid.map[path[0][0]][2].value;
@@ -613,7 +629,6 @@ function itemFinal(){
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
           Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
         }
-        unequal = false;
         itemDeplete();
       }
       if(path.length == 2){
@@ -621,7 +636,6 @@ function itemFinal(){
           Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value;
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
         }
-        unequal = false;
         itemDeplete();
       }
       break;
@@ -634,7 +648,6 @@ function itemFinal(){
           Grid.map[path[2][0]][path[2][1]].value = nextNumbers[2][0];
           Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
-          unequal = false;
           itemDeplete();
         }
       }
@@ -643,7 +656,6 @@ function itemFinal(){
           Grid.map[path[2][0]][path[2][1]].value = 6;
           Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
-          unequal = false;
           itemDeplete();
         }
       }
@@ -651,7 +663,6 @@ function itemFinal(){
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value == 6) {
           Grid.map[path[1][0]][path[1][1]].value = 6;
           Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
-          unequal = false;
           itemDeplete();
         }
       }
@@ -659,12 +670,23 @@ function itemFinal(){
     case "grow":
       if(path.length == 1) {
         Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[0][0]][path[0][1]].value+1;
-        Items[activeItem-1].charge--;
-        activeItem = 0;
-        maxLength(0);
-        itemMode = 0;
+        itemDeplete();;
       } else if (!bounds()) {
         maxLength(0);
+      }
+      break;
+    case "sort":
+      if(path.length >= 3) {
+        let toSort = [];
+        for(elem in path){
+          toSort.push(Grid.map[path[elem][0]][path[elem][1]].value);
+        }
+        console.log(toSort);
+        toSort.sort();
+        for(elem in path){
+          Grid.map[path[elem][0]][path[elem][1]].value = toSort[elem];
+        }
+        itemDeplete();
       }
       break;
   }
@@ -698,19 +720,24 @@ function itemIcon(type) {
     case "sum6":
     toShow = "6";
     break;
+    case "sort":
+    toShow = "V";
+    break;
+    case "shuffle":
+    toShow = "~";
+    break;
   }
   return toShow;
 }
 // reduce item charge by 1
 function itemDeplete() {
-  if(Items[activeItem-1].charge>=1){
-    Items[activeItem-1].charge--;
-  } else {
-    Items[activeItem-1].charge = 0;
+  Items[activeItem-1].charge--;
+  if(Items[activeItem-1].charge<=0){
     Items[activeItem-1].depleted = true;
   }
   activeItem = 0;
   itemMode = 0;
+  unequal = false;
 }
 // item side display
 function itemDraw(){
@@ -833,6 +860,7 @@ function itemPressed() {
         } else {
           itemMode = 0;
           activeItem = 0;
+          unequal = false;
         }
       }
     } else if( 0 < mouseX && mouseX < offset && offset+itemHeight < mouseY && mouseY < offset+itemHeight*2 ){
@@ -843,6 +871,7 @@ function itemPressed() {
         } else {
           itemMode = 0;
           activeItem = 0;
+          unequal = false;
         }
       }
     } else if( 0 < mouseX && mouseX < offset && offset+itemHeight*2 < mouseY && mouseY < offset+itemHeight*3 ){
@@ -853,6 +882,7 @@ function itemPressed() {
         } else {
           itemMode = 0;
           activeItem = 0;
+          unequal = false;
         }
       }
     }

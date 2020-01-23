@@ -1,6 +1,6 @@
 function createItem(init = "rand", charge = getRandomInt(3)+3) {
-  let types = ["row", "col", "swap", "grow", "shift", "pick", "sum", "sum6"];
-  // shift, clone1234
+  let types = ["row", "col", "swap", "grow", "shift", "pick", "sum", "sum6", "sort"];
+  //shuffle
   let thisType;
   if (init == "rand") {
     thisType = types[getRandomInt(types.length)];
@@ -38,7 +38,7 @@ function getRandomInt(max) {
 
 function initItem(items) {
   for(item = 0 ; item < items.length; item++) {
-    // items[item] = createItem();
+    // items[item] = createItem(8);
     items[item] = 0;
   }
   return items;
