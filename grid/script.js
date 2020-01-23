@@ -40,6 +40,7 @@ function setup() {
   textAlign(CENTER, CENTER);
   gameState = "main";
 }
+
 function draw() {
   background(220);
   cw = (width-offset*2) / Grid.cols;
@@ -154,34 +155,49 @@ function draw() {
 
   drawCharges();
   itemDraw();
-  // display preview
   textSize(80);
   strokeWeight(1);
-  if(!restartConfirm && gameState=="main"){
+  // game states
+  if(!restartConfirm && gameState=="main") {
     if(checkAllSame() && path.length != 0) {
       for(let i = path.length; i <= nextNumbers.length; i++) {
+        // display next number preview
         text(nextNumbers[i-1], (i-1)*cw+offset+cw, 0+offset/2);
       }
     } else {
-      if (score != 0) {
+      if(score != 0) {
         for(let i = 0; i < nextNumbers.length; i++) {
           text(nextNumbers[i], i*cw+offset+cw, 0+offset/2);
         }
       }
     }
-  } else if (gameState == "level") {
+  } else if(gameState == "level") {
     text("reached " + levelVal[level], offset+cw, 0+offset/2);
+  } else if(gameState == "dead") {
+    for(item in usedItems){
+      fill(0);
+      textAlign(CENTER, CENTER);
+      textSize(55);
+      text(usedItems[item], offset+item/usedItems.length*(width-offset), 0+offset/2);
+    }
+    fill(155, 155, 155, 144);
+    rect(offset + (width-offset*2)/4, offset + (height-offset*2)/4, (width-offset*2)/2, (height-offset*2)/2);
+    textAlign(CENTER, CENTER);
+    textSize(104);
+    fill(0);
+    text("Game", offset + (width-offset*2)*2.15/5, offset + (height-offset*2)*2.15/5);
+    text("Over", offset + (width-offset*2)*2.85/5, offset + (height-offset*2)*2.85/5);
   }
   textAlign(RIGHT, CENTER);
   // display score
   if(path.length == 0) {
     if(restartConfirm && path.length == 0) {
-      text("tap again to restart", offset, offset/2);
+      text("again to restart", offset, offset/2);
     } else if (score == 0) {
       textAlign(LEFT, CENTER);
-      text("tap or r to restart", offset, offset/2);
+      text("r to restart", offset, offset/2);
       textAlign(RIGHT, CENTER);
-      text("tap or u to undo", width-offset, height-offset/2);
+      text("u to undo", width-offset, height-offset/2);
     }
   }
   textAlign(RIGHT, CENTER);
@@ -208,9 +224,9 @@ function keyPressed() {
   if (key == '5') {
     restart5();
   }
-  if (key == 'x') {
-    scores = [];
-  }
+  // if (key == 'x') {
+  //   scores = [];
+  // }
   if (key == 's') {
     scoreShow = !scoreShow;
   }
@@ -247,19 +263,18 @@ function keyPressed() {
       activeItem = 3;
     }
   }
-  if (key == '6') {
-    itemMode = "swap";
+  // if (key == '6') {
+  //   itemMode = "swap";
+  // }
+  // if (key == '7') {
+  //   itemMode = "col";
+  // }
+  // if (key == '8') {
+  //   itemMode = "row";
+  // }
+  // if (key == '9') {
+  //   itemMode = "grow";
   }
-  if (key == '7') {
-    itemMode = "col";
-  }
-  if (key == '8') {
-    itemMode = "row";
-  }
-  if (key == '9') {
-    itemMode = "grow";
-  }
-}
 
 function mousePressed() {
   pressed();
@@ -847,7 +862,7 @@ function levelPress(x, y) {
               console.log("type match ", selection[item].type);
               let gain = selection[item].charge;
               Items[itm].charge += gain;
-              usedItems.push(itemIcon(Items[itm].type)+ "m" + gain);
+              usedItems.push(itemIcon(Items[itm].type)+ ";" + gain);
               selection = 0;
               break;
             }
@@ -870,7 +885,7 @@ function levelPress(x, y) {
         randChoice = Math.floor(Math.random()*Items.length);
         while(Items[randChoice]==0) randChoice = Math.floor(Math.random()*Items.length); //todo infinite
         Items[randChoice].charge += selection[item];
-        usedItems.push(itemIcon(Items[randChoice].type)+ "c" + selection[item]);
+        usedItems.push(itemIcon(Items[randChoice].type)+ ":" + selection[item]);
         selection = 0;
       }
     }
@@ -1020,6 +1035,9 @@ function combineNumbers(combine) {
     }
   }
   firstUndo = true;
+  if(gameOver()){
+    gameState = "dead";
+  }
 }
 // get the average score
 function average(average) {
@@ -1045,6 +1063,7 @@ function restart() {
   timesUndone = 0;
   firstUndo = true;
   gameState = "main";
+  itemMode = 0;
   usedItems = [];
   generateNext(5);
   Bag = newBag();
@@ -1061,13 +1080,13 @@ function restart5() {
   timesUndone = 0;
   firstUndo = true;
   gameState = "main";
+  itemMode = 0;
   usedItems = [];
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];
   Items = initItem(Items);
 }
-
 
 // generate a bag of 3x123
 function newBag(bag = []) {
@@ -1105,4 +1124,29 @@ function generateNext(amount=1) {
   if(amount == 1) {
     return parseInt(fiFo);
   }
+}
+
+function gameOver() {
+  let noMatch = true;
+  for(let i = 0; i < Grid.cols; i++) {
+    for(let j = 0; j < Grid.rows-1; j++) {
+      if(Grid.map[i][j].value == Grid.map[i][j+1].value){
+          noMatch = false;
+          console.log(Grid.map[i][j].value, Grid.map[i][j+1].value);
+      }
+    }
+  }
+  for(let i = 0; i < Grid.rows; i++) {
+    for(let j = 0; j < Grid.cols-1; j++) {
+      if(Grid.map[j][i].value == Grid.map[j+1][i].value){
+          noMatch = false;
+          console.log(Grid.map[j][i].value, Grid.map[j+1][i].value);
+      }
+    }
+  }
+  if(noMatch) {
+    console.log("Game Over");
+    return true;
+  }
+  return false;
 }
