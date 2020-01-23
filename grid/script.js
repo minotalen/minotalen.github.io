@@ -152,8 +152,8 @@ function draw() {
     }
   }
 
+  drawCharges();
   itemDraw();
-
   // display preview
   textSize(80);
   strokeWeight(1);
@@ -337,7 +337,7 @@ function dragged() {
   }
 }
 function release() {
-  if (mouseY >= height-offset && !justUndone) undo();
+  if (mouseX >= width-offset && !justUndone) undo();
   if (mouseY <= offset) {
     if (score != 0 && restartConfirm) {
       restartConfirm = false;
@@ -776,7 +776,7 @@ function itemDraw(){
       if(Items[i].charge < 7) {
         fill(lerpColor(from, to,Items[i].charge /7));
       }
-      strokeWeight(8);
+      strokeWeight(6);
       rect(0+itemOff/2, i*((width-offset*2) / 3)+offset, (cw-itemOff)/2, (width-offset*2) / 3);
       textSize(85);
       fill(0);
@@ -1002,6 +1002,7 @@ function combineNumbers(combine) {
   Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value *= combine.length;
   isLeveled(Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value);
   score += Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
+  addCharge();
   // // generate new numbers for all other slots
   for(let position in combine) {
     if(position != combine.length-1){
@@ -1064,66 +1065,22 @@ function restart5() {
   Items = initItem(Items);
 }
 
-// undo the last turn
-function undo() {
-  // update grid values from backup array
-  if(backup.length > 0 && firstUndo) {
-    if( backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0 || backup[backup.length-1].score < 48 ) {
-      // update grid values
-      for(let row = 0; row < Grid.rows; row++){
-        for(let col = 0; col < Grid.cols; col++){
-          Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
-        }
-      }
-      nextNumbers = backup[backup.length-1].next;
-      Bag = backup[backup.length-1].bag;
-      score = backup[backup.length-1].score;
 
-      if (backup.length > 1) backup.splice(backup.length-1); //leave the last restart as safestate
-      if(score > 48) {
-        timesUndone++;
-        justUndone = true;
-        // score -= Math.floor(5*Math.pow(1.18, timesUndone));
-      }
-      firstUndo = false;
-    }
-  }
-
-}
-// add a turn to the undo stack
-function addToUndo(grid, next, bag, score) {
-  // make a backup of grid values
-  let gridCopy = [];
-  if( path.length > nextNumbers.length) gridCopy = [];
-  for(let row = 0; row < Grid.rows; row++){
-    let rowTemp = [];
-    for(let col = 0; col < Grid.cols; col++){
-      rowTemp.push(Grid.map[row][col].value);
-    }
-    gridCopy.push(rowTemp);
-  }
-
-  let state = {
-    "grid": gridCopy,
-    "next": JSON.parse(JSON.stringify(next)),
-    "bag": JSON.parse(JSON.stringify(bag)),
-    "score": score
-  }
-  return state;
-}
 // generate a bag of 3x123
 function newBag(bag = []) {
+  let addBag = [];
   for(let i = 1; i<=3; i++) {
     for(let j = 0; j < 3; j++) {
-      bag.push(i);
-      bag = shuffle(bag);
+      addBag.push(i);
+      addBag = shuffle(addBag);
     }
   }
+  for(num in addBag) bag.push(addBag[num]);
   return bag;
 }
 // draws and returns a number from the bag, possibly refill bag
 function drawBag() {
-  if(Bag.length <= 3) Bag = newBag(Bag);
+  if(Bag.length <= 100) Bag = newBag(Bag);
   // Bag = shuffle(Bag);
   return Bag.splice(0,1);
 }
