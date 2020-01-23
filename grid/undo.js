@@ -15,6 +15,9 @@ function drawCharges(){
   if(undoCharges <= 10) {
     fill(lerpColor(from, to,undoCharges /10));
   }
+  if (backup.length == 0) {
+    fill(133, 133, 133,'#D9889C33');
+  }
   stroke(0);
   rect(width-offset+itemOff/2, height-offset, offset-itemOff, -((height-2*offset)*undoCharges/maxCharges)) ;
 }
@@ -23,27 +26,22 @@ function drawCharges(){
 function undo() {
   // update grid values from backup array
   if(undoCharges>=3) {
-    if(backup.length > 0) {
+    if(backup.length > 1) {
       undoCharges -= 3;
-      if( backup[backup.length-1].score-5*Math.pow(1.18, timesUndone+1) > 0 || backup[backup.length-1].score < 48 ) {
-        // update grid values
-        for(let row = 0; row < Grid.rows; row++){
-          for(let col = 0; col < Grid.cols; col++){
-            Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
-          }
+      // update grid values
+      for(let row = 0; row < Grid.rows; row++){
+        for(let col = 0; col < Grid.cols; col++){
+          Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
         }
-        nextNumbers = backup[backup.length-1].next;
-        Bag = backup[backup.length-1].bag;
-        score = backup[backup.length-1].score;
-
-        if (backup.length > 1) backup.splice(backup.length-1); //leave the last restart as safestate
-        if(score > 48) {
-          timesUndone++;
-          justUndone = true;
-          // score -= Math.floor(5*Math.pow(1.18, timesUndone));
-        }
-        firstUndo = false;
       }
+      nextNumbers = backup[backup.length-1].next;
+      Bag = backup[backup.length-1].bag;
+      backup.splice(backup.length-1); //leave the last restart as safestate
+      if(score > 48) {
+        timesUndone++;
+        justUndone = true;
+      }
+      firstUndo = false;
     }
   }
 }

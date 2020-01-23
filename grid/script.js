@@ -174,12 +174,13 @@ function draw() {
   } else if(gameState == "level") {
     text("reached " + levelVal[level], offset+cw, 0+offset/2);
   } else if(gameState == "dead") {
-    for(item in usedItems){
-      fill(0);
-      textAlign(CENTER, CENTER);
-      textSize(55);
-      text(usedItems[item], offset+item/usedItems.length*(width-offset), 0+offset/2);
-    }
+    fill(0);
+    textAlign(LEFT, CENTER);
+    textSize(55);
+    text(usedItems, offset, 0+offset/2);
+    // for(item in usedItems){
+    //   text(usedItems[item], offset+item/(usedItems.length-1)*(width-offset*2), 0+offset/2);
+    // }
     fill(155, 155, 155, 144);
     rect(offset + (width-offset*2)/4, offset + (height-offset*2)/4, (width-offset*2)/2, (height-offset*2)/2);
     textAlign(CENTER, CENTER);
@@ -206,8 +207,6 @@ function draw() {
   } else if(itemMode != 0) {
     //show item text
     text(itemMode + ": " + Items[activeItem-1].charge, width-offset, height-offset/2);
-  } else if(justUndone) {
-    text(score + " -" + Math.floor(5*Math.pow(1.18, timesUndone)) , width-offset, height-offset/2);
   } else if(score != 0){
     text(score, width-offset, height-offset/2);
   }
