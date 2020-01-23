@@ -1,13 +1,19 @@
+let usedItems = [];
+
 function createItem(init = "rand", charge = getRandomInt(3)+3) {
-  let types = ["row", "col", "swap", "grow", "shift", "pick", "sum", "sum6", "sort"];
-  //shuffle
+  let types = ["swap", "grow", "shift", "col", "sum", "pick", "sum6", "sort", "shrink"];
+  // took out row
   let thisType;
   if (init == "rand") {
-    thisType = types[getRandomInt(types.length)];
+    thisType = types[getRandomInt(Math.min(types.length,level+3))];
+    if(level>=5) thisType = types[getRandomInt(Math.min(types.length-2,level+1))+2];
   } else {
     thisType = types[init];
   }
+  if(init == "shift") charge += 2;
   if(init == "pick" || init == "sum" || init == "sum6") charge -= 1;
+  if(init == "shrink" || init == "sort") charge -= 2;
+  charge = max(charge, 1);
   let newItem = {
     "charge": charge,
     "type": thisType,
@@ -50,8 +56,8 @@ Items = initItem(Items);
 //// leveling up and item generation
 //generate items
 let level=0;
-let levelNeed = [1,  1, 1, 2,  2,  3,  3,   4,   4,   5];
-let levelVal = [12,24,48,96,192,384,768,1536,3072,6144];
+let levelNeed = [1,  1, 1, 2,  2,  3,  3,   4,   4,   5,    5,    5];
+let levelVal =  [12,24,48,96,192,384,768,1536,3072,6144,12288,24576];
 
 let selection = 0;
 let lastComboVal = 0;
@@ -64,6 +70,7 @@ function isLeveled(value) {
       for(itm in Items) {
         if(Items[itm]==0) {
           Items[itm] = selection[0];
+          usedItems.push(itemIcon(Items[0].type)+ " " + Items[0].charge);
           selection = 0;
           break;
         }
@@ -80,7 +87,6 @@ function isLeveled(value) {
         let randItem = Math.floor(Math.random(selection.length));
         Items[randItem].charge += selection[0].charge-1;
       }
-      console.log(Items);
       level++;
       isLeveled(value);
     } else {
@@ -97,10 +103,9 @@ function loadSelection(level) {
   let selection = [];
   //for loop makes 2 items
   for(let i= 0; i<choiceAmt; i++) {
-    let randomChg = levelNeed[level] + Math.floor(Math.random()*3);
+    let randomChg = Math.max(1, levelNeed[level] + Math.floor(Math.random()*4) - 2);
     let itemChoice = createItem("rand", randomChg);
     selection.push(itemChoice);
-    console.log(i);
     if(selection.length == 2){
       if(selection[0].type == selection[1].type){
         console.log("both items type " + selection[0].type + ". rerolling!");
@@ -110,7 +115,12 @@ function loadSelection(level) {
     }
  }
   // and a charge
-  let generatedChg = levelNeed[level]+Math.max(Math.floor(Math.random()*2)-1,1);
-  if (level>=2) selection.push(generatedChg)
+  if(selection.length == 2){
+    // if( (Items[0]==0 || Items[0].depleted) && (Items[1]==0 || Items[1].depleted) && (Items[2]==0 || Items[0].depleted) ) {
+      let generatedChg = Math.max( Math.min( (levelNeed[level]+Math.floor(Math.random()*4)-2), 6) ,1);
+      console.log(generatedChg);
+      if (level>=2) selection.push(generatedChg)
+    // }
+  }
   return selection;
 }

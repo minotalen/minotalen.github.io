@@ -201,7 +201,6 @@ function draw() {
   }
 }
 
-
 function keyPressed() {
   if (key == 'r') {
     restart();
@@ -217,6 +216,9 @@ function keyPressed() {
   }
   if (key == 'u') {
     undo();
+  }
+  if (key == 'i') {
+    alert(usedItems);
   }
   if (key == '1' && Items[0].charge > 0) {
     if(activeItem != 1) {
@@ -428,7 +430,7 @@ function itemDrag() {
         if(!(path[0][0] == path[1][0]+1 || path[0][0] == path[1][0]-1)) {
           maxLength(1);
         } else if(path[0][0] == path[1][0]+1) {
-          Grid.map[0][path[1][1]].color = 1;
+          Grid.map[0][path[1][1]].color = 3;
           Grid.map[1][path[1][1]].color = 3;
           Grid.map[2][path[1][1]].color = 3;
           Grid.map[3][path[1][1]].color = 3;
@@ -440,7 +442,7 @@ function itemDrag() {
           Grid.map[0][path[1][1]].color = 3;
           Grid.map[1][path[1][1]].color = 3;
           Grid.map[2][path[1][1]].color = 3;
-          Grid.map[3][path[1][1]].color = 1;
+          Grid.map[3][path[1][1]].color = 3;
           Grid.map[3][path[0][1]].preview = Grid.map[2][path[0][1]].value;
           Grid.map[2][path[0][1]].preview = Grid.map[1][path[0][1]].value;
           Grid.map[1][path[0][1]].preview = Grid.map[0][path[0][1]].value;
@@ -555,9 +557,17 @@ function itemDrag() {
         toSort.push(Grid.map[path[elem][0]][path[elem][1]].value);
       }
       console.log(toSort);
-      toSort.sort();
+      toSort.sort(function(a, b){return a-b});
       for(elem in path){
         Grid.map[path[elem][0]][path[elem][1]].preview = toSort[elem];
+      }
+      break;
+    case "shrink":
+      if(path.length > 2) maxLength(2);
+      if(path.length == 2 && Grid.map[path[0][0]][path[0][1]].value > Grid.map[path[1][0]][path[1][1]].value) {
+        Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+      } else {
+        maxLength(1);
       }
       break;
   }
@@ -682,10 +692,18 @@ function itemFinal(){
           toSort.push(Grid.map[path[elem][0]][path[elem][1]].value);
         }
         console.log(toSort);
-        toSort.sort();
+        toSort.sort(function(a, b){return a-b});
         for(elem in path){
           Grid.map[path[elem][0]][path[elem][1]].value = toSort[elem];
         }
+        itemDeplete();
+      }
+      break;
+    case "shrink":
+      if(path.length == 2 && Grid.map[path[0][0]][path[0][1]].value > Grid.map[path[1][0]][path[1][1]].value) {
+        score -= Grid.map[path[0][0]][path[0][1]].value - Grid.map[path[1][0]][path[1][1]].value;
+        console.log("score decreased by" + Grid.map[path[0][0]][path[0][1]].value - Grid.map[path[1][0]][path[1][1]].value);
+        Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
         itemDeplete();
       }
       break;
@@ -726,6 +744,9 @@ function itemIcon(type) {
     case "shuffle":
     toShow = "~";
     break;
+    case "shrink":
+    toShow = "*";
+    break;
   }
   return toShow;
 }
@@ -735,6 +756,7 @@ function itemDeplete() {
   if(Items[activeItem-1].charge<=0){
     Items[activeItem-1].depleted = true;
   }
+  backup = [];
   activeItem = 0;
   itemMode = 0;
   unequal = false;
@@ -815,19 +837,24 @@ function levelPress(x, y) {
     if(x > offset+extraOff+xOffset*item && x < offset+extraOff+xOffset*(item+1)) {
       // selection[item] is the selected item
       if(selection[item].hasOwnProperty('type')) {
+        // duplicate prevention
         for(itm in Items) {
           if(Items[itm].hasOwnProperty("type") && Items[itm].hasOwnProperty('charge')){
-            if(Items[itm].type == selection[item].type) {
+            if(Items[itm].type == selection[item].type && !Items[itm].type.depleted) {
               console.log("type match ", selection[item].type);
-              Items[itm].charge += selection[item].charge-1;
+              let gain = selection[item].charge;
+              Items[itm].charge += gain;
+              usedItems.push(itemIcon(Items[itm].type)+ "m" + gain);
               selection = 0;
               break;
             }
           }
         }
+        // find first empty slot
         if(selection!=0){
           for(itm in Items) {
             if(Items[itm]==0 || Items[itm].depleted == true){
+              usedItems.push(itemIcon(selection[item].type)+ " " + selection[item].charge);
               Items[itm] = selection[item];
               selection = 0;
               break;
@@ -835,7 +862,12 @@ function levelPress(x, y) {
           }
         }
       } else {
-        Items[Math.floor(Math.random()*Items.length)].charge += selection[item];
+        // add charges
+        let randChoice;
+        randChoice = Math.floor(Math.random()*Items.length);
+        while(Items[randChoice]==0) randChoice = Math.floor(Math.random()*Items.length); //todo infinite
+        Items[randChoice].charge += selection[item];
+        usedItems.push(itemIcon(Items[randChoice].type)+ "c" + selection[item]);
         selection = 0;
       }
     }
@@ -980,6 +1012,7 @@ function combineNumbers(combine) {
     if(position > nextNumbers.length) {
       score += bonus;
       console.log(bonus);
+      backup = [];
     }
   }
   firstUndo = true;
@@ -1008,6 +1041,7 @@ function restart() {
   timesUndone = 0;
   firstUndo = true;
   gameState = "main";
+  usedItems = [];
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];
@@ -1023,6 +1057,7 @@ function restart5() {
   timesUndone = 0;
   firstUndo = true;
   gameState = "main";
+  usedItems = [];
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];
