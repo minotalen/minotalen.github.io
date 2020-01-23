@@ -765,18 +765,21 @@ function itemDeplete() {
 function itemDraw(){
   let itemOff = 30;
   //item display
-  fill(133);
+  fill(133, 133, 133, 111);
   stroke(0);
   for(let i = 0; i < Items.length; i++) {
     if (Items[i] != 0) if(Items[i].charge > 0) {
       textAlign(CENTER,CENTER);
       textSize(55);
-      let from = color('#D9889C');
-      let to = color('#5D768B');
+      let from = color('#D9889CDD');
+      let to = color('#5D768B99');
       if(Items[i].charge < 7) {
         fill(lerpColor(from, to,Items[i].charge /7));
       }
       strokeWeight(6);
+      if(i == activeItem-1){
+        fill(123,231,213);
+      }
       rect(0+itemOff/2, i*((width-offset*2) / 3)+offset, (cw-itemOff)/2, (width-offset*2) / 3);
       textSize(85);
       fill(0);

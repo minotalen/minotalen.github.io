@@ -7,11 +7,11 @@ function addCharge() {
 
 function drawCharges(){
   let itemOff = 30;
-  fill(133, 133, 133, 133);
+  fill(133, 133, 133, 111);
   strokeWeight(6);
   rect(width-offset+itemOff/2, offset, offset-itemOff, height-2*offset);
-  let from = color('#D9889CFF');
-  let to = color('#5D768BAA');
+  let from = color('#D9889CDD');
+  let to = color('#5D768B99');
   if(undoCharges <= 10) {
     fill(lerpColor(from, to,undoCharges /10));
   }
