@@ -26,24 +26,39 @@ function drawCharges(){
 function undo() {
   // update grid values from backup array
   if(undoCharges>=3) {
-    if(backup.length > 1) {
-      undoCharges -= 3;
-      // update grid values
+    undoCharges -= 3;
+    if(backup.length == 1) {
       for(let row = 0; row < Grid.rows; row++){
         for(let col = 0; col < Grid.cols; col++){
-          Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
+          Grid.map[row][col].value = backup[0].grid[row][col];
         }
-      }
-      nextNumbers = backup[backup.length-1].next;
-      Bag = backup[backup.length-1].bag;
-      backup.splice(backup.length-1); //leave the last restart as safestate
+      }      nextNumbers = backup[0].next;
+      Bag = backup[0].bag;
+      backup = []; //leave the last restart as safestate
       if(score > 48) {
         timesUndone++;
         justUndone = true;
       }
       firstUndo = false;
     }
-  }
+    if(backup.length > 0) {
+        undoCharges -= 3;
+        // update grid values
+        for(let row = 0; row < Grid.rows; row++){
+          for(let col = 0; col < Grid.cols; col++){
+            Grid.map[row][col].value = backup[backup.length-1].grid[row][col];
+          }
+        }
+        nextNumbers = backup[backup.length-1].next;
+        Bag = backup[backup.length-1].bag;
+        if (backup.length > 1) backup.splice(backup.length-1); //leave the last restart as safestate
+        if(score > 48) {
+          timesUndone++;
+          justUndone = true;
+        }
+        firstUndo = false;
+      }
+    }
 }
 
 // add a turn to the undo stack

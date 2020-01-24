@@ -1061,6 +1061,7 @@ function restart() {
   nextNumbers = [0, 0, 0];
   timesUndone = 0;
   firstUndo = true;
+  undoCharges = 5;
   gameState = "main";
   itemMode = 0;
   usedItems = [];
@@ -1077,6 +1078,7 @@ function restart5() {
   score = 0;
   nextNumbers = [0, 0, 0, 0];
   timesUndone = 0;
+  undoCharges = 5;
   firstUndo = true;
   gameState = "main";
   itemMode = 0;
