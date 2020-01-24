@@ -113,6 +113,9 @@ function draw() {
         case 3: // col, row
           fill('#aaf99a');
           break;
+        case "turn": // turn
+          fill(185, 142, 204);
+          break;
         case "swap": // swap
         case "comboBreak": // swap
           fill(171, 236, 106);
@@ -419,7 +422,8 @@ function itemClick() {
       Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value+1;
       break;
     case "turn":
-      unequal = true;
+      if(path.length == 1) Grid.map[path[0][0]][path[0][1]].color = "swap";
+      // unequal = true;
       break;
     case "pick":
       let temp = nextNumbers.pop();
@@ -593,16 +597,32 @@ function itemDrag() {
       }
       break;
     case "turn":
+      if(path.length >= 1 && path.length <= 2) {
+        Grid.map[path[0][0]][path[0][1]].color = "swap";
+        Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value;
+      }
+      if(path.length == 2) {
+        Grid.map[path[1][0]][path[1][1]].color = "swap";
+        Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+      }
+      if(path.length > 2) {
+        for(let i = 0; i < path.length; i++) {
+          Grid.map[path[i][0]][path[i][1]].color = "turn";
+          console.log(Grid.map[path[i][0]][path[i][1]].color);
+          Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value;
+          Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+        }
+      }
       if(path.length > 4) maxLength(4);
       if(path.length == 4) {
         Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
         Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[2][0]][path[2][1]].value;
-        Grid.map[path[2][0]][path[2][2]].preview = Grid.map[path[3][0]][path[3][1]].value;
-        Grid.map[path[3][0]][path[3][2]].preview = Grid.map[path[0][0]][path[0][1]].value;
+        Grid.map[path[2][0]][path[2][1]].preview = Grid.map[path[3][0]][path[3][1]].value;
+        Grid.map[path[3][0]][path[3][1]].preview = Grid.map[path[0][0]][path[0][1]].value;
       } else if (path.length == 3) {
         Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
         Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[2][0]][path[2][1]].value;
-        Grid.map[path[2][0]][path[2][2]].preview = Grid.map[path[0][0]][path[0][1]].value;
+        Grid.map[path[2][0]][path[2][1]].preview = Grid.map[path[0][0]][path[0][1]].value;
       }
       break;
     case "shrink":
@@ -737,20 +757,19 @@ function itemFinal(){
       break;
     case "turn":
       if(path.length > 4) maxLength(4);
+      let temp;
       if(path.length == 4) {
-        let = temp;
         temp = Grid.map[path[0][0]][path[0][1]].value;
         Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
         Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[2][0]][path[2][1]].value;
-        Grid.map[path[2][0]][path[2][2]].value = Grid.map[path[3][0]][path[3][1]].value;
-        Grid.map[path[3][0]][path[3][2]].value = temp;
+        Grid.map[path[2][0]][path[2][1]].value = Grid.map[path[3][0]][path[3][1]].value;
+        Grid.map[path[3][0]][path[3][1]].value = temp;
         itemDeplete();
       } else if (path.length == 3) {path
-        let = temp;
         temp = Grid.map[path[0][0]][path[0][1]].value;
         Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
         Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[2][0]][path[2][1]].value;
-        Grid.map[path[2][0]][path[2][2]].value = temp;
+        Grid.map[path[2][0]][path[2][1]].value = temp;
         itemDeplete();
       }
       break;
@@ -1060,54 +1079,58 @@ function drawPreview() {
 function checkAllSame() {
   let notSame = false;
   let firstBreak = -1;
-  for(let element = 0; element < path.length-1; element++){
-      if( Grid.map[ path[element][0] ] [ path[element][1] ].value
-      != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value && notSame == false) {
-          notSame = true;
-          firstBreak = element;
-      }
-  }
-  // change preview color if numbers are not equal
-  if (notSame) {
-    for(firstBreak++; firstBreak < path.length-1; firstBreak++){
-      Grid.map[ path[firstBreak][0] ] [ path[firstBreak][1] ].color = "comboBreak";
-      console.log("2");
+  if(itemMode == 0) {
+    for(let element = 0; element < path.length-1; element++){
+        if( Grid.map[ path[element][0] ] [ path[element][1] ].value
+        != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value && notSame == false) {
+            notSame = true;
+            firstBreak = element;
+        }
     }
-    return false;
+    // change preview color if numbers are not equal
+    if (notSame) {
+      for(firstBreak++; firstBreak < path.length-1; firstBreak++){
+        Grid.map[ path[firstBreak][0] ] [ path[firstBreak][1] ].color = "comboBreak";
+        console.log("2");
+      }
+      return false;
+    }
   }
   return true;
 }
 // combine function takes an array of positions and combines to the last position
 function combineNumbers(combine) {
-  // compare positions with grid values and check if numbers match
-  for(let position = 0; position < combine.length-1; position++){
-    if(Grid.map[combine[position][0]][combine[position][1]].value
-    != Grid.map[ combine[position+1][0]][combine[position+1][1] ].value){
-      console.log("numbers not equal");
-      return false;
+  if(itemMode == 0) {
+    // compare positions with grid values and check if numbers match
+    for(let position = 0; position < combine.length-1; position++){
+      if(Grid.map[combine[position][0]][combine[position][1]].value
+      != Grid.map[ combine[position+1][0]][combine[position+1][1] ].value){
+        console.log("numbers not equal");
+        return false;
+      }
     }
-  }
-  // multiply last with amount of equal cells
-  Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value *= combine.length;
-  isLeveled(Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value);
-  score += Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
-  addCharge();
-  // // generate new numbers for all other slots
-  for(let position in combine) {
-    if(position != combine.length-1){
-      Grid.map[ combine[position][0]][combine[position][1] ].newValue();
+    // multiply last with amount of equal cells
+    Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value *= combine.length;
+    isLeveled(Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value);
+    score += Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
+    addCharge();
+    // // generate new numbers for all other slots
+    for(let position in combine) {
+      if(position != combine.length-1){
+        Grid.map[ combine[position][0]][combine[position][1] ].newValue();
+      }
+      // increase score if preview length reached
+      let bonus = Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
+      if(position > nextNumbers.length) {
+        score += bonus;
+        console.log(bonus);
+        backup = [];
+      }
     }
-    // increase score if preview length reached
-    let bonus = Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
-    if(position > nextNumbers.length) {
-      score += bonus;
-      console.log(bonus);
-      backup = [];
+    firstUndo = true;
+    if(gameOver()){
+      gameState = "dead";
     }
-  }
-  firstUndo = true;
-  if(gameOver()){
-    gameState = "dead";
   }
 }
 // get the average score
@@ -1138,6 +1161,7 @@ function restart() {
   gameState = "main";
   itemMode = 0;
   usedItems = [];
+  activeItem = 0;
   generateNext(5);
   Bag = newBag();
   Items = [0,0,0];
