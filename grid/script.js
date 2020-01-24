@@ -114,6 +114,7 @@ function draw() {
           fill('#aaf99a');
           break;
         case "swap": // swap
+        case "comboBreak": // swap
           fill(171, 236, 106);
           break;
 
@@ -214,6 +215,7 @@ function draw() {
   if(gameState == "level"){
     itemDialog(selection);
   }
+  checkAllSame();
 }
 
 function keyPressed() {
@@ -997,11 +999,22 @@ function drawPreview() {
 }
 // checks if all numbers are equal
 function checkAllSame() {
+  let notSame = false;
+  let firstBreak = -1;
   for(let element = 0; element < path.length-1; element++){
       if( Grid.map[ path[element][0] ] [ path[element][1] ].value
-      != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value) {
-          return false;
+      != Grid.map[ path[element+1][0] ] [ path[element+1][1] ].value && notSame == false) {
+          notSame = true;
+          firstBreak = element;
       }
+  }
+  // change preview color if numbers are not equal
+  if (notSame) {
+    for(firstBreak++; firstBreak < path.length-1; firstBreak++){
+      Grid.map[ path[firstBreak][0] ] [ path[firstBreak][1] ].color = "comboBreak";
+      console.log("2");
+    }
+    return false;
   }
   return true;
 }
@@ -1056,7 +1069,7 @@ function restart() {
   if(score != 0) scores.push(score);
   level = 0;
   backup = [];
-  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
+  // backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0];
   timesUndone = 0;
@@ -1074,7 +1087,7 @@ function restart5() {
   Grid = createGrid(5, 5);
   level = 0;
   backup = [];
-  backup.push(addToUndo(Grid, nextNumbers, Bag, score));
+  // backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0, 0];
   timesUndone = 0;

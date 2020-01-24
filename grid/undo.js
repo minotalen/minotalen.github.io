@@ -26,8 +26,8 @@ function drawCharges(){
 function undo() {
   // update grid values from backup array
   if(undoCharges>=3) {
-    undoCharges -= 3;
     if(backup.length == 1) {
+      undoCharges -= 3;
       for(let row = 0; row < Grid.rows; row++){
         for(let col = 0; col < Grid.cols; col++){
           Grid.map[row][col].value = backup[0].grid[row][col];
@@ -41,7 +41,7 @@ function undo() {
       }
       firstUndo = false;
     }
-    if(backup.length > 0) {
+    if(backup.length > 1) {
         undoCharges -= 3;
         // update grid values
         for(let row = 0; row < Grid.rows; row++){
