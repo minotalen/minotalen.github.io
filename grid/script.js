@@ -215,7 +215,6 @@ function draw() {
   if(gameState == "level"){
     itemDialog(selection);
   }
-  checkAllSame();
 }
 
 function keyPressed() {
@@ -299,6 +298,7 @@ function touchEnded() {
 }
 
 function pressed() {
+  if (mouseX >= width-offset && !justUndone) undo();
   if(gameState == "main") {
     if ( !(mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= height-offset) ) {
       let col = Math.floor((mouseX-offset)/cw);
@@ -353,7 +353,6 @@ function dragged() {
   }
 }
 function release() {
-  if (mouseX >= width-offset && !justUndone) undo();
   if (mouseY <= offset) {
     if (score != 0 && restartConfirm) {
       restartConfirm = false;
@@ -410,11 +409,17 @@ function itemClick() {
     case "sum":
       unequal = true;
       break;
+    case "sum4":
+      unequal = true;
+      break;
     case "sum6":
       unequal = true;
       break;
     case "grow":
       Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[0][0]][path[0][1]].value+1;
+      break;
+    case "turn":
+      unequal = true;
       break;
     case "pick":
       let temp = nextNumbers.pop();
@@ -509,6 +514,15 @@ function itemDrag() {
       }
       break;
     case "sum":
+      //smaller than 4 means preview
+      if(path.length == 2) {
+        unequal = true;
+        Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[0][0]][path[0][1]].preview = nextNumbers[0][0];
+      }
+      maxLength(2);
+      break;
+    case "sum4":
       if(path.length == 3) {
         //smaller than 4 means preview
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value <= 4) {
@@ -533,7 +547,7 @@ function itemDrag() {
             Grid.map[path[0][0]][path[0][1]].preview = nextNumbers[0];
           }
         }
-        break;
+      break;
     case "sum6":
       if(path.length == 4) {
         //exactly 6 means preview
@@ -576,6 +590,19 @@ function itemDrag() {
       toSort.sort(function(a, b){return a-b});
       for(elem in path){
         Grid.map[path[elem][0]][path[elem][1]].preview = toSort[elem];
+      }
+      break;
+    case "turn":
+      if(path.length > 4) maxLength(4);
+      if(path.length == 4) {
+        Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[2][0]][path[2][1]].value;
+        Grid.map[path[2][0]][path[2][2]].preview = Grid.map[path[3][0]][path[3][1]].value;
+        Grid.map[path[3][0]][path[3][2]].preview = Grid.map[path[0][0]][path[0][1]].value;
+      } else if (path.length == 3) {
+        Grid.map[path[0][0]][path[0][1]].preview = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].preview = Grid.map[path[2][0]][path[2][1]].value;
+        Grid.map[path[2][0]][path[2][2]].preview = Grid.map[path[0][0]][path[0][1]].value;
       }
       break;
     case "shrink":
@@ -647,6 +674,13 @@ function itemFinal(){
       path = [];
       break;
     case "sum":
+      if(path.length == 2) {
+        Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[0][0]][path[0][1]].value = generateNext(1);
+        itemDeplete();
+      }
+      break;
+    case "sum4":
       if(path.length == 3) {
         console.log(Grid.map[path[2][0]][path[2][1]].value);
         //smaller than 4 means preview
@@ -671,17 +705,17 @@ function itemFinal(){
         //exactly 6 means preview
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value + Grid.map[path[3][0]][path[3][1]].value == 6) {
           Grid.map[path[3][0]][path[3][1]].value = 6;
-          Grid.map[path[2][0]][path[2][1]].value = nextNumbers[2][0];
-          Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
-          Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
+          Grid.map[path[2][0]][path[2][1]].value = generateNext(0);
+          Grid.map[path[1][0]][path[1][1]].value = generateNext(0);
+          Grid.map[path[0][0]][path[0][1]].value = generateNext(0);
           itemDeplete();
         }
       }
       if(path.length == 3){
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value == 6) {
           Grid.map[path[2][0]][path[2][1]].value = 6;
-          Grid.map[path[1][0]][path[1][1]].value = nextNumbers[1][0];
-          Grid.map[path[0][0]][path[0][1]].value = nextNumbers[0][0];
+          Grid.map[path[1][0]][path[1][1]].value = generateNext(0);
+          Grid.map[path[0][0]][path[0][1]].value = generateNext(0);
           itemDeplete();
         }
       }
@@ -699,6 +733,25 @@ function itemFinal(){
         itemDeplete();;
       } else if (!bounds()) {
         maxLength(0);
+      }
+      break;
+    case "turn":
+      if(path.length > 4) maxLength(4);
+      if(path.length == 4) {
+        let = temp;
+        temp = Grid.map[path[0][0]][path[0][1]].value;
+        Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[2][0]][path[2][1]].value;
+        Grid.map[path[2][0]][path[2][2]].value = Grid.map[path[3][0]][path[3][1]].value;
+        Grid.map[path[3][0]][path[3][2]].value = temp;
+        itemDeplete();
+      } else if (path.length == 3) {path
+        let = temp;
+        temp = Grid.map[path[0][0]][path[0][1]].value;
+        Grid.map[path[0][0]][path[0][1]].value = Grid.map[path[1][0]][path[1][1]].value;
+        Grid.map[path[1][0]][path[1][1]].value = Grid.map[path[2][0]][path[2][1]].value;
+        Grid.map[path[2][0]][path[2][2]].value = temp;
+        itemDeplete();
       }
       break;
     case "sort":
@@ -731,7 +784,7 @@ function itemIcon(type) {
   let toShow = " ";
   switch(type) {
     case "grow":
-    toShow = "+"
+    toShow = "1"
     break;
     case "swap":
     toShow = "x";
@@ -749,10 +802,16 @@ function itemIcon(type) {
     toShow = ">";
     break;
     case "sum":
+    toShow = "+";
+    break;
+    case "sum4":
     toShow = "4";
     break;
     case "sum6":
     toShow = "6";
+    break;
+    case "turn":
+    toShow = "O";
     break;
     case "sort":
     toShow = "V";
@@ -985,7 +1044,7 @@ function maxLength(length) {
     path.splice(path.length-1);
   }
 }
-// draws the ongrid piece previews
+// draws the on grid piece previews
 function drawPreview() {
   for(let i = 1; i < path.length; i++){
     let prevCol = path[path.length-1-i][0]
@@ -997,7 +1056,7 @@ function drawPreview() {
     }
   }
 }
-// checks if all numbers are equal
+// checks if all numbers are equal and color after break
 function checkAllSame() {
   let notSame = false;
   let firstBreak = -1;
@@ -1068,6 +1127,7 @@ function restart() {
   Grid = createGrid(4, 4);
   if(score != 0) scores.push(score);
   level = 0;
+  unequal = false; // for sum items
   backup = [];
   // backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
@@ -1087,6 +1147,7 @@ function restart5() {
   Grid = createGrid(5, 5);
   level = 0;
   backup = [];
+  unequal = false;
   // backup.push(addToUndo(Grid, nextNumbers, Bag, score));
   score = 0;
   nextNumbers = [0, 0, 0, 0];
@@ -1146,7 +1207,7 @@ function gameOver() {
     for(let j = 0; j < Grid.rows-1; j++) {
       if(Grid.map[i][j].value == Grid.map[i][j+1].value){
           noMatch = false;
-          console.log(Grid.map[i][j].value, Grid.map[i][j+1].value);
+          // console.log(Grid.map[i][j].value, Grid.map[i][j+1].value);
       }
     }
   }
@@ -1154,7 +1215,7 @@ function gameOver() {
     for(let j = 0; j < Grid.cols-1; j++) {
       if(Grid.map[j][i].value == Grid.map[j+1][i].value){
           noMatch = false;
-          console.log(Grid.map[j][i].value, Grid.map[j+1][i].value);
+          // console.log(Grid.map[j][i].value, Grid.map[j+1][i].value);
       }
     }
   }

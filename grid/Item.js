@@ -1,7 +1,7 @@
 let usedItems = [];
 
 function createItem(init = "rand", charge = getRandomInt(3)+3) {
-  let types = ["swap", "grow", "shift", "col", "sum", "pick", "sum6", "sort", "shrink"];
+  let types = ["swap", "grow", "sum4", "shift", "col", "sum", "pick", "sum6", "turn", "sort",  "shrink"];
   // took out row
   let thisType;
   if (init == "rand") {
@@ -13,7 +13,7 @@ function createItem(init = "rand", charge = getRandomInt(3)+3) {
   if(init == "shift") charge += 2;
   if(init == "pick" || init == "sum" || init == "sum6") charge -= 1;
   if(init == "shrink" || init == "sort") charge -= 2;
-  charge = max(charge, 1);
+  charge = Math.max(charge, 1);
   let newItem = {
     "charge": charge,
     "type": thisType,
@@ -44,8 +44,8 @@ function getRandomInt(max) {
 
 function initItem(items) {
   for(item = 0 ; item < items.length; item++) {
-    // items[item] = createItem(8);
-    items[item] = 0;
+    items[item] = createItem(8);
+    // items[item] = 0;
   }
   return items;
 }
