@@ -725,17 +725,17 @@ function itemFinal(){
         //exactly 6 means preview
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value + Grid.map[path[3][0]][path[3][1]].value == 6) {
           Grid.map[path[3][0]][path[3][1]].value = 6;
-          Grid.map[path[2][0]][path[2][1]].value = generateNext(0);
-          Grid.map[path[1][0]][path[1][1]].value = generateNext(0);
-          Grid.map[path[0][0]][path[0][1]].value = generateNext(0);
+          Grid.map[path[2][0]][path[2][1]].value = generateNext(1);
+          Grid.map[path[1][0]][path[1][1]].value = generateNext(1);
+          Grid.map[path[0][0]][path[0][1]].value = generateNext(1);
           itemDeplete();
         }
       }
       if(path.length == 3){
         if(Grid.map[path[0][0]][path[0][1]].value + Grid.map[path[1][0]][path[1][1]].value + Grid.map[path[2][0]][path[2][1]].value == 6) {
           Grid.map[path[2][0]][path[2][1]].value = 6;
-          Grid.map[path[1][0]][path[1][1]].value = generateNext(0);
-          Grid.map[path[0][0]][path[0][1]].value = generateNext(0);
+          Grid.map[path[1][0]][path[1][1]].value = generateNext(1);
+          Grid.map[path[0][0]][path[0][1]].value = generateNext(1);
           itemDeplete();
         }
       }
