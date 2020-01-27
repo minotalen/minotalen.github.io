@@ -14,6 +14,7 @@ let x, y;
 let b;
 let offset = 120;
 let score = 0;
+let fuelUsed = 0;
 let scores = [];
 let scoreShow = false;
 let path = [];
@@ -95,7 +96,7 @@ function draw() {
             case 1536:
               fill('#96698E');
               break;
-            case 182:
+            case 3072:
               fill('#9D6180');
               break;
             default:
@@ -238,6 +239,9 @@ function keyPressed() {
   }
   if (key == 'i') {
     alert(usedItems);
+  }
+  if (key == 'f') {
+    alert(metaMap.fuel);
   }
   if (key == '1' && Items[0].charge > 0) {
     if(activeItem != 1) {
@@ -1114,6 +1118,8 @@ function combineNumbers(combine) {
     isLeveled(Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value);
     score += Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
     addCharge();
+    metaMap.fuel--;
+    fuelUsed++;
     // // generate new numbers for all other slots
     for(let position in combine) {
       if(position != combine.length-1){
@@ -1123,7 +1129,6 @@ function combineNumbers(combine) {
       let bonus = Grid.map[combine[combine.length-1][0]][combine[combine.length-1][1]].value;
       if(position > nextNumbers.length) {
         score += bonus;
-        console.log(bonus);
         backup = [];
       }
     }
@@ -1144,10 +1149,20 @@ function bounds() {
   if (mouseX <= offset || mouseY <= offset || mouseX >= width-offset || mouseY >= width-offset) return true;
   return false;
 }
-
+let initFuel = 10;
 // restart the game
 function restart() {
-  Grid = createGrid(4, 4);
+  metaMap.fuel = initFuel;
+  let spots = [0, 3, 6, 9];
+  let lCol = spots[Math.floor(Math.random()*spots.length)];
+  let lRow = spots[Math.floor(Math.random()*spots.length)];
+  console.log("spawning at " + lCol/3 + " " + lRow/3); 
+  for(let i=0; i<4; i++) {
+    let rCol = Math.floor(Math.random()*7);
+    let rRow = Math.floor(Math.random()*7);
+    metaMap = shrinkMeta(metaMap, rCol, rRow, 2);
+  }
+  Grid = loadMeta(metaMap, lRow, lCol, 4);
   if(score != 0) scores.push(score);
   level = 0;
   unequal = false; // for sum items
@@ -1166,6 +1181,11 @@ function restart() {
   Bag = newBag();
   Items = [0,0,0];
   Items = initItem(Items);
+
+
+  if(gameOver()){
+    gameState = "dead";
+  }
 }
 function restart5() {
   Grid = createGrid(5, 5);
@@ -1226,6 +1246,7 @@ function generateNext(amount=1) {
 }
 
 function gameOver() {
+  if(metaMap.fuel == 0) return true;
   let noMatch = true;
   for(let i = 0; i < Grid.cols; i++) {
     for(let j = 0; j < Grid.rows-1; j++) {
@@ -1245,6 +1266,7 @@ function gameOver() {
   }
   if(noMatch) {
     console.log("Game Over");
+    saveMeta(metaMap, Grid);
     return true;
   }
   return false;

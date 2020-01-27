@@ -47,18 +47,4 @@ function createGrid(cols, rows) {
   return newGrid;
 }
 
-// function createCursor(col, row) {
-//   let Cursor = {
-//     "col": col,
-//     "row": row,
-//   },
-//   move: function(amt, axis) {
-//     if(vert == 0) {
-//
-//     } else {
-//
-//     }
-//   }
-// }
-
-let Grid = createGrid(4,4);
+// let Grid = createGrid(4,4);

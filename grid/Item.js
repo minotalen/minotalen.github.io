@@ -1,18 +1,18 @@
 let usedItems = [];
 
 function createItem(init = "rand", charge = getRandomInt(4)) {
-  let types = ["swap", "grow", "sum4", "shift", "col", "sum", "pick", "sum6", "turn", "sort",  "shrink"];
+  let types = [ "shift", "swap", "grow", "sum4", "col", "sum", "pick", "sum6", "turn", "sort", "shrink"];
   // took out row
   let thisType;
   if (init == "rand") {
-    thisType = types[getRandomInt(Math.min(types.length,level+3))];
-    if(level>=5) thisType = types[getRandomInt(Math.min(types.length-2,level+1))+2];
+    thisType = types[Math.min(types.length, getRandomInt(level+4))];
+    if(level>=5) thisType = types[Math.min(types.length, getRandomInt(level+2)+2)];
   } else {
     thisType = types[init];
   }
-  if(init == "shift") charge += 2;
-  if(init == "pick" || init == "sum" || init == "sum6") charge -= 1;
-  if(init == "shrink" || init == "sort") charge -= 2;
+  if(thisType == "shift") charge += 2;
+  if(thisType == "pick" || thisType == "sum" || thisType == "sum6") charge -= 1;
+  if(thisType == "shrink" || thisType == "sort") charge -= 2;
   charge = Math.max(charge, 1);
   let newItem = {
     "charge": charge,
@@ -43,12 +43,12 @@ function getRandomInt(max) {
 }
 
 function initItem(items) {
-  items[0] = createItem(8, Math.max(getRandomInt(7)-1, 1));
-  items[1] = createItem(5, getRandomInt(4)+2);
+  // items[0] = createItem(8, Math.max(getRandomInt(7)-1, 1));
+  // items[1] = createItem(5, getRandomInt(4)+2);
   // items[2] = createItem(8, getRandomInt(3)+1);
-  items[2] = 0;
+  // items[2] = 0;
   for(item = 0 ; item < items.length; item++) {
-    // items[item] = 0;
+    items[item] = 0;
   }
   return items;
 }
@@ -106,7 +106,7 @@ function loadSelection(level) {
   let selection = [];
   //for loop makes 2 items
   for(let i= 0; i<choiceAmt; i++) {
-    let randomChg = Math.max(1, levelNeed[level] + Math.floor(Math.random()*4) - 2);
+    let randomChg = Math.min(6,  levelNeed[level] + Math.max(0,  Math.floor(Math.random()*6) - 2));
     let itemChoice = createItem("rand", randomChg);
     selection.push(itemChoice);
     if(selection.length == 2){
@@ -120,7 +120,7 @@ function loadSelection(level) {
   // and a charge
   if(selection.length == 2){
     // if( (Items[0]==0 || Items[0].depleted) && (Items[1]==0 || Items[1].depleted) && (Items[2]==0 || Items[0].depleted) ) {
-      let generatedChg = Math.max( Math.min( (levelNeed[level]+Math.floor(Math.random()*4)-2), 6) ,1);
+      let generatedChg = Math.max( Math.min( (levelNeed[level]+Math.floor(Math.random()*4)-1), 6) ,1); // max 6 min 1
       console.log(generatedChg);
       if (level>=2) selection.push(generatedChg)
     // }
