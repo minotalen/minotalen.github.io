@@ -1,0 +1,13 @@
+html,
+body {
+  background-color: white;
+  height:99%;
+
+}
+
+.static {
+  cursor: not-allowed;
+}
+.draggable {
+  cursor: move;
+}
