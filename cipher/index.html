@@ -12,7 +12,56 @@
 </head>
 
 <body>
+  <script>
+    function makeDraggable(evt) {
+      var svg = evt.target;
 
+      svg.addEventListener('mousedown', startDrag);
+      svg.addEventListener('mousemove', drag);
+      svg.addEventListener('mouseup', endDrag);
+      svg.addEventListener('mouseleave', endDrag);
+
+      var selectedElement, offset, transform;
+      function startDrag(evt) {
+        if (evt.target.classList.contains('draggable')) {
+          selectedElement = evt.target;
+          offset = getMousePosition(evt);
+          // Get all the transforms currently on this element
+          var transforms = selectedElement.transform.baseVal;
+          // Ensure the first transform is a translate transform
+          if (transforms.length === 0 ||
+              transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+            // Create an transform that translates by (0, 0)
+            var translate = svg.createSVGTransform();
+            translate.setTranslate(0, 0);
+            // Add the translation to the front of the transforms list
+            selectedElement.transform.baseVal.insertItemBefore(translate, 0);
+          }
+          // Get initial translation amount
+          transform = transforms.getItem(0);
+          offset.x -= transform.matrix.e;
+          offset.y -= transform.matrix.f;
+        }
+      }
+      function drag(evt) {
+        if (selectedElement) {
+          evt.preventDefault();
+          var coord = getMousePosition(evt);
+          transform.setTranslate(coord.x - offset.x, coord.y - offset.y);
+        }
+      }
+      function endDrag(evt) {
+        selectedElement = null;
+      }
+      function getMousePosition(evt) {
+        var CTM = svg.getScreenCTM();
+        return {
+          x: (evt.clientX - CTM.e) / CTM.a,
+          y: (evt.clientY - CTM.f) / CTM.d
+        };
+      }
+    }
+</script>
   <svg
      viewBox="-2 0 210.49821 44.666649"
      width="100%"
@@ -24,7 +73,7 @@
         id="layer1"
         transform="translate(-2.4553641,-122.02525)">
         <path
-            class="draggable"
+           class="draggable"
            inkscape:connector-curvature="0"
            style="opacity:1;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
            d="m 54.923511,121.95767 -6.076077,20.77067 5.306876,-9.51568 2.320462,20.95566 -6.180382,1.29229 h 16.068581 l -6.488166,-9.41907 8.663228,-12.10077 -12.547797,-1.93767 -0.0884,-0.15775 8.711503,-9.88768 z"
@@ -97,7 +146,7 @@
      </g>
   </svg>
 
-  <script src="js/skript.js"></script>
+
 </body>
 
 </html>
