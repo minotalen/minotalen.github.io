@@ -7,34 +7,38 @@
   <body>
     <div class="menu">
       <div class="menuText"> Dungeon </div>
-      <button class="menuButton" onClick="filter('all')"> All Items </button> </br>
-      <button class="menuButton" onClick="filter('undMan')"> Underground Manor </button>
-      <button class="menuButton" onClick="filter('inoCav')"> Inori Cave </button>
-      <button class="menuButton" onClick="filter('losWel')"> Lost Well </button>
-      <button class="menuButton" onClick="filter('genTur')"> Gen's Turf </button>
-      <button class="menuButton" onClick="filter('pitLif')"> Pitfall of Life </button>
-      <button class="menuButton" onClick="filter('heaLak')"> Heavenly Lake </button>
-      <button class="menuButton" onClick="filter('oldRoa')"> Old Road </button>
+      <button class="menuItem dungeon all toggled" onClick="filter('all')"> All Items </button> </br>
+      <button class="menuItem dungeon undMan" onClick="filter('undMan')"> Underground Manor </button>
+      <button class="menuItem dungeon inoCav" onClick="filter('inoCav')" disabled> Inori Cave </button>
+      <button class="menuItem dungeon losWel" onClick="filter('losWel')" disabled> Lost Well </button>
+      <button class="menuItem dungeon genTur" onClick="filter('genTur')" disabled> Gen's Turf </button>
+      <button class="menuItem dungeon pitLif" onClick="filter('pitLif')" disabled> Pitfall of Life </button>
+      <button class="menuItem dungeon heaLak" onClick="filter('heaLak')" disabled> Heavenly Lake </button>
+      <button class="menuItem dungeon oldRoa" onClick="filter('oldRoa')" disabled> Old Road </button>
       <hr>
-      <div class="menuText"> Tabs </div>
-      <button class="menuButton" onClick="toggleCat('grass')"> Grass </button>
-      <button class="menuButton" onClick="toggleCat('scrolls')"> Scroll </button>
-      <button class="menuButton" onClick="toggleCat('bracelet')"> Bracelet </button>
-      <button class="menuButton" onClick="toggleCat('staff')"> Staff </button>
-      <button class="menuButton" onClick="toggleCat('talisman')"> Talisman </button>
+      <!-- <div class="menuText"> Tabs </div>
+      <button class="menuItem" onClick="toggleCat('grass')"> Grass </button>
+      <button class="menuItem" onClick="toggleCat('scrolls')"> Scroll </button>
+      <button class="menuItem" onClick="toggleCat('bracelet')"> Bracelet </button>
+      <button class="menuItem" onClick="toggleCat('staff')"> Staff </button>
+      <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button>
+      <hr> -->
+      <div class="autocomplete" style="width:100%;">
+        <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
+      </div>
     </div>
 
     <div class="container">
-      <div class="menuMobile  ">
+      <div class="menuMobile">
         <div class="menuText"> Dungeon </div>
-        <button class="menuButton" onClick="filter('all')"> All Items </button> </br>
-        <button class="menuButton" onClick="filter('undMan')"> Underground Manor </button>
-        <button class="menuButton" onClick="filter('inoCav')"> Inori Cave </button>
-        <button class="menuButton" onClick="filter('losWel')"> Lost Well </button>
-        <button class="menuButton" onClick="filter('genTur')"> Gen's Turf </button>
-        <button class="menuButton" onClick="filter('pitLif')"> Pitfall of Life </button>
-        <button class="menuButton" onClick="filter('heaLak')"> Heavenly Lake </button>
-        <button class="menuButton" onClick="filter('oldRoa')"> Old Road </button>
+        <button class="menuItem" onClick="filter('all')"> All Items </button> </br>
+        <button class="menuItem" onClick="filter('undMan')"> Underground Manor </button>
+        <button class="menuItem" onClick="filter('inoCav')" disabled> Inori Cave </button>
+        <button class="menuItem" onClick="filter('losWel')" disabled> Lost Well </button>
+        <button class="menuItem" onClick="filter('genTur')" disabled> Gen's Turf </button>
+        <button class="menuItem" onClick="filter('pitLif')" disabled> Pitfall of Life </button>
+        <button class="menuItem" onClick="filter('heaLak')" disabled> Heavenly Lake </button>
+        <button class="menuItem" onClick="filter('oldRoa')" disabled> Old Road </button>
         <hr>
       </div>
 
@@ -426,7 +430,7 @@
           <p class="itemname       "> Shocking Staff </p>
           <p class="buy1 colAll"> 1200 </br> +60 </p>
           <p class="buy2 colAll"> 1260 </br> 1320 </br> 1380 </br> 1440 </br> 1500 </br> 1560 </br> 1620 </p>
-          <p class="sell1 colAll"> 421 </br> +21 </p>
+          <p class="sell1 colAll"> 420 </br> +21 </p>
           <p class="sell2 colAll"> 441 </br> 462 </br> 483 </br> 504 </br> 525 </br> 546 </br> 567</p>
         </div>
         <div class="tier staff">
@@ -479,6 +483,7 @@
 
     </div>
     <script type="text/javascript" src="jquery.js"> </script>
+    <script type="text/javascript" src="jqueryHighlight.js"> </script>
     <script type="text/javascript" src="script.js"> </script>
   </body>
 </html>
