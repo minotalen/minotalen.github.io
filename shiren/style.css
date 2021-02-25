@@ -51,10 +51,17 @@ html {
 .menuItem:disabled {
   pointer-events: none;
 }
-
+.menuItemHalf {
+  width: 50%;
+  text-align: center;
+}
 .menuText{
   width: 100%;
   text-align: center;
+}
+
+.iconSmall {
+  height: 1em;
 }
 
 .container::-webkit-scrollbar {
@@ -79,7 +86,7 @@ html {
 }
 
 .five .tier {
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr !important;
+  grid-template-columns: 4fr 1fr 1fr 1fr 1fr !important;
 }
 
 .itemtitle {
@@ -118,12 +125,12 @@ html {
 .buy1 {
   grid-column: 2;
   justify-self: end !important;
-  text-align: right;
+  text-align: center;
 }
 .buy2 {
   grid-column: 3;
   justify-self: end !important;
-  text-align: right;
+  text-align: center;
 }
 
 .sell {
@@ -135,7 +142,7 @@ html {
 .sell1 {
   grid-column: 4;
   justify-self: end !important;
-  text-align: right;
+  text-align: center;
 }
 
 .sell2 {

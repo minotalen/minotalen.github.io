@@ -2,13 +2,29 @@ $(".searchInput").on("change paste keyup", function( e ) {
   if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
 
+$("#extended").click(function() {
+    console.log("hi");
+    updateSearch($(".searchInput").val(), true);
+});
+
 let lastValue = "";
-function updateSearch(searchValue) {
-  if(searchValue != lastValue) {
+
+
+function updateSearch(searchValue, force) {
+  if(searchValue != lastValue  || force) {
     lastValue = searchValue;
     console.log("search change", searchValue);
 
     $(".tier").removeClass("searchResult");
+    let priceList = $(this).text().trim().split(" ")
+    // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
+    let searchZero = " " + searchValue.toLowerCase() + " ";
+    let searchBless = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
+    let searchUnBless = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
+    let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
+    let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
+    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, $("#extended").is(":checked"));
+
     $(".tier").children().each( function( index ) {
       $(this).removeClass("searchResult");
       if(!$(this).hasClass("itemname")) $(this).removeClass("priceHighlight");
@@ -19,11 +35,12 @@ function updateSearch(searchValue) {
           $(this).addClass("searchResult");
         }
 
-        let priceList = $(this).text().trim().split(" ")
-        // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
-        let searchZero = " " + searchValue.toLowerCase() + " ";
-        if(( $(this).hasClass("buy") || $(this).hasClass("buy1") || $(this).hasClass("buy2") || $(this).hasClass("sell") || $(this).hasClass("sell1") || $(this).hasClass("sell2") )
-        && $(this).text().indexOf(searchZero) != -1 ) { //does not contain search value with added zero
+
+
+        const regularSearch = $(this).text().indexOf(searchZero) != -1;
+        const extendedSearch = $(this).text().indexOf(searchZero) != -1|| $(this).text().indexOf(searchBless) != -1 || $(this).text().indexOf(searchUnBless) != -1|| $(this).text().indexOf(searchCurse) != -1 || $(this).text().indexOf(searchUnCurse) != -1;
+        const buyAndSell = ( $(this).hasClass("buy") || $(this).hasClass("buy1") || $(this).hasClass("buy2") || $(this).hasClass("sell") || $(this).hasClass("sell1") || $(this).hasClass("sell2") );
+        if( buyAndSell && ( (!$("#extended").is(":checked") && regularSearch) || ($("#extended").is(":checked") && extendedSearch) ) ) { //does not contain search value with added zero
           $(this).addClass("priceHighlight");
           $(this).parent().addClass("searchResult");
         }
