@@ -63,6 +63,7 @@ html {
   display: grid;
   grid-template-columns: 26% 26% 26% 26% 26% 26% 26% 26%;
   overflow-x: scroll;
+  overflow-y: hidden;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
@@ -107,6 +108,7 @@ html {
 }
 
 .buy {
+  font-size: 0.85em;
   grid-column: 2;
   justify-self: end !important;
   text-align: right;
@@ -170,27 +172,25 @@ html {
 ================================================== */
 
   /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
-  @media only screen and (min-width: 880px) and (max-width: 1400px) {
+  @media only screen and (min-width: 1180px) and (max-width: 1700px) {
     .container {
       grid-template-columns: 35% 35% 35% 35% 35% 35% 35% 35% 35% ;
     }
-  }
-
-  .menuMobile {
-    visibility: hidden;
+    .menuMobile {
+      display: none;
+    }
   }
 
   /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
-  @media only screen and (max-width: 879px) {
+  @media only screen and (max-width: 1179px) {
     .menuMobile {
-      visibility: visible;
       display: block !important;
     }
     .menu {
-      visibility: hidden;
+      display: none;
     }
     .container {
       padding: 0px;
-      grid-template-columns: 40% 70% 70% 70% 70% 70% 70% 70%;
+      grid-template-columns: 23% 50% 50% 50% 50% 50% 50% 50%;
     }
   }
