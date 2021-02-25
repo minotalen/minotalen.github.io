@@ -165,3 +165,32 @@ html {
 .colAll {
   grid-row: 1/span 999;
 }
+
+/* #Media Queries
+================================================== */
+
+  /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+  @media only screen and (min-width: 880px) and (max-width: 1400px) {
+    .container {
+      grid-template-columns: 35% 35% 35% 35% 35% 35% 35% 35% 35% ;
+    }
+  }
+
+  .menuMobile {
+    visibility: hidden;
+  }
+
+  /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+  @media only screen and (max-width: 879px) {
+    .menuMobile {
+      visibility: visible;
+      display: block !important;
+    }
+    .menu {
+      visibility: hidden;
+    }
+    .container {
+      padding: 0px;
+      grid-template-columns: 40% 70% 70% 70% 70% 70% 70% 70%;
+    }
+  }
