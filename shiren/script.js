@@ -2,9 +2,30 @@ $(".searchInput").on("change paste keyup", function( e ) {
   if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
 
-$("#extended").click(function() {
-    console.log("hi");
+$(".extended").click(function() {
+    if (!$(this).hasClass('toggled')) {
+        $(this).addClass("toggled");
+    } else {
+        $(this).removeClass("toggled");
+    }
     updateSearch($(".searchInput").val(), true);
+});
+
+$(".menu").click(function() {
+  $(".searchInput").focus();
+});
+
+$(window).keypress(function (e) {
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    $(".searchInput").focus();
+  }
+})
+
+$(".clear").click(function() {
+  console.log("clearing");
+  $(".searchInput").val('');
+  updateSearch($(".searchInput").val(), true);
 });
 
 let lastValue = "";
@@ -23,27 +44,30 @@ function updateSearch(searchValue, force) {
     let searchUnBless = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
     let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
     let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
-    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, searchUnCurse, $("#extended").is(":checked"));
+    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, searchUnCurse, $(".extended").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
       $(this).removeClass("searchResult");
       if(!$(this).hasClass("itemname")) $(this).removeClass("priceHighlight");
 
       if(searchValue != "") {
+        // item name filter
         if($(this).hasClass("itemname") && $(this).text().toLowerCase().indexOf(searchValue.toLowerCase()) != -1) {
           console.log( index + ": " + $( this ).text(), $(this).attr('class').split('/\s+/') );
           $(this).addClass("searchResult");
         }
 
-
-
+        // item price filter
         const regularSearch = $(this).text().indexOf(searchZero) != -1;
         const extendedSearch = $(this).text().indexOf(searchZero) != -1|| $(this).text().indexOf(searchBless) != -1 || $(this).text().indexOf(searchUnBless) != -1|| $(this).text().indexOf(searchCurse) != -1 || $(this).text().indexOf(searchUnCurse) != -1;
         const buyAndSell = ( $(this).hasClass("buy") || $(this).hasClass("buy1") || $(this).hasClass("buy2") || $(this).hasClass("sell") || $(this).hasClass("sell1") || $(this).hasClass("sell2") );
-        if( buyAndSell && ( (!$("#extended").is(":checked") && regularSearch) || ($("#extended").is(":checked") && extendedSearch) ) ) { //does not contain search value with added zero
+
+        if( buyAndSell && ( (!$(".extended").hasClass('toggled') && regularSearch) || ($(".extended").hasClass('toggled') && extendedSearch) ) ) {
           $(this).addClass("priceHighlight");
           $(this).parent().addClass("searchResult");
         }
+      } else {
+
       }
     });
   }
@@ -127,13 +151,11 @@ function autocomplete(inp, arr) {
       closeAllLists();
       if (!val) { return false;}
       currentFocus = -1;
-      /*create a DIV element that will contain the items (values):*/
+
       a = document.createElement("DIV");
       a.setAttribute("id", this.id + " autocomplete-list");
       a.setAttribute("class", "autocomplete-items");
-      /*append the DIV element as a child of the autocomplete container:*/
       this.parentNode.appendChild(a);
-      /*for each item in the array...*/
       for (i = 0; i < arr.length; i++) {
         /*check if the item starts with the same letters as the text field value:*/
         if (arr[i].toString().substr(0, val.length).toUpperCase() == val.toUpperCase()) {

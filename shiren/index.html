@@ -3,6 +3,10 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <title> Shiren 5 cheat sheet </title>
+    <meta name="author" content="minotalen">
+    <meta name="description" content="A neat cheat sheet for tracking Shiren item discoveries.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
     <div class="menu">
@@ -16,6 +20,21 @@
       <button class="menuItem dungeon pitLif" onClick="filter('pitLif')" disabled> Pitfall of Life </button>
       <button class="menuItem dungeon heaLak" onClick="filter('heaLak')" disabled> Heavenly Lake </button>
       <button class="menuItem dungeon oldRoa" onClick="filter('oldRoa')" disabled> Old Road </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Bizarre Tower </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Onigiri Hollow </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Destiny's Descent </button>
+      <hr>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Merchant's Hideout </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Warning Valley </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Page of Youth </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Hunter Pond </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Rousing Paradise </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> The Pinnacle </button>
+      <hr>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Froggo's Fury </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Master's Footprint </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Aura Ruins </button>
+      <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> more to come </button>
       <hr>
       <!-- <div class="menuText"> Tabs </div>
       <button class="menuItem" onClick="toggleCat('grass')"> Grass </button>
@@ -25,13 +44,12 @@
       <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button>
       <hr> -->
       <div class="autocomplete" style="width:100%;">
-        <input type="checkbox" id="extended" value="extended">
-          <label for="extended">
-            + <img class="iconSmall" src="icon/blessed.png"> </img> <img class="iconSmall" src="icon/cursed.png"> </img>
-          </label>
         <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
+        <button class="menuItemHalf extended">
+          <img class="iconSmall" src="icon/blessed.png"> </img> <img class="iconSmall" src="icon/cursed.png"> </img>
+        </button>
 
-        <!-- <button class="menuItemHalf" onClick="bless()"> blessed </button> -->
+        <button class="menuItemHalf clear"> clear </button>
       </div>
     </div>
 
@@ -51,7 +69,7 @@
       </div>
 
       <div class="itemtype grass">
-        <div class="itemtitle "> Grass </div>
+        <div class="itemtitle "> <img class="iconHead" src="icon/grass.png"> Grass </div>
         <div class="descriptor">
           <p class="itemname desc"> Name </p>
           <p class="buy desc"> buy </p>
@@ -134,7 +152,7 @@
       </div>
 
       <div class="itemtype scrolls">
-        <div class="itemtitle"> Scrolls </div>
+        <div class="itemtitle"> <img class="iconHead" src="icon/scroll.png"> Scrolls </div>
         <div class="descriptor">
           <p class="itemname desc"> Name </p>
           <p class="buy desc"> buy </p>
@@ -235,8 +253,8 @@
       </div>
 
       <div class="itemtype pots five">
-        <div class="itemtitle "> Pots </div>
-        <div class="descriptor">
+        <div class="itemtitle "> <img class="iconHead" src="icon/pot.png"> Pots </div>
+        <div class="descriptor desc5">
           <p class="itemname desc"> Name </p>
           <p class="buy desc"> buy </p>
           <p class="sell desc"> sell </p>
@@ -321,7 +339,7 @@
           <p class="buy1 colAll"> 10000 </br> +500 </p>
           <p class="buy2 colAll"> 10500 </br>	11000 </br>	11500 </br>	12000 </br>	12500 </p>
           <p class="sell1 colAll"> 3500 </br> +175 </p>
-          <p class="sell2 colAll"> 3675 3850 4025 4200 4375 </p>
+          <p class="sell2 colAll"> 3675 </br> 3850 </br> 4025 </br> 4200 </br> 4375 </p>
         </div>
         <div class="tier pots">
           <p class="itemname       "> Aksys Pot </p>
@@ -333,7 +351,7 @@
       </div>
 
       <div class="itemtype staff five">
-        <div class="itemtitle "> Staves </div>
+        <div class="itemtitle "> <img class="iconHead" src="icon/staff.png"> Staves </div>
         <div class="descriptor desc5">
           <p class="itemname desc"> Name </p>
           <p class="buy desc"> buy </p>
@@ -396,7 +414,7 @@
       </div>
 
       <div class="itemtype bracelet">
-          <div class="itemtitle "> Bracelets </div>
+          <div class="itemtitle "> <img class="iconHead" src="icon/bracelet.png"> Bracelets </div>
           <div class="descriptor">
             <p class="itemname desc"> Name </p>
             <p class="buy desc"> buy </p>
@@ -463,7 +481,7 @@
         </div>
 
       <div class="itemtype talisman">
-        <div class="itemtitle "> Talismans </div>
+        <div class="itemtitle "> <img class="iconHead" src="icon/talisman.png">Talismans </div>
         <div class="descriptor">
           <p class="itemname desc"> Name </p>
           <p class="buy desc"> buy </p>

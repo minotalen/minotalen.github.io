@@ -52,16 +52,21 @@ html {
   pointer-events: none;
 }
 .menuItemHalf {
-  width: 50%;
+  width: 48%;
   text-align: center;
 }
 .menuText{
   width: 100%;
   text-align: center;
 }
+.clear{
+}
 
 .iconSmall {
   height: 1em;
+}
+.iconHead {
+  height: 1.2em;
 }
 
 .container::-webkit-scrollbar {
@@ -85,29 +90,47 @@ html {
   padding-bottom: 10px;
 }
 
-.five .tier {
-  grid-template-columns: 4fr 1fr 1fr 1fr 1fr !important;
-}
+
 
 .itemtitle {
   font-size: 1.3em;
   font-weight: bold;
+  display: grid;
+  /* justify-items: center; */
+  justify-items: start;
+  grid-template-columns: auto auto;
+  white-space: nowrap;
 }
+
+.iconHead {
+  justify-self: end;
+  padding-right: 5px;
+}
+
 .descriptor {
   display: grid;
   grid-template-columns: 3fr 1fr 1fr;
   font-size: 0.9em;
   justify-items: center;
   align-items: center;
+  margin-bottom: 2px;
 }
+.desc {
+  margin-bottom: 2px;
+}
+
 .desc5 {
-  grid-template-columns: 1.25fr 1fr 1fr !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
 }
 
 .tier {
   display: grid;
   grid-template-columns: 3fr 1fr 1fr;
   border: 1px solid #222;
+}
+
+.five .tier {
+  grid-template-columns: 2.5fr 1fr 1fr 1fr 1fr !important;
 }
 
 .tier p {
