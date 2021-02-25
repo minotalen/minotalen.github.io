@@ -23,7 +23,7 @@ function updateSearch(searchValue, force) {
     let searchUnBless = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
     let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
     let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
-    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, $("#extended").is(":checked"));
+    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, searchUnCurse, $("#extended").is(":checked"));
 
     $(".tier").children().each( function( index ) {
       $(this).removeClass("searchResult");
