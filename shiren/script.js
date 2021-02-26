@@ -34,7 +34,7 @@ $(".searchInput").on("change paste keyup", function( e ) {
   if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
 
-$(".extended").click(function() {
+$(".blessCurse").click(function() {
     if (!$(this).hasClass('toggled')) {
         $(this).addClass("toggled");
     } else {
@@ -72,11 +72,11 @@ function updateSearch(searchValue, force) {
     let priceList = $(this).text().trim().split(" ")
     // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
     let searchZero = " " + searchValue.toLowerCase() + " ";
-    let searchBless = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
-    let searchUnBless = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
-    let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
-    let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
-    console.log("search", searchValue, searchBless, searchCurse, searchUnBless, searchUnCurse, $(".extended").hasClass('toggled'));
+    // let searchBless = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
+    let searchCurse = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
+    // let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
+    let searchBlessed = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
+    console.log("search", searchValue, searchBlessed, $(".blessed").hasClass('toggled'), searchCurse, $(".cursed").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
       $(this).removeClass("searchResult");
@@ -91,10 +91,11 @@ function updateSearch(searchValue, force) {
 
         // item price filter
         const regularSearch = $(this).text().indexOf(searchZero) != -1;
-        const extendedSearch = $(this).text().indexOf(searchZero) != -1|| $(this).text().indexOf(searchBless) != -1 || $(this).text().indexOf(searchUnBless) != -1|| $(this).text().indexOf(searchCurse) != -1 || $(this).text().indexOf(searchUnCurse) != -1;
+        const blessedSearch = $(this).text().indexOf(searchBlessed) != -1;
+        const cursedSearch = $(this).text().indexOf(searchCurse) != -1
         const buyAndSell = ( $(this).hasClass("buy") || $(this).hasClass("buy1") || $(this).hasClass("buy2") || $(this).hasClass("sell") || $(this).hasClass("sell1") || $(this).hasClass("sell2") );
 
-        if( buyAndSell && ( (!$(".extended").hasClass('toggled') && regularSearch) || ($(".extended").hasClass('toggled') && extendedSearch) ) ) {
+        if( buyAndSell && ( regularSearch || ($(".blessed").hasClass('toggled') && blessedSearch) || ($(".cursed").hasClass('toggled') && cursedSearch) ) ) {
           $(this).addClass("priceHighlight");
           $(this).parent().addClass("searchResult");
         }
