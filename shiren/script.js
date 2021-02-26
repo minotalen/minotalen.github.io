@@ -1,3 +1,35 @@
+// code for dark mode toggle
+const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+
+let css = document.styleSheets[0].cssRules[0].style;
+
+function switchTheme() {
+  let toggle = $('#checkbox')[0];
+  if (toggle.checked) {
+      console.log(toggle);
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
+  } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+  }
+}
+
+if (currentTheme) {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    if (currentTheme === 'light') {
+        toggleSwitch.checked = true;
+    }
+}
+toggleSwitch.addEventListener('change', switchTheme, false);
+
+$('.theme-switch-wrapper').mousedown(function( event ) {
+  event.preventDefault();
+});
+
+// #########################################################################################################
+
 $(".searchInput").on("change paste keyup", function( e ) {
   if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
