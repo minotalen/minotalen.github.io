@@ -154,12 +154,12 @@ function updateSearch(searchValue, force) {
           $(this).parent().removeClass("priceCursed");
           $(this).parent().addClass("searchResult");
         }
-        if( buyAndSellBC && ($(".blessed").hasClass('toggled') && unCursedSearch) ) {
+        if( buyAndSellBC && ($(".blessed").hasClass('toggled') && unBlessedSearch) ) {
           $(this).addClass("priceHighlight");
           $(this).parent().addClass("priceBlessed");
           $(this).parent().removeClass("searchResult");
         }
-        if( buyAndSellBC && ($(".cursed").hasClass('toggled') && unBlessedSearch) ) {
+        if( buyAndSellBC && ($(".cursed").hasClass('toggled') && unCursedSearch) ) {
           $(this).addClass("priceHighlight");
           if($(this).hasClass("buy2")) {
 
