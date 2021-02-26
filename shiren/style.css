@@ -1,10 +1,10 @@
 :root {
     --primary-color: #5ded40;
     --secondary-color: #04d5d9;
-    --cursed-color: #ed4c40;
-    --blessed-color: #5ded40;
+    --cursed-color: #fb9c95;
+    --blessed-color: #d2ff65;
     --font-color: #e1e1ff;
-    --hlfont-color: #424242;
+    --hlfont-color: #040404;
     --bg-color: #161625;
     --heading-color: #818cab;
     --font-size:100%;
@@ -15,11 +15,11 @@
 [data-theme="light"] {
     --primary-color: #5ded40;
     --secondary-color: #04d5d9;
-    --cursed-color: #ed4c40;
-    --blessed-color: #5ded40;
+    --cursed-color: #fb9c95;
+    --blessed-color: #d2ff65;
     --font-color: #424242;
-    --hlfont-color: #424242;
-    --bg-color: #fff;
+    --hlfont-color: #040404;
+    --bg-color: #fefbfe;
     --heading-color: #292922;
     --summary-color: #373fff25;
     --details-color: #373fff11;
@@ -90,20 +90,20 @@
 
 .itemtype::-webkit-scrollbar-track
 {
-  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  -webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
   background-color: var(--summary-color);
 }
 
 .itemtype::-webkit-scrollbar
 {
-  width: 10px;
+  width: 5px;
   background-color: var(--summary-color);
 }
 
 .itemtype::-webkit-scrollbar-thumb
 {
   background-color: var(--font-color);
-  border: 2px solid var(--font-color);
+  border: 1px solid var(--font-color);
 }
 
 
@@ -136,6 +136,10 @@ html {
   width: 100%;
   text-align: center;
 }
+.menuText {
+  font-size: 0.9em;
+  padding: 4px 0px;
+}
 .menuItem:disabled {
   pointer-events: none;
 }
@@ -158,7 +162,7 @@ html {
   padding: 0px;
   width: 47%;
   text-align: center;
-  margin-bottom: 5px;
+  margin: 5px 0px;
 }
 .menuText{
   width: 100%;
@@ -181,11 +185,17 @@ html {
 .container {
   padding-left: 14%;
   display: grid;
-  grid-template-columns: 300px 300px 300px 300px 300px 300px 300px 300px;
   overflow-x: scroll;
   overflow-y: hidden;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+.containerPrice {
+  grid-template-columns: 280px 280px 330px 330px 320px 280px 280px;
+}
+
+.containerNoPrice {
+  grid-template-columns: 16.5% 16.5% 16.5% 16.5% 16.5% 16.5%  ;
 }
 
 .itemtype {
@@ -237,6 +247,7 @@ html {
   display: grid;
   grid-template-columns: 3fr 1fr 1fr;
   border: 1px solid var(--font-color);
+  padding: 2px;
 }
 
 .five .tier {
@@ -263,6 +274,8 @@ html {
   font-size: 0.9em;
 }
 .buy2 {
+  /* display: grid; */
+  /* grid-template-rows: 1fr 1fr 1fr 1fr 1fr; */
   grid-column: 3;
   justify-self: end !important;
   text-align: center;
@@ -382,8 +395,8 @@ button.toggled {
   .autocomplete-items {
     position: absolute;
     border: 1px solid var(--font-color);
-    border-bottom: none;
-    border-top: none;
+    /* border-bottom: none;
+    border-top: none; */
     z-index: 99;
     /*position the autocomplete items to be the same width as the container:*/
     top: 100%;
@@ -391,7 +404,7 @@ button.toggled {
     right: 0;
   }
   .autocomplete-items div {
-    padding: 10px;
+    padding: 4px;
     cursor: pointer;
     background-color: var(--bg-color);
     border-bottom: 1px solid var(--font-color);
@@ -410,14 +423,19 @@ button.toggled {
   ================================================== */
 
   /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
-  @media only screen and (min-width: 980px) and (max-width: 1400px) {
+  @media only screen and (min-width: 1001) and (max-width: 1400px) {
     .container {
-      grid-template-columns: 500px 500px 500px 500px 500px 500px 500px 500px;
+      grid-template-columns: 30% 30% 40% 40% 30% 30% 30% 30%  ;
+    }
+  }
+  @media only screen and (min-width: 480px) and (max-width: 1000px) {
+    .container {
+      grid-template-columns: 45% 45% 55% 55% 45% 45% 45% 45% ;
     }
   }
 
   /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
-  @media only screen and (max-width: 979px) {
+  @media only screen and (max-width: 479px) {
     body {
       font-size: 0.9em
     }
@@ -431,7 +449,12 @@ button.toggled {
       display: none;
     }
     .container {
+      grid-template-columns: 30% 70% 70% 85% 85% 70% 70% 70%;
       padding: 0px;
-      grid-template-columns: 36% 75% 75% 85% 85% 75% 75% 75%;
+      overflow-x: scroll;
+    }
+
+    .container::-webkit-scrollbar {
+      display: block !important;
     }
   }

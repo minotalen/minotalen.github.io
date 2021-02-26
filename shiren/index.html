@@ -21,7 +21,8 @@
         </label>
         🌞
       </div>
-      <div class="menuText"> Dungeon </div>
+      <hr>
+      <div class="menuText"> dungeon </div>
       <button class="menuItem dungeon all toggled" onClick="filter('all')"> All Items </button> </br>
       <button class="menuItem dungeon undMan" onClick="filter('undMan')"> Underground Manor </button>
       <button class="menuItem dungeon priCha" onClick="filter('priCha')"> Primordial Chasm </button>
@@ -34,7 +35,6 @@
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Bizarre Tower </button>
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Onigiri Hollow </button>
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Destiny's Descent </button>
-      <hr>
       <!-- <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Merchant's Hideout </button>
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Warning Valley </button>
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Page of Youth </button>
@@ -46,30 +46,34 @@
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Master's Footprint </button>
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Aura Ruins </button> -->
       <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> more to come </button>
-      <hr>
       <!-- <div class="menuText"> Tabs </div>
       <button class="menuItem" onClick="toggleCat('grass')"> Grass </button>
       <button class="menuItem" onClick="toggleCat('scrolls')"> Scroll </button>
       <button class="menuItem" onClick="toggleCat('bracelet')"> Bracelet </button>
       <button class="menuItem" onClick="toggleCat('staff')"> Staff </button>
-      <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button>
-      <hr> -->
+      <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button> -->
+      <hr>
+      <div class="menuText version"> settings </div>
+      <button class="menuItem priceToggle toggled"> <img class="iconSmall" src="icon/gitan.png"> </img> display prices </button>
+      <hr>
       <div class="autocomplete" style="width:100%;">
-
-        <button class="menuItemHalf blessCurse cursed toggled">
-          <img class="iconSmall" src="icon/blessed.png"> </img>
-        </button>
-        <button class="menuItemHalf blessCurse blessed toggled">
-          <img class="iconSmall" src="icon/cursed.png"> </img>
-        </button>
-        <!-- <button class="menuItemHalf clear"> clear </button> -->
-        <input class="menuItem searchInput autocomplete" type="text" placeholder="search"> </input>
-
-
+        <div class="menuItem">
+          <div class="menuText version"> enter name/price </div>
+          <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
+          <button class="menuItemHalf blessCurse cursed toggled">
+            <img class="iconSmall" src="icon/blessed.png"> </img>
+            <span style="font-weight: bold;"> </span>
+          </button>
+          <button class="menuItemHalf blessCurse blessed toggled">
+            <img class="iconSmall" src="icon/cursed.png"> </img>
+            <span style="font-weight: bold;"> </span>
+          </button>
+          <!-- <button class="menuItemHalf clear"> clear </button> -->
+        </div>
       </div>
     </div>
 
-    <div class="container">
+    <div class="container containerPrice">
       <div class="menuMobile">
         <div class="menuText"> Dungeon </div>
         <button class="menuItem dungeon all toggled" onClick="filter('all')"> All Items </button> </br>
@@ -111,8 +115,8 @@
         <div class="itemtype grass">
           <div class="descriptor">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png">  buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png">  sell </p>
           </div>
           <div class="tier grass">
             <p class="itemname"> Weeds </p>
@@ -196,8 +200,8 @@
         <div class="itemtype scrolls">
           <div class="descriptor">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png">  sell </p>
           </div>
           <div class="tier scroll">
             <p class="itemname"> Wet Scroll </p>
@@ -300,8 +304,8 @@
         <div class="itemtype pots five">
           <div class="descriptor desc5">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> sell </p>
           </div>
           <div class="tier pots">
             <p class="itemname undMan priCha inoCav"> Preservation Pot </p>
@@ -342,7 +346,7 @@
             <p class="buy1 colAll"> 2000 </br> +100 </p>
             <p class="buy2 colAll"> 2100 </br> 2200 </br> 2300 </br> 2400 </br> 2500 </p>
             <p class="sell1 colAll"> 700 </br> +35 </p>
-            <p class="sell2 colAll"> 735 </br> 770 </br> 805 </br> 840 </br> 875</p>
+            <p class="sell2 colAll"> 735 </br> 770 </br> 805 </br> 840 </br> 875 </p>
           </div>
           <div class="tier pots">
             <p class="itemname undMan priCha inoCav"> Zen Pot </p>
@@ -364,7 +368,7 @@
             <p class="buy1 colAll"> 3500 </br> +175 </p>
             <p class="buy2 colAll"> 3675 </br> 3850 </br> 4025 </br> 4200 </br> 4375 </p>
             <p class="sell1 colAll"> 1225 </br> +61¼ </p>
-            <p class="sell2 colAll"> 1286 </br> 1347 </br> 1408 </br> 1470 </br> 1531</p>
+            <p class="sell2 colAll"> 1286 </br> 1347 </br> 1408 </br> 1470 </br> 1531 </p>
           </div>
           <div class="tier pots">
             <p class="itemname undMan priCha inoCav"> Synthesis Pot </p>
@@ -385,13 +389,13 @@
             <p class="sell1 colAll"> 3500 </br> +175 </p>
             <p class="sell2 colAll"> 3675 </br> 3850 </br> 4025 </br> 4200 </br> 4375 </p>
           </div>
-          <div class="tier pots">
+          <!-- <div class="tier pots">
             <p class="itemname       "> Aksys Pot </p>
             <p class="buy1 colAll"> 45000 </br> +2250 </p>
             <p class="buy2 colAll"> 47250 </br> 49500 </br> 51750 </br> 54000 </br> 56250 </p>
             <p class="sell1 colAll"> 8320 </br> +416 </p>
             <p class="sell2 colAll"> 8736 </br> 9152 </br> 9568 </br> 9984 </br> 10400 </p>
-          </div>
+          </div> -->
         </div>
       </div>
 
@@ -400,8 +404,8 @@
         <div class="itemtype staff five">
           <div class="descriptor desc5">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> sell </p>
           </div>
           <div class="tier staff">
             <p class="itemname undMan priCha inoCav"> Swap Staff </p>
@@ -435,7 +439,7 @@
             <p class="buy1 colAll"> 1200 </br> +60 </p>
             <p class="buy2 colAll"> 1260 </br> 1320 </br> 1380 </br> 1440 </br> 1500 </br> 1560 </br> 1620 </p>
             <p class="sell1 colAll"> 420 </br> +21 </p>
-            <p class="sell2 colAll"> 441 </br> 462 </br> 483 </br> 504 </br> 525 </br> 546 </br> 567</p>
+            <p class="sell2 colAll"> 441 </br> 462 </br> 483 </br> 504 </br> 525 </br> 546 </br> 567 </p>
           </div>
           <div class="tier staff">
             <p class="itemname undMan priCha inoCav"> Seal Staff </p>
@@ -444,7 +448,7 @@
             <p class="buy1 colAll"> 1500 </br> +75 </p>
             <p class="buy2 colAll"> 1575 </br> 1650 </br> 1725 </br> 1800 </br> 1875 </br> 1950 </br> 2025 </p>
             <p class="sell1 colAll"> 525 </br> +26¼ </p>
-            <p class="sell2 colAll"> 551 </br> 577 </br> 603 </br> 630 </br> 656 </br> 682 </br> 708</p>
+            <p class="sell2 colAll"> 551 </br> 577 </br> 603 </br> 630 </br> 656 </br> 682 </br> 708 </p>
           </div>
           <div class="tier staff">
             <p class="itemname        priCha       "> Glorious Staff </p>
@@ -455,7 +459,7 @@
             <p class="buy1 colAll"> 1800 </br> +90 </p>
             <p class="buy2 colAll"> 1890 </br> 1980 </br> 2070 </br> 2160 </br> 2250 </br> 2340 </br> 2430 </p>
             <p class="sell1 colAll"> 630 </br> +31½ </p>
-            <p class="sell2 colAll"> 661 </br> 693 </br> 724 </br> 756 </br> 787 </br> 819 </br> 850</p>
+            <p class="sell2 colAll"> 661 </br> 693 </br> 724 </br> 756 </br> 787 </br> 819 </br> 850 </p>
           </div>
         </div>
       </div>
@@ -465,8 +469,8 @@
         <div class="itemtype bracelet">
           <div class="descriptor">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> sell </p>
           </div>
           <div class="tier bracelet">
             <p class="itemname undMan priCha inoCav"> Strength Bracelet </p>
@@ -534,8 +538,8 @@
         <div class="itemtype talisman">
           <div class="descriptor">
             <p class="itemname desc"> Name </p>
-            <p class="buy desc"> buy </p>
-            <p class="sell desc"> sell </p>
+            <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> buy </p>
+            <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> sell </p>
           </div>
           <div class="tier talisman">
             <p class="itemname undMan priCha inoCav"> Shadow Bind Tal. </p>

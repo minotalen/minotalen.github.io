@@ -1,7 +1,6 @@
 // code for dark mode toggle
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-
 let css = document.styleSheets[0].cssRules[0].style;
 
 function switchTheme() {
@@ -15,7 +14,6 @@ function switchTheme() {
       localStorage.setItem('theme', 'dark');
   }
 }
-
 if (currentTheme) {
     document.documentElement.setAttribute('data-theme', currentTheme);
     if (currentTheme === 'light') {
@@ -23,7 +21,6 @@ if (currentTheme) {
     }
 }
 toggleSwitch.addEventListener('change', switchTheme, false);
-
 $('.theme-switch-wrapper').mousedown(function( event ) {
   event.preventDefault();
 });
@@ -33,6 +30,41 @@ $('.theme-switch-wrapper').mousedown(function( event ) {
 $(".searchInput").on("change paste keyup", function( e ) {
   if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
+
+$(".priceToggle").click(function() {
+  if (!$(this).hasClass('toggled')) {
+      // show prices
+      $(".container").addClass("containerPrice");
+      $(".container").removeClass("containerNoPrice");
+      $(".itemname").css("grid-column", "");
+
+      $(".buy").show();
+      $(".buy1").show();
+      $(".buy2").show();
+      $(".sell").show();
+      $(".sell1").show();
+      $(".sell2").show();
+      $('.descriptor').show("");
+
+      $(this).addClass("toggled");
+  } else {
+      // hide prices
+      $(".container").removeClass("containerPrice");
+      $(".container").addClass("containerNoPrice");
+        $(".itemname").css("grid-column", "1/span 5");
+
+      $(".buy").hide();
+      $(".buy1").hide();
+      $(".buy2").hide();
+      $(".sell").hide();
+      $(".sell1").hide();
+      $(".sell2").hide();
+      $('.descriptor').hide("");
+
+      $(this).removeClass("toggled");
+  }
+});
+$(".priceToggle").click();
 
 $(".blessCurse").click(function() {
     if (!$(this).hasClass('toggled')) {
@@ -75,10 +107,22 @@ function updateSearch(searchValue, force) {
     // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
     let searchZero = " " + searchValue.toLowerCase() + " ";
     let searchCurse = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
-    let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
+    let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
     let searchBlessed = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
-    let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
-    console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, $(".cursed").hasClass('toggled'));
+    let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
+
+    if($(".cursed").hasClass('toggled')) {
+      $('.cursed span').text(searchUnBlessed);
+    } else {
+      $('.cursed span').text("");
+    }
+    if($(".blessed").hasClass('toggled')) {
+      $('.blessed span').text(searchUnCurse);
+    } else {
+      $('.blessed span').text("");
+    }
+
+    console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, searchUnCurse, $(".cursed").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
 
@@ -91,20 +135,35 @@ function updateSearch(searchValue, force) {
           $(this).addClass("searchResult");
         }
 
-        // item price filter
         const regularSearch = $(this).text().indexOf(searchZero) != -1;
-        const blessedSearch = false;
+        const blessedSearch = $(this).text().indexOf(searchBlessed) != -1;;
         const unBlessedSearch = $(this).text().indexOf(searchUnBlessed) != -1;
         const cursedSearch = $(this).text().indexOf(searchCurse) != -1
         const unCursedSearch = $(this).text().indexOf(searchUnCurse) != -1
-        const buyAndSell = ( $(this).is('.buy, .buy1, .buy2, .sell, .sell1, .sell2') );
+        const buyAndSell = ( $(this).is('.buy, .buy2, .sell, .sell2') );
+        const buyAndSellBC = ( $(this).is('.buy, .buy2, .sell, .sell2') );
+        // item price filter
 
-        
-        if( buyAndSell && ( regularSearch ||  ($(".cursed").hasClass('toggled') && (cursedSearch || unCursedSearch) ) || ($(".blessed").hasClass('toggled') && (blessedSearch || unBlessedSearch)) ) ) {
+
+        if( buyAndSell && regularSearch ) {
           $(this).addClass("priceHighlight");
           $(this).parent().removeClass("priceBlessed");
           $(this).parent().removeClass("priceCursed");
           $(this).parent().addClass("searchResult");
+        }
+        if( buyAndSellBC && ($(".blessed").hasClass('toggled') && unCursedSearch) ) {
+          $(this).addClass("priceHighlight");
+          $(this).parent().addClass("priceBlessed");
+          $(this).parent().removeClass("searchResult");
+        }
+        if( buyAndSellBC && ($(".cursed").hasClass('toggled') && unBlessedSearch) ) {
+          $(this).addClass("priceHighlight");
+          if($(this).hasClass("buy2")) {
+
+          }
+          $(this).parent().addClass("priceBlessed");
+          $(this).parent().addClass("priceCursed");
+          $(this).parent().removeClass("searchResult");
         }
       }
     });
