@@ -82,7 +82,10 @@ $(".menu").click(function() {
 $(window).keypress(function (e) {
   if (e.key === ' ' || e.key === 'Spacebar') {
     e.preventDefault();
+    // $(".searchInput").val('');
     $(".searchInput").focus();
+    $(".searchInput").select();
+
   }
 })
 
@@ -111,12 +114,12 @@ function updateSearch(searchValue, force) {
     let searchBlessed = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
     let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
 
-    if($(".cursed").hasClass('toggled')) {
+    if($(".cursed").hasClass('toggled') && searchUnBlessed != " NaN ") {
       $('.cursed span').text(searchUnBlessed);
     } else {
       $('.cursed span').text("");
     }
-    if($(".blessed").hasClass('toggled')) {
+    if($(".blessed").hasClass('toggled') && searchUnCurse != " NaN ") {
       $('.blessed span').text(searchUnCurse);
     } else {
       $('.blessed span').text("");
