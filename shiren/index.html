@@ -12,6 +12,7 @@
   </head>
   <body>
     <div class="menu">
+      <div class="menuText version"> <i> shiren5 id helper 0.2 </i> </div>
       <div class="lightDark">
         🌙
         <label class="theme-switch" for="checkbox">
@@ -55,14 +56,14 @@
       <hr> -->
       <div class="autocomplete" style="width:100%;">
 
-        <button class="menuItemHalf blessCurse cursed">
+        <button class="menuItemHalf blessCurse cursed toggled">
           <img class="iconSmall" src="icon/blessed.png"> </img>
         </button>
-        <button class="menuItemHalf blessCurse blessed">
+        <button class="menuItemHalf blessCurse blessed toggled">
           <img class="iconSmall" src="icon/cursed.png"> </img>
         </button>
         <!-- <button class="menuItemHalf clear"> clear </button> -->
-        <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
+        <input class="menuItem searchInput autocomplete" type="text" placeholder="search"> </input>
 
 
       </div>
@@ -74,7 +75,7 @@
         <button class="menuItem dungeon all toggled" onClick="filter('all')"> All Items </button> </br>
         <button class="menuItem dungeon undMan" onClick="filter('undMan')"> Underground Manor </button>
         <button class="menuItem dungeon priCha" onClick="filter('priCha')"> Primordial Chasm </button>
-        <button class="menuItem dungeon inoCav" onClick="filter('inoCav')" disabled> Inori Cave </button>
+        <button class="menuItem dungeon inoCav" onClick="filter('inoCav')"> Inori Cave </button>
         <button class="menuItem dungeon losWel" onClick="filter('losWel')" disabled> Lost Well </button>
         <button class="menuItem dungeon genTur" onClick="filter('genTur')" disabled> Gen's Turf </button>
         <button class="menuItem dungeon pitLif" onClick="filter('pitLif')" disabled> Pitfall of Life </button>
@@ -103,14 +104,6 @@
         <button class="menuItem" onClick="toggleCat('staff')"> Staff </button>
         <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button>
         <hr> -->
-        <div class="autocomplete" style="width:100%;">
-          <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
-          <button class="menuItemHalf extended">
-            <img class="iconSmall" src="icon/blessed.png"> </img> <img class="iconSmall" src="icon/cursed.png"> </img>
-          </button>
-
-          <button class="menuItemHalf clear"> clear </button>
-        </div>
       </div>
 
       <div class="itemcontainer">
@@ -374,21 +367,21 @@
             <p class="sell2 colAll"> 1286 </br> 1347 </br> 1408 </br> 1470 </br> 1531</p>
           </div>
           <div class="tier pots">
-            <p class="itemname undMan priCha"> Synthesis Pot </p>
-            <p class="itemname        priCha"> Modder's Pot </p>
+            <p class="itemname undMan priCha inoCav"> Synthesis Pot </p>
+            <p class="itemname        priCha       "> Modder's Pot </p>
             <p class="buy1 colAll"> 6000 </br> +300 </p>
             <p class="buy2 colAll"> 6300 </br> 6600 </br> 6900 </br> 7200 </br> 7500 </p>
             <p class="sell1 colAll"> 2100 </br> +105 </p>
             <p class="sell2 colAll"> 2205 </br> 2310 </br> 2415 </br> 2520 </br> 2625 </p>
           </div>
           <div class="tier pots">
-            <p class="itemname        priCha"> Upgrade Pot </p>
-            <p class="itemname        priCha"> Degrade Pot </p>
-            <p class="itemname        priCha"> Lucky Pot </p>
-            <p class="itemname        priCha"> Unlucky Pot </p>
+            <p class="itemname        priCha       "> Upgrade Pot </p>
+            <p class="itemname        priCha       "> Degrade Pot </p>
+            <p class="itemname        priCha       "> Lucky Pot </p>
+            <p class="itemname        priCha       "> Unlucky Pot </p>
             <p class="itemname        priCha priCha"> Grilling Pot </p>
             <p class="buy1 colAll"> 10000 </br> +500 </p>
-            <p class="buy2 colAll"> 10500 </br>	11000 </br>	11500 </br>	12000 </br>	12500 </p>
+            <p class="buy2 colAll"> 10500 </br> 11000 </br> 11500 </br> 12000 </br> 12500 </p>
             <p class="sell1 colAll"> 3500 </br> +175 </p>
             <p class="sell2 colAll"> 3675 </br> 3850 </br> 4025 </br> 4200 </br> 4375 </p>
           </div>
@@ -418,9 +411,9 @@
             <p class="itemname        priCha       "> Swift Staff </p>
             <p class="itemname undMan priCha inoCav"> Mage Staff </p>
             <p class="buy1 colAll"> 600 </br> +30 </p>
-            <p class="buy2 colAll"> 630 </br>	660 </br>	690 </br>	720 </br>	750 </br>	780 </br>	810 </p>
+            <p class="buy2 colAll"> 630 </br> 660 </br> 690 </br> 720 </br> 750 </br> 780 </br> 810 </p>
             <p class="sell1 colAll "> 210 </br> +10½ </p>
-            <p class="sell2 colAll "> 220 </br> 231 </br> 241 </br> 252 </br> 262 </br> 273 </br>	283 </p>
+            <p class="sell2 colAll "> 220 </br> 231 </br> 241 </br> 252 </br> 262 </br> 273 </br> 283 </p>
           </div>
           <div class="tier staff">
             <p class="itemname undMan priCha inoCav"> Transient Staff </p>

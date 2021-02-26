@@ -1,6 +1,8 @@
 :root {
-    --primary-color: #21de54;
+    --primary-color: #5ded40;
     --secondary-color: #04d5d9;
+    --cursed-color: #ed4c40;
+    --blessed-color: #5ded40;
     --font-color: #e1e1ff;
     --hlfont-color: #424242;
     --bg-color: #161625;
@@ -11,8 +13,10 @@
 }
 
 [data-theme="light"] {
-    --primary-color: #21de54;
+    --primary-color: #5ded40;
     --secondary-color: #04d5d9;
+    --cursed-color: #ed4c40;
+    --blessed-color: #5ded40;
     --font-color: #424242;
     --hlfont-color: #424242;
     --bg-color: #fff;
@@ -124,9 +128,9 @@ html {
 .menu {
   background: var(--bg-color);
   position: fixed;
-  width: 10%;
+  width: 14%;
   height: 100%;
-  padding-right: 5px;
+  padding-right: 15px;
 }
 .menuItem {
   width: 100%;
@@ -134,6 +138,13 @@ html {
 }
 .menuItem:disabled {
   pointer-events: none;
+}
+.menuMobile {
+  position: relative;
+  height: 96vh;
+  padding-right: 5px;
+  display: none;
+  overflow-y: auto;
 }
 
 .lightDark {
@@ -144,7 +155,8 @@ html {
 }
 
 .menuItemHalf {
-  width: 48%;
+  padding: 0px;
+  width: 47%;
   text-align: center;
   margin-bottom: 5px;
 }
@@ -167,9 +179,9 @@ html {
 }
 
 .container {
-  padding-left: 10%;
+  padding-left: 14%;
   display: grid;
-  grid-template-columns: 26% 26% 26% 26% 26% 26% 26% 26%;
+  grid-template-columns: 300px 300px 300px 300px 300px 300px 300px 300px;
   overflow-x: scroll;
   overflow-y: hidden;
   -ms-overflow-style: none;  /* IE and Edge */
@@ -312,9 +324,19 @@ button.toggled {
   color: var(--hlfont-color);
 }
 .priceHighlight {
-  background-color: var(--secondary-color); !important;
+  background-color: var(--secondary-color) !important;
   font-weight: bold;
   padding: 4px !important;
+}
+.priceBlessed {
+  background-color: var(--blessed-color) !important;
+  color: var(--hlfont-color);
+  /* text-align: right; */
+}
+.priceCursed {
+  background-color: var(--cursed-color) !important;
+  color: var(--hlfont-color);
+  /* text-align: right; */
 }
 
 .itemname:hover: {
@@ -327,32 +349,7 @@ button.toggled {
 }
 
 
-.menuMobile {
-  display: none;
-}
-/* #Media Queries
-================================================== */
 
-  /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
-  @media only screen and (min-width: 980px) and (max-width: 1400px) {
-    .container {
-      grid-template-columns: 35% 35% 35% 35% 35% 35% 35% 35% 35% ;
-    }
-  }
-
-  /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
-  @media only screen and (max-width: 979px) {
-    .menuMobile {
-      display: block !important;
-    }
-    .menu {
-      display: none;
-    }
-    .container {
-      padding: 0px;
-      grid-template-columns: 23% 50% 50% 50% 50% 50% 50% 50%;
-    }
-  }
 
   /* #Autocomplete
   ================================================== */
@@ -407,4 +404,34 @@ button.toggled {
     /*when navigating through the items using the arrow keys:*/
     background-color: DodgerBlue !important;
     color: var(--font-color)
+  }
+
+  /* #Media Queries
+  ================================================== */
+
+  /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+  @media only screen and (min-width: 980px) and (max-width: 1400px) {
+    .container {
+      grid-template-columns: 500px 500px 500px 500px 500px 500px 500px 500px;
+    }
+  }
+
+  /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+  @media only screen and (max-width: 979px) {
+    body {
+      font-size: 0.9em
+    }
+    button {
+      font-size: 0.9em;
+    }
+    .menuMobile {
+      display: block !important;
+    }
+    .menu {
+      display: none;
+    }
+    .container {
+      padding: 0px;
+      grid-template-columns: 36% 75% 75% 85% 85% 75% 75% 75%;
+    }
   }

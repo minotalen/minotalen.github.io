@@ -66,20 +66,22 @@ let lastValue = "";
 function updateSearch(searchValue, force) {
   if(searchValue != lastValue  || force) {
     lastValue = searchValue;
-    console.log("search change", searchValue);
 
     $(".tier").removeClass("searchResult");
+    $(".tier").children().removeClass("searchResult");
+    $(".tier").removeClass("priceBlessed");
+    $(".tier").removeClass("priceCursed");
     let priceList = $(this).text().trim().split(" ")
     // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
     let searchZero = " " + searchValue.toLowerCase() + " ";
-    // let searchBless = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
-    let searchCurse = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
-    // let searchCurse = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
-    let searchBlessed = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
-    console.log("search", searchValue, searchBlessed, $(".blessed").hasClass('toggled'), searchCurse, $(".cursed").hasClass('toggled'));
+    let searchCurse = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
+    let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
+    let searchBlessed = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
+    let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
+    console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, $(".cursed").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
-      $(this).removeClass("searchResult");
+
       if(!$(this).hasClass("itemname")) $(this).removeClass("priceHighlight");
 
       if(searchValue != "") {
@@ -91,16 +93,19 @@ function updateSearch(searchValue, force) {
 
         // item price filter
         const regularSearch = $(this).text().indexOf(searchZero) != -1;
-        const blessedSearch = $(this).text().indexOf(searchBlessed) != -1;
+        const blessedSearch = false;
+        const unBlessedSearch = $(this).text().indexOf(searchUnBlessed) != -1;
         const cursedSearch = $(this).text().indexOf(searchCurse) != -1
-        const buyAndSell = ( $(this).hasClass("buy") || $(this).hasClass("buy1") || $(this).hasClass("buy2") || $(this).hasClass("sell") || $(this).hasClass("sell1") || $(this).hasClass("sell2") );
+        const unCursedSearch = $(this).text().indexOf(searchUnCurse) != -1
+        const buyAndSell = ( $(this).is('.buy, .buy1, .buy2, .sell, .sell1, .sell2') );
 
-        if( buyAndSell && ( regularSearch || ($(".blessed").hasClass('toggled') && blessedSearch) || ($(".cursed").hasClass('toggled') && cursedSearch) ) ) {
+        
+        if( buyAndSell && ( regularSearch ||  ($(".cursed").hasClass('toggled') && (cursedSearch || unCursedSearch) ) || ($(".blessed").hasClass('toggled') && (blessedSearch || unBlessedSearch)) ) ) {
           $(this).addClass("priceHighlight");
+          $(this).parent().removeClass("priceBlessed");
+          $(this).parent().removeClass("priceCursed");
           $(this).parent().addClass("searchResult");
         }
-      } else {
-
       }
     });
   }
@@ -133,7 +138,7 @@ function toggleCat(catName){
 function giveToggle(){
    var elements = document.getElementsByClassName('itemname');
    for(var i = 0; i < elements.length; i++){
-      elements[i].onclick = itemToggle;
+      if(!elements[i].classList.contains('desc')) elements[i].onclick = itemToggle;
    }
 }
 
@@ -292,12 +297,17 @@ const prices = [      3,
                     315,
                     330,
                     346,
+                    350,
                     362,
+                    367,
                     378,
+                    385,
                     393,
+                    402,
                     409,
                     420,
                     425,
+                    437,
                     441,
                     462,
                     483,
@@ -306,48 +316,123 @@ const prices = [      3,
                     525,
                     546,
                     551,
+                    560,
                     567,
                     577,
+                    588,
                     600,
                     603,
+                    616,
                     630,
+                    644,
                     656,
                     660,
+                    661,
+                    672,
                     682,
                     690,
+                    693,
+                    700,
                     708,
                     720,
+                    724,
+                    735,
                     750,
+                    756,
+                    770,
+                    787,
                     780,
                     800,
+                    805,
                     810,
+                    819,
+                    840,
+                    850,
+                    875,
                     900,
+                    918,
                     945,
+                    962,
                     990,
                    1000,
+                   1006,
                    1035,
+                   1050,
                    1080,
+                   1093,
+                   1100,
                    1125,
+                   1150,
                    1170,
                    1200,
                    1215,
+                   1225,
+                   1250,
                    1260,
+                   1286,
                    1320,
+                   1347,
                    1380,
+                   1408,
                    1440,
+                   1470,
                    1500,
+                   1531,
                    1560,
                    1575,
+                   1600,
                    1620,
                    1650,
+                   1680,
                    1725,
+                   1760,
                    1800,
+                   1840,
                    1875,
+                   1890,
+                   1920,
                    1950,
+                   1980,
                    2000,
                    2025,
+                   2070,
+                   2100,
+                   2160,
+                   2200,
+                   2205,
+                   2250,
+                   2300,
+                   2310,
+                   2340,
+                   2400,
+                   2415,
+                   2430,
+                   2500,
+                   2520,
+                   2625,
+                   2750,
+                   2875,
+                   3000,
+                   3125,
+                   3500,
+                   3675,
+                   3850,
+                   4025,
+                   4200,
+                   4375,
                    5000,
+                   6000,
+                   6300,
+                   6600,
+                   6900,
+                   7200,
+                   7500,
                   10000,
+                  10500,
+                  11000,
+                  11500,
+                  12000,
+                  12500,
                   30000]
 
 autocomplete(document.getElementById("autocomplete"), prices);
