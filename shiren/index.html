@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="menu">
-      <div class="menuText version"> <i> ez item id 0.3 </i> </div>
+      <div class="menuText version"> <i> ez item id 0.3.1 </i> </div>
       <div class="lightDark">
         🌙
         <label class="theme-switch" for="checkbox">
@@ -54,12 +54,11 @@
       <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button> -->
       <hr>
       <div class="menuText version"> settings </div>
-      <button class="menuItem priceToggle toggled"> <img class="iconSmall" src="icon/gitan.png"> </img> display prices </button>
+      <button class="menuItem priceToggle toggled"> <img class="iconSmall" src="icon/gitan.png"> </img> toggle price view </button>
       <hr>
       <div class="autocomplete" style="width:100%;">
         <div class="menuItem">
-          <div class="menuText version"> enter name/price </div>
-          <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"> </input>
+          <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search / space"> </input>
           <button class="menuItemHalf blessCurse cursed toggled">
             <img class="iconSmall" src="icon/blessed.png"> </img>
             <span style="font-weight: bold;"> </span>
@@ -70,6 +69,16 @@
           </button>
           <!-- <button class="menuItemHalf clear"> clear </button> -->
         </div>
+        <div class="menuItem">
+          <div class="menuText help"><i> how to use </i> </div>
+          <div class="menuText help">spacebar: search</div>
+          <div class="menuText help">name or item price</div>
+          <div class="menuText help">includes curse/bless</div>
+          <div class="menuText help">filter by dungeon</div>
+          <div class="menuText help">checklist functionality</div>
+          <div class="menuText help version"> <a href="https://twitter.com/minotalen"> <i> feedback here </i> </a> </div>
+        </div>
+
       </div>
     </div>
 
@@ -108,6 +117,9 @@
         <button class="menuItem" onClick="toggleCat('staff')"> Staff </button>
         <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button>
         <hr> -->
+        <div class="menuText version"> settings </div>
+        <button class="menuItem priceToggle toggled"> <img class="iconSmall" src="icon/gitan.png"> </img> display prices </button>
+        <hr>
       </div>
 
       <div class="itemcontainer bracelet">
@@ -198,7 +210,7 @@
             <p class="itemname undMan priCha inoCav"> Navigation Scroll </p>
             <p class="itemname undMan priCha inoCav"> Oil Scroll </p>
             <p class="itemname               inoCav"> Light Scroll </p>
-            <p class="itemname undMan priCha inoCav"> Recommend. Letter </p>
+            <!-- <p class="itemname undMan priCha inoCav"> Recommend. Letter </p> -->
             <p class="itemname              "> Commend. Letter </p>
             <p class="buy colAll"> 10 </p>
             <p class="sell colAll"> 3 </p>

@@ -132,6 +132,7 @@ function updateSearch(searchValue, force) {
       if(!$(this).hasClass("itemname")) $(this).removeClass("priceHighlight");
 
       if(searchValue != "") {
+        $(".help").hide()
         // item name filter
         if($(this).hasClass("itemname") && $(this).text().toLowerCase().indexOf(searchValue.toLowerCase()) != -1) {
           console.log( index + ": " + $( this ).text(), $(this).attr('class').split('/\s+/') );
@@ -168,6 +169,8 @@ function updateSearch(searchValue, force) {
           $(this).parent().addClass("priceCursed");
           $(this).parent().removeClass("searchResult");
         }
+      } else {
+        $(".help").show()
       }
     });
   }
