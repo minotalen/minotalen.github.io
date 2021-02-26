@@ -177,7 +177,7 @@ html {
 }
 
 .itemtype {
-  height: 95vh;
+  max-height: 95vh;
   overflow-y: auto;
   padding: 10px 5px;
   padding-top: 0px;
