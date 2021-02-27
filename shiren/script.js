@@ -73,10 +73,12 @@ $(".language").click(function() {
         //load english locale
         console.log("loading en")
         $("[data-localize]").localize("locale/locale", { language: "en" });
+        $(".itemname").css("margin", "0px 0px");
       } else {
         //load japanese locale
         console.log("loading jp")
         $("[data-localize]").localize("locale/locale", { language: "jp" });
+        $(".itemname").css("margin", "-1px 0px");
       }
       $(".language").removeClass("toggled")
       $(this).addClass("toggled")

@@ -7,7 +7,6 @@
     --hlfont-color: #040404;
     --bg-color: #161625;
     --heading-color: #818cab;
-    --font-size:100%;
     --summary-color: #818cab25;
     --details-color: #818cab11;
 }
@@ -17,8 +16,8 @@
     --secondary-color: #abedee;
     --cursed-color: #fb9c95;
     --blessed-color: #d2ff65;
-    --font-color: #424242;
-    --hlfont-color: #040404;
+    --font-color: #040404;
+    --hlfont-color: #131313;
     --bg-color: #fefbfe;
     --heading-color: #292922;
     --summary-color: #373fff25;
@@ -120,7 +119,7 @@ html {
   background: var(--bg-color);
   color: var(--font-color);
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.85em;
+  font-size: 15px;
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
    -khtml-user-select: none; /* Konqueror HTML */
@@ -222,7 +221,7 @@ html {
   background: var(--bg-color);
   min-height: 1.1em;
   font-size: 1.3em;
-  font-weight: bold;
+  /* font-weight: bold; */
   display: grid;
   /* justify-items: center; */
   justify-items: start;
@@ -269,7 +268,7 @@ html {
   justify-self: center;
   align-self: center;
   padding: 0px 3px;
-  margin: 1px 0px;
+  margin: 0px 0px;
 }
 
 .buy {
@@ -322,7 +321,7 @@ html {
 
 .itemname {
   width: 100%;
-  font-weight: bold;
+  font-weight: 500;
   grid-column: 1;
   justify-self: start !important;
   align-self: center;
@@ -383,7 +382,7 @@ button.toggled {
 
   * { box-sizing: border-box; }
   body {
-    font: 16px Arial;
+    font-size: 15px;
   }
   .autocomplete {
     /*the container must be positioned relative:*/
@@ -472,7 +471,7 @@ button.toggled {
       display: block;
     }
     body {
-      font-size: 0.9em
+      font-size: 17px;
     }
     button {
       font-size: 0.8em;
