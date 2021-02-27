@@ -7,7 +7,7 @@
     --hlfont-color: #040404;
     --bg-color: #161625;
     --heading-color: #818cab;
-    --summary-color: #818cab25;
+    --summary-color: #818cab;
     --details-color: #818cab11;
 }
 
@@ -20,7 +20,7 @@
     --hlfont-color: #131313;
     --bg-color: #fefbfe;
     --heading-color: #292922;
-    --summary-color: #373fff25;
+    --summary-color: #98b0c3;
     --details-color: #373fff11;
 }
 
@@ -140,13 +140,25 @@ html {
   width: 100%;
   text-align: center;
 }
-.menuText {
-  font-size: 0.9em;
-  padding: 4px 0px;
-}
 .menuItem:disabled {
-  pointer-events: none;
+  /* pointer-events: none; */
 }
+.menuItemHalf {
+  padding: 0px;
+  width: 47%;
+  text-align: center;
+  margin: 5px 0px;
+}
+.menuText {
+  width: 100%;
+  text-align: center;
+  font-size: 0.9em;
+  padding: 1px 0px;
+}
+hr {
+  margin: 4px 0px;
+}
+
 .menuMobile {
   position: relative;
   height: 96vh;
@@ -162,16 +174,25 @@ html {
   justify-content: center;
 }
 
-.menuItemHalf {
-  padding: 0px;
-  width: 47%;
-  text-align: center;
-  margin: 5px 0px;
+
+.third {
+  width: 31%;
 }
-.menuText{
-  width: 100%;
-  text-align: center;
+.floor {
+  font-weight: bold;
 }
+
+.notedFloor {
+  background-color: var(--summary-color) !important;
+  font-weight: bold;
+
+  border-left: 1px solid var(--bg-color);
+  margin-right: 0px;
+  margin-left: 3px;
+  padding-right: 1px;
+}
+
+
 .help {
   font-size: 0.8em;
   padding: 2px 0px;
@@ -256,8 +277,8 @@ html {
 .tier {
   display: grid;
   grid-template-columns: 3fr 1fr 1fr;
-  border: 1px solid var(--font-color);
-  padding: 2px;
+  border: 1.2px solid var(--font-color);
+  padding: 0px 0px;
 }
 
 .five .tier {
@@ -267,8 +288,8 @@ html {
 .tier p {
   justify-self: center;
   align-self: center;
-  padding: 0px 3px;
-  margin: 0px 0px;
+  padding: 0px 0px;
+  margin: -1px 0px;
 }
 
 .buy {
@@ -330,6 +351,7 @@ html {
 
 button {
   font-size: 0.8em;
+  padding: 0px 0px;
 }
 button.toggled {
   background-color: var(--secondary-color);
@@ -345,6 +367,11 @@ button.toggled {
     color: var(--hlfont-color);
     /* text-align: right; */
 }
+.typeMe {
+  background-color: #214c46 !important;
+  color: #eeee;
+}
+
 .searchName {
   background-color: var(--primary-color) !important;
   color: var(--hlfont-color);

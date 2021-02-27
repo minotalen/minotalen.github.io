@@ -5,6 +5,8 @@
   "more" : "more to come",
   "settings" : "settings",
   "priceView" : "toggle price view",
+  "search": "search",
+  "floorHighlight" : "floor found",
   "howTo": {
     "1" : "how to use",
     "2" : "spacebar: search",

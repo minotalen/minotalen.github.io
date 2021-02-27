@@ -28,10 +28,48 @@ $('.theme-switch-wrapper').mousedown(function( event ) {
 
 // #########################################################################################################
 
+// search input
 $(".searchInput").on("change paste keyup", function( e ) {
-  if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
+  const isNumber = /^[0-9]$/i.test(event.key)
+  if($(".floorNote").hasClass("typeMe")){
+    $(".searchInput").val('');
+    var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    if (validkeys.indexOf(e.key) < 0) return false;
+    newFloor = $(".floorNote").text().substring(1) + validkeys.indexOf(e.key);
+    // if(newFloor < 10) newFloor = "0"+newFloor;
+    $(".floorNote").text(newFloor);
+  } else {
+    if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
+  }
+});
+$(".searchInput").click(function() {
+  $(".floorNote").removeClass("typeMe");
 });
 
+// input catch focus
+$(".menu").click(function() {
+  if(!$(".floorNote").hasClass("typeMe")) $(".searchInput").focus();
+});
+
+$(window).keypress(function (e) {
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    $(".floorNote").removeClass("typeMe")
+    e.preventDefault();
+    // $(".searchInput").val('');
+    $(".searchInput").focus();
+    $(".searchInput").select();
+  }
+})
+// blessed/cursed prices
+$(".blessCurse").click(function() {
+    if (!$(this).hasClass('toggled')) {
+        $(this).addClass("toggled");
+    } else {
+        $(this).removeClass("toggled");
+    }
+    updateSearch($(".searchInput").val(), true);
+});
+// price display toggle
 $(".priceToggle").click(function() {
   if (!$(this).hasClass('toggled')) {
       // show prices
@@ -66,58 +104,67 @@ $(".priceToggle").click(function() {
   }
 });
 $(".priceToggle").click();
-
+//language
 $(".language").click(function() {
     if(!$(this).hasClass("toggled")) {
       if($(this).hasClass("EN")) {
         //load english locale
         console.log("loading en")
         $("[data-localize]").localize("locale/locale", { language: "en" });
-        $(".itemname").css("margin", "0px 0px");
       } else {
         //load japanese locale
         console.log("loading jp")
         $("[data-localize]").localize("locale/locale", { language: "jp" });
-        $(".itemname").css("margin", "-1px 0px");
       }
       $(".language").removeClass("toggled")
       $(this).addClass("toggled")
     }
 });
 
-
-$(".blessCurse").click(function() {
-    if (!$(this).hasClass('toggled')) {
-        $(this).addClass("toggled");
+// floor notes
+$(".floor").click(function() {
+  let newFloor = "";
+  if($(this).hasClass("floorNote")) {
+    if(!$(this).hasClass("toggled")) {
+      $(this).addClass("toggled");
+      $(this).addClass("typeMe");
     } else {
-        $(this).removeClass("toggled");
+      $(this).removeClass("toggled");
+      $(this).removeClass("typeMe");
     }
-    updateSearch($(".searchInput").val(), true);
-});
-
-$(".menu").click(function() {
-  $(".searchInput").focus();
-});
-
-$(window).keypress(function (e) {
-  if (e.key === ' ' || e.key === 'Spacebar') {
-    e.preventDefault();
-    // $(".searchInput").val('');
-    $(".searchInput").focus();
-    $(".searchInput").select();
-
+    return;
+  } else if($(this).hasClass("floorPlus")) {
+    newFloor = parseInt($(".floorNote").text(), 10)+1;
+    console.log("floor note", newFloor);
+  } else if($(this).hasClass("floorMinus")) {
+    newFloor = parseInt($(".floorNote").text(), 10)-1;
   }
-})
-
-$(".clear").click(function() {
-  console.log("clearing");
-  $(".searchInput").val('');
-  updateSearch($(".searchInput").val(), true);
+  if(0 < newFloor && newFloor < 99) {
+    if(newFloor < 10) newFloor = "0"+newFloor;
+    $(".floorNote").text(newFloor);
+    console.log("after:", newFloor);
+  }
+});
+$("body").on("change paste keyup", function( e ) {
+  const isNumber = /^[0-9]$/i.test(event.key)
+  if($(".floorNote").hasClass("typeMe")){
+    $(".searchInput").val('');
+    var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    if (validkeys.indexOf(e.key) < 0) return false;
+    newFloor = $(".floorNote").text().substring(1) + validkeys.indexOf(e.key);
+    // if(newFloor < 10) newFloor = "0"+newFloor;
+    $(".floorNote").text(newFloor);
+  }
 });
 
+// $(".clear").click(function() {
+//   console.log("clearing");
+//   $(".searchInput").val('');
+//   updateSearch($(".searchInput").val(), true);
+// });
+
+// search higlighting
 let lastValue = "";
-
-
 function updateSearch(searchValue, force) {
   if(searchValue != lastValue  || force) {
     lastValue = searchValue;
@@ -134,12 +181,12 @@ function updateSearch(searchValue, force) {
     let searchBlessed = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
     let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
 
-    if($(".cursed").hasClass('toggled') && searchUnBlessed != " NaN ") {
+    if($(".cursed").hasClass('toggled') && searchUnBlessed != " NaN " && searchUnBlessed.length < 7) {
       $('.cursed span').text(searchUnBlessed);
     } else {
       $('.cursed span').text("");
     }
-    if($(".blessed").hasClass('toggled') && searchUnCurse != " NaN ") {
+    if($(".blessed").hasClass('toggled') && searchUnCurse != " NaN " && searchUnBlessed.length < 7) {
       $('.blessed span').text(searchUnCurse);
     } else {
       $('.blessed span').text("");
@@ -197,10 +244,18 @@ function updateSearch(searchValue, force) {
 }
 
 function itemToggle() {
-  if (!$(this).hasClass('toggled')) {
-      $(this).addClass("toggled");
+  if($(".floorNote").hasClass("toggled") && !$(this).hasClass('toggled')){
+    // add floor note when toggling an item
+    $(this).addClass("toggled");
+    $(this).append("<span class='notedFloor'>" + $(".floorNote").text() + "</span>");
+  } else if (!$(this).hasClass('toggled')) {
+    // toggle an item without floor note
+    $(this).addClass("toggled");
   } else {
-      $(this).removeClass("toggled");
+    // remove item toggle (including potential floor note)
+    $(this).removeClass("toggled");
+    $(this).find(".notedFloor").remove();
+    $(this).removeClass("toggled");
   }
 }
 

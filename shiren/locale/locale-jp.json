@@ -5,6 +5,8 @@
   "more" : "もっと追加する予定です",
   "settings" : "設定",
   "priceView" : "値段表示",
+  "search": "検索",
+  "floorHighlight" : "見つけたフロア",
   "howTo": {
     "1" : "使い方",
     "2" : "スペースキー: 検索",
