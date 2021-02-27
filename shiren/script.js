@@ -135,14 +135,16 @@ $(".floor").click(function() {
     return;
   } else if($(this).hasClass("floorPlus")) {
     newFloor = parseInt($(".floorNote").text(), 10)+1;
-    console.log("floor note", newFloor);
+    $(".floorNote").addClass("toggled");
+    $(".floorNote").addClass("typeMe");
   } else if($(this).hasClass("floorMinus")) {
     newFloor = parseInt($(".floorNote").text(), 10)-1;
   }
   if(0 < newFloor && newFloor < 99) {
     if(newFloor < 10) newFloor = "0"+newFloor;
     $(".floorNote").text(newFloor);
-    console.log("after:", newFloor);
+    $(".floorNote").addClass("toggled");
+    $(".floorNote").addClass("typeMe");
   }
 });
 $("body").on("change paste keyup", function( e ) {
@@ -257,6 +259,7 @@ function itemToggle() {
     $(this).find(".notedFloor").remove();
     $(this).removeClass("toggled");
   }
+  $(".floorNote").removeClass("typeMe");
 }
 
 function toggleCat(catName){
