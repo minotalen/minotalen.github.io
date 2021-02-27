@@ -1,3 +1,4 @@
+
 // code for dark mode toggle
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
@@ -65,6 +66,23 @@ $(".priceToggle").click(function() {
   }
 });
 $(".priceToggle").click();
+
+$(".language").click(function() {
+    if(!$(this).hasClass("toggled")) {
+      if($(this).hasClass("EN")) {
+        //load english locale
+        console.log("loading en")
+        $("[data-localize]").localize("locale/locale", { language: "en" });
+      } else {
+        //load japanese locale
+        console.log("loading jp")
+        $("[data-localize]").localize("locale/locale", { language: "jp" });
+      }
+      $(".language").removeClass("toggled")
+      $(this).addClass("toggled")
+    }
+});
+
 
 $(".blessCurse").click(function() {
     if (!$(this).hasClass('toggled')) {
