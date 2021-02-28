@@ -9,16 +9,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="icon/favicon.ico">
     <!-- Global site tag (gtag.js) - Google Analytics -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-KZB4PXMER3"></script>
-      <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KZB4PXMER3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-        gtag('config', 'G-KZB4PXMER3');
-      </script>
+      gtag('config', 'G-KZB4PXMER3');
+    </script>
   </head>
   <body>
+    <div class="menuToggle">&#x2630;</div>
     <div class="menu">
       <div class="menuText version"> <i> ez item id 0.4 </i> </div>
       <div class="lightDark">
@@ -102,88 +103,18 @@
         </div>
 
       </div>
-    </div>
-
+</div>
     <div class="container containerPrice">
-      <div class="menuMobile">
-        <div class="menuText version"> <i> ez item id 0.3.1 </i> </div>
-        <div class="lightDark">
-          🌙
-          <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox"/>
-            <div class="slider round"></div>
-          </label>
-          🌞
-        </div>
-        <hr>
-        <div class="menuText" data-localize="dungeon"> dungeon </div>
-        <button class="menuItem dungeon all toggled" onClick="filter('all')" data-localize="allItems"> All Items </button> </br>
-        <button class="menuItem dungeon undMan" onClick="filter('undMan')" data-localize="undMan"> Underground Manor </button>
-        <button class="menuItem dungeon priCha" onClick="filter('priCha')" data-localize="priCha"> Primordial Chasm </button>
-        <button class="menuItem dungeon inoCav" onClick="filter('inoCav')" data-localize="inoCav"> Inori Cave </button>
-        <button class="menuItem dungeon losWel" onClick="filter('losWel')" data-localize="losWel" disabled> Lost Well </button>
-        <button class="menuItem dungeon genTur" onClick="filter('genTur')" data-localize="genTur" disabled> Gen's Turf </button>
-        <button class="menuItem dungeon pitLif" onClick="filter('pitLif')" data-localize="pitLif" disabled> Pitfall of Life </button>
-        <button class="menuItem dungeon heaLak" onClick="filter('heaLak')" data-localize="heaLak" disabled> Heavenly Lake </button>
-        <button class="menuItem dungeon oldRoa" onClick="filter('oldRoa')" data-localize="oldRoa" disabled> Old Road </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" data-localize="bizTow" disabled> Bizarre Tower </button>
-        <button class="menuItem dungeon oniHol" onClick="filter('oniHol')" data-localize="oniHol" disabled> Onigiri Hollow </button>
-        <button class="menuItem dungeon desDes" onClick="filter('desDes')" data-localize="desDes" disabled> Destiny's Descent </button>
-        <!-- <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Merchant's Hideout </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Warning Valley </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Page of Youth </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Hunter Pond </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Rousing Paradise </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> The Pinnacle </button>
-        <hr>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Froggo's Fury </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Master's Footprint </button>
-        <button class="menuItem dungeon bizTow" onClick="filter('bizTow')" disabled> Aura Ruins </button> -->
-        <button class="menuItem dungeon more" onClick="filter('more')" data-localize="more" disabled> more to come </button>
-        <!-- <div class="menuText"> Tabs </div>
-        <button class="menuItem" onClick="toggleCat('grass')"> Grass </button>
-        <button class="menuItem" onClick="toggleCat('scrolls')"> Scroll </button>
-        <button class="menuItem" onClick="toggleCat('bracelet')"> Bracelet </button>
-        <button class="menuItem" onClick="toggleCat('staff')"> Staff </button>
-        <button class="menuItem" onClick="toggleCat('talisman')"> Talisman </button> -->
-        <hr>
-        <div class="menuText version" data-localize="settings"> settings </div>
-        <button class="menuItem priceToggle toggled"> <img class="iconSmall" src="icon/gitan.png"> </img> <span data-localize="priceView"> toggle price view </span> </button>
-        <hr>
-        <div class="autocomplete" style="width:100%;">
-          <!-- <div class="menuItem">
-            <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search / space"> </input>
-            <button class="menuItemHalf blessCurse cursed toggled">
-              <img class="iconSmall" src="icon/blessed.png"> </img>
-              <span style="font-weight: bold;"> </span>
-            </button>
-            <button class="menuItemHalf blessCurse blessed toggled">
-              <img class="iconSmall" src="icon/cursed.png"> </img>
-              <span style="font-weight: bold;"> </span>
-            </button>
-          </div> -->
-          <div class="menuItem">
-            <div class="menuText help" data-localize="howTo1"><i> how to use </i> </div>
-            <div class="menuText help" data-localize="howTo2">spacebar: search</div>
-            <div class="menuText help" data-localize="howTo3">name or item price</div>
-            <div class="menuText help" data-localize="howTo4">includes curse/bless</div>
-            <div class="menuText help" data-localize="howTo5">filter by dungeon</div>
-            <div class="menuText help" data-localize="howTo6">checklist functionality</div>
-            <div class="menuText help version"> <a href="https://twitter.com/minotalen"> <i  data-localize="howTo7"> feedback here </i> </a> </div>
-          </div>
 
-        </div>
-      </div>
-
-      <div class="itemcontainer bracelet">
+      <div class="itemcontainer bracelets">
         <div class="itemtitle "> <img class="iconHead" src="icon/bracelet.png"> <span data-localize="bracelets"> Bracelets </span></div>
-        <div class="itemtype bracelet">
+        <div class="itemtype bracelets">
           <div class="descriptor">
             <p class="itemname desc" data-localize="name"> Name </p>
             <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"> <span data-localize="buy"> buy </span> </p>
             <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> <span data-localize="sell"> sell </span> </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname undMan inoCav priCha desDes"><span data-localize="brc.strength"> Strength Bracelet </span></p>
             <p class="itemname undMan inoCav priCha desDes"><span data-localize="brc.canArm"> Can. Arm Bracelet </span></p>
             <p class="itemname        inoCav priCha desDes"><span data-localize="brc.inacc"> Inacc. Bracelet </span></p>
@@ -191,7 +122,7 @@
             <p class="buy colAll"> 2000 </p>
             <p class="sell colAll"> 700 </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname undMan inoCav priCha desDes"><span data-localize="brc.cleansing"> Cleansing Bracelet </span></p>
             <p class="itemname undMan inoCav priCha desDes"><span data-localize="brc.antiCnf"> Anti-Cnf. Bracelet </span> </p>
             <p class="itemname undMan inoCav priCha desDes"><span data-localize="brc.alert"> Alert Bracelet </span></p>
@@ -205,7 +136,7 @@
             <p class="buy colAll"> 3000 </p>
             <p class="sell colAll"> 1050 </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname undMan inoCav priCha       "> <span data-localize="brc.monsterDet"> Monster Detector </span></p>
             <p class="itemname        inoCav priCha desDes"> <span data-localize="brc.monsterPho"> Monsterphobic </span></p>
             <p class="itemname undMan inoCav priCha       "> <span data-localize="brc.itemDet"> Item Detector </span></p>
@@ -220,7 +151,7 @@
             <p class="buy colAll"> 5000 </p>
             <p class="sell colAll"> 1750 </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="brc.growth"> Growth Bracelet </span></p>
             <p class="itemname        inoCav priCha       "> <span data-localize="brc.antiParry"> Anti-Parry Brce. </span></p>
             <p class="itemname               inoCav       "> <span data-localize="brc.timeStop"> Time Stop Bracelet </span></p>
@@ -228,7 +159,7 @@
             <p class="buy colAll"> 10000 </p>
             <p class="sell colAll"> 3500 </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname                           "> <span data-localize="brc.night"> Night Ward </span></p>
             <p class="itemname              inoCav       "> <span data-localize="brc.scout"> Scout Bracelet</span></p>
             <p class="itemname                           "> <span data-localize="brc.trapper"> Trapper Bracelet </span></p>
@@ -236,7 +167,7 @@
             <p class="buy colAll"> 30000 </p>
             <p class="sell colAll"> 10500 </p>
           </div>
-          <div class="tier bracelet">
+          <div class="tier bracelets">
             <p class="itemname desDes"> <span data-localize="brc.vip"> VIP Bracelet </span></p>
             <p class="buy colAll"> 50000 </p>
             <p class="sell colAll"> 17500 </p>
@@ -244,7 +175,7 @@
         </div>
       </div>
 
-      <div class="itemcontainer scroll">
+      <div class="itemcontainer scrolls">
         <div class="itemtitle"> <img class="iconHead" src="icon/scroll.png"> <span data-localize="scrolls"> Scrolls </span></div>
         <div class="itemtype scrolls">
           <div class="descriptor">
@@ -252,13 +183,13 @@
             <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"><span data-localize="buy"> buy </span></p>
             <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> <span data-localize="sell"> sell </span></p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname"> <span data-localize="scrl.Wet"> Wet Scroll </span></p>
             <p class="itemname"> <span data-localize="scrl.Piece"> Piece of Paper </span></p>
             <p class="buy colAll"> 10 </p>
             <p class="sell colAll"> 3 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname        inoCav priCha desDes"> <span data-localize="scrl.Escape"> Escape Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Navigation"> Navigation Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Oil"> Oil Scroll </span></p>
@@ -268,19 +199,19 @@
             <p class="buy colAll"> 10 </p>
             <p class="sell colAll"> 3 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Identify"> Identify Scroll </span></p>
             <p class="buy colAll"> 200 </p>
             <p class="sell colAll"> 70 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname undMan inoCav priCha"> <span data-localize="scrl.Gathering"> Gathering Scroll </span></p>
             <p class="itemname undMan priCha desDes"> <span data-localize="scrl.Collection"> Collection Scroll </span></p>
             <p class="itemname                     "> <span data-localize="scrl.Squid"> Squid Sushi Scroll </span></p>
             <p class="buy colAll"> 300 </p>
             <p class="sell colAll"> 105 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Exorcism"> Exorcism Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Fate"> Fate Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Earth"> Earth Scroll </span></p>
@@ -299,7 +230,7 @@
             <p class="buy colAll"> 500 </p>
             <p class="sell colAll"> 175 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Fear"> Fear Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.TrapDel"> Trap Deletion Scrl </span></p>
             <p class="itemname        inoCav priCha desDes"> <span data-localize="scrl.Desert"> Desert Scroll </span></p>
@@ -310,7 +241,7 @@
             <p class="buy colAll"> 800 </p>
             <p class="sell colAll"> 280 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Confusion"> Confusion Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Slumber"> Slumber Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Vacuum"> Vacuum Slash Scroll </span></p>
@@ -327,7 +258,7 @@
             <p class="buy colAll"> 1000 </p>
             <p class="sell colAll"> 350 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname               priCha desDes"> <span data-localize="scrl.Lost"> Lost Scroll </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="scrl.Sanctuary"> Sanctuary Scroll </span></p>
             <p class="itemname               priCha desDes"> <span data-localize="scrl.Bankruptcy"> Bankruptcy Scroll </span></p>
@@ -335,12 +266,12 @@
             <p class="buy colAll"> 3000 </p>
             <p class="sell colAll"> 1050 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname        inoCav priCha desDes"> <span data-localize="scrl.Blank"> Blank Scroll </span></p>
             <p class="buy colAll"> 5000 </p>
             <p class="sell colAll"> 1750 </p>
           </div>
-          <div class="tier scroll">
+          <div class="tier scrolls">
             <p class="itemname        inoCav priCha desDes"> <span data-localize="scrl.Extinction"> Extinction Scroll </span></p>
             <p class="buy colAll"> 10000 </p>
             <p class="sell colAll"> 3500 </p>
@@ -348,7 +279,7 @@
         </div>
       </div>
 
-      <div class="itemcontainer pot">
+      <div class="itemcontainer pots">
         <div class="itemtitle "> <img class="iconHead" src="icon/pot.png"> <span data-localize="pots"> Pots </span> </div>
         <div class="itemtype pots five">
           <div class="descriptor desc5">
@@ -448,15 +379,15 @@
         </div>
       </div>
 
-      <div class="itemcontainer staff">
+      <div class="itemcontainer staves">
         <div class="itemtitle "> <img class="iconHead" src="icon/staff.png"> <span data-localize="staves"> Staves </span> </div>
-        <div class="itemtype staff five">
+        <div class="itemtype staves five">
           <div class="descriptor desc5">
             <p class="itemname desc" data-localize="name"> Name </p>
             <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"><span data-localize="buy"> buy </span></p>
             <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> <span data-localize="sell"> sell </span> </p>
           </div>
-          <div class="tier staff">
+          <div class="tier staves">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Swap"> Swap Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Knockback"> Knockback Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Pinning"> Pinning Staff </span></p>
@@ -468,7 +399,7 @@
             <p class="sell1 colAll "> 210 </br> +10½ </p>
             <p class="sell2 colAll "> 220 </br> 231 </br> 241 </br> 252 </br> 262 </br> 273 </br> 283 </p>
           </div>
-          <div class="tier staff">
+          <div class="tier staves">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Transient"> Transient Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Paralysis"> Paralysis Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Empathy"> Empathy Staff </span></p>
@@ -482,7 +413,7 @@
             <p class="sell1 colAll"> 315 </br> +15¾ </p>
             <p class="sell2 colAll"> 330 </br> 346 </br> 362 </br> 378 </br> 393 </br> 409 </br> 425 </p>
           </div>
-          <div class="tier staff">
+          <div class="tier staves">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Electric"> Electric Staff </span></p>
             <p class="itemname               priCha desDes"> <span data-localize="staff.Shocking"> Shocking Staff </span></p>
             <p class="buy1 colAll"> 1200 </br> +60 </p>
@@ -490,7 +421,7 @@
             <p class="sell1 colAll"> 420 </br> +21 </p>
             <p class="sell2 colAll"> 441 </br> 462 </br> 483 </br> 504 </br> 525 </br> 546 </br> 567 </p>
           </div>
-          <div class="tier staff">
+          <div class="tier staves">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Seal"> Seal Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Clone"> Clone Staff </span></p>
             <p class="itemname               priCha desDes"> <span data-localize="staff.Staff"> Staff of Sacrifice </span></p>
@@ -499,7 +430,7 @@
             <p class="sell1 colAll"> 525 </br> +26¼ </p>
             <p class="sell2 colAll"> 551 </br> 577 </br> 603 </br> 630 </br> 656 </br> 682 </br> 708 </p>
           </div>
-          <div class="tier staff">
+          <div class="tier staves">
             <p class="itemname               priCha desDes"> <span data-localize="staff.Glorious"> Glorious Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Unlucky"> Unlucky Staff </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="staff.Boring"> Boring Staff </span></p>
@@ -600,13 +531,13 @@
 
       <div class="itemcontainer talismans">
         <div class="itemtitle "> <img class="iconHead" src="icon/talisman.png"><span data-localize="talismans"> Talismans </span></div>
-        <div class="itemtype talisman">
+        <div class="itemtype talismans">
           <div class="descriptor">
             <p class="itemname desc" data-localize="name"> Name </p>
             <p class="buy desc"> <img class="iconSmall" src="icon/gitan.png"><span data-localize="buy"> buy </span></p>
             <p class="sell desc"> <img class="iconSmall" src="icon/gitan.png"> <span data-localize="sell"> sell </span> </p>
           </div>
-          <div class="tier talisman">
+          <div class="tier talismans">
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="tal.Shadow" > Shadow Bind Tal. </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="tal.Conf" > Conf. Talisman </span></p>
             <p class="itemname undMan inoCav priCha desDes"> <span data-localize="tal.Seal" > Seal Talisman </span></p>
