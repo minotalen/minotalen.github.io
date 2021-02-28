@@ -182,6 +182,7 @@ button.toggled {
 }
 
 .container {
+  height:98vh;
   padding-left: min(280px, 13%);
   display: grid;
   overflow-x: scroll;
@@ -381,7 +382,7 @@ button.toggled {
     margin-top: 4px;
   }
   input {
-    position: absolute;
+    /* position: absolute; */
     border: 1px solid transparent;
     background-color: var(--bg-color);
     padding: 5px;

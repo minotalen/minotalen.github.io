@@ -81,7 +81,10 @@
       <hr>
       <div class="autocomplete" style="width:100%;">
         <div class="menuItem">
-          <input class="menuItem searchInput" id="autocomplete" type="text" placeholder="search"  data-localize="search"> </input>
+          <div class="menuItem">
+            <input class="searchInput" id="autocomplete" type="text" placeholder="search" autocomplete="off" data-localize="search"> </input>
+          </div>
+          <!-- <button class="menuItemHalf clear"> clear </button> -->
           <button class="menuItemHalf blessCurse cursed toggled">
             <img class="iconSmall" src="icon/blessed.png"> </img>
             <span style="font-weight: bold;">0</span>
@@ -90,7 +93,7 @@
             <img class="iconSmall" src="icon/cursed.png"> </img>
             <span style="font-weight: bold;">0  </span>
           </button>
-          <!-- <button class="menuItemHalf clear"> clear </button> -->
+
         </div>
         <div class="menuItem">
           <div class="menuText help"  data-localize="howTo.1"><i> how to use </i> </div>

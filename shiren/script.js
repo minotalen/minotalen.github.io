@@ -1,22 +1,120 @@
-
+let currentLanguage = "EN";
+let currentDungeon = "all";
+let configLoaded = false;
 $( document ).ready(function() {
     var pathname = window.location.hash;
     pathname = pathname.split("#").pop();
     pathname = pathname.split("+");
-    console.log(pathname);
-    if(pathname[0] == "JP") {
-      $(".language.JP").click()
-    }
-    if(pathname[1].length == 6) {
-      console.log("loading dungeon");
-      filter(pathname[1]);
-    }
-    if(pathname[2]) {
-      $(".searchInput").val(pathname[2]);
-      updateSearch($(".searchInput").val());
+    setTimeout(loadHash, 1000)
+
+
+    function loadHash() {
+      // console.log(pathname);
+
+      if(pathname[3]) {
+        //split at ()
+        let itemCat = pathname[3].split(/[()]+/).filter(function(e) { return e; });
+        // for each ()
+        for(cat in itemCat) {
+          // split at ,
+          let itemCatVals = itemCat[cat].split(",");
+          console.log("val: ", itemCatVals);
+          for (item in itemCatVals) {
+            if(itemCatVals[item].includes(":")) {
+              itemCatVals[item] = itemCatVals[item].split(":");
+              itemCatVals[item][1] = parseInt(itemCatVals[item][1], 10);
+            } else {
+              itemCatVals[item] = [itemCatVals[item], 0];
+            }
+          }
+          console.log("item category values",  itemCatVals );
+          $(".itemcontainer").eq(cat).find(".itemtype").each( function( index ) {
+            let counter = 0;
+            $(this).find(".tier").find("p").each( function( index ) {
+              let exists = itemCatVals.find(el => el[0] == counter);
+              if(exists) {
+                $(this).addClass("toggled");
+                console.log("esist:", exists)
+                if(exists[1] != 0) {
+
+                  // console.log("esist:", exists[1])
+                  if(exists[1] < 10) exists[1] = "0"+exists[1];
+                  $(this).append("<span class='notedFloor'>" + exists[1] + "</span>");
+                }
+              }
+
+              counter++;
+              // for each ,
+              // if has :
+                // toggle with floor
+                // else toggle
+            });
+            console.log(counter);
+          });
+        }
+      }
+
+      // set language
+      if(pathname[0] == "JP") {
+        $(".language.JP").click()
+      }
+      if(pathname[1] && pathname[1].length == 6) {
+        console.log("loading dungeon");
+        filter(pathname[1]);
+      }
+      if(pathname[2]) {
+        $(".searchInput").val(pathname[2]);
+        updateSearch($(".searchInput").val());
+      }
+
+      configLoaded = true;
     }
 });
 
+function updateHash() {
+  let newHash = "";
+  newHash += "#" + currentLanguage;
+  newHash += "+" + currentDungeon;
+  newHash += "+" + $(".searchInput").val();
+
+  let itemArray = [];
+  $(".itemtitle").each(function( index ) {
+    let tierArray = [];
+    let itemCat = $(this).find("span").attr('data-localize');
+    $(".tier."+itemCat).children().each(function( index ) {
+      console.log( index + ": " + $( this ).text() );
+      // if( $(this).is(':visible') ) {
+        if($(this).find(".notedFloor").length == 1) {
+          tierArray.push( index + ":" + parseInt($(this).find(".notedFloor").text(), 10) );
+        } else if ($(this).hasClass("toggled") ){
+          tierArray.push( index );
+        }
+        // console.log($(this).find(".notedFloor").length == 1);
+      // }
+    });
+    // console.log(tierAmount, itemCat, $(".tier."+itemCat))
+    itemArray.push(tierArray);
+    // $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
+  });
+  console.log(itemArray);
+  let itemString = ""
+  for(group in itemArray) {
+    itemString += "("
+    // console.log(itemArray[group], itemArray[group].length);
+    for(let i = 0 ; i < itemArray[group].length; i++) {
+      // console.log("group", group[i]);
+
+      // if(itemArray[group][i]) {
+        itemString += itemArray[group][i]
+        if(i != itemArray[group].length-1) itemString += ","
+      // }
+    }
+    itemString += ")"
+  }
+  // console.log(itemString);
+  newHash += "+" + itemString;
+  window.location.hash = newHash;
+}
 
 // code for dark mode toggle
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
@@ -63,7 +161,6 @@ $("body").on("change paste keyup", function( e ) {
     $(".searchInput").blur()
     return;
   }
-
   if($(".floorNote").hasClass("typeMe")){
     $(".searchInput").val('');
     var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -73,6 +170,7 @@ $("body").on("change paste keyup", function( e ) {
     $(".floorNote").text(newFloor);
   }
 });
+
 // search input
 $(".searchInput").on("change paste keyup", function( e ) {
   const isNumber = /^[0-9]$/i.test(event.key)
@@ -171,14 +269,17 @@ $(".language").click(function() {
       if($(this).hasClass("EN")) {
         //load english locale
         console.log("loading en")
+        currentLanguage = "EN";
         $("[data-localize]").localize("locale/locale", { language: "en" });
       } else {
         //load japanese locale
         console.log("loading jp")
+        currentLanguage = "JP";
         $("[data-localize]").localize("locale/locale", { language: "jp" });
       }
       $(".language").removeClass("toggled")
       $(this).addClass("toggled")
+      if(configLoaded) updateHash();
     }
     setTimeout(tierCount, 300);
 });
@@ -285,11 +386,12 @@ function updateSearch(searchValue, force) {
       }
     });
   }
+  if(configLoaded) updateHash();
 }
 function filter(className) {
   console.log("starting filter: ", className)
   // console.log($('button.dungeon.'+className).hasClass('toggled'));
-
+  currentDungeon = className;
   $('button.dungeon').removeClass("toggled");
   $('button.dungeon.'+className).addClass("toggled");
 
@@ -316,6 +418,7 @@ function filter(className) {
     else $( this ).show();
   });
   tierCount();
+  if(configLoaded) updateHash();
 }
 
 function itemToggle() {
@@ -333,6 +436,7 @@ function itemToggle() {
     $(this).removeClass("toggled");
   }
   $(".floorNote").removeClass("typeMe");
+  if(configLoaded) updateHash();
 }
 function toggleCat(catName){
   console.log($('button.'+catName).hasClass('toggled'));
@@ -630,4 +734,3 @@ function tierCount() {
     $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
   });
 }
-tierCount();
