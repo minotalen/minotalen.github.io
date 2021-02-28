@@ -1,8 +1,20 @@
 
 $( document ).ready(function() {
     var pathname = window.location.hash;
-    // pathname = pathname.split("#");
-    console.log( pathname );
+    pathname = pathname.split("#").pop();
+    pathname = pathname.split("+");
+    console.log(pathname);
+    if(pathname[0] == "JP") {
+      $(".language.JP").click()
+    }
+    if(pathname[1].length == 6) {
+      console.log("loading dungeon");
+      filter(pathname[1]);
+    }
+    if(pathname[2]) {
+      $(".searchInput").val(pathname[2]);
+      updateSearch($(".searchInput").val());
+    }
 });
 
 
