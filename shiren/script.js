@@ -78,10 +78,10 @@ $(".searchInput").on("change paste keyup", function( e ) {
 $(".searchInput").click(function() {
   $(".floorNote").removeClass("typeMe");
 });
-// input catch focus
-$(".menu").click(function() {
-  if(!$(".floorNote").hasClass("typeMe")) $(".searchInput").focus();
-});
+// // input catch focus
+// $(".menu").click(function() {
+//   if(!$(".floorNote").hasClass("typeMe")) $(".searchInput").focus();
+// });
 $(window).keypress(function (e) {
   if (e.key === ' ' || e.key === 'Spacebar') {
     e.preventDefault();

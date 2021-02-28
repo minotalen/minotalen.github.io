@@ -193,7 +193,7 @@ button.toggled {
   display: none;
 }
 .containerPrice {
-  grid-template-columns: minmax(280px, 20%) minmax(330px, 20%) minmax(330px, 20%) minmax(280px, 20%) minmax(280px, 20%) minmax(280px, 20%);
+  grid-template-columns: minmax(270px, 20%) minmax(270px, 20%) minmax(330px, 20%) minmax(330px, 20%) minmax(270px, 20%) minmax(270px, 20%);
 }
 .containerNoPrice {
   grid-template-columns: repeat(auto-fit, minmax(200px, 16.5%))  ;
