@@ -5,7 +5,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <title data-localize="title"> Shiren 5 cheat sheet </title>
     <meta name="author" content="minotalen">
-    <meta name="description" content="A neat cheat sheet for tracking Shiren item discoveries.">
+    <meta name="description" content="A cheat sheet for tracking Shiren 5 item discoveries. Filter by dungeon, find cursed price, easy share/export.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/x-icon" href="icon/favicon.ico">
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -19,9 +19,30 @@
     </script>
   </head>
   <body>
+
+    <!-- The Modal -->
+    <div id="howTo" class="modal rescueModal">
+      <!-- Modal content -->
+      <!-- <div class="modal-content">
+        <span class="close"></span>
+        <h5> requesting a rescue </h5>
+        <p class="menuText"> 1. log your item info </p>
+        <p class="menuText"> 2. enter name and dungeon floor </p>
+        <p class="menuText"> 3. input rescue code </p>
+        <p class="menuText"> 4. share the link </p>
+        <div class="rescueInput">
+          <span class="menuText"> name: <input class="menuText searchInput" id="rescueName" type="text" placeholder="name" autocomplete="off"> </input> </span>
+          <span class="menuText"> floor: <input class="menuText searchInput" id="rescueFloor" type="number" min="0" max="99" size="1" placeholder="floor" autocomplete="off"> </input> </span>
+        </div>
+        <span class="menuText"> code: <input class="menuText searchInput" id="rescueCode" type="number" placeholder="floor" autocomplete="off"> </input> </span>
+        <button class="menuItem" onClick="updateHash()" data-localize="setUrl" > set url </button> </br>
+      </div> -->
+    </div>
+
     <div class="menuToggle">&#x2630;</div>
     <div class="menu">
-      <div class="menuText version"> <i> ez item id 0.4 </i> </div>
+      <!-- Trigger/Open The Modal -->
+      <div class="menuText version"> <i> ez item id 0.4.2 </i> </div>
       <div class="lightDark">
         🌙
         <label class="theme-switch" for="checkbox">
@@ -80,6 +101,7 @@
       <button class="menuItem floor third floorPlus" data-localize="floor">+</button>
       <hr>
       <div class="autocomplete" style="width:100%;">
+        <!-- <div class="menuText rescue" cursor="help" id="rescue"  data-localize="rescue"> <i> <u> get rescued </u> </i> </div> -->
         <div class="menuItem">
           <div class="menuItem">
             <input class="searchInput" id="autocomplete" type="text" placeholder="search" autocomplete="off" data-localize="search"> </input>

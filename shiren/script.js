@@ -1,24 +1,41 @@
 let currentLanguage = "EN";
 let currentDungeon = "all";
 let configLoaded = false;
+
+// $("#rescueName").on("change paste keyup", function ( e ) {
+//     console.log("hello");
+//     if ($(this).val().length > 12) {
+//       $(this).val($(this).val().slice(0,12));
+//     }
+// });
+// $("#rescueFloor").on("change paste keyup", function ( e ) {
+//   if ($(this).val().length > 2) {
+//     $(this).val($(this).val().slice(0,$(this).val().length-1));
+//   }
+// });
+// $("#rescueCode").on("change paste keyup", function ( e ) {
+//
+//   if ($(this).val().length > 16) {
+//     $(this).val($(this).val().slice(0,$(this).val().length-1));
+//   }
+// });
+
+// load and save hash
 $( document ).ready(function() {
+
     var pathname = window.location.hash;
     pathname = pathname.split("#").pop();
     pathname = pathname.split("+");
-    setTimeout(loadHash, 1000)
-
+    setTimeout(loadHash, 100);
+    // if(pathname.includes("?")) {
+    //   pathname = pathname.split("?");
+    // }
 
     function loadHash() {
-      // console.log(pathname);
-
-      if(pathname[3]) {
-        //split at ()
-        let itemCat = pathname[3].split(/[()]+/).filter(function(e) { return e; });
-        // for each ()
+      if(pathname[2]) {
+        let itemCat = pathname[2].split(/[()]+/).filter(function(e) { return e; });
         for(cat in itemCat) {
-          // split at ,
           let itemCatVals = itemCat[cat].split(",");
-          console.log("val: ", itemCatVals);
           for (item in itemCatVals) {
             if(itemCatVals[item].includes(":")) {
               itemCatVals[item] = itemCatVals[item].split(":");
@@ -27,29 +44,19 @@ $( document ).ready(function() {
               itemCatVals[item] = [itemCatVals[item], 0];
             }
           }
-          console.log("item category values",  itemCatVals );
           $(".itemcontainer").eq(cat).find(".itemtype").each( function( index ) {
             let counter = 0;
             $(this).find(".tier").find("p").each( function( index ) {
               let exists = itemCatVals.find(el => el[0] == counter);
               if(exists) {
                 $(this).addClass("toggled");
-                console.log("esist:", exists)
                 if(exists[1] != 0) {
-
-                  // console.log("esist:", exists[1])
                   if(exists[1] < 10) exists[1] = "0"+exists[1];
                   $(this).append("<span class='notedFloor'>" + exists[1] + "</span>");
                 }
               }
-
               counter++;
-              // for each ,
-              // if has :
-                // toggle with floor
-                // else toggle
             });
-            console.log(counter);
           });
         }
       }
@@ -57,66 +64,51 @@ $( document ).ready(function() {
       // set language
       if(pathname[0] == "JP") {
         $(".language.JP").click()
+      } else {
+        $(".language.EN").click()
       }
       if(pathname[1] && pathname[1].length == 6) {
         console.log("loading dungeon");
         filter(pathname[1]);
       }
-      if(pathname[2]) {
-        $(".searchInput").val(pathname[2]);
-        updateSearch($(".searchInput").val());
-      }
 
       configLoaded = true;
     }
 });
-
 function updateHash() {
   let newHash = "";
   newHash += "#" + currentLanguage;
   newHash += "+" + currentDungeon;
-  newHash += "+" + $(".searchInput").val();
 
   let itemArray = [];
   $(".itemtitle").each(function( index ) {
     let tierArray = [];
     let itemCat = $(this).find("span").attr('data-localize');
     $(".tier."+itemCat).children().each(function( index ) {
-      console.log( index + ": " + $( this ).text() );
-      // if( $(this).is(':visible') ) {
-        if($(this).find(".notedFloor").length == 1) {
-          tierArray.push( index + ":" + parseInt($(this).find(".notedFloor").text(), 10) );
-        } else if ($(this).hasClass("toggled") ){
-          tierArray.push( index );
-        }
-        // console.log($(this).find(".notedFloor").length == 1);
-      // }
+      if($(this).find(".notedFloor").length == 1) {
+        tierArray.push( index + ":" + parseInt($(this).find(".notedFloor").text(), 10) );
+      } else if ($(this).hasClass("toggled") ){
+        tierArray.push( index );
+      }
     });
-    // console.log(tierAmount, itemCat, $(".tier."+itemCat))
     itemArray.push(tierArray);
-    // $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
   });
-  console.log(itemArray);
   let itemString = ""
   for(group in itemArray) {
     itemString += "("
-    // console.log(itemArray[group], itemArray[group].length);
     for(let i = 0 ; i < itemArray[group].length; i++) {
-      // console.log("group", group[i]);
-
-      // if(itemArray[group][i]) {
-        itemString += itemArray[group][i]
-        if(i != itemArray[group].length-1) itemString += ","
-      // }
+      itemString += itemArray[group][i]
+      if(i != itemArray[group].length-1) itemString += ","
     }
     itemString += ")"
   }
-  // console.log(itemString);
   newHash += "+" + itemString;
+  // newHash += "?" + $("#rescueCode").val() + "/" + $("#rescueName").val() + "/" + $("#rescueFloor").val()
+;
   window.location.hash = newHash;
 }
 
-// code for dark mode toggle
+// ########  DARK MODE ####################################################################################
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
 let css = document.styleSheets[0].cssRules[0].style;
@@ -124,7 +116,6 @@ let css = document.styleSheets[0].cssRules[0].style;
 function switchTheme() {
   let toggle = $('#checkbox')[0];
   if (toggle.checked) {
-      console.log(toggle);
       document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
   } else {
@@ -143,10 +134,25 @@ $('.theme-switch-wrapper').mousedown(function( event ) {
   event.preventDefault();
 });
 
-// ########  EVENT  LISTENERS  ########################################################################
+// ########  MODAL ####################################################################################
+var modal = document.getElementById("howTo");
+var rescue = document.getElementById("rescue");
+var span = document.getElementsByClassName("close")[0];
 
+// rescue.onclick = function() {
+//   modal.style.display = "block";
+// };
+// span.onclick = function() {
+//   modal.style.display = "none";
+// };
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
+
+// ########  EVENT  LISTENERS  ########################################################################
 $("body").on("change paste keyup", function( e ) {
-  const isNumber = /^[0-9]$/i.test(event.key)
   if(event.key == "+") {
     $(".floorPlus").click();
     $(".searchInput").blur()
@@ -156,7 +162,6 @@ $("body").on("change paste keyup", function( e ) {
     $(".searchInput").blur()
     return;
   } else if (event.key == "#") {
-    console.log("test");
     $(".floorNote").click();
     $(".searchInput").blur()
     return;
@@ -173,7 +178,6 @@ $("body").on("change paste keyup", function( e ) {
 
 // search input
 $(".searchInput").on("change paste keyup", function( e ) {
-  const isNumber = /^[0-9]$/i.test(event.key)
   if($(".floorNote").hasClass("typeMe")){
     $(".searchInput").val('');
     var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -188,10 +192,7 @@ $(".searchInput").on("change paste keyup", function( e ) {
 $(".searchInput").click(function() {
   $(".floorNote").removeClass("typeMe");
 });
-// // input catch focus
-// $(".menu").click(function() {
-//   if(!$(".floorNote").hasClass("typeMe")) $(".searchInput").focus();
-// });
+
 $(window).keypress(function (e) {
   if (e.key === ' ' || e.key === 'Spacebar') {
     e.preventDefault();
@@ -308,9 +309,10 @@ $(".floor").click(function() {
   }
 });
 
-let lastValue = "";
 // search higlighting
+let lastValue = "";
 function updateSearch(searchValue, force) {
+  if($(".rescueModal").is(':visible')) return;
   if(searchValue != lastValue  || force) {
     lastValue = searchValue;
 
@@ -319,7 +321,6 @@ function updateSearch(searchValue, force) {
     $(".tier").removeClass("priceBlessed");
     $(".tier").removeClass("priceCursed");
     let priceList = $(this).text().trim().split(" ")
-    // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
     let searchZero = " " + searchValue.toLowerCase() + " ";
     let searchCurse = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
     let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
@@ -337,7 +338,7 @@ function updateSearch(searchValue, force) {
       $('.blessed span').text("");
     }
 
-    console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, searchUnCurse, $(".cursed").hasClass('toggled'));
+    // console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, searchUnCurse, $(".cursed").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
 
@@ -347,7 +348,6 @@ function updateSearch(searchValue, force) {
         $(".help").hide()
         // item name filter
         if($(this).hasClass("itemname") && $(this).text().toLowerCase().indexOf(searchValue.toLowerCase()) != -1) {
-          console.log( index + ": " + $( this ).text(), $(this).attr('class').split('/\s+/') );
           $(this).addClass("searchResult");
         }
 
@@ -386,11 +386,9 @@ function updateSearch(searchValue, force) {
       }
     });
   }
-  if(configLoaded) updateHash();
 }
 function filter(className) {
   console.log("starting filter: ", className)
-  // console.log($('button.dungeon.'+className).hasClass('toggled'));
   currentDungeon = className;
   $('button.dungeon').removeClass("toggled");
   $('button.dungeon.'+className).addClass("toggled");
@@ -410,7 +408,6 @@ function filter(className) {
       $( this ).children(".itemname").each(function( index ) {
         if($(this).css('display') != 'none') {
           hasActive = true;
-          // console.log( index + ": " + $( this ).text() );
         }
       });
     });
@@ -420,7 +417,19 @@ function filter(className) {
   tierCount();
   if(configLoaded) updateHash();
 }
+function tierCount() {
+  $(".itemAmount").remove();
+  $(".itemtitle").each(function( index ) {
+    let tierAmount = 0;
+    let itemCat = $(this).find("span").attr('data-localize');
+    $(".tier."+itemCat).children().each(function( index ) {
+      if($(this).is(':visible')) tierAmount++;
+    });
+    $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
+  });
+}
 
+// toggle item, set found floor
 function itemToggle() {
   if($(".floorNote").hasClass("toggled") && !$(this).hasClass('toggled')){
     // add floor note when toggling an item
@@ -439,11 +448,9 @@ function itemToggle() {
   if(configLoaded) updateHash();
 }
 function toggleCat(catName){
-  console.log($('button.'+catName).hasClass('toggled'));
   if ($('button.'+catName).hasClass('toggled')) {
     $('button.'+catName).removeClass("toggled");
   } else {
-    console.log("adding toggled to", $(this));
     $('button.'+catName).addClass("toggled");
   }
 
@@ -462,7 +469,6 @@ function giveToggle(){
 giveToggle();
 
 //  ########################### AUTOCOMPLETE ########################################
-
 function autocomplete(inp, arr) {
   /*the autocomplete function takes two arguments,
   the text field element and an array of possible autocompleted values:*/
@@ -524,7 +530,6 @@ function autocomplete(inp, arr) {
         if (currentFocus > -1) {
           /*and simulate a click on the "active" item:*/
           if (x) {
-            // console.log($(".autocomplete-active").find("input").val());
             updateSearch($(".autocomplete-active").find("input").val());
             x[currentFocus].click();
           }
@@ -540,7 +545,6 @@ function autocomplete(inp, arr) {
     if (currentFocus < 0) currentFocus = (x.length - 1);
     /*add class "autocomplete-active":*/
     x[currentFocus].classList.add("autocomplete-active");
-    console.log($(".autocomplete-active").find("input").val());
     if (currentFocus > -1) updateSearch($(".autocomplete-active").find("input").val());
   }
   function removeActive(x) {
@@ -719,18 +723,3 @@ const prices = [      3,
                   12500,
                   30000]
 autocomplete(document.getElementById("autocomplete"), prices);
-
-function tierCount() {
-  $(".itemAmount").remove();
-  $(".itemtitle").each(function( index ) {
-    let tierAmount = 0;
-    let itemCat = $(this).find("span").attr('data-localize');
-    $(".tier."+itemCat).children().each(function( index ) {
-      // console.log( index + ": " + $( this ).text() );
-      if($(this).is(':visible')) tierAmount++;
-    });
-    // console.log(tierAmount, itemCat, $(".tier."+itemCat))
-    // console.log(tierAmount);
-    $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
-  });
-}
