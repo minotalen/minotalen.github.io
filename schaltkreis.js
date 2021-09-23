@@ -60,7 +60,7 @@ function speak(elem) {
 
   // finished quote
   if(quoteIndex == 23 && !solvedOnce) {
-    source.innerHTML = `- <a href="https://minotalen.digital/projects/#schaltkreishaiku">heinz von förster</a>`;
+    source.innerHTML = `- <a href="/projects/#schaltkreishaiku">heinz von förster</a>`;
     let quot = new SpeechSynthesisUtterance();
 
     quot.text = elem.innerText;
