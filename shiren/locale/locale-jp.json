@@ -5,8 +5,6 @@
   "more" : "もっと追加する予定です",
   "settings" : "設定",
   "priceView" : "値段表示",
-  "search": "検索",
-  "floorHighlight" : "見つけたフロア",
   "howTo": {
     "1" : "使い方",
     "2" : "スペースキー: 検索",
@@ -30,8 +28,7 @@
     "bizTow" : "異次元の塔",
     "oniHol" : "おにぎり穴",
     "priCha" : "原始に続く穴",
-    "desDes" : "運命の地下",
-    "masFoo" : "Master's Footprint"
+    "desDes" : "運命の地下"
   },
   "bracelets" : "腕輪",
   "brc": {

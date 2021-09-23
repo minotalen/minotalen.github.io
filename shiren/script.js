@@ -1,114 +1,5 @@
-let currentLanguage = "EN";
-let currentDungeon = "all";
-let configLoaded = false;
 
-// $("#rescueName").on("change paste keyup", function ( e ) {
-//     console.log("hello");
-//     if ($(this).val().length > 12) {
-//       $(this).val($(this).val().slice(0,12));
-//     }
-// });
-// $("#rescueFloor").on("change paste keyup", function ( e ) {
-//   if ($(this).val().length > 2) {
-//     $(this).val($(this).val().slice(0,$(this).val().length-1));
-//   }
-// });
-// $("#rescueCode").on("change paste keyup", function ( e ) {
-//
-//   if ($(this).val().length > 16) {
-//     $(this).val($(this).val().slice(0,$(this).val().length-1));
-//   }
-// });
-
-// load and save hash
-$( document ).ready(function() {
-
-    var pathname = window.location.hash;
-    pathname = pathname.split("#").pop();
-    pathname = pathname.split("+");
-    setTimeout(loadHash, 100);
-    // if(pathname.includes("?")) {
-    //   pathname = pathname.split("?");
-    // }
-
-    function loadHash() {
-      if(pathname[2]) {
-        let itemCat = pathname[2].split(/[()]+/).filter(function(e) { return e; });
-        for(cat in itemCat) {
-          let itemCatVals = itemCat[cat].split(",");
-          for (item in itemCatVals) {
-            if(itemCatVals[item].includes(":")) {
-              itemCatVals[item] = itemCatVals[item].split(":");
-              itemCatVals[item][1] = parseInt(itemCatVals[item][1], 10);
-            } else {
-              itemCatVals[item] = [itemCatVals[item], 0];
-            }
-          }
-          $(".itemcontainer").eq(cat).find(".itemtype").each( function( index ) {
-            let counter = 0;
-            $(this).find(".tier").find("p").each( function( index ) {
-              let exists = itemCatVals.find(el => el[0] == counter);
-              if(exists) {
-                $(this).addClass("toggled");
-                if(exists[1] != 0) {
-                  if(exists[1] < 10) exists[1] = "0"+exists[1];
-                  $(this).append("<span class='notedFloor'>" + exists[1] + "</span>");
-                }
-              }
-              counter++;
-            });
-          });
-        }
-      }
-
-      // set language
-      if(pathname[0] == "JP") {
-        $(".language.JP").click()
-      } else {
-        $(".language.EN").click()
-      }
-      if(pathname[1] && pathname[1].length == 6) {
-        console.log("loading dungeon");
-        filter(pathname[1]);
-      }
-
-      configLoaded = true;
-    }
-});
-function updateHash() {
-  let newHash = "";
-  newHash += "#" + currentLanguage;
-  newHash += "+" + currentDungeon;
-
-  let itemArray = [];
-  $(".itemtitle").each(function( index ) {
-    let tierArray = [];
-    let itemCat = $(this).find("span").attr('data-localize');
-    $(".tier."+itemCat).children().each(function( index ) {
-      if($(this).find(".notedFloor").length == 1) {
-        tierArray.push( index + ":" + parseInt($(this).find(".notedFloor").text(), 10) );
-      } else if ($(this).hasClass("toggled") ){
-        tierArray.push( index );
-      }
-    });
-    itemArray.push(tierArray);
-  });
-  let itemString = ""
-  for(group in itemArray) {
-    itemString += "("
-    for(let i = 0 ; i < itemArray[group].length; i++) {
-      itemString += itemArray[group][i]
-      if(i != itemArray[group].length-1) itemString += ","
-    }
-    itemString += ")"
-  }
-  newHash += "+" + itemString;
-  // newHash += "?" + $("#rescueCode").val() + "/" + $("#rescueName").val() + "/" + $("#rescueFloor").val()
-;
-  window.location.hash = newHash;
-}
-
-// ########  DARK MODE ####################################################################################
+// code for dark mode toggle
 const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
 let css = document.styleSheets[0].cssRules[0].style;
@@ -116,6 +7,7 @@ let css = document.styleSheets[0].cssRules[0].style;
 function switchTheme() {
   let toggle = $('#checkbox')[0];
   if (toggle.checked) {
+      console.log(toggle);
       document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
   } else {
@@ -134,102 +26,12 @@ $('.theme-switch-wrapper').mousedown(function( event ) {
   event.preventDefault();
 });
 
-// ########  MODAL ####################################################################################
-var modal = document.getElementById("howTo");
-var rescue = document.getElementById("rescue");
-var span = document.getElementsByClassName("close")[0];
+// #########################################################################################################
 
-// rescue.onclick = function() {
-//   modal.style.display = "block";
-// };
-// span.onclick = function() {
-//   modal.style.display = "none";
-// };
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-};
-
-// ########  EVENT  LISTENERS  ########################################################################
-$("body").on("change paste keyup", function( e ) {
-  if(event.key == "+") {
-    $(".floorPlus").click();
-    $(".searchInput").blur()
-    return;
-  } else if (event.key == "-") {
-    $(".floorMinus").click();
-    $(".searchInput").blur()
-    return;
-  } else if (event.key == "#") {
-    $(".floorNote").click();
-    $(".searchInput").blur()
-    return;
-  }
-  if($(".floorNote").hasClass("typeMe")){
-    $(".searchInput").val('');
-    var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    if (validkeys.indexOf(e.key) < 0) return false;
-    newFloor = $(".floorNote").text().substring(1) + validkeys.indexOf(e.key);
-    // if(newFloor < 10) newFloor = "0"+newFloor;
-    $(".floorNote").text(newFloor);
-  }
-});
-
-// search input
 $(".searchInput").on("change paste keyup", function( e ) {
-  if($(".floorNote").hasClass("typeMe")){
-    $(".searchInput").val('');
-    var validkeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    if (validkeys.indexOf(e.key) < 0) return false;
-    newFloor = $(".floorNote").text().substring(1) + validkeys.indexOf(e.key);
-    // if(newFloor < 10) newFloor = "0"+newFloor;
-    $(".floorNote").text(newFloor);
-  } else {
-    if( e.keyCode != 40 && e.keyCode != 38 && e.key != "#" && e.key != "+" && e.key != "-") updateSearch($(".searchInput").val());
-  }
-});
-$(".searchInput").click(function() {
-  $(".floorNote").removeClass("typeMe");
+  if( e.keyCode != 40 && e.keyCode != 38) updateSearch($(".searchInput").val());
 });
 
-$(window).keypress(function (e) {
-  if (e.key === ' ' || e.key === 'Spacebar') {
-    e.preventDefault();
-    // $(".searchInput").val('');
-    $(".floorNote").removeClass("typeMe")
-    $(".searchInput").focus();
-    $(".searchInput").select();
-  }
-})
-// menu visibility toggle
-$(".menuToggle").click(function() {
-  if(!$(this).hasClass("toggled")) {
-    $(".menu").css("width", "0");
-    $(".menu").css("height", "0");
-    $(".menu").css("overflow", "hidden");
-    $(".container").css("padding-left", "1.3em");
-    $(this).css("height","auto");
-    $(this).addClass("toggled")
-  } else {
-    $(".menu").css("width", "");
-    $(".menu").css("height", "");
-    $(".menu").css("overflow", "visible");
-    $(".container").css("padding-left", "");
-    $(this).css("height","");
-    $(this).removeClass("toggled")
-  }
-});
-// blessed/cursed prices
-$(".blessCurse").click(function() {
-    if (!$(this).hasClass('toggled')) {
-        $(this).addClass("toggled");
-    } else {
-        $(this).removeClass("toggled");
-    }
-    updateSearch($(".searchInput").val(), true);
-});
-// price display toggle
 $(".priceToggle").click(function() {
   if (!$(this).hasClass('toggled')) {
       // show prices
@@ -264,55 +66,59 @@ $(".priceToggle").click(function() {
   }
 });
 $(".priceToggle").click();
-//language changer
+
 $(".language").click(function() {
     if(!$(this).hasClass("toggled")) {
       if($(this).hasClass("EN")) {
         //load english locale
         console.log("loading en")
-        currentLanguage = "EN";
         $("[data-localize]").localize("locale/locale", { language: "en" });
+        $(".itemname").css("margin", "0px 0px");
       } else {
         //load japanese locale
         console.log("loading jp")
-        currentLanguage = "JP";
         $("[data-localize]").localize("locale/locale", { language: "jp" });
+        $(".itemname").css("margin", "-1px 0px");
       }
       $(".language").removeClass("toggled")
       $(this).addClass("toggled")
-      if(configLoaded) updateHash();
     }
-    setTimeout(tierCount, 300);
-});
-/// floor notes
-$(".floor").click(function() {
-  let newFloor = "";
-  if($(this).hasClass("floorNote")) {
-    if(!$(this).hasClass("toggled")) {
-      $(this).addClass("toggled");
-      $(this).addClass("typeMe");
-    } else {
-      $(this).removeClass("toggled");
-      $(this).removeClass("typeMe");
-    }
-    return;
-  } else if($(this).hasClass("floorPlus")) {
-    newFloor = parseInt($(".floorNote").text(), 10)+1;
-  } else if($(this).hasClass("floorMinus")) {
-    newFloor = parseInt($(".floorNote").text(), 10)-1;
-  }
-  if(0 < newFloor && newFloor < 99) {
-    if(newFloor < 10) newFloor = "0"+newFloor;
-    $(".floorNote").text(newFloor);
-    $(".floorNote").addClass("toggled");
-    $(".floorNote").addClass("typeMe");
-  }
 });
 
-// search higlighting
+
+$(".blessCurse").click(function() {
+    if (!$(this).hasClass('toggled')) {
+        $(this).addClass("toggled");
+    } else {
+        $(this).removeClass("toggled");
+    }
+    updateSearch($(".searchInput").val(), true);
+});
+
+$(".menu").click(function() {
+  $(".searchInput").focus();
+});
+
+$(window).keypress(function (e) {
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    // $(".searchInput").val('');
+    $(".searchInput").focus();
+    $(".searchInput").select();
+
+  }
+})
+
+$(".clear").click(function() {
+  console.log("clearing");
+  $(".searchInput").val('');
+  updateSearch($(".searchInput").val(), true);
+});
+
 let lastValue = "";
+
+
 function updateSearch(searchValue, force) {
-  if($(".rescueModal").is(':visible')) return;
   if(searchValue != lastValue  || force) {
     lastValue = searchValue;
 
@@ -321,24 +127,25 @@ function updateSearch(searchValue, force) {
     $(".tier").removeClass("priceBlessed");
     $(".tier").removeClass("priceCursed");
     let priceList = $(this).text().trim().split(" ")
+    // console.log( index + ": " + $( this ).text().trim(), searchValue, priceList);
     let searchZero = " " + searchValue.toLowerCase() + " ";
     let searchCurse = " " + Math.floor(searchValue.toLowerCase()*1.1+0.5) + " ";
     let searchUnCurse = " " + Math.floor(searchValue.toLowerCase()/0.8+0.5) + " ";
     let searchBlessed = " " + Math.floor(searchValue.toLowerCase()*0.8+0.5) + " ";
     let searchUnBlessed = " " + Math.floor(searchValue.toLowerCase()/1.1+0.5) + " ";
 
-    if($(".cursed").hasClass('toggled') && searchUnBlessed != " NaN " && searchUnBlessed.length < 7) {
+    if($(".cursed").hasClass('toggled') && searchUnBlessed != " NaN ") {
       $('.cursed span').text(searchUnBlessed);
     } else {
       $('.cursed span').text("");
     }
-    if($(".blessed").hasClass('toggled') && searchUnCurse != " NaN " && searchUnBlessed.length < 7) {
+    if($(".blessed").hasClass('toggled') && searchUnCurse != " NaN ") {
       $('.blessed span').text(searchUnCurse);
     } else {
       $('.blessed span').text("");
     }
 
-    // console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, searchUnCurse, $(".cursed").hasClass('toggled'));
+    console.log("search", searchValue, searchBlessed, searchUnBlessed, $(".blessed").hasClass('toggled'), searchCurse, searchUnCurse, $(".cursed").hasClass('toggled'));
 
     $(".tier").children().each( function( index ) {
 
@@ -348,6 +155,7 @@ function updateSearch(searchValue, force) {
         $(".help").hide()
         // item name filter
         if($(this).hasClass("itemname") && $(this).text().toLowerCase().indexOf(searchValue.toLowerCase()) != -1) {
+          console.log( index + ": " + $( this ).text(), $(this).attr('class').split('/\s+/') );
           $(this).addClass("searchResult");
         }
 
@@ -387,9 +195,42 @@ function updateSearch(searchValue, force) {
     });
   }
 }
+
+function itemToggle() {
+  if (!$(this).hasClass('toggled')) {
+      $(this).addClass("toggled");
+  } else {
+      $(this).removeClass("toggled");
+  }
+}
+
+function toggleCat(catName){
+  console.log($('button.'+catName).hasClass('toggled'));
+  if ($('button.'+catName).hasClass('toggled')) {
+    $('button.'+catName).removeClass("toggled");
+  } else {
+    console.log("adding toggled to", $(this));
+    $('button.'+catName).addClass("toggled");
+  }
+
+  if ($('div.itemtype.'+catName).css('display') != 'none') {
+    $('div.itemtype.'+catName).hide();
+  } else {
+    $('div.itemtype.'+catName).show();
+  }
+}
+
+function giveToggle(){
+   var elements = document.getElementsByClassName('itemname');
+   for(var i = 0; i < elements.length; i++){
+      if(!elements[i].classList.contains('desc')) elements[i].onclick = itemToggle;
+   }
+}
+
 function filter(className) {
   console.log("starting filter: ", className)
-  currentDungeon = className;
+  console.log($('button.dungeon.'+className).hasClass('toggled'));
+
   $('button.dungeon').removeClass("toggled");
   $('button.dungeon.'+className).addClass("toggled");
 
@@ -408,67 +249,20 @@ function filter(className) {
       $( this ).children(".itemname").each(function( index ) {
         if($(this).css('display') != 'none') {
           hasActive = true;
+          // console.log( index + ": " + $( this ).text() );
         }
       });
     });
     if(!hasActive) $( this ).hide()
     else $( this ).show();
   });
-  tierCount();
-  if(configLoaded) updateHash();
-}
-function tierCount() {
-  $(".itemAmount").remove();
-  $(".itemtitle").each(function( index ) {
-    let tierAmount = 0;
-    let itemCat = $(this).find("span").attr('data-localize');
-    $(".tier."+itemCat).children().each(function( index ) {
-      if($(this).is(':visible')) tierAmount++;
-    });
-    $(".itemcontainer."+itemCat).find("span").first().append("<span class='itemAmount'> (" + tierAmount + ") </span>");
-  });
 }
 
-// toggle item, set found floor
-function itemToggle() {
-  if($(".floorNote").hasClass("toggled") && !$(this).hasClass('toggled')){
-    // add floor note when toggling an item
-    $(this).addClass("toggled");
-    $(this).append("<span class='notedFloor'>" + $(".floorNote").text() + "</span>");
-  } else if (!$(this).hasClass('toggled')) {
-    // toggle an item without floor note
-    $(this).addClass("toggled");
-  } else {
-    // remove item toggle (including potential floor note)
-    $(this).removeClass("toggled");
-    $(this).find(".notedFloor").remove();
-    $(this).removeClass("toggled");
-  }
-  $(".floorNote").removeClass("typeMe");
-  if(configLoaded) updateHash();
-}
-function toggleCat(catName){
-  if ($('button.'+catName).hasClass('toggled')) {
-    $('button.'+catName).removeClass("toggled");
-  } else {
-    $('button.'+catName).addClass("toggled");
-  }
-
-  if ($('div.itemtype.'+catName).css('display') != 'none') {
-    $('div.itemtype.'+catName).hide();
-  } else {
-    $('div.itemtype.'+catName).show();
-  }
-}
-function giveToggle(){
-   var elements = document.getElementsByClassName('itemname');
-   for(var i = 0; i < elements.length; i++){
-      if(!elements[i].classList.contains('desc')) elements[i].onclick = itemToggle;
-   }
-}
 giveToggle();
 
-//  ########################### AUTOCOMPLETE ########################################
+
+//  ########################### Autocomplete ########################################
+
 function autocomplete(inp, arr) {
   /*the autocomplete function takes two arguments,
   the text field element and an array of possible autocompleted values:*/
@@ -530,6 +324,7 @@ function autocomplete(inp, arr) {
         if (currentFocus > -1) {
           /*and simulate a click on the "active" item:*/
           if (x) {
+            // console.log($(".autocomplete-active").find("input").val());
             updateSearch($(".autocomplete-active").find("input").val());
             x[currentFocus].click();
           }
@@ -545,6 +340,7 @@ function autocomplete(inp, arr) {
     if (currentFocus < 0) currentFocus = (x.length - 1);
     /*add class "autocomplete-active":*/
     x[currentFocus].classList.add("autocomplete-active");
+    console.log($(".autocomplete-active").find("input").val());
     if (currentFocus > -1) updateSearch($(".autocomplete-active").find("input").val());
   }
   function removeActive(x) {
@@ -568,6 +364,7 @@ document.addEventListener("click", function (e) {
     closeAllLists(e.target);
 });
 }
+
 const prices = [      3,
                      10,
                      50,
@@ -722,4 +519,5 @@ const prices = [      3,
                   12000,
                   12500,
                   30000]
+
 autocomplete(document.getElementById("autocomplete"), prices);

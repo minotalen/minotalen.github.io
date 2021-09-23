@@ -1,0 +1,207 @@
+#schaltkreis {
+  display: grid;
+  grid-template-columns: 0.5fr min-content 0.7fr min-content 0.5fr;
+  grid-template-rows: 9;
+  font-family: 'Oswald', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 5vh;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+#quoteshow {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 300;
+
+  white-space: pre;
+  padding: 5px 30px;
+  font-size: 2rem;
+  font-weight: 300;
+  text-align: left;
+  line-height: 2.2rem;
+}
+
+#source {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 300;
+
+  padding: 0 30px;
+  font-size: 2rem;
+  font-weight: 300;
+  text-align: right;
+}
+
+.schaltWord {
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.ichCenter {
+  padding: 0 2rem;
+}
+
+.schaltWord:hover {
+  background-color: #f0c9f2;
+}
+
+.gapv1 {
+  grid-row: 1/9;
+  grid-column: 1;
+  width:  25%
+}
+
+.gapv2 {
+  grid-row: 1/9;
+  grid-column: 5;
+  width:  25%
+}
+
+
+.g1 {
+  grid-row: 2;
+  grid-column: 1 / 5;
+  height: .5rem;
+}
+.g2 {
+  grid-row: 4;
+  grid-column: 1 / 5;
+  height: 1.5rem;
+}
+.g3 {
+  grid-row: 6;
+  grid-column: 1 / 5;
+  height: 1.5rem;
+}
+.g4 {
+  grid-row: 8;
+  grid-column: 1 / 5;
+  height: .5rem;
+}
+
+.bin {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.blind {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: right;
+}
+
+.dann {
+  grid-column: 4;
+  grid-row: 3;
+  justify-self: left;
+}
+/*  */
+.wenn {
+  grid-column: 2;
+  grid-row: 5;
+  justify-self: right;
+  position: relative;
+  left: -1rem;
+}
+
+.ich {
+  grid-column: 3;
+  grid-row: 5;
+}
+
+.wordBox {
+  display: flex;
+  justify-content: center;
+}
+
+.nicht {
+  grid-column: 4;
+  grid-row: 5;
+  justify-self: left;
+  position: relative;
+  left: 1rem;
+}
+/*  */
+.dass {
+  grid-column: 2;
+  grid-row: 7;
+  justify-self: right;
+}
+
+.sehe {
+  grid-column: 4;
+  grid-row: 7;
+  justify-self: left;
+}
+/*  */
+.aber {
+  grid-column: 3;
+  grid-row: 9;
+}
+
+/* blink */
+.blink_me {
+  animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+  50% { opacity: 0.4; }
+}
+
+/* media queries */
+@media only screen and (max-width: 800px) {
+  .wordbox.bin {
+    margin-top: 0.5rem;
+  }
+
+  #schaltkreis {
+    font-size: 9vmin;
+  }
+
+  #quoteshow {
+    font-size: 1.5rem;
+    font-weight: 300;
+    text-align: left;
+    padding: 5px 10px;
+  }
+
+  #source {
+    font-size: 1rem;
+    font-weight: 300;
+    text-align: right;
+    padding: 5px 15px;
+  }
+
+  .wenn {
+    left: -.5rem;
+  }
+
+  .nicht {
+    left: .5rem;
+  }
+
+  .g1 .g4 {
+    height: .2rem;
+  }
+
+  .g2 .g3 {
+    height: .5rem;
+  }
+
+  .gapv1 {
+    width: 10%
+  }
+
+  .gapv2 {
+    width: 10%
+  }
+
+}
