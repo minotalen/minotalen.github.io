@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Windradrotatioon</title>
+      <link rel="stylesheet" href="./css/app.css">
+   </head>
+
+   <body>
+    <div class="controls">
+          <section class="horizontal">
+            <input class="slider" type="range" min="0" max="10000" value="5000" id="x" />
+          </section>
+          <section class="vertical">
+            <input class="slider" type="range" min="0" max="10000" value="5000" id="y" />
+          </section>
+          <section class="spd">
+            <div class="slider-text">test</div> <input class="slider" type="range" min="0" max="2000000" value="700000" id="spd" />
+          </section>
+          <section class="spdFine">
+            <input class="slider" type="range" min="200000" max="4800000" value="1500000" step=".000001" id="spdFine" />
+          </section>
+          <div class="redDot"></div>
+        </div>
+    <div class="app">
+      <div>
+        <code></code>
+        <code></code>
+        <br />    <br />
+         
+      </div>
+      <div class="rad rotation">
+        <!-- <video class="vid" width="190%" height="190%" loop autoplay muted playinline> <source src="video/rad.mp4" type="video/mp4">  </video>  -->
+        <!-- <iframe class="vid" width="300%" height="300%" src="https://www.youtube.com/embed/sDkqzrdtYCo?hd=1?autoplay=1"></iframe> -->
+        <iframe class="vid" width="300%" height="300%" src="https://www.youtube.com/embed/sDkqzrdtYCo?hd=1&autoplay=1&controls=0" frameborder="0"></iframe>
+
+      </div>"
+    </div>
+
+<script>
+document.onkeydown = checkKey;
+var rad = document.querySelector(".rad"),
+  video = document.querySelector(".vid"),
+  dot = document.querySelector(".redDot"),
+  x = document.querySelector("#x"),
+  y = document.querySelector("#y"),
+  spd = document.querySelector("#spd")
+  spdFine = document.querySelector("#spdFine")
+var dotTimeout;
+
+function checkKey(e) {
+    e = e || window.event;
+    if (e.keyCode == '38') {
+      spdFine.value -= 300;
+      // console.log("up", spdFine.value);
+      updateSpeed(spd.value, spdFine.value);
+    }
+    else if (e.keyCode == '40') {
+      if(rad.classList.contains("rotation")){
+          rad.classList.remove("rotation"); 
+          rad.classList.add("rotation2"); 
+      } else {
+        rad.classList.add("rotation");
+        rad.classList.remove("rotation2");
+      }
+      
+    }
+    else if (e.key == 'w') {
+       y.value += 50;
+       updateXY(x.value, y.value);
+    }
+    else if (e.keyCode == 's') {
+       y.value -= 50;
+       updateXY(x.value, y.value);
+    }
+    else if (e.keyCode == 'a') {
+       x.value -= 50;
+       updateXY(x.value, y.value);
+    }
+    else if (e.keyCode == 'd') {
+       x.value += 50;
+       updateXY(x.value, y.value);
+    }
+}
+
+function hideDot() {
+  var dot = document.querySelector(".redDot")
+  dot.style.display = "none";
+}
+function showDot() {
+  var dot = document.querySelector(".redDot")
+  dot.style.display = "block";
+  clearTimeout(dotTimeout);
+  dotTimeout = setTimeout(hideDot, 2000);
+}
+
+window.onload = function() {
+    x.addEventListener('input', function () {
+      updateXY(x.value, y.value);
+    });
+    y.addEventListener('input', function () {
+      updateXY(x.value, y.value);
+    });
+    spd.addEventListener('input', function () {
+      updateSpeed(spd.value, spdFine.value);
+    });
+    spdFine.addEventListener('input', function () {
+      updateSpeed(spd.value, spdFine.value);
+    });
+    x.addEventListener('change', function () {
+      updateXY(x.value, y.value);
+    });
+    y.addEventListener('change', function () {
+      updateXY(x.value, y.value);
+    });
+    spd.addEventListener('change', function () {
+      updateSpeed(spd.value, spdFine.value);
+    });
+    spdFine.addEventListener('change', function () {
+      updateSpeed(spd.value, spdFine.value);
+    });
+
+    updateXY(x.value, y.value);
+    updateSpeed(spd.value, spdFine.value);
+
+}
+
+function updateSpeed(spd, spdFine) {
+      spd = parseInt(spd, 10);
+      spdFine = parseInt(spdFine, 10);
+      const newSpd = Math.sqrt(Math.pow(spd/2,1.7))*(spdFine/1000000)
+      // console.log(spd, spdFine, "   updating speed to", newSpd)
+      rad.style.animationDuration = newSpd + "ms";
+    }
+    function updateXY(newX, newY) {
+      showDot();
+      // console.log(newX, newY)
+      newX = parseFloat(newX/10000) * video.clientWidth
+      newY = parseFloat(newY/10000) * video.clientHeight
+      newX *= -1
+      newY *= -1
+      console.log(newX, newY)
+      video.style.left = newX + "px";
+      video.style.top = newY + "px";
+    }
+
+</script>
+  </body>
+
+</html>

@@ -1,0 +1,161 @@
+@import url(https://fonts.googleapis.com/css?family=Merriweather:400,700,900,300); 
+html, body {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #a1bcd1;
+}
+
+body {
+  margin: 0 auto;
+  text-align: center;
+  font-family: Merriweather;
+}
+
+body>div {
+  text-align: left;
+  display: inline-block;
+}
+.controls {
+  position: relative;
+  display: block;
+  top:  3%;
+  height: 100%;
+}
+input[type='range'] {
+  margin: 12;
+  padding: 0;
+}
+input {
+  -webkit-transition: opacity .15s ease-in-out;
+  -moz-transition: opacity .15s ease-in-out;
+  -ms-transition: opacity .15s ease-in-out;
+  -o-transition: opacity .15s ease-in-out;
+  transition: opacity .15s ease-in-out;
+  width: 99%;
+  z-index: 101;
+  position: relative;
+}
+input[type='range']:focus {
+  outline: none;
+}
+
+.horizontal input {
+}
+
+.vertical input {
+  position: relative;
+}
+.spd input {
+  position: relative;
+}
+
+
+svg {
+  box-shadow: 0 0 2px black;
+}
+
+.safari {
+  display: none;
+}
+
+@-webkit-keyframes rotation {
+    from{
+    -webkit-transform: rotate(360deg);
+    }
+    to{
+    -webkit-transform: rotate(0deg);
+    }
+}
+
+@-webkit-keyframes rotation2 {
+    from{
+    -webkit-transform: rotate(0deg);
+    }
+    to{
+    -webkit-transform: rotate(360deg);
+    }
+}
+.rotation {
+  -webkit-animation: rotation infinite linear;
+}
+.rotation2 {
+  -webkit-animation: rotation2 infinite linear;
+}
+
+
+.no-connection {
+  animation 'noConnection' 5s ease infinite
+}
+.rad {
+  animation-duration: 20s;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  transform-origin: top left;
+  top: 50%;
+}
+
+.vid {
+  position: absolute;
+  top: -2500px;
+  left: -1000px;
+}
+
+.redDot {
+  position: fixed;
+  background-color: #b27664aa;
+  height: 20px;
+  width: 20px;
+  border-radius: 20px;
+  top:  49%;
+  left: 49%;
+  z-index: 102;
+  -webkit-transition: opacity .5s ease-in-out;
+  -moz-transition: opacity .5s ease-in-out;
+  -ms-transition: opacity .5s ease-in-out;
+  -o-transition: opacity .5s ease-in-out;
+  transition: opacity .5s ease-in-out;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.1;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #45523d;
+  cursor: pointer;
+}
+
+.slider-text {
+    position: relative;
+    top:  10px;
+    white-space: nowrap;
+}
