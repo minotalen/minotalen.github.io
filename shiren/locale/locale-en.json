@@ -5,6 +5,8 @@
   "more" : "more to come",
   "settings" : "settings",
   "priceView" : "toggle price view",
+  "search": "search",
+  "floorHighlight" : "floor found",
   "howTo": {
     "1" : "how to use",
     "2" : "spacebar: search",
@@ -28,7 +30,8 @@
     "bizTow" : "Bizarre Tower",
     "oniHol" : "Onigiri Hollow",
     "desDes" : "Destiny's Descent",
-    "priCha" : "Primordial Chasm"
+    "priCha" : "Primordial Chasm",
+    "masFoo" : "Master's Footprint"
   },
   "bracelets" : "Bracelets",
   "brc": {
