@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        let timerStart = 0;
+        let timerEnd = 0;
+        let targetTime = 0;
+        let tokens = 100;
+        let players = [];
+        let winningPlayer = null;
+        let pot = 0;
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function updateMarker(value) {
+            const markerWrapper = document.querySelector('.marker-wrapper');
+            if (!markerWrapper) return;
+
+            const newPositionPercentage = value;
+            markerWrapper.style.left = `${newPositionPercentage}%`;
+
+            // Update player time
+            const playerTimeElement = markerWrapper.querySelector('.player-time');
+            const playerTime = ((newPositionPercentage / 100) * targetTime).toFixed(2);
+            playerTimeElement.innerText = `${playerTime}s`;
+        }
+
+        function startTimer() {
+            if (tokens <= 0) {
+                alert("Game over! Press the button to reset the game.");
+                tokens = 100;
+                updateTokensDisplay();
+                return;
+            }
+            timerStart = new Date().getTime();
+            targetTime = getRandomInt(300, 1500) / 100;
+            document.querySelector('.start-button').innerText = "Release to Stop";
+            tokens -= 10;
+            pot += 9;
+            updateTokensDisplay();
+            clearMarkers();
+            document.querySelector('.container').style.background = "rgba(105, 92, 92, 0.1)";
+        }
+
+        function startPlayerTimers() {
+            players = Array.from({ length: getRandomInt(3, 10) }, (_, i) => ({ name: `Player ${i + 1}`, time: 0, position: 0 }));
+            players.forEach(player => {
+                player.time = getRandomInt(2000, 14000) / 1000;
+                pot += 9;
+                player.position = Math.min((player.time / targetTime) * 100, 100);
+                if (player.time <= targetTime) {
+                    displayPlayerMarker(player);
+                }
+            });
+        }
+
+        function displayPlayerMarker(player) {
+            const progressBar = document.querySelector('.progress-bar');
+            const marker = document.createElement('div');
+            marker.classList.add('marker-wrapper');
+            marker.style.left = `${(player.time / targetTime) * 100}%`;
+            marker.innerHTML = `<div class="username">${player.name}</div></div><div class="marker-circle"></div><div class="player-time">${player.time.toFixed(2)}s</div>`;
+            marker.querySelector('.marker-circle').style.top = '16px';
+            marker.querySelector('.marker-circle').style.background = getMarkerColor(player.time / targetTime);
+            progressBar.appendChild(marker);
+        }
+
+        function getMarkerColor(positionRatio) {
+            if (positionRatio <= 0.23) return '#FFFFFF';
+            if (positionRatio <= 0.55) return '#FFED00';
+            if (positionRatio <= 0.77) return '#01F500';
+            if (positionRatio <= 0.92) return '#FF202C';
+            if (positionRatio <= 0.99) return '#01FDFE';
+            return '#FE04F5';
+        }
+
+        function stopTimer() {
+            timerEnd = new Date().getTime();
+            const duration = (timerEnd - timerStart) / 1000;
+            const newPositionPercentage = Math.min((duration / targetTime) * 100, 100);
+
+            if (document.querySelector('.marker-wrapper')) {
+                updateMarker(newPositionPercentage);
+            }
+            document.querySelector('.start-button').innerText = "Start Again";
+            document.querySelector('.container').style.background = "rgba(105, 92, 92, 0.3)";
+            startPlayerTimers();
+            resolveRound(duration);
+        }
+
+        function resolveRound(playerTime) {
+            winningPlayer = null; // Clear the previous winning player.
+
+            const remainingPlayers = players.filter(player => player.time <= targetTime);
+            const eliminatedPlayers = players.filter(player => player.time > targetTime);
+            const totalPot = pot;
+            console.log("Debug: Remaining Players", remainingPlayers);
+            console.log("Debug: Eliminated Players", eliminatedPlayers);
+
+            console.log(`Debug: Pot ${pot}`);
+            if (playerTime <= targetTime) {
+                remainingPlayers.push({ name: "You", time: playerTime });
+            } else {
+                eliminatedPlayers.push({ name: "You", time: playerTime });
+            }
+
+            const sortedPlayers = [...remainingPlayers, ...eliminatedPlayers].sort((a, b) => b.time - a.time);
+
+            const winnerShare = remainingPlayers.length <= 2 ? 0.7 : remainingPlayers.length <= 5 ? 0.6 : remainingPlayers.length <= 12 ? 0.5 : 0.4;
+            const winnerTokens = Math.round(pot * winnerShare);
+            let remainingTokens = winnerTokens;
+            pot -= pot * winnerShare;
+
+            console.log("Debug: Winner Tokens", winnerTokens);
+
+            let winnerDeclared = false;
+            let resultsHtml = `<h2>Round Results</h2><p>Target Time: ${targetTime.toFixed(2)}s</p><table class='results-table'><thead><tr><th>Rank</th><th>Player</th><th>Time (s)</th><th>Tokens Won</th></tr></thead><tbody>`;
+            let totalTime = remainingPlayers.reduce((acc, player) => acc + player.time, 0);
+
+            sortedPlayers.forEach((player, index) => {
+                let tokensWon = 0;
+                const isWinner = !winnerDeclared && remainingPlayers.includes(player);
+
+                if (isWinner) {
+                    tokensWon = winnerTokens;
+                    remainingPlayers.splice(remainingPlayers.indexOf(player), 1); // Remove the winner from remaining players
+                    winningPlayer = player.name;
+                    console.log(`Debug: Round Winner - ${player.name}, Tokens Won: ${tokensWon}, Pot: ${pot}`);
+                    winnerDeclared = true;
+                } else if (remainingPlayers.includes(player)) {
+                    tokensWon = Math.round((player.time / totalTime) * remainingTokens);
+                    remainingTokens -= tokensWon;
+                    console.log(`Debug: Calculating tokens for ${player.name}, Tokens Won: ${tokensWon}, Remaining Tokens: ${remainingTokens}`);
+                }
+
+                const highlightClass = player.name === winningPlayer ? 'highlighted-winner' : eliminatedPlayers.includes(player) ? 'highlighted' : player.name === "You" ? 'highlighted-you' : '';
+                resultsHtml += `<tr class="result-row ${highlightClass}" data-player="${player.name}"><td>${index + 1}</td><td>${player.name}</td><td>${player.time.toFixed(2)}</td><td>${tokensWon}</td></tr>`;
+                player.tokensWon = tokensWon;
+                if (player.name === "You") {
+                    tokens += tokensWon;
+                }
+            });
+
+            resultsHtml += "</tbody></table>";
+            const resultsElement = document.querySelector('.results');
+            resultsElement.innerHTML = resultsHtml;
+            resultsElement.classList.remove('hidden');
+            updateTokensDisplay();
+
+            animatePlayerResults(sortedPlayers);
+            highlightPlayerOnHover();
+            debugPotDistribution(totalPot, remainingPlayers, winnerTokens);
+
+            console.log(`Debug: Winning Player - ${winningPlayer}`);
+        }
+
+
+        function animatePlayerResults(sortedPlayers) {
+            const resultRows = document.querySelectorAll('.result-row');
+            let winningTime = sortedPlayers[0].time;
+            resultRows.forEach((row, index) => {
+                row.style.opacity = 0;
+                setTimeout(() => {
+                    row.style.opacity = 1;
+                }, sortedPlayers[index].time < winningTime ? sortedPlayers[index].time * 300 : winningTime * 300 + 300);
+            });
+        }
+
+        function clearMarkers() {
+            const barGroup = document.querySelector('.bar-group');
+            barGroup.innerHTML = '<div class="progress-bar">' +
+                '<div class="progress-section white"></div>' +
+                '<div class="progress-section yellow"></div>' +
+                '<div class="progress-section green"></div>' +
+                '<div class="progress-section red"></div>' +
+                '<div class="progress-section cyan"></div>' +
+                '<div class="progress-section pink"></div>' +
+                '</div>';
+        }
+
+        function updateTokensDisplay() {
+            const tokensElement = document.querySelector('.tokens');
+            tokensElement.innerText = `Tokens: ${tokens.toFixed(0)}`;
+        }
+
+        function debugPotDistribution(pot, remainingPlayers, winnerTokens) {
+            let distributedTokens = winnerTokens;
+            remainingPlayers.forEach(player => {
+                distributedTokens += player.tokensWon || 0;
+            });
+            console.log(`Debug: Pot = ${pot}, Distributed Tokens = ${distributedTokens}, Difference = ${pot - distributedTokens}`);
+        }
+
+        function highlightPlayerOnHover() {
+            document.querySelectorAll('.result-row').forEach(row => {
+                row.addEventListener('mouseover', function () {
+                    const playerName = this.getAttribute('data-player');
+                    document.querySelectorAll('.marker-wrapper').forEach(marker => {
+                        if (marker.querySelector('.username').innerText === playerName) {
+                            marker.querySelector('.username').style.display = 'block';
+                            marker.querySelector('.player-time').style.display = 'block';
+                            marker.querySelector('.marker-circle').style.top = '0px';
+                        }
+                    });
+                });
+
+                row.addEventListener('mouseout', function () {
+                    const playerName = this.getAttribute('data-player');
+                    document.querySelectorAll('.marker-wrapper').forEach(marker => {
+                        if (marker.querySelector('.username').innerText === playerName) {
+                            marker.querySelector('.username').style.display = 'none';
+                            marker.querySelector('.player-time').style.display = 'none';
+                            marker.querySelector('.marker-circle').style.top = '16px';
+                        }
+                    });
+                });
+            });
+        }
+
+        window.onload = function () {
+            const slider = document.querySelector('.slider');
+            const startButton = document.createElement('button');
+            startButton.classList.add('start-button');
+            startButton.innerText = 'Press and Hold to Start';
+            startButton.onmousedown = startTimer;
+            startButton.onmouseup = stopTimer;
+            document.body.appendChild(startButton);
+
+            const tokensElement = document.createElement('div');
+            tokensElement.classList.add('tokens');
+            tokensElement.innerText = `Tokens: ${tokens}`;
+            document.body.appendChild(tokensElement);
+
+            const resultsElement = document.createElement('div');
+            resultsElement.classList.add('results', 'hidden');
+            document.body.appendChild(resultsElement);
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === ' ') {
+                    startButton.onmousedown();
+                }
+            });
+
+            document.addEventListener('keyup', function (event) {
+                if (event.key === ' ') {
+                    startButton.onmouseup();
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="bar-group">
+            <div class="progress-bar">
+                <div class="progress-section white"></div>
+                <div class="progress-section yellow"></div>
+                <div class="progress-section green"></div>
+                <div class="progress-section red"></div>
+                <div class="progress-section cyan"></div>
+                <div class="progress-section pink"></div>
+            </div>
+        </div>
+        <input type="range" class="slider" min="0" max="100" value="50" oninput="updateMarker(this.value)">
+    </div>
+</body>
+
+</html>
