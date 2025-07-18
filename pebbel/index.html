@@ -891,7 +891,6 @@
 
         function startGame() {
             showView('countdown-view');
-            toggleFullscreen();
             gameActive = false;
             firstTap = true;
             
@@ -906,21 +905,45 @@
             const existingIndicators = document.querySelectorAll('.tap-indicator');
             existingIndicators.forEach(indicator => indicator.remove());
             
-            let count = 3;
             const countdownEl = document.getElementById('countdown-number');
+            
+            // Use requestAnimationFrame-based countdown instead of setInterval
+            const startTime = Date.now();
+            let lastCount = 3;
             countdownEl.textContent = '3';
             
-            const timer = setInterval(() => {
-                count--;
-                if (count === 0) {
-                    clearInterval(timer);
-                    showPlaying();
-                } else {
-                    countdownEl.textContent = count;
+            function updateCountdown() {
+                const elapsed = Date.now() - startTime;
+                const newCount = Math.max(0, 3 - Math.floor(elapsed / 1000));
+                
+                if (newCount !== lastCount) {
+                    lastCount = newCount;
+                    if (newCount === 0) {
+                        showPlaying();
+                        return;
+                    } else {
+                        countdownEl.textContent = newCount.toString();
+                    }
                 }
-            }, 1000);
+                
+                if (newCount > 0) {
+                    requestAnimationFrame(updateCountdown);
+                }
+            }
+            
+            // Start countdown immediately, then request fullscreen
+            requestAnimationFrame(updateCountdown);
+            
+            // Delay fullscreen to avoid interference
+            setTimeout(() => {
+                try {
+                    toggleFullscreen();
+                } catch (e) {
+                    console.log('Fullscreen not available:', e);
+                }
+            }, 100);
         }
-
+        
         function showPlaying() {
             showView('playing-view');
             gameWords = shuffle(categories).slice(0, Math.min(categories.length - 1, 6));
