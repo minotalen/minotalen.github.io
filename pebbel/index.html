@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pebbel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #0f0f0f;
+            color: #e5e5e5;
+            height: 100vh;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        .container {
+            height: 100vh;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            max-width: 768px;
+            margin: 0 auto;
+            width: 100%;
+            min-height: 0;
+        }
+
+        .interactive-logo {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+
+        .letter {
+            display: inline-block;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .circle {
+            position: absolute;
+            width: clamp(80px, 12vw, 140px);
+            height: clamp(80px, 12vw, 140px);
+            border: clamp(10px, 2vw, 16px) solid #dc2626d1;
+            border-radius: 50%;
+            left: clamp(20px, 4vw, 50px);
+            top: clamp(10px, 2vw, 20px);
+            z-index: 1;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .help-btn {
+            width: 3rem;
+            height: 3rem;
+            border: 1px solid #404040;
+            background: #1a1a1a;
+            color: #a1a1aa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .help-btn:hover {
+            color: #ffffff;
+            background: #262626;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
+            padding: 1.5rem 0;
+            gap: 1rem;
+        }
+
+        .secondary-buttons {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 28rem;
+        }
+
+        .start-btn {
+            width: 100%;
+            max-width: 28rem;
+            background: #ffffff;
+            color: #0f0f0f;
+            padding: clamp(1rem, 4vh, 2rem) 2.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .start-btn:hover {
+            background: #e5e5e5;
+            transform: translateY(-2px);
+        }
+
+        .customize-btn {
+            width: 100%;
+            max-width: 28rem;
+            background: #1a1a1a;
+            color: #e5e5e5;
+            padding: clamp(0.8rem, 3vh, 1.2rem) 2rem;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            border: 1px solid #404040;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .customize-btn:hover {
+            background: #262626;
+            border-color: #525252;
+            transform: translateY(-1px);
+        }
+
+        /* Instructions View */
+        .instructions {
+            height: 100vh;
+            background: #0f0f0f;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        .instructions-container {
+            max-width: 768px;
+            margin: 0 auto;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .instructions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #404040;
+            padding-bottom: 1rem;
+        }
+
+        .instructions h1 {
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            color: #a1a1aa;
+            font-size: 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            margin-bottom: 1rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .section p {
+            line-height: 1.6;
+            color: #d4d4d8;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .back-btn {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #ffffff;
+            color: #0f0f0f;
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #e5e5e5;
+        }
+
+        /* Customize View */
+        .customize {
+            height: 100vh;
+            background: #0f0f0f;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        .customize-container {
+            max-width: 768px;
+            margin: 0 auto;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .customize-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #404040;
+            padding-bottom: 1rem;
+        }
+
+        .customize h1 {
+            font-size: clamp(1.8rem, 6vw, 2.5rem);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .category-list {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .category-index {
+            color: #a1a1aa;
+            width: 2rem;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .category-input {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid #404040;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 400;
+            min-width: 0;
+        }
+
+        .category-input:focus {
+            border-color: #71717a;
+            outline: none;
+        }
+
+        .remove-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #262626;
+            color: #a1a1aa;
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .remove-btn:hover {
+            background: #404040;
+            color: #ffffff;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preset-btn {
+            padding: 0.75rem 0.5rem;
+            background: #262626;
+            color: #e5e5e5;
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            font-weight: 500;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .preset-btn:hover {
+            background: #404040;
+        }
+
+        .share-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #404040;
+        }
+
+        .share-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #404040;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .share-btn:hover {
+            background: #262626;
+        }
+
+        .share-url {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.7rem, 2vw, 0.85rem);
+            color: #71717a;
+            word-break: break-all;
+            padding: 0.75rem;
+            background: #0a0a0a;
+            border: 1px solid #262626;
+            border-radius: 0;
+            width: 100%;
+        }
+
+        /* Countdown View */
+        .countdown {
+            height: 100vh;
+            background: #0f0f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .countdown-number {
+            font-size: clamp(4rem, 15vw, 8rem);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Playing View */
+        .playing {
+            height: 100vh;
+            background: #0f0f0f;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .playing-container {
+            width: 100%;
+            max-width: 28rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .playing-timer {
+            text-align: left;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            height: 2.5rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            pointer-events: none;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .current-time {
+            font-size: clamp(1.5rem, 5vw, 1.75rem);
+            color: #ffffff;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: slashed-zero;
+        }
+
+        .recent-times {
+            display: flex;
+            gap: 0.5rem;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            color: #71717a;
+            font-weight: 400;
+            align-items: flex-end;
+            white-space: nowrap;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: slashed-zero;
+        }
+
+        .playing-timer.show {
+            opacity: 1;
+        }
+
+        .word-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .word-item {
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            padding: clamp(0.8rem, 3vh, 1.5rem);
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease-out forwards;
+            font-weight: 600;
+        }
+
+        .playing-buttons {
+            display: flex;
+            gap: 0.4rem;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            height: 3.5rem;
+            margin-top: 0.75rem;
+            pointer-events: none;
+        }
+
+        .playing-buttons.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .new-round-btn {
+            flex: 1;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 1.25rem 1.75rem;
+            border: 1px solid #404040;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .new-round-btn:hover {
+            background: #262626;
+        }
+
+        .home-btn {
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 1.25rem;
+            border: 1px solid #404040;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home-btn:hover {
+            background: #262626;
+        }
+
+        /* Tap indicator */
+        .tap-indicator {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border: 16px solid #dc2626d1;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            animation: tapPulse 0.7s ease-out;
+        }
+
+        .tap-indicator.show {
+            opacity: 1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes tapPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.35);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        a {
+            color: #f3af98
+        }
+        /* Icons */
+        .icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .instructions,
+            .customize {
+                padding: 1rem;
+            }
+
+            .category-item {
+                gap: 0.5rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Menu -->
+    <div id="main-view" class="container">
+        <div class="main-content">
+            <div class="interactive-logo" id="interactive-logo">
+                <div class="circle" id="circle"></div>
+                <span class="letter">p</span><span class="letter">e</span><span class="letter">b</span><span class="letter">b</span><span class="letter">e</span><span class="letter">l</span>
+            </div>
+            <button class="start-btn" onclick="startGame()">
+                Start Round
+            </button>
+            <div class="secondary-buttons">
+                <button class="customize-btn" onclick="showCustomize()">
+                    Customize Game
+                </button>
+                <button class="customize-btn" onclick="showInstructions()">
+                    How to Play
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instructions-view" class="instructions hidden">
+        <div class="instructions-container">
+            <div class="instructions-header">
+                <h1>How to Play</h1>
+                <button class="close-btn" onclick="showMain()">×</button>
+            </div>
+            
+            <div class="section">
+                <h2>Overview</h2>
+                <p>Pebbel is a tactile hand dexterity game played with an assembled kit of found components. Prepare your own game kit by collecting six sets of objects, then compete to be the fastest to drop them from your hand in the generated sequence. The first player to accumulate 5 crowns in their hand wins. A game usually lasts 10-15 minutes.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Material/Preparations</h2>
+                <p>Collect six sets of objects. A set consists of small things that share some property like 'smooth', 'rough', 'flat', 'long', or 'striped'. Forage your surroundings for bits and pieces: I use stone pebbles because I have them in my backyard, but you can use pasta shapes, nuts, office/hardware components. Aim for comfort and make sure it's easy for players to fit one of each set into their hand. Pick objects that are easy to tell apart by feel alone. Do not make sets out of identical pieces or buy components to make this. Order <a href="https://oinkgames.com/en/games/analog/dropolter/">Dropolter</a> instead of spending money to make this.</p>
+                <p>When playing with younger players it's a good idea to reduce the number of object sets used. You need enough objects in each set so that all players can draft one from each category. Give each set a name, then adjust the set names in the config. I recommend using adjectives but any descriptive term works.</p>
+                 <p> In addition to the object sets, you'll need a supply of crowns — small tokens used to track round wins. Any easily grabbable item will work: coins, beads, smaller stones or buttons, as long as they're distinct from the object sets and easy to hold in your hand during play. </p>
+                <p>Once you've created your first six object sets and played a few rounds, you can start iterating and experimenting with new sets. It is up to you to figure out what your ideal kit looks like.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Setup</h2>
+                <p>Place your six object sets in the center of the table. Starting with the youngest player, take turns picking until everyone has exactly one object from each set.</p>
+            </div>
+
+            <div class="section">
+                <h2>Playing</h2>
+                <p>Each player places their objects in one hand, gives them a shuffle, then places their closed hand in front of them. During play, all players may only use one hand (for holding objects, crowns, and for tapping the screen). Once all players are ready, start the countdown.</p>
+                <p>As soon as the list appears, all players open their hands and start dropping objects from their hand to form a line in front of them that matches the generated sequence. The first object in the list must be the first dropped, and so on. The final object remains in hand and is not listed.</p>
+                <p>If a player makes a mistake and drops the wrong object, they must pick up all objects before they can try again.</p>
+                <p>First to complete the correct sequence and tap the screen wins the round and gains 1 crown. Players lose 1 crown if they tap the screen with an incorrect sequence. Crowns are held in your hand during play, they may not be pickd up when dropped.</p>
+            </div>
+            
+            <div class="section">
+                <h2>Winning</h2>
+                <p>The first player to possess 5 crowns at once wins. It is considered courteous to declare Pebbel when a player picks up their fourth crown.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customize -->
+    <div id="customize-view" class="customize hidden">
+        <div class="customize-container">
+            <div class="customize-header">
+                <h1>Customize</h1>
+                <button class="close-btn" onclick="showMain()">×</button>
+            </div>
+            
+            <div class="section">
+                <h2>Configure Categories</h2>
+                <div id="category-list" class="category-list"></div>
+                <div class="action-buttons">
+                    <button class="preset-btn" onclick="addCategory()">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="16"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        Add
+                    </button>
+                    <button class="preset-btn" onclick="loadStones()">Stones</button>
+                    <button class="preset-btn" onclick="loadPasta()">Pasta</button>
+                    <button class="preset-btn" onclick="loadNuts()">Nuts</button>
+                    <button class="preset-btn" onclick="loadRandom()">Random</button>
+                </div>
+                
+                <div class="share-section">
+                    <button class="share-btn" onclick="shareCustomList()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.18287 15.0134 5.36371 15.0391 5.54132L9.39589 8.80372C8.80815 8.29825 8.0473 8 7.2 8C5.4327 8 4 9.4327 4 11.2C4 12.9673 5.4327 14.4 7.2 14.4C8.0473 14.4 8.80815 14.1018 9.39589 13.5963L15.0391 16.8587C15.0134 17.0363 15 17.2171 15 17.4C15 19.0569 16.3431 20.4 18 20.4C19.6569 20.4 21 19.0569 21 17.4C21 15.7431 19.6569 14.4 18 14.4C17.1527 14.4 16.3919 14.6982 15.8041 15.2037L10.1609 11.9413C10.1866 11.7637 10.2 11.5829 10.2 11.4C10.2 11.2171 10.1866 11.0363 10.1609 10.8587L15.8041 7.59628C16.3919 8.10175 17.1527 8.4 18 8.4"/>
+                        </svg>
+                        Share Custom List
+                    </button>
+                    <div id="share-url" class="share-url hidden"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Countdown -->
+    <div id="countdown-view" class="countdown hidden">
+        <div id="countdown-number" class="countdown-number">3</div>
+    </div>
+
+    <!-- Playing -->
+    <div id="playing-view" class="playing hidden">
+        <div class="playing-container">
+            <div id="playing-timer" class="playing-timer"></div>
+            <div id="word-list" class="word-list"></div>
+            <div id="playing-buttons" class="playing-buttons">
+                <button class="new-round-btn" onclick="startGame()">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M1 4V10H7"/>
+                        <path d="M23 20V14H17"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/>
+                        <path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/>
+                    </svg>
+                    Play Again
+                </button>
+                <button class="home-btn" onclick="showMain()">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M20 9V21H15V14H9V21H4V9L12 3L20 9Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let categories = ['stripe', 'long', 'smol', 'rough', 'old', 'sharp'];
+        let gameWords = [];
+        let gameStartTime = null;
+        let gameActive = false;
+        let recentTimes = []; // Store last 5 times
+        let firstTap = true;
+
+        // 40 tactile adjectives for interesting game sets
+        const tactileAdjectives = [
+            'rough', 'smooth', 'bumpy', 'ridged', 'pitted', 'angular', 'curved', 'flat', 
+            'chunky', 'spiky', 'heavy', 'light', 'hollow', 'dense', 'cold', 'warm', 
+            'metallic', 'tiny', 'long', 'wide', 'fuzzy', 'slick', 'gritty', 'spongy',
+            'firm', 'soft', 'sharp', 'blunt', 'thin', 'thick', 'flexible', 'rigid',
+            'sticky', 'slippery', 'textured', 'glossy', 'matte', 'jagged', 'round', 'square'
+        ];
+
+        function getRandomAdjective() {
+            return tactileAdjectives[Math.floor(Math.random() * tactileAdjectives.length)];
+        }
+
+        // Storage utilities (using in-memory storage for artifact)
+        let storage = {
+            categories: null,
+            times: []
+        };
+
+        function saveRecentTimes() {
+            storage.times = [...recentTimes];
+        }
+
+        function loadRecentTimes() {
+            if (storage.times && Array.isArray(storage.times)) {
+                recentTimes = [...storage.times];
+            }
+        }
+
+        // URL utilities
+        function updateUrl() {
+            const slug = categories.join('~').toLowerCase().replace(/[^a-z0-9~]/g, '');
+            window.history.replaceState(null, '', `#${slug}`);
+        }
+
+        function loadFromUrl() {
+            const hash = window.location.hash.substring(1);
+            if (hash && hash.length > 0) {
+                const decoded = hash.split('~').filter(word => word.length > 0);
+                if (decoded.length >= 3) {
+                    categories = decoded;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function saveCategories() {
+            storage.categories = [...categories];
+            updateUrl();
+        }
+
+        function shareCustomList() {
+            const currentUrl = window.location.href.split('#')[0];
+            const slug = categories.join('~').toLowerCase().replace(/[^a-z0-9~]/g, '');
+            const shareUrl = `${currentUrl}#${slug}`;
+            
+            const shareUrlEl = document.getElementById('share-url');
+            shareUrlEl.textContent = shareUrl;
+            shareUrlEl.classList.remove('hidden');
+            
+            // Copy to clipboard if supported
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    const btn = document.querySelector('.share-btn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = `
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M9 12L11 14L15 10"/>
+                            <circle cx="12" cy="12" r="9"/>
+                        </svg>
+                        Copied to Clipboard!
+                    `;
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                    }, 2000);
+                });
+            }
+        }
+
+        function shuffle(array) {
+            const result = [...array];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        function showView(viewId) {
+            const views = ['main-view', 'instructions-view', 'customize-view', 'countdown-view', 'playing-view'];
+            views.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function showMain() {
+            showView('main-view');
+            gameActive = false;
+            firstTap = true;
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        }
+
+        function showInstructions() {
+            showView('instructions-view');
+        }
+
+        function showCustomize() {
+            showView('customize-view');
+            renderCategories();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
+
+        function startGame() {
+            showView('countdown-view');
+            toggleFullscreen();
+            gameActive = false;
+            firstTap = true;
+            
+            // Reset timer display
+            const timerEl = document.getElementById('playing-timer');
+            const buttonsEl = document.getElementById('playing-buttons');
+            timerEl.classList.remove('show');
+            buttonsEl.classList.remove('show');
+            timerEl.innerHTML = '';
+            
+            // Remove any existing tap indicators
+            const existingIndicators = document.querySelectorAll('.tap-indicator');
+            existingIndicators.forEach(indicator => indicator.remove());
+            
+            let count = 3;
+            const countdownEl = document.getElementById('countdown-number');
+            countdownEl.textContent = '3';
+            
+            const timer = setInterval(() => {
+                count--;
+                if (count === 0) {
+                    clearInterval(timer);
+                    showPlaying();
+                } else {
+                    countdownEl.textContent = count;
+                }
+            }, 1000);
+        }
+
+        function showPlaying() {
+            showView('playing-view');
+            gameWords = shuffle(categories).slice(0, Math.min(categories.length - 1, 6));
+            renderGameWords();
+            gameStartTime = Date.now();
+            gameActive = true;
+            firstTap = true;
+        }
+
+        function createTapIndicator(x, y) {
+            const indicator = document.createElement('div');
+            indicator.className = 'tap-indicator show';
+            indicator.style.left = (x - 70) + 'px';
+            indicator.style.top = (y - 70) + 'px';
+            
+            const playingView = document.getElementById('playing-view');
+            playingView.appendChild(indicator);
+        }
+
+        function handlePlayingClick(event) {
+            if (!gameActive || !gameStartTime || !firstTap) return;
+            
+            // Only handle the first tap
+            firstTap = false;
+            
+            const endTime = Date.now();
+            const elapsedTime = (endTime - gameStartTime) / 1000;
+            
+            // Create tap indicator at touch/click position
+            let x, y;
+            if (event.touches && event.touches.length > 0) {
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            } else {
+                x = event.clientX;
+                y = event.clientY;
+            }
+            createTapIndicator(x, y);
+            
+            // Add new time to recent times (keep last 5)
+            recentTimes.unshift(elapsedTime);
+            if (recentTimes.length > 5) {
+                recentTimes = recentTimes.slice(0, 5);
+            }
+            saveRecentTimes();
+            
+            // Display all times in single line, cutoff at container edge
+            const timerEl = document.getElementById('playing-timer');
+            const currentTime = `<span class="current-time">${elapsedTime.toFixed(1)}s</span>`;
+            
+            // Show as many past times as fit in the available space
+            let pastTimesHtml = '';
+            const pastTimes = recentTimes.slice(1);
+            for (let i = 0; i < pastTimes.length; i++) {
+                pastTimesHtml += `${pastTimes[i].toFixed(1)}s`;
+                if (i < pastTimes.length - 1) pastTimesHtml += ' ';
+            }
+            
+            timerEl.innerHTML = `
+                ${currentTime}
+                <div class="recent-times">${pastTimesHtml}</div>
+            `;
+            timerEl.classList.add('show');
+            
+            // Show the buttons
+            const buttonsEl = document.getElementById('playing-buttons');
+            buttonsEl.classList.add('show');
+            
+            gameActive = false;
+        }
+
+        function renderGameWords() {
+            const listEl = document.getElementById('word-list');
+            listEl.innerHTML = '';
+            
+            gameWords.forEach((word, index) => {
+                const wordEl = document.createElement('div');
+                wordEl.className = 'word-item';
+                wordEl.textContent = word;
+                wordEl.style.animationDelay = `${index * 0.1}s`;
+                listEl.appendChild(wordEl);
+            });
+        }
+
+        function renderCategories() {
+            const listEl = document.getElementById('category-list');
+            listEl.innerHTML = '';
+            
+            categories.forEach((category, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'category-item';
+                
+                itemEl.innerHTML = `
+                    <span class="category-index">${index + 1}</span>
+                    <input type="text" class="category-input" value="${category}" placeholder="stone type" onchange="updateCategory(${index}, this.value)" oninput="restrictInput(this)">
+                    ${categories.length > 3 ? `<button class="remove-btn" onclick="removeCategory(${index})">×</button>` : '<div style="width: 2.5rem;"></div>'}
+                `;
+                
+                listEl.appendChild(itemEl);
+            });
+        }
+
+        function updateCategory(index, value) {
+            categories[index] = value;
+            saveCategories();
+        }
+
+        function restrictInput(input) {
+            // Remove tilde characters as they're used as URL separators
+            input.value = input.value.replace(/~/g, '');
+        }
+
+        function addCategory() {
+            if (categories.length < 10) {
+                categories.push(getRandomAdjective());
+                renderCategories();
+                saveCategories();
+            }
+        }
+
+        function removeCategory(index) {
+            if (categories.length > 3) {
+                categories.splice(index, 1);
+                renderCategories();
+                saveCategories();
+            }
+        }
+
+        function loadStones() {
+            categories = ['stripe', 'long', 'smol', 'rough', 'old', 'sharp'];
+            renderCategories();
+            saveCategories();
+        }
+
+        function loadPasta() {
+            categories = ['twirl', 'curl', 'ribbon', 'ear', 'tube', 'flat'];
+            renderCategories();
+            saveCategories();
+        }
+
+        function loadNuts() {
+            categories = ['spherical', 'teardrop', 'ear', 'wrapped', 'oval', 'brain'];
+            renderCategories();
+            saveCategories();
+        }
+
+        function loadRandom() {
+            const shuffled = [...tactileAdjectives];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            categories = shuffled.slice(0, 7);
+            renderCategories();
+            saveCategories();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load categories from URL first, then storage, or use defaults
+            if (!loadFromUrl()) {
+                if (storage.categories) {
+                    categories = [...storage.categories];
+                }
+            }
+            
+            // Load recent times
+            loadRecentTimes();
+            
+            document.getElementById('countdown-number').textContent = '3';
+            
+            // Add click/touch handler for playing view
+            const playingView = document.getElementById('playing-view');
+            playingView.addEventListener('click', handlePlayingClick);
+            playingView.addEventListener('touchstart', (e) => {
+                // If the user tapped a control button, let it work normally
+                if (e.target.closest('#playing-buttons')) return;
+
+                // Otherwise handle the "finish round" tap
+                e.preventDefault();
+                handlePlayingClick(e);
+            });
+            
+            document.querySelector('.main-content').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    toggleFullscreen();
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                setTimeout(() => {
+                    if (!document.fullscreenElement) {
+                        const mainView = document.getElementById('main-view');
+                        if (!mainView.classList.contains('hidden')) {
+                            document.querySelector('.main-content').style.cursor = 'pointer';
+                        }
+                    }
+                }, 100);
+            });
+
+            // Initialize interactive logo
+            const interactiveLogo = document.getElementById('interactive-logo');
+            const circle = document.getElementById('circle');
+            const letters = document.querySelectorAll('.letter');
+            const mainContent = document.querySelector('.main-content');
+
+            function triggerJitter() {
+                letters.forEach(letter => {
+                    const dx = (Math.random() - 0.5) * 8;
+                    const dy = (Math.random() - 0.5) * 15;
+                    letter.style.transform = `translate(${dx}px, ${dy}px)`;
+                });
+            }
+
+            function randomizeCirclePosition() {
+                const rect = interactiveLogo.getBoundingClientRect();
+                const leeway = 50;
+                const circleSize = parseInt(getComputedStyle(circle).width);
+                const maxX = rect.width - circleSize + leeway;
+                const maxY = rect.height - circleSize + leeway;
+                
+                const x = Math.random() * (maxX + 2 * leeway) - leeway;
+                const y = Math.random() * (maxY + 2 * leeway) - leeway;
+                
+                circle.style.left = x + 'px';
+                circle.style.top = y + 'px';
+            }
+
+            function rerollLogo() {
+                triggerJitter();
+                randomizeCirclePosition();
+            }
+
+            // Initial setup on page load
+            rerollLogo();
+
+            // Reroll every 10 seconds
+            setInterval(rerollLogo, 10000);
+
+            function handleLogoInteraction(e) {
+                e.preventDefault();
+                
+                const rect = interactiveLogo.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                // Restrict circle to logo bounds with extra leeway
+                const relativeX = clientX - rect.left;
+                const relativeY = clientY - rect.top;
+                
+                const leeway = 50;
+                const circleSize = parseInt(getComputedStyle(circle).width);
+                const maxX = rect.width - circleSize + leeway;
+                const maxY = rect.height - circleSize + leeway;
+                
+                const x = Math.max(-leeway, Math.min(maxX, relativeX - circleSize/2));
+                const y = Math.max(-leeway, Math.min(maxY, relativeY - circleSize/2));
+                
+                circle.style.left = x + 'px';
+                circle.style.top = y + 'px';
+                
+                // Trigger jitter
+                triggerJitter();
+            }
+
+            interactiveLogo.addEventListener('click', handleLogoInteraction);
+            interactiveLogo.addEventListener('touchstart', handleLogoInteraction);
+        });
+    </script>
+</body>
+</html>
