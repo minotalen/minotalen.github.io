@@ -24,21 +24,34 @@
         /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: env(safe-area-inset-top, 24px) 12% 0px 12%;
+            padding: env(safe-area-inset-top, 24px) 12% 4px 12%;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .main-container {
-            height: calc(100vh - 72px);
+            height: calc(100vh - 36px);
             position: relative;
         }
         
-        .scroll-container, .settings-container, .daily-container {
+        .settings-container, .daily-container {
             padding: 16px 12%;
             height: 100%;
             overflow-y: auto;
+        }
+        
+        .scroll-container {
+            padding: 16px 0;
+            margin: 0 12%;
+            height: 100%;
+            overflow-y: scroll;
+            /* Hide default scrollbar */
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer and Edge */
+            &::-webkit-scrollbar {
+                display: none;  /* Chrome, Safari, and Opera */
+            }
         }
         
         /* BUTTONS & INPUTS */
@@ -186,11 +199,13 @@
         
         .goal-item.failed {
             background-color: #5f3b3b;
+            justify-content: flex-end;
+            text-align: right;
         }
         
         .goal-text {
             color: #d1d5db;
-            font-size: 1.5em;
+            font-size: 1.6em;
             font-weight: 500;
         }
         
@@ -267,6 +282,15 @@
             max-width: 64px;
             min-width: 64px;
             padding-right: 24px;
+        }
+        
+        .hour-entry:not(.editing) .hour-content:has(.hour-text:empty) .hour-emojis {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            max-width: none;
+            min-width: 0;
+            overflow-x: auto;
         }
         
         .emoji {
@@ -466,9 +490,11 @@
             color: white;
             border-radius: 4px;
             font-size: 18px;
-            font-family: 'Space Mono', monospace;
+            font-family: 'Atkinson Hyperlegible', monospace;
         }
-        
+        .emoji-input {
+            font-size: 2.2em;
+        }
         .checkbox-label {
             display: flex;
             align-items: center;
@@ -742,7 +768,7 @@
         /* DAILY VIEW */
         .bubbles-container {
             border-radius: 8px;
-            height: 192px;
+            height: 300px;
             position: relative;
             overflow: hidden;
             border: 1px solid #2a313e;
@@ -756,6 +782,7 @@
             justify-content: center;
             border-radius: 50%;
             color: white;
+            background-color: #1F2937;
         }
         
         .dailies-section h3 {
@@ -784,7 +811,8 @@
         @media (max-width: 768px) {
             .scroll-bar { display: none !important; }
             .header { padding: env(safe-area-inset-top, 16px) 16px 0 16px; height: 54px; }
-            .scroll-container, .settings-container, .daily-container { padding: 8px 16px; }
+            .settings-container, .daily-container { padding: 8px 16px; }
+            .scroll-container { padding: 8px 0; margin: 0 16px; }
             .header h1 { font-size: 1.4em; }
             .btn { font-size: 1.3em !important; }
             .btn-label { font-size: 0.6em; }
@@ -810,7 +838,8 @@
             .header h1 { font-size: 1.2em; }
             .btn { font-size: 1.2em !important; }
             .btn-label { font-size: 0.55em; }
-            .scroll-container, .settings-container, .daily-container { padding: 8px 12px; }
+            .settings-container, .daily-container { padding: 8px 12px; }
+            .scroll-container { padding: 8px 0; margin: 0 12px; }
             .hour-time { font-size: 18px; width: 24px; }
             .hour-emojis { grid-template-columns: repeat(2, 24px); max-width: 50px; min-width: 50px; }
             .emoji { font-size: 22px; min-height: 22px; }
@@ -897,7 +926,6 @@
                     16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
                     18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
                     19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' },
-                    20: { emojis: [''], text: '' },
                     21: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
                 };
                 this.allEntries[this.currentDateKey] = welcomeEntries;
@@ -1792,6 +1820,278 @@
                 return emojiCounts;
             }
 
+            startBubbleAnimation() {
+                // Clean up any existing animation
+                if (this.bubbleAnimationId) {
+                    cancelAnimationFrame(this.bubbleAnimationId);
+                    this.bubbleAnimationId = null;
+                }
+
+                const container = document.querySelector('.bubbles-container');
+                if (!container) return;
+                const bubbles = container.querySelectorAll('.bubble');
+                const containerRect = container.getBoundingClientRect();
+                const bubbleStates = new Map();
+                
+                // Physics constants
+                const centerGravity = 0.02;
+                const friction = 0.995;
+                const restitution = 0.3;
+                const repulsion = 2.0;
+                const maxSpeed = 1;
+                const minSpeed = 0;
+                const gravityDampening = 0.7;
+
+                // Initialize bubbles randomly across the entire container
+                // Initialize bubbles with no overlaps
+                bubbles.forEach((bubble) => {
+                    const size = parseFloat(bubble.style.width);
+                    const containerWidth = containerRect.width;
+                    const containerHeight = containerRect.height;
+                    const padding = size;
+                    
+                    let attempts = 0;
+                    let pixelX, pixelY;
+                    let overlap;
+                    
+                    // Try to find non-overlapping position
+                    do {
+                        pixelX = padding + Math.random() * (containerWidth - size - padding * 2);
+                        pixelY = padding + Math.random() * (containerHeight - size - padding * 2);
+                        
+                        overlap = false;
+                        // Check against all existing bubbles
+                        bubbleStates.forEach((existingState) => {
+                            const dx = (pixelX + size/2) - (existingState.x + existingState.size/2);
+                            const dy = (pixelY + size/2) - (existingState.y + existingState.size/2);
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < (size + existingState.size) / 2) {
+                                overlap = true;
+                            }
+                        });
+                        attempts++;
+                    } while (overlap && attempts < 100); // Prevent infinite loop
+                    
+                    // Initial velocity with random direction
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 0.5 + 0.5; // 0.5-1.0 base speed
+                    const initialVelX = Math.cos(angle) * speed;
+                    const initialVelY = Math.sin(angle) * speed;
+                
+                bubbleStates.set(bubble, {
+                    x: pixelX,
+                    y: pixelY,
+                    vx: initialVelX === 0 ? 0.1 : initialVelX, // Ensure non-zero initial velocity
+                    vy: initialVelY === 0 ? 0.1 : initialVelY,
+                    size: size,
+                    lastMoved: performance.now() // Track last movement time
+                });
+                });
+
+                let lastFrame = performance.now();
+                const animate = (currentTime) => {
+                    if (!document.querySelector('.bubbles-container')) {
+                        cancelAnimationFrame(this.bubbleAnimationId);
+                        this.bubbleAnimationId = null;
+                        return; // Stop if container is gone
+                    }
+
+                    const deltaTime = Math.min(currentTime - lastFrame, 32); // Cap at ~30fps
+                    lastFrame = currentTime;
+
+                    // Apply forces and update positions
+                    bubbleStates.forEach((state, bubble) => {
+                        // Use mouse position as gravity center when hovering
+                        const bubbleCenterX = state.x + state.size / 2;
+                        const bubbleCenterY = state.y + state.size / 2;
+                        const containerRadius = Math.min(containerRect.width, containerRect.height) / 2;
+                        
+                        // Default to container center if mouse is not over container
+                        const containerCenterX = this.mouseX || containerRect.width / 2;
+                        const containerCenterY = this.mouseY || containerRect.height / 2;
+
+                        // Calculate gravity/repulsion with improved stability
+                        const dx = containerCenterX - bubbleCenterX;
+                        const dy = containerCenterY - bubbleCenterY;
+                        const distToCenter = Math.sqrt(dx * dx + dy * dy);
+                        if (distToCenter > 0) {
+                            // Calculate normalized direction
+                            const dirX = dx / distToCenter;
+                            const dirY = dy / distToCenter;
+                            
+                            // Calculate force strength with smooth falloff
+                            const normalizedDist = Math.min(distToCenter / containerRadius, 1);
+                            let forceStrength;
+                            
+                            // Repel if mouse is over container, attract otherwise
+                            if (this.mouseX != null && this.mouseY != null) {
+                                // Stronger repulsion when closer to mouse
+                                forceStrength = -centerGravity * 3 * (1 - Math.pow(normalizedDist, 0.8));
+                            } else {
+                                // Normal center attraction when no mouse
+                                forceStrength = centerGravity * Math.pow(normalizedDist, 1.2);
+                            }
+                            
+                            // Apply force with dampening based on current velocity
+                            const currentSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                            const dampening = Math.max(0, 1 - (currentSpeed / maxSpeed) * gravityDampening);
+                            
+                            // Add small random impulse if bubble hasn't moved in a while
+                            const now = performance.now();
+                            if (currentSpeed < 0.01 && (now - state.lastMoved) > 1000) {
+                                state.vx += (Math.random() - 0.5) * 0.2;
+                                state.vy += (Math.random() - 0.5) * 0.2;
+                                state.lastMoved = now;
+                            }
+                            
+                            state.vx += dirX * forceStrength * dampening;
+                            state.vy += dirY * forceStrength * dampening;
+                        }
+
+                        // Apply friction
+                        state.vx *= friction;
+                        state.vy *= friction;
+
+                        // Maintain minimum and maximum speed
+                        const speed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                        if (speed < minSpeed) {
+                            const scale = minSpeed / speed;
+                            state.vx *= scale;
+                            state.vy *= scale;
+                        } else if (speed > maxSpeed) {
+                            const scale = maxSpeed / speed;
+                            state.vx *= scale;
+                            state.vy *= scale;
+                        }
+
+                        // Update position
+                        state.x += state.vx;
+                        state.y += state.vy;
+
+                        // Bounce off container bounds (rectangular boundary)
+                        const radius = state.size / 2;
+                        
+                        // Right wall
+                        if (state.x + state.size > containerRect.width) {
+                            state.x = containerRect.width - state.size;
+                            state.vx *= -restitution;
+                        }
+                        // Left wall
+                        if (state.x < 0) {
+                            state.x = 0;
+                            state.vx *= -restitution;
+                        }
+                        // Bottom wall
+                        if (state.y + state.size > containerRect.height) {
+                            state.y = containerRect.height - state.size;
+                            state.vy *= -restitution;
+                        }
+                        // Top wall
+                        if (state.y < 0) {
+                            state.y = 0;
+                            state.vy *= -restitution;
+                        }
+
+                        // Apply new position as percentage of container and update lastMoved
+                        const newX = (state.x / containerRect.width) * 100;
+                        const newY = (state.y / containerRect.height) * 100;
+                        
+                        if (Math.abs(parseFloat(bubble.style.left) - newX) > 0.01 ||
+                            Math.abs(parseFloat(bubble.style.top) - newY) > 0.01) {
+                            bubble.style.left = `${newX}%`;
+                            bubble.style.top = `${newY}%`;
+                            state.lastMoved = performance.now();
+                        }
+                    });
+
+                    // Handle collisions between bubbles
+                    const bubbleArray = Array.from(bubbleStates.entries());
+                    for (let i = 0; i < bubbleArray.length; i++) {
+                        const [bubble1, state1] = bubbleArray[i];
+                        for (let j = i + 1; j < bubbleArray.length; j++) {
+                            const [bubble2, state2] = bubbleArray[j];
+                            
+                            // Calculate centers
+                            const center1X = state1.x + state1.size / 2;
+                            const center1Y = state1.y + state1.size / 2;
+                            const center2X = state2.x + state2.size / 2;
+                            const center2Y = state2.y + state2.size / 2;
+                            
+                            // Check collision
+                            const dx = center2X - center1X;
+                            const dy = center2Y - center1Y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const minDist = (state1.size + state2.size) / 2;
+
+                            if (distance < minDist) {
+                                // Normalize collision vector
+                                const nx = dx / distance;
+                                const ny = dy / distance;
+                                
+                                // Calculate relative velocity
+                                const relativeVelX = state2.vx - state1.vx;
+                                const relativeVelY = state2.vy - state1.vy;
+                                
+                                // Calculate relative velocity along normal
+                                const relativeSpeed = relativeVelX * nx + relativeVelY * ny;
+                                
+                                // Don't resolve if bubbles are moving apart
+                                if (relativeSpeed > 0) continue;
+                                
+                                // Move bubbles apart
+                                const overlap = minDist - distance;
+                                state1.x -= nx * overlap * 0.5;
+                                state1.y -= ny * overlap * 0.5;
+                                state2.x += nx * overlap * 0.5;
+                                state2.y += ny * overlap * 0.5;
+                                
+                                // Calculate collision response
+                                const repulsionForce = repulsion * Math.min(1.0, overlap / minDist);
+                                state1.vx -= nx * repulsionForce;
+                                state1.vy -= ny * repulsionForce;
+                                state2.vx += nx * repulsionForce;
+                                state2.vy += ny * repulsionForce;
+                            }
+                        }
+                    }
+
+                    this.bubbleAnimationId = requestAnimationFrame(animate);
+                };
+                
+                // Start the animation
+                this.bubbleAnimationId = requestAnimationFrame(animate);
+
+                // Track mouse position
+                container.addEventListener('mousemove', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                    this.mouseY = e.clientY - rect.top;
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    this.mouseX = null;
+                    this.mouseY = null;
+                });
+
+                // Handle window resize
+                this.resizeObserver?.disconnect();
+                this.resizeObserver = new ResizeObserver(() => {
+                    // Recalculate container dimensions
+                    const newRect = container.getBoundingClientRect();
+                    const scaleX = newRect.width / containerRect.width;
+                    const scaleY = newRect.height / containerRect.height;
+                    
+                    // Scale bubble positions to new container size
+                    bubbleStates.forEach((state, bubble) => {
+                        state.x *= scaleX;
+                        state.y *= scaleY;
+                    });
+                    
+                    // Update container rect reference
+                    Object.assign(containerRect, newRect);
+                });
+            }
+
             // === RENDER ===
             render() {
                 this.updateUndoButton();
@@ -1909,7 +2209,8 @@
                             const isCurrent = this.isCurrentHour(hour);
                             const isEditing = this.editingHour === hour;
                             const hourFill = this.getHourFill(hour);
-                            const emojis = (entry.emojis || []).slice(0, 6);
+                            // Show all emojis if there's no text, otherwise limit to 6
+                            const emojis = (entry.emojis || []).slice(0, entry.text ? 6 : undefined);
 
                             return `
                                 <div class="hour-row">
@@ -1959,7 +2260,7 @@
                     <div class="settings-container">
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
-                            <input type="text" class="setting-input" value="${this.emojis.join('')}"
+                            <input type="text" class="setting-input emoji-input" value="${this.emojis.join('')}"
                                    oninput="this.value = this.value.replace(/[^\p{Emoji}]/gu, ''); app.emojis = Array.from(this.value.match(/\p{Emoji}/gu) || []); app.saveData()">
                         </div>
                         
@@ -2097,29 +2398,68 @@
                         </div>
                         
                         <div class="bubbles-container">
-                            ${Object.entries(dayEmojis).map(([emoji, count], index) => {
-                                const maxCount = Math.max(...Object.values(dayEmojis), 1);
-                                const size = 30 + (count / maxCount) * 40;
-                                const x = (index * 80 + 50) % 300;
-                                const y = 30 + (index * 50) % 120;
-                                return `
-                                    <div class="bubble" style="
-                                        left: ${x}px; 
-                                        top: ${y}px; 
-                                        width: ${size}px; 
-                                        height: ${size}px; 
-                                        font-size: ${size * 0.5}px
-                                    ">
-                                        ${emoji}
-                                    </div>
-                                `;
-                            }).join('')}
+                            ${(() => {
+                                let bubbles = [];
+                                Object.entries(this.entries).forEach(([hour, entry]) => {
+                                    if (entry.emojis && entry.emojis.length > 0) {
+                                        const uniqueEmojis = new Set(entry.emojis);
+                                        entry.emojis.forEach((emoji, index) => {
+                                            let size;
+                                            if (uniqueEmojis.size === 1) {
+                                                size = 60; // Large for single emoji
+                                            } else if (uniqueEmojis.size === 2) {
+                                                size = 45; // Medium for two emojis
+                                            } else {
+                                                size = 30; // Small for three or more
+                                            }
+
+                                            // Generate a unique ID for the bubble
+                                            const bubbleId = `bubble-${hour}-${index}`;
+                                            
+                                            // Use stored position if available, otherwise random
+                                            let x = 5, y = 5;
+                                            if (this.restoreBubbleStates) {
+                                                const stored = this.restoreBubbleStates.find(b => b.id === bubbleId);
+                                                if (stored) {
+                                                    x = (stored.state.x / containerWidth) * 100;
+                                                    y = (stored.state.y / containerHeight) * 100;
+                                                } else {
+                                                    x = Math.random() * 90 + 5; // 5-95%
+                                                    y = Math.random() * 90 + 5; // 5-95%
+                                                }
+                                            } else {
+                                                x = Math.random() * 90 + 5; // 5-95%
+                                                y = Math.random() * 90 + 5; // 5-95%
+                                            }
+                                            
+                                            bubbles.push(`
+                                                <div class="bubble" style="
+                                                    left: ${x}%; 
+                                                    top: ${y}%; 
+                                                    width: ${size}px; 
+                                                    height: ${size}px; 
+                                                    font-size: ${size * 0.5}px;
+                                                    transition: none;
+                                                    border-radius: 50%;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    background-color: rgba(31, 41, 55, 0.7);
+                                                ">
+                                                    ${emoji}
+                                                </div>
+                                            `);
+                                        });
+                                    }
+                                });
+                                return bubbles.join('');
+                            })()}
                         </div>
                         
                         <div class="dailies-section">
                             <h3>Dailies</h3>
                             ${goalChecks.map(goal => `
-                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="font-size:18px; font-weight:500; margin-bottom:8px;">
+                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="margin-bottom:8px;">
                                     <span class="goal-text">${this.formatGoalText(goal)}</span>
                                 </div>
                             `).join('')}
@@ -2127,6 +2467,8 @@
                         </div>
                     </div>
                 `;
+                
+                this.startBubbleAnimation();
             }
         }
 
