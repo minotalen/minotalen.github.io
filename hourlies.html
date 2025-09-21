@@ -24,28 +24,36 @@
         /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: env(safe-area-inset-top, 24px) 12% 4px 12%;
+            padding: env(safe-area-inset-top, 16px) 12% 12px 12%;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
+            min-height: calc(48px + env(safe-area-inset-top, 16px));
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .main-container {
-            height: calc(100vh - 36px);
+            height: calc(100vh - env(safe-area-inset-top, 16px) - 60px);
             position: relative;
+            overflow-y: auto;
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer and Edge */
+            &::-webkit-scrollbar {
+                display: none;  /* Chrome, Safari, and Opera */
+            }
         }
         
         .settings-container, .daily-container {
             padding: 16px 12%;
-            height: 100%;
-            overflow-y: auto;
+            min-height: 100%;
         }
         
         .scroll-container {
             padding: 16px 0;
             margin: 0 12%;
-            height: 100%;
-            overflow-y: scroll;
+            min-height: 100%;
             /* Hide default scrollbar */
             scrollbar-width: none;  /* Firefox */
             -ms-overflow-style: none;  /* Internet Explorer and Edge */
@@ -106,6 +114,7 @@
             cursor: pointer;
             transition: color 0.2s;
             color: #aeb6c3;
+            padding-top: 16px;
         }
         
         .header h1:hover {
@@ -119,7 +128,7 @@
         }
         
         .btn-label {
-            font-size: clamp(0.7rem, 2.5vw, 0.8rem);
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             vertical-align: middle;
         }
         
@@ -418,7 +427,7 @@
         
         /* SCROLL BAR */
         .scroll-bar {
-            position: absolute;
+            position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
@@ -768,7 +777,7 @@
         /* DAILY VIEW */
         .bubbles-container {
             border-radius: 8px;
-            height: 300px;
+            height: 350px;
             position: relative;
             overflow: hidden;
             border: 1px solid #2a313e;
@@ -810,9 +819,18 @@
         /* MOBILE */
         @media (max-width: 768px) {
             .scroll-bar { display: none !important; }
-            .header { padding: env(safe-area-inset-top, 16px) 16px 0 16px; height: 54px; }
-            .settings-container, .daily-container { padding: 8px 16px; }
-            .scroll-container { padding: 8px 0; margin: 0 16px; }
+            .header { 
+                padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 8px 16px;
+                min-height: calc(44px + env(safe-area-inset-top, 12px));
+            }
+            .settings-container, .daily-container { 
+                padding: 8px 16px;
+                padding-top: calc(env(safe-area-inset-top, 12px) + 8px);
+            }
+            .scroll-container { 
+                padding: 8px 0; 
+                margin: 0 16px;
+            }
             .header h1 { font-size: 1.4em; }
             .btn { font-size: 1.3em !important; }
             .btn-label { font-size: 0.6em; }
@@ -834,7 +852,10 @@
         }
         
         @media (max-width: 375px) {
-            .header { padding: env(safe-area-inset-top, 12px) 12px 0 12px; height: 48px; }
+            .header { 
+                padding: env(safe-area-inset-top, 12px) 12px 6px 12px;
+                min-height: calc(48px + env(safe-area-inset-top, 12px));
+            }
             .header h1 { font-size: 1.2em; }
             .btn { font-size: 1.2em !important; }
             .btn-label { font-size: 0.55em; }
@@ -853,10 +874,10 @@
 <body>
     <div id="app">
         <div class="header">
-            <span style="display: flex; align-items: start; gap: 16px;">
-                <h1 onclick="app.setView('timeline')"><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
                 <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">↶</button>
-            </span>
+            </div>
             <div class="header-buttons">
                 <button class="btn" onclick="app.setView('daily')">🎯 <span class="btn-label">daily</span></button>
                 <button class="btn" onclick="app.setView('settings')">⚙ <span class="btn-label">edit</span></button>
@@ -919,7 +940,7 @@
                 const welcomeEntries = {
                     7: { emojis: ['👋'], text: 'welcome to hourlies' },
                     8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
-                    10: { emojis: ['✏️'], text: 'click any hour to add what you did' },
+                    10: { emojis: ['✏️'], text: 'click any hour to add what you did or plan to do' },
                     12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
                     13: { emojis: ['📋'], text: 'repeat on empty hour to paste' },
                     15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
@@ -1113,7 +1134,7 @@
 
             setView(view) {
                 if (this.view === 'timeline' && view !== 'timeline') {
-                    const container = document.querySelector('.scroll-container');
+                    const container = document.querySelector('.daily-container');
                     if (container) this.timelineScrollPosition = container.scrollTop;
                 }
 
@@ -1141,13 +1162,23 @@
                 const scrolled = e.target.scrollTop > 150;
                 const floatingNavDate = document.getElementById('floatingNavDate');
                 
-                if (floatingNavDate && this.view === 'timeline') {
-                    if (scrolled) {
-                        floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                if (floatingNavDate) {
+                    if (this.view === 'timeline') {
+                        if (scrolled) {
+                            floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                            floatingNavDate.onclick = () => {
+                                document.getElementById('mainContainer').scrollTo({ top: 0, behavior: 'smooth' });
+                            };
+                        } else {
+                            floatingNavDate.textContent = "hourlies";
+                            floatingNavDate.onclick = () => app.setView('timeline');
+                        }
+                        floatingNavDate.classList.add('btn-active');
                     } else {
-                        floatingNavDate.textContent = "hourlies";
+                        floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
+                        floatingNavDate.onclick = () => app.setView('timeline');
+                        floatingNavDate.classList.remove('btn-active');
                     }
-                    floatingNavDate.classList.add('btn-active');
                 }
             }
 
@@ -1231,9 +1262,9 @@
                         setTimeout(() => {
                             textarea.focus();
                             textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                        }, 300);
+                        }, 100);
                     }
-                }, 50);
+                }, 30);
             }
 
             updateText(text) {
@@ -1834,7 +1865,7 @@
                 const bubbleStates = new Map();
                 
                 // Physics constants
-                const centerGravity = 0.02;
+                const centerGravity = 0.015;
                 const friction = 0.995;
                 const restitution = 0.3;
                 const repulsion = 2.0;
@@ -1884,7 +1915,6 @@
                     vx: initialVelX === 0 ? 0.1 : initialVelX, // Ensure non-zero initial velocity
                     vy: initialVelY === 0 ? 0.1 : initialVelY,
                     size: size,
-                    lastMoved: performance.now() // Track last movement time
                 });
                 });
 
@@ -1926,23 +1956,15 @@
                             // Repel if mouse is over container, attract otherwise
                             if (this.mouseX != null && this.mouseY != null) {
                                 // Stronger repulsion when closer to mouse
-                                forceStrength = -centerGravity * 3 * (1 - Math.pow(normalizedDist, 0.8));
+                                forceStrength = -centerGravity * 15 * (1 - Math.pow(normalizedDist, 0.8));
                             } else {
                                 // Normal center attraction when no mouse
-                                forceStrength = centerGravity * Math.pow(normalizedDist, 1.2);
+                                forceStrength = centerGravity * 0.7 * Math.pow(normalizedDist, 1.2);
                             }
                             
                             // Apply force with dampening based on current velocity
                             const currentSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
                             const dampening = Math.max(0, 1 - (currentSpeed / maxSpeed) * gravityDampening);
-                            
-                            // Add small random impulse if bubble hasn't moved in a while
-                            const now = performance.now();
-                            if (currentSpeed < 0.01 && (now - state.lastMoved) > 1000) {
-                                state.vx += (Math.random() - 0.5) * 0.2;
-                                state.vy += (Math.random() - 0.5) * 0.2;
-                                state.lastMoved = now;
-                            }
                             
                             state.vx += dirX * forceStrength * dampening;
                             state.vy += dirY * forceStrength * dampening;
@@ -1992,7 +2014,6 @@
                             state.vy *= -restitution;
                         }
 
-                        // Apply new position as percentage of container and update lastMoved
                         const newX = (state.x / containerRect.width) * 100;
                         const newY = (state.y / containerRect.height) * 100;
                         
@@ -2000,7 +2021,6 @@
                             Math.abs(parseFloat(bubble.style.top) - newY) > 0.01) {
                             bubble.style.left = `${newX}%`;
                             bubble.style.top = `${newY}%`;
-                            state.lastMoved = performance.now();
                         }
                     });
 
@@ -2028,24 +2048,19 @@
                                 const nx = dx / distance;
                                 const ny = dy / distance;
                                 
-                                // Calculate relative velocity
                                 const relativeVelX = state2.vx - state1.vx;
                                 const relativeVelY = state2.vy - state1.vy;
                                 
-                                // Calculate relative velocity along normal
                                 const relativeSpeed = relativeVelX * nx + relativeVelY * ny;
                                 
-                                // Don't resolve if bubbles are moving apart
                                 if (relativeSpeed > 0) continue;
                                 
-                                // Move bubbles apart
                                 const overlap = minDist - distance;
                                 state1.x -= nx * overlap * 0.5;
                                 state1.y -= ny * overlap * 0.5;
                                 state2.x += nx * overlap * 0.5;
                                 state2.y += ny * overlap * 0.5;
                                 
-                                // Calculate collision response
                                 const repulsionForce = repulsion * Math.min(1.0, overlap / minDist);
                                 state1.vx -= nx * repulsionForce;
                                 state1.vy -= ny * repulsionForce;
@@ -2058,19 +2073,34 @@
                     this.bubbleAnimationId = requestAnimationFrame(animate);
                 };
                 
-                // Start the animation
                 this.bubbleAnimationId = requestAnimationFrame(animate);
 
-                // Track mouse position
-                container.addEventListener('mousemove', (e) => {
-                    const rect = container.getBoundingClientRect();
-                    this.mouseX = e.clientX - rect.left;
-                    this.mouseY = e.clientY - rect.top;
+                // Track mouse position using event delegation
+                container.addEventListener('mouseenter', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    if (bubble) {
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.clientX - rect.left;
+                        this.mouseY = e.clientY - rect.top;
+                    }
                 });
 
-                container.addEventListener('mouseleave', () => {
-                    this.mouseX = null;
-                    this.mouseY = null;
+                container.addEventListener('mousemove', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    if (bubble) {
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.clientX - rect.left;
+                        this.mouseY = e.clientY - rect.top;
+                    }
+                });
+
+                container.addEventListener('mouseout', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    const relatedBubble = e.relatedTarget?.closest('.bubble');
+                    if (bubble && !relatedBubble) {
+                        this.mouseX = null;
+                        this.mouseY = null;
+                    }
                 });
 
                 // Handle window resize
@@ -2131,7 +2161,7 @@
                     <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''}" id="customScrollBar"></div>
                 `;
 
-                const container = document.querySelector('.scroll-container');
+                const container = document.querySelector('.main-container');
                 container.addEventListener('scroll', this.handleScroll.bind(this));
                 if (this.timelineScrollPosition > 0) {
                     container.scrollTop = this.timelineScrollPosition;
@@ -2154,7 +2184,7 @@
                 document.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
                     const deltaY = e.clientY - startY;
-                    container.scrollTop = startScroll - deltaY * 2.5; // inverted direction, 2x impact
+                    container.scrollTop = startScroll - deltaY * 2; // inverted direction, 2x impact
                 });
 
                 document.addEventListener('mouseup', () => {
@@ -2406,11 +2436,11 @@
                                         entry.emojis.forEach((emoji, index) => {
                                             let size;
                                             if (uniqueEmojis.size === 1) {
-                                                size = 60; // Large for single emoji
+                                                size = 70; // Large for single emoji
                                             } else if (uniqueEmojis.size === 2) {
-                                                size = 45; // Medium for two emojis
+                                                size = 50; // Medium for two emojis
                                             } else {
-                                                size = 30; // Small for three or more
+                                                size = 40; // Small for three or more
                                             }
 
                                             // Generate a unique ID for the bubble
