@@ -24,7 +24,7 @@
         /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: env(safe-area-inset-top, 16px) 12% 0 12%;
+            padding: env(safe-area-inset-top, 24px) 12% 0px 12%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -122,12 +122,13 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: #aeb6c3;
         }
         
         .date-input {
             font-size: clamp(1.2rem, 5vw, 1.5rem);
             text-align: center;
-            width: clamp(140px, 30vw, 160px);
+            width: clamp(120px, 30vw, 140px);
             cursor: pointer;
         }
         .date-btn {
@@ -157,9 +158,9 @@
         
         /* GOALS */
         .goals-section {
-            margin-bottom: 24px;
-            padding: 12px;
-            background-color: #1f2937;
+            margin-bottom: 16px;
+            padding: 0px;
+            background-color: transparent;
             border-radius: 8px;
         }
         
@@ -189,7 +190,7 @@
         
         .goal-text {
             color: #d1d5db;
-            font-size: 1.4em;
+            font-size: 1.5em;
             font-weight: 500;
         }
         
@@ -294,6 +295,7 @@
             margin-top: 4px;
             transition: height 0.15s ease-out;
             user-select: text;
+            white-space: pre-wrap;
         }
         
         .hour-input::placeholder {
@@ -311,6 +313,7 @@
         .hour-text {
             color: #d1d5db;
             font-size: 20px;
+            white-space: pre-wrap;
         }
         
         .clear-btn {
@@ -851,6 +854,7 @@
                 this.undoStack = [];
                 this.clipboardEntry = null;
                 this.timelineScrollPosition = 0;
+                this.hoveredHour = null; // Track which hour entry is currently being hovered
 
                 this.loadData();
                 this.currentDate = this.getEffectiveDate();
@@ -894,7 +898,7 @@
                     18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
                     19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' },
                     20: { emojis: [''], text: '' },
-                    12: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
+                    21: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
                 };
                 this.allEntries[this.currentDateKey] = welcomeEntries;
 
@@ -919,8 +923,12 @@
             }
 
             updateEntries(newEntries) {
-                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
-                if (this.undoStack.length > 10) this.undoStack.shift();
+                this.undoStack.push({ 
+                    entries: { ...this.entries }, 
+                    timestamp: Date.now(),
+                    date: new Date(this.currentDate) // Store the date for undo
+                });
+                if (this.undoStack.length > 100) this.undoStack.shift();
                 
                 // Split entries into correct calendar days
                 const currentDayKey = this.dateKey(this.currentDate);
@@ -990,8 +998,6 @@
             
             formatDateInput() {
                 if (!this.currentDate) return '';
-                // The date input should show the logical day date 
-                // (the date that this day period represents)
                 return [
                     this.currentDate.getDate().toString().padStart(2, '0'),
                     (this.currentDate.getMonth() + 1).toString().padStart(2, '0'),
@@ -1032,6 +1038,18 @@
 
             // === EVENTS ===
             setupEvents() {
+                // Handle backspace/delete on hover
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'Backspace' || e.key === 'Delete') && 
+                        this.editingHour === null && // Not in edit mode
+                        this.hoveredHour !== null && // Hovering over an entry
+                        this.view === 'timeline' && // In timeline view
+                        !e.target.matches('input, textarea')) { // Not typing in an input
+                        this.clearEntry(this.hoveredHour);
+                        e.preventDefault(); // Prevent browser back navigation
+                    }
+                });
+
                 document.addEventListener('click', (e) => {
                     if (this.editingHour === null) return;
                     const isInterface = e.target.classList.contains('overlay') ||
@@ -1121,8 +1139,6 @@
                     if (!isNaN(inputDate.getTime()) && day > 0 && day <= 31 && month >= 0 && month < 12) {
                         this.currentDate = new Date(year, month, day);
                         this.currentTime = new Date(year, month, day, 12, 0, 0);
-                        // Remove any override of getEffectiveDate, always use the default logic
-                        delete this.getEffectiveDate;
                         event.target.value = this.formatDateInput();
                         this.render();
                         return true;
@@ -1197,8 +1213,12 @@
                 const newEntries = { ...this.entries };
                 newEntries[this.editingHour] = { ...entry, text };
                 
-                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
-                if (this.undoStack.length > 10) this.undoStack.shift();
+                this.undoStack.push({ 
+                    entries: { ...this.entries }, 
+                    timestamp: Date.now(),
+                    date: new Date(this.currentDate)
+                });
+                if (this.undoStack.length > 50) this.undoStack.shift();
                 this.allEntries[this.currentDateKey] = newEntries;
                 this.updateUndoButton();
                 this.saveData();
@@ -1287,6 +1307,14 @@
                 document.querySelectorAll(".hour-entry").forEach(el => {
                     const hour = parseInt(el.dataset.hour);
                     const entry = this.entries[hour] || { emojis: [], text: "" };
+
+                    el.addEventListener("mouseenter", () => {
+                        this.hoveredHour = hour;
+                    });
+
+                    el.addEventListener("mouseleave", () => {
+                        this.hoveredHour = null;
+                    });
 
                     el.addEventListener("contextmenu", (e) => {
                         e.preventDefault();
@@ -1408,6 +1436,11 @@
                 if (this.undoStack.length === 0) return;
                 const lastState = this.undoStack.pop();
                 
+                // Restore the date from the undo state
+                if (lastState.date) {
+                    this.currentDate = new Date(lastState.date);
+                }
+                
                 // Apply the undo state using the same logic as updateEntries
                 const currentDayKey = this.dateKey(this.currentDate);
                 const nextDay = new Date(this.currentDate);
@@ -1487,6 +1520,241 @@
                 }
             }
 
+            groupEntriesByMonth() {
+                const months = {};
+                Object.entries(this.allEntries).forEach(([dateKey, entries]) => {
+                    const [year, month] = dateKey.split('-');
+                    const monthKey = `${year}-${month}`;
+                    if (!months[monthKey]) months[monthKey] = {};
+                    months[monthKey][dateKey] = entries;
+                });
+                return months;
+            }
+
+            exportAllToCSV() {
+                const monthlyData = this.groupEntriesByMonth();
+                const settings = {
+                    version: 1,
+                    timestamp: new Date().toISOString(),
+                    settings: {
+                        emojis: this.emojis,
+                        startHour: this.startHour,
+                        showGoalsInTimeline: this.showGoalsInTimeline
+                    },
+                    rules: this.goals.map(goal => ({
+                        ...goal,
+                        emojis: Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji]
+                    }))
+                };
+
+                // Create a settings file
+                const settingsBlob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+                const settingsUrl = URL.createObjectURL(settingsBlob);
+                const settingsLink = document.createElement('a');
+                settingsLink.href = settingsUrl;
+                settingsLink.download = 'hourlies-settings.json';
+                document.body.appendChild(settingsLink);
+                settingsLink.click();
+                document.body.removeChild(settingsLink);
+                URL.revokeObjectURL(settingsUrl);
+
+                // Create CSV files for each month
+                Object.entries(monthlyData).forEach(([monthKey, monthEntries]) => {
+                    const [year, month] = monthKey.split('-');
+                    const dates = Object.keys(monthEntries).sort();
+                    const hours = Array.from({ length: 24 }, (_, i) => (this.startHour + i) % 24);
+
+                    // Create CSV content
+                    let csvContent = 'Date,' + hours.map(h => h.toString().padStart(2, '0')).join(',') + '\n';
+                    dates.forEach(date => {
+                        const dayEntries = monthEntries[date];
+                        const row = [date];
+                        hours.forEach(hour => {
+                            const entry = dayEntries[hour];
+                            const cellContent = entry ? (entry.emojis?.join('') || '') + ' ' + (entry.text || '') : '';
+                            row.push(this.escapeCSV(cellContent));
+                        });
+                        csvContent += row.join(',') + '\n';
+                    });
+
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `hourlies-${monthKey}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }
+
+            escapeCSV(str) {
+                if (!str) return '';
+                str = str.replace(/"/g, '""');
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    str = `"${str}"`;
+                }
+                return str;
+            }
+
+            importFromCSVFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (file.name.endsWith('.json')) {
+                        // Import settings file
+                        try {
+                            const importData = JSON.parse(e.target.result);
+                            console.log('Importing settings:', importData);  // Debug log
+                            
+                            // Handle both old and new format
+                            if (importData.version === 1) {
+                                // New format
+                                if (importData.settings) {
+                                    if (Array.isArray(importData.settings.emojis)) {
+                                        this.emojis = [...importData.settings.emojis];
+                                    }
+                                    if (typeof importData.settings.startHour === 'number' && 
+                                        importData.settings.startHour >= 0 && 
+                                        importData.settings.startHour < 24) {
+                                        this.startHour = importData.settings.startHour;
+                                    }
+                                    if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
+                                        this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
+                                    }
+                                }
+                                if (Array.isArray(importData.rules)) {
+                                    // Ensure all goals have required properties and valid values
+                                    this.goals = importData.rules.filter(goal => {
+                                        const validOperators = ['more_than', 'less_than', 'before', 'after'];
+                                        return goal && 
+                                               goal.id && 
+                                               Array.isArray(goal.emojis) && 
+                                               validOperators.includes(goal.operator) && 
+                                               typeof goal.value === 'number';
+                                    }).map(goal => ({
+                                        ...goal,
+                                        not: Boolean(goal.not),
+                                        value: Math.max(0, Math.min(23, goal.value))  // Clamp value between 0-23
+                                    }));
+                                }
+                            } else {
+                                // Old format for backward compatibility
+                                if (Array.isArray(importData.emojis)) {
+                                    this.emojis = [...importData.emojis].filter(emoji => /\p{Emoji}/u.test(emoji));
+                                }
+                                if (Array.isArray(importData.goals)) {
+                                    this.goals = importData.goals.map(goal => {
+                                        if (goal.emoji && !goal.emojis) {
+                                            goal.emojis = [goal.emoji];
+                                            delete goal.emoji;
+                                        }
+                                        return goal;
+                                    });
+                                }
+                                if (typeof importData.startHour === 'number' && 
+                                    importData.startHour >= 0 && 
+                                    importData.startHour < 24) {
+                                    this.startHour = importData.startHour;
+                                }
+                                if (typeof importData.showGoalsInTimeline === 'boolean') {
+                                    this.showGoalsInTimeline = Boolean(importData.showGoalsInTimeline);
+                                }
+                            }
+                            this.saveData();
+                            this.render();
+                            alert('Settings imported successfully');
+                        } catch (err) {
+                            alert('Error importing settings: Invalid JSON file');
+                        }
+                    } else if (file.name.endsWith('.csv')) {
+                        // Import CSV data file
+                        try {
+                            const lines = e.target.result.split(/\r?\n/);
+                            const headers = this.parseCSVLine(lines[0]);
+                            console.log('CSV headers:', headers);  // Debug log
+                            if (!headers[0].toLowerCase().includes('date')) {
+                                throw new Error('Invalid CSV format: first column must be Date');
+                            }
+                            const hours = headers.slice(1).map(h => {
+                                const hour = parseInt(h, 10);
+                                if (isNaN(hour) || hour < 0 || hour > 23) {
+                                    throw new Error(`Invalid hour in header: ${h}`);
+                                }
+                                return hour;
+                            });
+                            
+                            for (let i = 1; i < lines.length; i++) {
+                                const line = lines[i].trim();
+                                if (!line) continue;
+
+                                const cols = this.parseCSVLine(line);
+                                if (cols.length !== headers.length) {
+                                    throw new Error(`Row ${i + 1} has incorrect number of columns: expected ${headers.length}, got ${cols.length}`);
+                                }
+
+                                const date = new Date(cols[0]);
+                                if (isNaN(date.getTime())) {
+                                    throw new Error(`Invalid date in row ${i + 1}: ${cols[0]}`);
+                                }
+
+                                const entries = {};
+                                for (let j = 1; j < cols.length; j++) {
+                                    const hour = hours[j - 1];
+                                    const cellContent = cols[j].trim();
+                                    if (cellContent) {
+                                        const emojis = Array.from(cellContent.match(/\p{Emoji}/gu) || []);
+                                        const text = cellContent.replace(/\p{Emoji}/gu, '').trim();
+                                        entries[hour] = { emojis, text };
+                                    }
+                                }
+
+                                this.allEntries[date.toISOString().split('T')[0]] = entries;
+                            }
+
+                            this.saveData();
+                            this.render();
+                            alert('Data imported successfully');
+                        } catch (err) {
+                            alert('Error importing data: Invalid CSV format');
+                        }
+                    }
+                };
+
+                if (file.name.endsWith('.json')) {
+                    reader.readAsText(file);
+                } else if (file.name.endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    alert('Invalid file type. Please select a .csv or .json file.');
+                }
+            }
+
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            }
+
             wipeCurrentDayData() {
                 // Clear entries for the current logical day
                 const currentDayKey = this.dateKey(this.currentDate);
@@ -1554,8 +1822,7 @@
                                 <div class="date-btn" onclick="app.navigateDay(1)">→</div>
                             </div>
                             <div class="date-nav-right">
-                                <button class="jump-btn" onclick="app.jumpToToday()">now</button>
-                                <button class="btn" onclick="app.exportCurrentDayCSV()">📋</button>
+                                <div onclick="app.jumpToToday()">jump to now</div>
                             </div>
                         </div>
                         <div id="goalsSection"></div>
@@ -1587,7 +1854,7 @@
                 document.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
                     const deltaY = e.clientY - startY;
-                    container.scrollTop = startScroll - deltaY * 2; // inverted direction, 2x impact
+                    container.scrollTop = startScroll - deltaY * 2.5; // inverted direction, 2x impact
                 });
 
                 document.addEventListener('mouseup', () => {
@@ -1616,7 +1883,6 @@
                 if (this.goals.length > 0 && this.showGoalsInTimeline) {
                     goalsSection.innerHTML = `
                         <div class="goals-section">
-                            <h2 class="goals-title">dailies</h2>
                             ${goalChecks.map(goal => `
                                 <div class="goal-item ${goal.met ? 'passed' : 'failed'}">
                                     <span class="goal-text">${this.formatGoalText(goal)}</span>
@@ -1676,7 +1942,7 @@
                                                            onclick="event.stopPropagation()">${entry.text}</textarea>
                                                     <button class="clear-btn" onclick="event.stopPropagation(); app.clearEntry(${hour})">×</button>
                                                 </div>
-                                            ` : `<span class="hour-text">${entry.text}</span>`}
+                                            ` : `<span class="hour-text">${entry.text.replace(/\n/g, '<br>')}</span>`}
                                         </div>
                                     </div>
                                 </div>
@@ -1694,7 +1960,7 @@
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
                             <input type="text" class="setting-input" value="${this.emojis.join('')}"
-                                   oninput="this.value = this.value.replace(/[^\p{Emoji}]/gu, ''); app.emojis = [...this.value]; app.saveData()">
+                                   oninput="this.value = this.value.replace(/[^\p{Emoji}]/gu, ''); app.emojis = Array.from(this.value.match(/\p{Emoji}/gu) || []); app.saveData()">
                         </div>
                         
                         <div class="setting-group">
@@ -1707,6 +1973,7 @@
                                     <span>Show dailies in timeline</span>
                                 </label>
                             </div>
+                        </div>
 
                         <div class="setting-group">
                             <label class="setting-label">Start Hour</label>
@@ -1717,6 +1984,29 @@
                                     </option>
                                 `).join('')}
                             </select>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <div class="export-section">
+                                <button class="export-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.export-arrow').classList.toggle('open')">
+                                    Export/Import Data
+                                    <span class="export-arrow">▼</span>
+                                </button>
+                                <div class="export-content" style="display: none;">
+                                    <button class="export-btn" onclick="app.exportAllToCSV()" style="margin-bottom: 12px;">
+                                        Export All Data
+                                    </button>
+                                    <div class="import-section">
+                                        <input type="file" class="import-input" accept=".csv,.json" 
+                                               onchange="if(this.files.length) app.importFromCSVFile(this.files[0])">
+                                    </div>
+                                    <div class="export-help">
+                                        Export creates two files:
+                                        <br>• Monthly CSV files with daily entries
+                                        <br>• JSON file with settings and goals
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         ${this.editingGoal !== null ? '<div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
