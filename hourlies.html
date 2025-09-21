@@ -4,87 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hourlies</title>
-    <!-- Space Mono font from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
         }
         
         body {
-            font-family: 'Space Mono', monospace;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
             background-color: #111827;
             color: white;
             height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        html {
-            height: 100%;
             overflow: hidden;
         }
         
+        /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: 0px 12%;
+            padding: 0 12%;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .header h1 {
-            font-size: 1.7em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-            color: #aeb6c3;
-            cursor: pointer;
-        }
-        
-        .header h1:hover {
-            color: white;
-        }
-        
-        .header-buttons,.btn {
-            font-size: 1.55em !important;
-        }   
-        .header-buttons {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-        .btn-label {
-            font-size: 0.65em;
-            vertical-align: middle;
-        }
-        
-        .btn {
-            background: none;
-            border: none;
-            color: #aeb6c3;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        
-        .btn-active {
-            color: white;
-            font-weight: 500;
-        }
-        .btn:hover {
-            color: white;
-        }
-        
-        .btn.large {
-            font-size: 1.4em;
-            color: white;
-        }
-
         .main-container {
             height: calc(100vh - 72px);
             position: relative;
@@ -96,82 +41,121 @@
             overflow-y: auto;
         }
         
-        .date-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .date-nav-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .date-nav-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .secondary-btn {
-            font-size: 32px;
-        }
-        .date-btn {
+        /* BUTTONS & INPUTS */
+        .btn {
             background: none;
             border: none;
             color: #aeb6c3;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
         }
         
-        .date-btn:hover {
+        .btn:hover, .btn-active {
             color: white;
         }
         
-        .date-input {
+        .btn-active {
+            font-weight: 700;
+        }
+        
+        input, select, textarea {
             background: none;
             border: none;
             color: #aeb6c3;
             font-family: inherit;
-            font-size: 32px;
-            text-align: center;
-            width: 160px;
             transition: color 0.2s;
-            cursor: pointer;
         }
         
-        .date-input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             color: white;
         }
-
-        /* Remove spinners from number inputs */
+        
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+        
         input[type=number] {
             -webkit-appearance: textfield;
-            -moz-appearance: textfield;
-            appearance: textfield;
+        }
+        
+        textarea {
+            color: #d1d5db;
+            font-size: 20px;
+        }       
+        /* HEADER */
+        .header h1 {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.2s;
+            color: #aeb6c3;
+        }
+        
+        .header h1:hover {
+            color: white;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn-label {
+            font-size: clamp(0.7rem, 2.5vw, 0.8rem);
+            vertical-align: middle;
+        }
+        
+        /* DATE NAVIGATION */
+        .date-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .date-nav-left, .date-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .date-input {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            text-align: center;
+            width: clamp(140px, 30vw, 160px);
+            cursor: pointer;
+        }
+        .date-btn {
+            background-color: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+        }
+        .secondary-btn {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
         }
         
         .jump-btn {
             background-color: #1f2937;
             color: #6b7280;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: clamp(0.8rem, 3vw, 1rem);
         }
         
         .jump-btn:hover {
             color: #d1d5db;
         }
         
+        /* GOALS */
         .goals-section {
             margin-bottom: 24px;
             padding: 12px;
@@ -203,10 +187,6 @@
             background-color: #5f3b3b;
         }
         
-        .goal-status {
-            font-size: 14px;
-        }
-        
         .goal-text {
             color: #d1d5db;
             font-size: 1.4em;
@@ -222,10 +202,7 @@
             font-size: 14px;
         }
         
-        .hours-container {
-            position: relative;
-        }
-        
+        /* HOURS */
         .hour-row {
             position: relative;
             margin-bottom: 8px;
@@ -236,26 +213,13 @@
             cursor: pointer;
             padding: 12px 16px;
             border-radius: 4px;
-            background-color: #343d4e !important;
+            background-color: #343d4e;
             overflow: hidden;
-            user-select: none;
             transition: all 0.2s;
-        }
-
-        .hour-entry.editing {
-            user-select: text;
-        }
-
-        .hour-text {
-            user-select: none;
         }
         
         .hour-entry:hover {
-            background-color: #373e49 !important;
-        }
-        
-        .hour-fill.empty {
-            background-color: #1f242d;
+            background-color: #373e49;
         }
         
         .hour-entry.current {
@@ -265,16 +229,7 @@
         .hour-entry.editing {
             box-shadow: 0 0 0 2px #3108ea;
             z-index: 40;
-        }
-        
-        .hour-entry.editing .hour-text,
-        .hour-entry.editing .hour-input,
-        .setting-input,
-        .value-input {
             user-select: text;
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
         }
         
         .hour-fill {
@@ -284,47 +239,47 @@
             height: 100%;
             background-color: #334870;
         }
+        
+        .hour-fill.empty {
+            background-color: #1f242d;
+        }
+        
         .hour-content {
             position: relative;
             display: flex;
             align-items: flex-start;
-            gap: 12px;
+            gap: 6px;
         }
         
         .hour-time {
             font-size: 24px;
             width: 32px;
-            user-select: none;
         }
         
         .hour-emojis {
             display: grid;
-            margin: 0px;
-            padding-right: 24px;
             grid-template-columns: repeat(2, 30px);
             gap: 4px;
             min-height: 30px;
-            max-height: calc(30px * 3 +8);
+            max-height: calc(30px * 3 + 8px);
             overflow: hidden;
             max-width: 64px;
             min-width: 64px;
+            padding-right: 24px;
         }
-
+        
         .emoji {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            height: 100%;
             font-size: 28px;
             min-height: 28px;
         }
-
         
         .hour-input-container {
             flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             position: relative;
         }
         
@@ -332,60 +287,52 @@
             flex: 1;
             background: transparent;
             color: #d1d5db;
-            border: none;
-            outline: none;
-            font-size: 26px;
-            padding-right: 32px;
-            font-family: 'Space Mono', monospace;
             resize: none;
             overflow: hidden;
-            min-height: 1.5em;
+            min-height: 36px;
             line-height: 1.5;
-            width: 100%;
+            margin-top: 4px;
+            transition: height 0.15s ease-out;
+            user-select: text;
         }
         
         .hour-input::placeholder {
             color: #6b7280;
         }
         
+        .hour-input.empty {
+            color: #6b7280;
+        }
+        
+        .hour-input.scrolling {
+            overflow-y: auto;
+        }
+        
         .hour-text {
             color: #d1d5db;
-            font-size: 26px;
-            user-select: none;
+            font-size: 20px;
         }
         
         .clear-btn {
             position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 0;
+            top: 0;
             background: none;
             border: none;
-            color: #6b7280;
+            color: #eb6f6f;
             cursor: pointer;
-            font-size: 16px;
-            width: 20px;
-            height: 20px;
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             transition: all 0.2s ease;
-        }
-
-        .clear-btn:hover {
-            background-color: #374151;
-            color: #d1d5db;
-        }
-
-        .clear-btn:hover {
-            background-color: #374151;
-            color: #d1d5db;
-        }
-        .clear-btn:hover {
-            color: #ef4444;
+            z-index: 2;
         }
         
+        /* EMOJI PICKER */
         .emoji-picker {
             position: absolute;
             left: 0;
@@ -393,7 +340,8 @@
             background-color: #1f2937;
             padding: 12px;
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(auto-fit, 48px);
+            justify-content: center;
             gap: 8px;
             z-index: 50;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
@@ -424,7 +372,7 @@
         }
         
         .emoji-btn.selected {
-            background-color: #334970;
+            background-color: #456090;
         }
         
         .emoji-btn.selected:hover {
@@ -441,6 +389,7 @@
             z-index: 30;
         }
         
+        /* SCROLL BAR */
         .scroll-bar {
             position: absolute;
             top: 0;
@@ -449,13 +398,6 @@
             width: 48px;
             cursor: ns-resize;
             transition: all 0.2s;
-        }
-        
-        .scroll-bar.hidden {
-            display: none;
-        }
-        
-        .scroll-pattern {
             background: repeating-linear-gradient(
                 45deg,
                 transparent 0px,
@@ -474,6 +416,10 @@
                 transparent 4px,
                 transparent 8px
             );
+        }
+        
+        .scroll-bar.hidden {
+            display: none;
         }
         
         .scroll-bar.dragging {
@@ -498,6 +444,7 @@
             50% { opacity: 0.5; }
         }
         
+        /* SETTINGS */
         .setting-group {
             margin-bottom: 24px;
         }
@@ -514,7 +461,6 @@
             padding: 12px;
             background-color: #2a313e;
             color: white;
-            border: none;
             border-radius: 4px;
             font-size: 18px;
             font-family: 'Space Mono', monospace;
@@ -523,7 +469,7 @@
         .checkbox-label {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             font-size: 18px;
             cursor: pointer;
         }
@@ -533,38 +479,35 @@
             height: 20px;
         }
         
-        .goals-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .add-goal-btn {
+        .add-goal-btn, .export-btn {
             background-color: #334970;
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 1px;
+            border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
         
-        .add-goal-btn:hover {
+        .add-goal-btn:hover, .export-btn:hover {
             background-color: #173ca4;
         }
         
+        /* GOAL EDITOR */
         .goal-row {
             position: relative;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         
         .goal-summary {
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 12px;
             background-color: #2a313e;
-            border-radius: 1px;
+            border-radius: 4px;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         
         .goal-summary:hover {
@@ -572,118 +515,181 @@
         }
         
         .goal-summary.editing {
+            background-color: #1f2937;
             box-shadow: 0 0 0 2px #eab308;
-            z-index: 40;
-        }
-        
-        .goal-summary-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
         
         .goal-emoji-display {
-            font-size: 24px;
+            font-size: 28px;
+            min-width: 40px;
+            text-align: center;
         }
         
         .goal-text-display {
             color: #d1d5db;
             flex: 1;
+            font-size: 16px;
         }
         
         .remove-goal-btn {
             background: none;
             border: none;
-            color: #aeb6c3;
+            color: #6b7280;
             cursor: pointer;
-            font-size: 18px;
-            width: 24px;
-            height: 24px;
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.2s;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
         
         .remove-goal-btn:hover {
+            background-color: #374151;
             color: #ef4444;
         }
         
         .goal-editor {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 4px;
             background-color: #1f2937;
-            padding: 12px;
-            z-index: 50;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 8px;
+            border: 2px solid #eab308;
+            position: relative;
+            z-index: 60;
         }
         
-        .goal-controls {
+        .goal-editor-section {
+            margin-bottom: 16px;
+        }
+        
+        .goal-editor-label {
+            color: #d1d5db;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .goal-emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 44px);
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        
+        .goal-emoji-btn {
+            width: 44px;
+            height: 44px;
+            background: none;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 24px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background-color: #374151;
+        }
+        
+        .goal-emoji-btn:hover {
+            background-color: #4b5563;
+        }
+        
+        .goal-emoji-btn.selected {
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+        }
+        
+        .goal-controls-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
             gap: 12px;
-            margin-top: 12px;
+            align-items: center;
         }
         
-        .not-btn {
-            padding: 4px 12px;
-            font-weight: bold;
+        .operator-value-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .goal-operator-btn {
+            background-color: #374151;
+            color: #d1d5db;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
             font-size: 14px;
+            min-width: 100px;
+        }
+        
+        .goal-operator-btn:hover {
+            background-color: #4b5563;
+        }
+        
+        .goal-value-input {
+            background-color: #374151;
+            color: #d1d5db;
             border: none;
-            border-radius: 1px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .not-btn.active {
-            background-color: #991b1b;
-            color: #fecaca;
-        }
-        
-        .not-btn.inactive {
-            background-color: #373e49;
-            color: white;
-        }
-        
-        .operator-btn {
-            background-color: #373e49;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 1px;
-            cursor: pointer;
-            flex: 1;
-            transition: background-color 0.2s;
-        }
-        
-        .operator-btn:hover {
-            background-color: #6b7280;
-        }
-        
-        .value-input {
-            background-color: #373e49;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 1px;
+            padding: 10px 12px;
+            border-radius: 6px;
             width: 80px;
             text-align: center;
-        }
-        
-        .value-suffix {
             font-size: 14px;
-            color: #aeb6c3;
         }
         
+        .goal-value-input:focus {
+            outline: none;
+            background-color: #4b5563;
+        }
+        
+        .goal-editor-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        
+        .goal-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .goal-action-btn.primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .goal-action-btn.primary:hover {
+            background-color: #2563eb;
+        }
+        
+        .goal-action-btn.secondary {
+            background-color: #374151;
+            color: #d1d5db;
+        }
+        
+        .goal-action-btn.secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        /* EXPORT/IMPORT */
         .export-section {
             background-color: #2a313e;
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .export-toggle {
             width: 100%;
             background-color: #2a313e;
@@ -714,22 +720,6 @@
             background-color: #2a313e;
         }
         
-        .export-btn {
-            width: 100%;
-            background-color: #334970;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 12px;
-            transition: background-color 0.2s;
-        }
-        
-        .export-btn:hover {
-            background-color: #1d4ed8;
-        }
-        
         .import-section {
             display: flex;
             gap: 8px;
@@ -741,15 +731,8 @@
             padding: 8px;
             background-color: #373e49;
             color: white;
-            border: none;
             border-radius: 4px;
             font-size: 14px;
-        }
-        
-        .import-label {
-            font-size: 12px;
-            color: #aeb6c3;
-            align-self: center;
         }
         
         .export-help {
@@ -759,6 +742,7 @@
             border-top: 1px solid #373e49;
         }
         
+        /* DAILY VIEW */
         .bubbles-container {
             border-radius: 8px;
             height: 192px;
@@ -784,65 +768,61 @@
             margin-bottom: 12px;
         }
         
-        .daily-goal {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #d1d5db;
-            padding: 8px 0;
-        }
-        
-        .daily-goal-icon {
-            font-size: 24px;
-        }
-        
-        .daily-goal-text {
-            font-size: 14px;
-        }
-        
         .no-goals-daily {
             color: #6b7280;
             font-size: 14px;
         }
         
-
-        
-        .drag-handle {
-            cursor: grab;
-            padding: 4px;
-            color: #6b7280;
-            margin-right: 8px;
-        }
-        .drag-handle:hover {
-            color: #aeb6c3;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-        
-        @media (max-width: 768px) {
-            .scroll-bar {
-                display: none !important;
-            }
-            .header {
-                background-color: #1f2937;
-                padding: 0px 24px;
-            }
-            .scroll-container, .settings-container, .daily-container {
-                padding: 8px 24px;
-                height: 100%;
-                overflow-y: auto;
-            }
-        }
-        /* Flash effect when copying */
+        /* ANIMATIONS */
         @keyframes flash-border {
-        0%   { box-shadow: 0 0 0 2px white; }
-        100% { box-shadow: none; }
+            0% { box-shadow: 0 0 0 2px white; }
+            100% { box-shadow: none; }
         }
+        
         .hour-entry.flash {
-        animation: flash-border 0.5s ease;
+            animation: flash-border 0.5s ease;
         }
-
+        
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .scroll-bar { display: none !important; }
+            .header { padding: 0 16px; height: 54px; }
+            .scroll-container, .settings-container, .daily-container { padding: 8px 16px; }
+            .header h1 { font-size: 1.4em; }
+            .btn { font-size: 1.3em !important; }
+            .btn-label { font-size: 0.6em; }
+            .date-nav { margin-bottom: 12px; }
+            .secondary-btn, .date-input { font-size: 22px; }
+            .date-input { width: 140px; }
+            .hour-time { font-size: 20px; width: 28px; }
+            .hour-emojis { grid-template-columns: repeat(2, 26px); gap: 2px; max-width: 54px; min-width: 54px; }
+            .emoji { font-size: 24px; min-height: 24px; }
+            .hour-text, .hour-input { font-size: 16px; }
+            .emoji-picker { grid-template-columns: repeat(auto-fit, 42px); gap: 4px; padding: 8px; }
+            .emoji-btn { width: 42px; height: 42px; font-size: 28px; }
+            .setting-label, .setting-input, .checkbox-label { font-size: 16px; }
+            .setting-input { padding: 10px; }
+            .checkbox { width: 18px; height: 18px; }
+            .bubble { font-size: 24px !important; }
+            .dailies-section h3 { font-size: 16px; }
+            .goal-emoji-display { font-size: 22px; }
+            .goal-text-display { font-size: 16px; }
+        }
+        
+        @media (max-width: 375px) {
+            .header { padding: 0 12px; height: 48px; }
+            .header h1 { font-size: 1.2em; }
+            .btn { font-size: 1.2em !important; }
+            .btn-label { font-size: 0.55em; }
+            .scroll-container, .settings-container, .daily-container { padding: 8px 12px; }
+            .hour-time { font-size: 18px; width: 24px; }
+            .hour-emojis { grid-template-columns: repeat(2, 24px); max-width: 50px; min-width: 50px; }
+            .emoji { font-size: 22px; min-height: 22px; }
+            .hour-text, .hour-input { font-size: 16px; }
+            .emoji-picker { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px; }
+            .emoji-btn { padding: 4px; font-size: 24px; }
+            .date-input, .secondary-btn { font-size: 18px; }
+        }
     </style>
 </head>
 <body>
@@ -852,8 +832,8 @@
                 <h1 onclick="app.setView('timeline')"><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
                 <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">↶</button>
             </span>
-        <div class="header-buttons">
-                <button class="btn" onclick="app.setView('daily')">👁 <span class="btn-label">daily</span></button>
+            <div class="header-buttons">
+                <button class="btn" onclick="app.setView('daily')">🎯 <span class="btn-label">daily</span></button>
                 <button class="btn" onclick="app.setView('settings')">⚙ <span class="btn-label">edit</span></button>
             </div>
         </div>
@@ -862,129 +842,171 @@
 
     <script>
         class HourliesApp {
+
             constructor() {
                 this.currentTime = new Date();
-                this.currentDate = new Date();
                 this.startHour = 7;
                 this.allEntries = {};
-                this.goals = [
-                    {
-                        id: 1,
-                        emojis: ['☕'],
-                        isNot: false,
-                        operator: 'less_than',
-                        value: 3
-                    },
-                    {
-                        id: 2,
-                        emojis: ['☕'],
-                        isNot: true,
-                        operator: 'after',
-                        value: 17
-                    }
-                ];
+                this.goals = [];
+                this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                this.showGoalsInTimeline = false;
+                
+                this.currentDate = new Date();
                 this.editingHour = null;
                 this.editingGoal = null;
                 this.view = 'timeline';
-                this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '🔷'];
-                        this.showGoalsInTimeline = false;
                 this.undoStack = [];
-                this.showExportAccordion = false;
                 this.clipboardEntry = null;
-                this.longPressTimer = null;
-
-                this.isDragging = false;
-                this.dragSource = null;
-                this.dragStartTime = null;
-                this.dragThreshold = 150;
-                
-                this.scrollContainerRef = null;
-                this.lastTapTime = 0;
-                this.isScrollDragging = false;
-                this.scrollDragStart = { y: 0, scrollTop: 0 };
-                this.showFloatingNav = false;
                 this.timelineScrollPosition = 0;
 
-                // Load saved data from localStorage
+                this.loadData();
+                this.currentDate = this.getEffectiveDate();
+                this.render();
+                this.startTimer();
+                this.setupEvents();
+                setTimeout(() => this.scrollToCurrentHour(), 100);
+            }
+
+            // === DATA ===
+            loadData() {
                 const saved = localStorage.getItem("hourliesData");
                 if (saved) {
                     try {
                         const data = JSON.parse(saved);
-                        if (data.allEntries) this.allEntries = data.allEntries;
-                        if (data.goals) this.goals = data.goals;
-                        if (data.emojis) this.emojis = data.emojis;
-                        if (typeof data.startHour === 'number') this.startHour = data.startHour;
-                        if (typeof data.showGoalsInTimeline === 'boolean') this.showGoalsInTimeline = data.showGoalsInTimeline;
+                        Object.assign(this, {
+                            allEntries: data.allEntries || {},
+                            goals: data.goals || [],
+                            emojis: data.emojis || this.emojis,
+                            startHour: data.startHour ?? this.startHour,
+                            showGoalsInTimeline: data.showGoalsInTimeline ?? false
+                        });
                     } catch (e) {
                         console.warn("Failed to load saved data", e);
                     }
                 } else {
-                    // Detect if user is on mobile
-                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    
-                    // First time user - add welcome message to current day
-                    const welcomeEntries = {
-                        7: { emojis: ['👋'], text: 'welcome to hourlies' },
-                        8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
-                        9: { emojis: [], text: '' },
-                        10: { emojis: ['✏️'], text: 'click any hour to add what you did' },
-                        11: { emojis: [], text: '' },
-                        12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
-                        13: { emojis: ['📝'], text: 'repeat on empty hour to paste' },
-                        14: { emojis: [], text: '' },
-                        15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
-                        16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
-                        17: { emojis: [], text: '' },
-                        18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
-                        19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' }
-                    };
-                    this.allEntries[this.currentDateKey] = welcomeEntries;
-                    
-                    // Add these emojis to the available emojis list if not already present
-                    const welcomeEmojis = ['👋', '📊', '✏️', '📄', '📝', '⚙️', '🎯', '🏠', '🗑️'];
-                    this.emojis = [...new Set([...this.emojis, ...welcomeEmojis])];
+                    this.createWelcomeMessage();
                 }
-
-                this.init();
             }
 
-            init() {
-                this.render();
-                this.startTimer();
-                this.setupEventListeners();
+            createWelcomeMessage() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const welcomeEntries = {
+                    7: { emojis: ['👋'], text: 'welcome to hourlies' },
+                    8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
+                    10: { emojis: ['✏️'], text: 'click any hour to add what you did' },
+                    12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
+                    13: { emojis: ['📋'], text: 'repeat on empty hour to paste' },
+                    15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
+                    16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
+                    18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
+                    19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' }
+                };
+                this.allEntries[this.currentDateKey] = welcomeEntries;
             }
 
-            dateKey(date) {
-                return date.toISOString().split('T')[0];
+            saveData() {
+                localStorage.setItem("hourliesData", JSON.stringify({
+                    allEntries: this.allEntries,
+                    goals: this.goals,
+                    emojis: this.emojis,
+                    startHour: this.startHour,
+                    showGoalsInTimeline: this.showGoalsInTimeline
+                }));
             }
 
-            get currentDateKey() {
-                return this.dateKey(this.currentDate);
+            updateEntries(newEntries) {
+                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
+                if (this.undoStack.length > 10) this.undoStack.shift();
+                
+                // Split entries into correct calendar days
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Initialize storage objects
+                if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                
+                // Store entries in correct calendar days
+                Object.entries(newEntries).forEach(([hour, entry]) => {
+                    const hourNum = parseInt(hour);
+                    if (hourNum >= this.startHour) {
+                        // Hours 7-23 go to current calendar day
+                        this.allEntries[currentDayKey][hourNum] = entry;
+                    } else {
+                        // Hours 0-6 go to next calendar day
+                        this.allEntries[nextDayKey][hourNum] = entry;
+                    }
+                });
+                
+                this.updateUndoButton();
+                this.saveData();
             }
 
-            get entries() {
-                return this.allEntries[this.currentDateKey] || {};
+            // === UTILITIES ===
+            dateKey(date) { return date ? date.toISOString().split('T')[0] : ''; }
+            
+            get currentDateKey() { 
+                // For data storage, we need to account for hours that belong to previous day
+                const effectiveDate = new Date(this.currentDate);
+                return this.dateKey(effectiveDate);
+            }
+            
+            get entries() { 
+                // Get entries for the current logical day
+                const currentDayEntries = this.allEntries[this.currentDateKey] || {};
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                const nextDayEntries = this.allEntries[nextDayKey] || {};
+                
+                // Combine entries: hours 0-6 from next calendar day + hours 7-23 from current day
+                const combinedEntries = {};
+                
+                // Add hours 7-23 from current calendar day
+                for (let hour = this.startHour; hour < 24; hour++) {
+                    if (currentDayEntries[hour]) {
+                        combinedEntries[hour] = currentDayEntries[hour];
+                    }
+                }
+                
+                // Add hours 0-(startHour-1) from next calendar day
+                for (let hour = 0; hour < this.startHour; hour++) {
+                    if (nextDayEntries[hour]) {
+                        combinedEntries[hour] = nextDayEntries[hour];
+                    }
+                }
+                
+                return combinedEntries;
+            }
+            
+            get hours() { return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24); }
+            formatHour(hour) { return hour.toString().padStart(2, '0'); }
+            
+            formatDateInput() {
+                if (!this.currentDate) return '';
+                // The date input should show the logical day date 
+                // (the date that this day period represents)
+                return [
+                    this.currentDate.getDate().toString().padStart(2, '0'),
+                    (this.currentDate.getMonth() + 1).toString().padStart(2, '0'),
+                    this.currentDate.getFullYear().toString().slice(-2)
+                ].join('/');
             }
 
-            formatHour(hour) {
-                return hour.toString().padStart(2, '0');
+            getEffectiveDate() {
+                // Get the current logical day based on start hour
+                const d = new Date(this.currentTime);
+                if (d.getHours() < this.startHour) {
+                    d.setDate(d.getDate() - 1);
+                }
+                return d;
             }
 
-            get hours() {
-                return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24);
-            }
-
-            isCurrentDate() {
-                return this.dateKey(this.currentTime) === this.currentDateKey;
-            }
-
-            isPastDate() {
-                return new Date(this.currentDateKey) < new Date(this.dateKey(this.currentTime));
-            }
-
-            isFutureDate() {
-                return new Date(this.currentDateKey) > new Date(this.dateKey(this.currentTime));
-            }
+            isCurrentDate() { return this.dateKey(this.getEffectiveDate()) === this.currentDateKey; }
+            isPastDate() { return this.dateKey(this.currentDate) < this.dateKey(this.getEffectiveDate()); }
+            isFutureDate() { return this.dateKey(this.currentDate) > this.dateKey(this.getEffectiveDate()); }
 
             getHourFill(hour) {
                 if (this.isFutureDate()) return 0;
@@ -996,10 +1018,7 @@
                 const adjustedCurrentHour = currentHour < this.startHour ? currentHour + 24 : currentHour;
                 
                 if (adjustedHour < adjustedCurrentHour) return 100;
-                if (adjustedHour === adjustedCurrentHour) {
-                    const minutes = this.currentTime.getMinutes();
-                    return (minutes / 60) * 100;
-                }
+                if (adjustedHour === adjustedCurrentHour) return (this.currentTime.getMinutes() / 60) * 100;
                 return 0;
             }
 
@@ -1007,260 +1026,178 @@
                 return this.isCurrentDate() && this.currentTime.getHours() === hour;
             }
 
-            startTimer() {
-                setInterval(() => {
-                    const now = new Date();
-                    this.currentTime = now;
-                    if (this.dateKey(now) !== this.currentDateKey) {
-                        this.currentDate = now;
+            // === EVENTS ===
+            setupEvents() {
+                document.addEventListener('click', (e) => {
+                    if (this.editingHour === null) return;
+                    const isInterface = e.target.classList.contains('overlay') ||
+                                      e.target.classList.contains('hour-input') ||
+                                      e.target.classList.contains('clear-btn') ||
+                                      e.target.classList.contains('emoji-btn');
+                    if (!isInterface) {
+                        e.preventDefault();
+                        setTimeout(() => {
+                            const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
+                            if (textarea) {
+                                textarea.focus();
+                                textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                            }
+                        }, 0);
                     }
-                    this.updateTimeDisplay();
-                }, 60000);
-            }
-
-            setupEventListeners() {
-                document.addEventListener('mousemove', this.handleGlobalMouseMove.bind(this));
-                document.addEventListener('mouseup', this.handleGlobalMouseUp.bind(this));
-                document.addEventListener('click', this.handleGlobalClick.bind(this));
-            }
-            
-            handleGlobalClick(event) {
-                // Only handle clicks when in edit mode
-                if (this.editingHour === null) return;
-                
-                // Don't handle clicks on the overlay (it has its own handler)
-                if (event.target.classList.contains('overlay')) return;
-                
-                // Don't handle clicks inside the textarea or clear button
-                if (event.target.classList.contains('hour-input') || 
-                    event.target.classList.contains('clear-btn') ||
-                    event.target.classList.contains('emoji-btn')) return;
-                
-                // Refocus the textarea and set cursor to end
-                const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
-                if (textarea) {
-                    event.preventDefault();
-                    // Wait a bit to ensure the click event is fully processed
-                    setTimeout(() => {
-                        textarea.focus();
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                    }, 0);
-                }
-            }
-
-            handleCopyPaste(hour, entry, element) {
-            const hasNoContent = (!entry.text || entry.text.trim() === "") && (!entry.emojis || entry.emojis.length === 0);
-
-            if (!hasNoContent) {
-                // Only copy what exists in the source
-                this.clipboardEntry = {
-                    hasEmojis: entry.emojis && entry.emojis.length > 0,
-                    hasText: entry.text && entry.text.trim().length > 0 && entry.text.trim() !== "",
-                    emojis: entry.emojis ? [...entry.emojis] : [],
-                    text: entry.text || ""
-                };
-                element.classList.add("flash");
-                setTimeout(() => element.classList.remove("flash"), 500);
-            } else if (this.clipboardEntry) {
-                // Paste
-                const newEntries = { ...this.entries };
-                const targetHasText = entry.text && entry.text.trim() !== "";
-                
-                newEntries[hour] = {
-                    // If clipboard has emojis, use them, otherwise keep target emojis (or empty array)
-                    emojis: this.clipboardEntry.hasEmojis ? [...this.clipboardEntry.emojis] : (entry.emojis || []),
-                    // If target has text, keep it, otherwise use clipboard text only if it was copied
-                    text: targetHasText ? entry.text : (this.clipboardEntry.hasText ? this.clipboardEntry.text : "")
-                };
-                
-                this.updateEntries(newEntries);
-                this.renderHours();
-            }
-            }
-            attachCopyPasteEvents() {
-            const hourElements = document.querySelectorAll(".hour-entry");
-            hourElements.forEach(el => {
-                const hour = parseInt(el.dataset.hour);
-                const entry = this.entries[hour] || { emojis: [], text: "" };
-
-                el.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-                this.handleCopyPaste(hour, entry, el);
                 });
+            }
 
-                el.addEventListener("touchstart", () => {
-                this.longPressTimer = setTimeout(() => {
-                    this.handleCopyPaste(hour, entry, el);
-                    el._suppressClick = true;
-                }, 500);
-                });
-                el.addEventListener("touchend", () => clearTimeout(this.longPressTimer));
-                el.addEventListener("touchmove", () => clearTimeout(this.longPressTimer));
+            // === NAVIGATION ===
+            navigateDay(direction) {
+                this.currentDate.setDate(this.currentDate.getDate() + direction);
+                this.editingHour = null;
+                this.render();
+            }
 
-                // Suppress click after long-press
-                el.addEventListener("click", (e) => {
-                if (el._suppressClick) {
-                    e.stopImmediatePropagation();
-                    el._suppressClick = false;
+            jumpToToday() {
+                this.currentDate = this.getEffectiveDate();
+                this.editingHour = null;
+                this.render();
+                setTimeout(() => this.scrollToCurrentHour(), 100);
+            }
+
+            setView(view) {
+                if (this.view === 'timeline' && view !== 'timeline') {
+                    const container = document.querySelector('.scroll-container');
+                    if (container) this.timelineScrollPosition = container.scrollTop;
                 }
-                }, true);
-            });
+
+                this.view = view;
+                this.editingHour = null;
+                this.editingGoal = null;
+                this.updateHeaderTitle();
+                this.render();
+            }
+
+            updateHeaderTitle() {
+                const floatingNavDate = document.getElementById('floatingNavDate');
+                if (!floatingNavDate) return;
+
+                if (this.view === 'timeline') {
+                    floatingNavDate.textContent = "hourlies";
+                    floatingNavDate.classList.add('btn-active');
+                } else {
+                    floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
+                    floatingNavDate.classList.remove('btn-active');
+                }
             }
 
             handleScroll(e) {
                 const scrolled = e.target.scrollTop > 150;
-                this.showFloatingNav = scrolled;
-                
-                if (this.view === 'timeline') {
-                    this.timelineScrollPosition = e.target.scrollTop;
-                }
-                
                 const floatingNavDate = document.getElementById('floatingNavDate');
-
-                floatingNavDate.classList.add('btn-active');
+                
                 if (floatingNavDate && this.view === 'timeline') {
                     if (scrolled) {
                         floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
                     } else {
                         floatingNavDate.textContent = "hourlies";
                     }
+                    floatingNavDate.classList.add('btn-active');
                 }
             }
 
-            handleGlobalMouseMove(e) {
-                if (this.isScrollDragging && this.scrollContainerRef) {
-                    const deltaY = e.clientY - this.scrollDragStart.y;
-                    const newScrollTop = this.scrollDragStart.scrollTop - deltaY * 2;
-                    this.scrollContainerRef.scrollTop = newScrollTop;
+            // === DATE INPUT ===
+            handleDateInput(event) {
+                const value = event.target.value.replace(/\D/g, '');
+                event.target.value = value.match(/.{1,2}/g)?.join('/') || value;
+
+                const parseAndSetDate = (value, useCurrentYear = false) => {
+                    const day = parseInt(value.slice(0, 2), 10);
+                    const month = parseInt(value.slice(2, 4), 10) - 1;
+                    const year = useCurrentYear ? this.currentTime.getFullYear() : 2000 + parseInt(value.slice(4, 6), 10);
+
+                    // Set currentDate and currentTime to the user's entered date
+                    const inputDate = new Date(year, month, day, 12, 0, 0);
+
+                    if (!isNaN(inputDate.getTime()) && day > 0 && day <= 31 && month >= 0 && month < 12) {
+                        this.currentDate = new Date(year, month, day);
+                        this.currentTime = new Date(year, month, day, 12, 0, 0);
+                        // Remove any override of getEffectiveDate, always use the default logic
+                        delete this.getEffectiveDate;
+                        event.target.value = this.formatDateInput();
+                        this.render();
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (value.length === 4 && (event.type === 'blur' || event.key === 'Enter')) {
+                    if (!parseAndSetDate(value, true)) {
+                        event.target.value = this.formatDateInput();
+                    }
+                } else if (value.length === 6) {
+                    parseAndSetDate(value);
                 }
             }
 
-            handleGlobalMouseUp() {
-                if (this.isScrollDragging) {
-                    this.isScrollDragging = false;
-                    this.updateScrollBar();
+            formatNavbarDate(date) {
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toLowerCase();
+            }
+
+            handleDateKeydown(event) {
+                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Escape'];
+                if (!/^\d$/.test(event.key) && !allowed.includes(event.key)) {
+                    event.preventDefault();
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.target.blur();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.target.value = this.formatDateInput();
+                    event.target.blur();
                 }
             }
 
-            updateEntries(newEntries) {
+            handleDateFocus(event) {
+                event.target.select();
+                event.target.addEventListener('blur', (e) => this.handleDateInput(e), { once: true });
+            }
+
+            // === HOURS ===
+            editHour(hour) {
+                if (this.editingHour === hour) return;
+                this.editingHour = hour;
+                this.renderHours();
+                
+                setTimeout(() => {
+                    const hourElement = document.querySelector(`[data-hour="${hour}"]`);
+                    const textarea = hourElement?.querySelector('textarea');
+                    if (textarea) {
+                        if (window.innerWidth <= 768) {
+                            const container = document.querySelector('.scroll-container');
+                            const containerRect = container.getBoundingClientRect();
+                            const elementRect = hourElement.getBoundingClientRect();
+                            const relativeTop = elementRect.top - containerRect.top;
+                            const targetPosition = containerRect.height * 0.15;
+                            container.scrollTop = container.scrollTop + (relativeTop - targetPosition);
+                        } else {
+                            hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        
+                        setTimeout(() => {
+                            textarea.focus();
+                            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                        }, 300);
+                    }
+                }, 50);
+            }
+
+            updateText(text) {
+                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
+                const newEntries = { ...this.entries };
+                newEntries[this.editingHour] = { ...entry, text };
+                
                 this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
                 if (this.undoStack.length > 10) this.undoStack.shift();
-                
                 this.allEntries[this.currentDateKey] = newEntries;
                 this.updateUndoButton();
-            
                 this.saveData();
-            }
-
-            wipeCurrentDayData() {
-                const newEntries = {};
-                this.updateEntries(newEntries);
-                this.render();
-            }
-            shiftHoursForNewStartHour(oldStartHour, newStartHour) {
-                const shiftedEntries = {};
-                
-                Object.entries(this.allEntries).forEach(([date, dayEntries]) => {
-                    shiftedEntries[date] = {};
-                    Object.entries(dayEntries).forEach(([hour, entry]) => {
-                        const hourNum = parseInt(hour);
-                        // Calculate how many hours this entry needs to shift
-                        // If it's after the old start hour, it belongs to the same day
-                        // If it's before, it belongs to the next day
-                        const dayOffset = hourNum < oldStartHour ? 1 : 0;
-                        const absoluteHour = hourNum + (dayOffset * 24);
-                        const shiftedAbsoluteHour = absoluteHour - (oldStartHour - newStartHour);
-                        const newHour = shiftedAbsoluteHour % 24;
-                        
-                        const targetDate = dayOffset ? 
-                            new Date(date).setDate(new Date(date).getDate() + dayOffset) :
-                            date;
-                            
-                        if (!shiftedEntries[targetDate]) {
-                            shiftedEntries[targetDate] = {};
-                        }
-                        shiftedEntries[targetDate][newHour] = entry;
-                    });
-                });
-                
-                this.allEntries = shiftedEntries;
-            }
-            
-            saveData() {
-                const oldStartHour = JSON.parse(localStorage.getItem("hourliesData"))?.startHour;
-                if (oldStartHour !== undefined && oldStartHour !== this.startHour) {
-                    this.shiftHoursForNewStartHour(oldStartHour, this.startHour);
-                }
-                
-                localStorage.setItem("hourliesData", JSON.stringify({
-                    allEntries: this.allEntries,
-                    goals: this.goals,
-                    emojis: this.emojis,
-                    startHour: this.startHour,
-                    showGoalsInTimeline: this.showGoalsInTimeline
-                }));            
-            }
-            undo() {
-                if (this.undoStack.length === 0) return;
-                
-                const lastState = this.undoStack.pop();
-                this.allEntries[this.currentDateKey] = lastState.entries;
-                this.updateUndoButton();
-                this.renderHours();
-                this.saveData();
-            }
-
-            updateUndoButton() {
-                const undoBtn = document.getElementById('undoBtn');
-                if (undoBtn) {
-                    undoBtn.style.display = this.view === 'timeline' && this.undoStack.length > 0 ? 'block' : 'none';
-                }
-            }
-
-            setView(view) {
-                // Store timeline position if leaving timeline view
-                if (this.view === 'timeline' && view !== 'timeline') {
-                    const container = document.querySelector('.scroll-container');
-                    if (container) {
-                        this.timelineScrollPosition = container.scrollTop;
-                    }
-                }
-
-                this.view = view;
-                this.editingHour = null;
-                this.editingGoal = null;
-                
-                // Update active button state
-                const buttons = document.querySelectorAll('.header-buttons .btn');
-                buttons.forEach(btn => {
-                    btn.classList.remove('btn-active');
-                    if (btn.onclick.toString().includes(`'${view}'`)) {
-                        btn.classList.add('btn-active');
-                    }
-                });
-
-                // Update header title and classes
-                const floatingNavDate = document.getElementById('floatingNavDate');
-                if (floatingNavDate) {
-                    if (view === 'timeline') {
-                        floatingNavDate.textContent = "hourlies";
-                        if (!this.showFloatingNav) {
-                            floatingNavDate.classList.add('btn-active');
-                        }
-                    } else {
-                        floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
-                        floatingNavDate.classList.remove('btn-active');
-                    }
-                }
-                
-                this.render();
-            }
-
-            updateTimeDisplay() {
-                if (this.view === 'timeline' && this.editingHour === null) {
-                    this.renderHours();
-                    this.updateScrollIndicator();
-                }
             }
 
             clearEntry(hour) {
@@ -1269,27 +1206,6 @@
                 this.updateEntries(newEntries);
                 this.editingHour = null;
                 this.renderHours();
-            }
-
-            editHour(hour) {
-                if (this.editingHour === hour) return;
-                this.editingHour = hour;
-                this.renderHours();
-                setTimeout(() => {
-                    const hourElement = document.querySelector(`[data-hour="${hour}"]`);
-                    const textarea = hourElement?.querySelector('textarea');
-                    if (textarea && hourElement) {
-                        // Center the hour element in view
-                        hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        textarea.focus();
-                        // Move cursor to end
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                        // Adjust height for content
-                        textarea.style.height = '';
-                        textarea.style.height = textarea.scrollHeight + 'px';
-                    }
-                }, 50);
             }
 
             toggleEmoji(emoji) {
@@ -1308,399 +1224,97 @@
                     const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
                     if (textarea) {
                         textarea.focus();
-                        // Move cursor to end
                         textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
                     }
                 }, 50);
             }
 
-            updateText(text) {
-                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
-                const newEntries = { ...this.entries };
-                newEntries[this.editingHour] = { ...entry, text };
-                // Don't trigger a full render, just save
-                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
-                if (this.undoStack.length > 10) this.undoStack.shift();
-                this.allEntries[this.currentDateKey] = newEntries;
-                this.updateUndoButton();
-                this.saveData();
-            }
-
-            navigateDay(direction) {
-                const newDate = new Date(this.currentDate);
-                newDate.setDate(newDate.getDate() + direction);
-                this.currentDate = newDate;
-                this.editingHour = null;
-                this.render();
-            }
-
-            formatNavbarDate(date) {
-                return date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-
-            formatDateInput() {
-                const d = this.currentDate.getDate().toString().padStart(2, '0');
-                const m = (this.currentDate.getMonth() + 1).toString().padStart(2, '0');
-                const y = this.currentDate.getFullYear().toString().slice(-2);
-                return `${d}/${m}/${y}`;
-            }
-
-            handleDateFocus(event) {
-                event.target.select();
-            }
-
             handleHourInputKeydown(event, hour) {
                 if (event.key === 'Enter' && !event.shiftKey) {
-                    // Close edit mode only if Enter is pressed without Shift
                     event.preventDefault();
                     this.editingHour = null;
                     this.renderHours();
                 } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                     const textarea = event.target;
-                    const atStart = textarea.selectionStart === 0;
-                    const atEnd = textarea.selectionEnd === textarea.value.length;
-                    const noSelection = textarea.selectionStart === textarea.selectionEnd;
-                    const isMultiline = textarea.value.includes('\n');
-
-                    // Only navigate between hours if we're at the edges of single-line content
-                    if ((event.key === 'ArrowUp' && (atStart || !isMultiline)) ||
-                        (event.key === 'ArrowDown' && (atEnd || !isMultiline))) {
+                    const cursorAtEnd = textarea.selectionStart === textarea.value.length;
+                    
+                    // Only navigate if cursor is at the very end of the text
+                    if (cursorAtEnd) {
                         event.preventDefault();
                         const currentIndex = this.hours.indexOf(hour);
                         const nextIndex = event.key === 'ArrowUp' 
                             ? (currentIndex - 1 + this.hours.length) % this.hours.length
                             : (currentIndex + 1) % this.hours.length;
                         const nextHour = this.hours[nextIndex];
+
+                        this.editingHour = nextHour;
+                        this.renderHours();
                         
-                        this.editHour(nextHour);
+                        setTimeout(() => {
+                            const nextTextarea = document.querySelector(`[data-hour="${nextHour}"] textarea`);
+                            if (nextTextarea) {
+                                nextTextarea.focus();
+                                nextTextarea.selectionStart = nextTextarea.selectionEnd = nextTextarea.value.length;
+                            }
+                        }, 0);
                     }
                 }
             }
 
-            handleDateKeydown(event) {
-                // Allow only numbers, backspace, delete, arrow keys, tab
-                if (!/^\d$/.test(event.key) && 
-                    !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
-                    event.preventDefault();
+            // === COPY/PASTE ===
+            handleCopyPaste(hour, entry, element) {
+                const hasContent = (entry.text && entry.text.trim()) || (entry.emojis && entry.emojis.length > 0);
+
+                if (hasContent) {
+                    this.clipboardEntry = {
+                        emojis: entry.emojis ? [...entry.emojis] : [],
+                        text: entry.text || ""
+                    };
+                    element.classList.add("flash");
+                    setTimeout(() => element.classList.remove("flash"), 500);
+                } else if (this.clipboardEntry) {
+                    const newEntries = { ...this.entries };
+                    newEntries[hour] = { ...this.clipboardEntry };
+                    this.updateEntries(newEntries);
+                    this.renderHours();
                 }
             }
 
-            handleDateInput(event) {
-                let value = event.target.value.replace(/\D/g, '');
-                const parts = [];
-                
-                // Split into day/month/year parts
-                for (let i = 0; i < value.length && i < 6; i += 2) {
-                    parts.push(value.slice(i, i + 2));
-                }
-                
-                // Add slashes between parts
-                event.target.value = parts.join('/');
-                
-                // If we have a complete date (6 digits), try to update
-                if (value.length === 6) {
-                    const day = parseInt(value.slice(0, 2), 10);
-                    const month = parseInt(value.slice(2, 4), 10) - 1;
-                    const year = 2000 + parseInt(value.slice(4, 6), 10);
+            attachCopyPasteEvents() {
+                document.querySelectorAll(".hour-entry").forEach(el => {
+                    const hour = parseInt(el.dataset.hour);
+                    const entry = this.entries[hour] || { emojis: [], text: "" };
+
+                    el.addEventListener("contextmenu", (e) => {
+                        e.preventDefault();
+                        this.handleCopyPaste(hour, entry, el);
+                    });
+
+                    let longPressTimer;
+                    el.addEventListener("touchstart", () => {
+                        longPressTimer = setTimeout(() => {
+                            this.handleCopyPaste(hour, entry, el);
+                            el._suppressClick = true;
+                        }, 500);
+                    });
                     
-                    const newDate = new Date(year, month, day);
-                    if (!isNaN(newDate.getTime())) {
-                        this.currentDate = newDate;
-                        this.render();
-                    }
-                }
-            }
+                    el.addEventListener("touchend", () => clearTimeout(longPressTimer));
+                    el.addEventListener("touchmove", () => clearTimeout(longPressTimer));
 
-            jumpToToday() {
-                this.currentDate = new Date();
-                this.editingHour = null;
-                this.render();
-                setTimeout(() => {
-                    this.scrollToCurrentHour();
-                }, 100);
-            }
-
-            handleNavbarDateClick() {
-                if (this.scrollContainerRef) {
-                    this.scrollContainerRef.scrollTop = 0;
-                }
-            }
-
-            scrollToCurrentHour() {
-                if (!this.scrollContainerRef) return;
-                const currentHourIndex = this.hours.findIndex(hour => hour === this.currentTime.getHours());
-                if (currentHourIndex === -1) return;
-                const hourElements = this.scrollContainerRef.querySelectorAll('[data-hour]');
-                const targetElement = hourElements[currentHourIndex];
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-
-            handleScrollMouseDown(e) {
-                this.isScrollDragging = true;
-                this.scrollDragStart = {
-                    y: e.clientY,
-                    scrollTop: this.scrollContainerRef?.scrollTop || 0
-                };
-                e.preventDefault();
-                this.updateScrollBar();
-            }
-
-            handleRightBarClick() {
-                const now = Date.now();
-                if (now - this.lastTapTime < 300) {
-                    this.scrollToCurrentHour();
-                }
-                this.lastTapTime = now;
-            }
-
-            updateScrollBar() {
-                const scrollBar = document.querySelector('.scroll-bar');
-                if (scrollBar) {
-                    if (this.isScrollDragging) {
-                        scrollBar.classList.add('dragging');
-                        scrollBar.classList.remove('scroll-pattern');
-                    } else {
-                        scrollBar.classList.remove('dragging');
-                        scrollBar.classList.add('scroll-pattern');
-                    }
-                }
-            }
-
-            getCurrentHourPosition() {
-                if (!this.scrollContainerRef) return null;
-                
-                const currentHourIndex = this.hours.findIndex(hour => hour === this.currentTime.getHours());
-                if (currentHourIndex === -1) return null;
-                
-                const hourHeight = 60;
-                const hourTop = currentHourIndex * hourHeight;
-                const containerTop = this.scrollContainerRef.scrollTop;
-                const containerHeight = this.scrollContainerRef.clientHeight;
-                
-                const relativePosition = (hourTop - containerTop) / containerHeight;
-                
-                if (relativePosition < 0 || relativePosition > 1) {
-                    return Math.max(0.1, Math.min(0.9, relativePosition));
-                }
-                
-                return null;
-            }
-
-            updateScrollIndicator() {
-                const currentHourPos = this.getCurrentHourPosition();
-                const indicator = document.querySelector('.hour-indicator');
-                if (indicator) {
-                    if (currentHourPos !== null) {
-                        indicator.style.display = 'block';
-                        indicator.style.top = `${currentHourPos * 100}%`;
-                    } else {
-                        indicator.style.display = 'none';
-                    }
-                }
-            }
-
-            exportCurrentDayCSV() {
-                let exportContent = "";
-                
-                this.hours.forEach(hour => {
-                    const entry = this.entries[hour];
-                    const emojis = entry?.emojis?.join('') || '';
-                    const text = entry?.text || '';
-                    exportContent += `${emojis} ${text}"\n`;
-                });
-                // 02,"",""
-                // 03,"☕","kaffee"
-
-                
-                try {
-                    navigator.clipboard.writeText(exportContent);
-                } catch (err) {
-                    const blob = new Blob([exportContent], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `hourlies-${this.currentDate.toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            }
-
-            exportAllCSV() {
-                const years = Object.keys(this.allEntries)
-                    .map(date => new Date(date).getFullYear())
-                    .filter((v, i, a) => a.indexOf(v) === i)
-                    .sort();
-                
-                if (years.length === 0) return;
-
-                // Create workbook with multiple sheets
-                let csvContent = "";
-
-                // First tab: Settings and Rules
-                csvContent += "# Settings\n";
-                csvContent += `StartHour,${this.startHour}\n`;
-                csvContent += `ShowGoalsInTimeline,${this.showGoalsInTimeline}\n`;
-                csvContent += `Emojis,${this.emojis.join('')}\n\n`;
-                
-                csvContent += "# Dailies\n";
-                csvContent += "Emojis,IsNot,Operator,Value\n";
-                this.goals.forEach(goal => {
-                    const goalEmojis = goal.emojis || [goal.emoji];
-                    csvContent += `${goalEmojis.join('')},${goal.isNot},${goal.operator},${goal.value}\n`;
-                });
-                csvContent += "\n---\n\n"; // Sheet separator
-
-                // Create a sheet for each year with data
-                years.forEach(year => {
-                    const yearDates = Object.keys(this.allEntries)
-                        .filter(date => new Date(date).getFullYear() === year &&
-                                      Object.keys(this.allEntries[date] || {}).length > 0)
-                        .sort();
-
-                    if (yearDates.length === 0) return;
-
-                    // Group by months
-                    const monthGroups = {};
-                    yearDates.forEach(date => {
-                        const month = new Date(date).getMonth();
-                        if (!monthGroups[month]) monthGroups[month] = [];
-                        monthGroups[month].push(date);
-                    });
-
-                    // Prepare year data
-                    const yearData = [];
-
-                    Object.entries(monthGroups).forEach(([month, monthDates]) => {
-                        // Add month header
-                        const monthName = new Date(year, parseInt(month)).toLocaleString('default', { month: 'long' });
-                        yearData.push([`${monthName} ${year}`]);
-
-                        // Add date headers row
-                        const headers = ['Hour'].concat(monthDates.map(date => 
-                            new Date(date).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: '2-digit'
-                            })
-                        ));
-                        yearData.push(headers);
-
-                        // Add hour rows
-                        this.hours.forEach(hour => {
-                            const row = [this.formatHour(hour)];
-                            monthDates.forEach(date => {
-                                const entry = this.allEntries[date]?.[hour];
-                                const emojis = entry?.emojis?.join('') || '';
-                                const text = entry?.text || '';
-                                row.push(`${emojis}${text ? ' ' + text : ''}`);
-                            });
-                            yearData.push(row);
-                        });
-
-                        // Add empty row between months
-                        yearData.push([]);
-                    });
-
-                    // Create year sheet
-                    const yearSheet = XLSX.utils.aoa_to_sheet(yearData);
-                    XLSX.utils.book_append_sheet(workbook, yearSheet, year.toString());
-                });
-
-                // Write workbook and trigger download
-                const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-                
-                function s2ab(s) {
-                    const buf = new ArrayBuffer(s.length);
-                    const view = new Uint8Array(buf);
-                    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                    return buf;
-                }
-
-                const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'hourlies.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                document.head.removeChild(script);
-            }
-
-            importCSV(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const csv = e.target.result;
-                        const lines = csv.split('\n').filter(line => line.trim());
-                        const headers = lines[0].split(',');
-                        
-                        if (headers.includes('Date')) {
-                            const newEntries = {};
-                            
-                            lines.slice(1).forEach(line => {
-                                const [date, hour, emojis, text] = line.split(',').map(cell => 
-                                    cell.replace(/^"/, '').replace(/"$/, '')
-                                );
-                                
-                                if (date && hour) {
-                                    const isoDate = new Date(date.split('/').reverse().join('-')).toISOString().split('T')[0];
-                                    if (!newEntries[isoDate]) newEntries[isoDate] = {};
-                                    
-                                    newEntries[isoDate][parseInt(hour)] = {
-                                        emojis: emojis ? [...emojis] : [],
-                                        text: text || ''
-                                    };
-                                }
-                            });
-                            
-                            this.allEntries = { ...this.allEntries, ...newEntries };
-                        } else {
-                            const dayEntries = {};
-                            
-                            lines.slice(1).forEach(line => {
-                                const [hour, emojis, text] = line.split(',').map(cell => 
-                                    cell.replace(/^"/, '').replace(/"$/, '')
-                                );
-                                
-                                if (hour) {
-                                    dayEntries[parseInt(hour)] = {
-                                        emojis: emojis ? [...emojis] : [],
-                                        text: text || ''
-                                    };
-                                }
-                            });
-                            
-                            this.allEntries[this.currentDateKey] = dayEntries;
+                    el.addEventListener("click", (e) => {
+                        if (el._suppressClick) {
+                            e.stopImmediatePropagation();
+                            el._suppressClick = false;
                         }
-                        
-                        alert('CSV imported successfully!');
-                        this.render();
-                    } catch (error) {
-                        alert('Invalid CSV file: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-                event.target.value = '';
+                    }, true);
+                });
             }
 
+            // === GOALS ===
             addGoal() {
                 const newGoal = {
                     id: Date.now(),
-                    emojis: ['📖'],
-                    isNot: false,
+                    emoji: '📖',
                     operator: 'more_than',
                     value: 1
                 };
@@ -1710,51 +1324,19 @@
 
             updateGoal(id, updates) {
                 this.goals = this.goals.map(goal => goal.id === id ? { ...goal, ...updates } : goal);
+                this.saveData();
                 this.renderSettings();
             }
 
             removeGoal(id) {
                 this.goals = this.goals.filter(goal => goal.id !== id);
+                this.saveData();
                 this.renderSettings();
             }
 
             editGoal(id) {
                 this.editingGoal = this.editingGoal === id ? null : id;
                 this.renderSettings();
-                if (this.editingGoal !== null) {
-                    setTimeout(() => {
-                        const input = document.querySelector(`.goal-value[data-goal="${id}"]`);
-                        if (input) {
-                            input.focus();
-                            input.selectionStart = input.selectionEnd = input.value.length;
-                        }
-                    }, 50);
-                }
-            }
-
-            handleGoalInputKeydown(event, goalId) {
-                if (event.key === 'Enter') {
-                    this.editingGoal = null;
-                    this.renderSettings();
-                } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                    event.preventDefault();
-                    const currentGoal = this.goals.find(g => g.id === goalId);
-                    const currentIndex = this.goals.indexOf(currentGoal);
-                    const nextIndex = event.key === 'ArrowUp'
-                        ? (currentIndex - 1 + this.goals.length) % this.goals.length
-                        : (currentIndex + 1) % this.goals.length;
-                    this.editGoal(this.goals[nextIndex].id);
-                }
-            }
-
-            toggleGoalEmoji(goalId, emoji) {
-                const goal = this.goals.find(g => g.id === goalId);
-                const currentEmojis = (goal.emojis || [goal.emoji]).filter(e => this.emojis.includes(e));
-                const newEmojis = currentEmojis.includes(emoji)
-                    ? currentEmojis.filter(e => e !== emoji)
-                    : [...currentEmojis, emoji];
-                
-                this.updateGoal(goalId, { emojis: newEmojis });
             }
 
             cycleOperator(goalId) {
@@ -1766,46 +1348,164 @@
             }
 
             formatGoalText(goal) {
-                const notText = goal.isNot ? 'not ' : '';
                 const opText = goal.operator.replace('_', ' ');
                 const suffix = goal.operator.includes('than') ? ' times' : '';
-                return `${notText}${opText} ${goal.value}${suffix}`;
+                return `${opText} ${goal.value}${suffix}`;
             }
 
             checkGoals() {
                 const dayEntries = Object.values(this.entries);
                 return this.goals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji]).filter(emoji => this.emojis.includes(emoji));
-                    
                     const emojiCount = dayEntries.reduce((count, entry) => {
-                        return count + goalEmojis.reduce((emojiSum, emoji) => {
-                            return emojiSum + (entry.emojis?.filter(e => e === emoji).length || 0);
-                        }, 0);
+                        return count + (entry.emojis?.filter(e => e === goal.emoji).length || 0);
                     }, 0);
                     
                     const emojiHours = Object.keys(this.entries).filter(hour => 
-                        this.entries[hour].emojis?.some(emoji => goalEmojis.includes(emoji))
+                        this.entries[hour].emojis?.includes(goal.emoji)
                     ).map(Number);
                     
                     let met = false;
-                    let applicable = true;
                     
                     if (goal.operator === 'more_than') {
-                        met = goal.isNot ? emojiCount <= goal.value : emojiCount > goal.value;
+                        met = emojiCount > goal.value;
                     } else if (goal.operator === 'less_than') {
-                        met = goal.isNot ? emojiCount >= goal.value : emojiCount < goal.value;
-                    } else if (goal.operator === 'before') {
-                        applicable = emojiHours.length > 0;
-                        const condition = applicable && ((Math.min(...emojiHours)-this.startHour)+24%24) < ((goal.value - this.startHour)+24)%24;
-                        met = goal.isNot ? !condition : condition;
-                    } else if (goal.operator === 'after') {
-                        applicable = emojiHours.length > 0;
-                        const condition = applicable && ((Math.max(...emojiHours)-this.startHour)+24)%24 > ((goal.value - this.startHour)+24)%24;
-                        met = goal.isNot ? !condition : condition;
+                        met = emojiCount < goal.value;
+                    } else if (goal.operator === 'before' && emojiHours.length > 0) {
+                        // Adjust hours for start time
+                        const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
+                        const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
+                        met = Math.min(...adjustedHours) < adjustedTarget;
+                    } else if (goal.operator === 'after' && emojiHours.length > 0) {
+                        // Adjust hours for start time  
+                        const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
+                        const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
+                        met = Math.max(...adjustedHours) > adjustedTarget;
                     }
                     
-                    return { ...goal, met, applicable, emojis: goalEmojis };
+                    return { ...goal, met, emojiCount };
                 });
+            }
+
+            // === TIMER ===
+            startTimer() {
+                setInterval(() => {
+                    this.currentTime = new Date();
+                    const effectiveDate = this.getEffectiveDate();
+                    if (this.dateKey(effectiveDate) !== this.currentDateKey) {
+                        this.currentDate = effectiveDate;
+                    }
+                    if (this.view === 'timeline' && this.editingHour === null) {
+                        this.renderHours();
+                    }
+                }, 60000);
+            }
+
+            undo() {
+                if (this.undoStack.length === 0) return;
+                const lastState = this.undoStack.pop();
+                
+                // Apply the undo state using the same logic as updateEntries
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Clear current entries
+                if (this.allEntries[currentDayKey]) {
+                    for (let hour = this.startHour; hour < 24; hour++) {
+                        delete this.allEntries[currentDayKey][hour];
+                    }
+                }
+                if (this.allEntries[nextDayKey]) {
+                    for (let hour = 0; hour < this.startHour; hour++) {
+                        delete this.allEntries[nextDayKey][hour];
+                    }
+                }
+                
+                // Restore entries
+                Object.entries(lastState.entries).forEach(([hour, entry]) => {
+                    const hourNum = parseInt(hour);
+                    if (hourNum >= this.startHour) {
+                        if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                        this.allEntries[currentDayKey][hourNum] = entry;
+                    } else {
+                        if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                        this.allEntries[nextDayKey][hourNum] = entry;
+                    }
+                });
+                
+                this.updateUndoButton();
+                this.renderHours();
+                this.saveData();
+            }
+
+            updateUndoButton() {
+                const undoBtn = document.getElementById('undoBtn');
+                if (undoBtn) {
+                    undoBtn.style.display = this.view === 'timeline' && this.undoStack.length > 0 ? 'block' : 'none';
+                }
+            }
+
+            scrollToCurrentHour() {
+                const container = document.querySelector('.scroll-container');
+                if (!container) return;
+                const currentHourIndex = this.hours.findIndex(hour => hour === this.currentTime.getHours());
+                if (currentHourIndex === -1) return;
+                const hourElements = container.querySelectorAll('[data-hour]');
+                const targetElement = hourElements[currentHourIndex];
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            // === EXPORT ===
+            exportCurrentDayCSV() {
+                let content = "";
+                this.hours.forEach(hour => {
+                    const entry = this.entries[hour];
+                    const emojis = entry?.emojis?.join('') || '';
+                    const text = entry?.text || '';
+                    content += `${emojis} ${text}\n`;
+                });
+                
+                try {
+                    navigator.clipboard.writeText(content);
+                } catch (err) {
+                    const blob = new Blob([content], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `hourlies-${this.formatDateInput()}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            }
+
+            wipeCurrentDayData() {
+                // Clear entries for the current logical day
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Clear hours 7-23 from current calendar day
+                if (this.allEntries[currentDayKey]) {
+                    for (let hour = this.startHour; hour < 24; hour++) {
+                        delete this.allEntries[currentDayKey][hour];
+                    }
+                }
+                
+                // Clear hours 0-6 from next calendar day
+                if (this.allEntries[nextDayKey]) {
+                    for (let hour = 0; hour < this.startHour; hour++) {
+                        delete this.allEntries[nextDayKey][hour];
+                    }
+                }
+                
+                this.render();
+                this.saveData();
             }
 
             getDayEmojis() {
@@ -1820,13 +1520,11 @@
                 return emojiCounts;
             }
 
-            shouldShowAbove(hourIndex) {
-                return hourIndex >= this.hours.length - 3;
-            }
-
+            // === RENDER ===
             render() {
                 this.updateUndoButton();
-                
+                this.checkGoals(); // Always update/check dailies on UI update
+
                 if (this.view === 'timeline') {
                     this.renderTimeline();
                 } else if (this.view === 'settings') {
@@ -1837,27 +1535,23 @@
             }
 
             renderTimeline() {
-                const container = document.getElementById('mainContainer');
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="scroll-container">
                         <div class="date-nav">
                             <div class="date-nav-left">
-                                <button class="date-btn secondary-btn" onclick="app.navigateDay(-1)">←</button>
+                                <div class="date-btn" onclick="app.navigateDay(-1)">←</div>
                                 <input type="text" 
-                                    class="date-input secondary-btn large"
+                                    class="date-input secondary-btn"
                                     value="${this.formatDateInput()}"
                                     maxlength="8"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
                                     onkeydown="app.handleDateKeydown(event)"
                                     oninput="app.handleDateInput(event)"
-                                    onfocus="app.handleDateFocus(event)"
-                                    onclick="app.handleDateFocus(event)">
-                                <button class="date-btn secondary-btn" onclick="app.navigateDay(1)">→</button>
+                                    onfocus="app.handleDateFocus(event)">
+                                <div class="date-btn" onclick="app.navigateDay(1)">→</div>
                             </div>
                             <div class="date-nav-right">
-                                <button class="jump-btn secondary-btn" onclick="app.jumpToToday()">now</button>
-                                <button class="btn normal-size" onclick="app.exportCurrentDayCSV()">📋</button>
+                                <button class="jump-btn" onclick="app.jumpToToday()">now</button>
+                                <button class="btn" onclick="app.exportCurrentDayCSV()">📋</button>
                             </div>
                         </div>
                         
@@ -1865,50 +1559,39 @@
                         <div id="hoursContainer"></div>
                     </div>
                     
-                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''} scroll-pattern"
-                         onmousedown="app.handleScrollMouseDown(event)"
-                         onclick="app.handleRightBarClick()">
-                        <div class="hour-indicator" style="display: none;"></div>
-                    </div>
+                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''}"></div>
                 `;
 
-                this.scrollContainerRef = container.querySelector('.scroll-container');
-                this.scrollContainerRef.addEventListener('scroll', this.handleScroll.bind(this));
-
+                const container = document.querySelector('.scroll-container');
+                container.addEventListener('scroll', this.handleScroll.bind(this));
                 if (this.timelineScrollPosition > 0) {
-                    this.scrollContainerRef.scrollTop = this.timelineScrollPosition;
+                    container.scrollTop = this.timelineScrollPosition;
                 }
 
                 this.renderGoals();
                 this.renderHours();
-                this.updateScrollIndicator();
             }
 
             renderGoals() {
                 const goalsSection = document.getElementById('goalsSection');
+                if (!goalsSection) return;
+                
                 const goalChecks = this.checkGoals();
 
                 if (this.goals.length > 0 && this.showGoalsInTimeline) {
                     goalsSection.innerHTML = `
                         <div class="goals-section">
                             <h2 class="goals-title">dailies</h2>
-                            ${goalChecks.map(goal => {
-                                const itemClass = goal.met ? 'passed' : (goal.applicable && !goal.met) ? 'failed' : '';
-                                return `
-                                    <div class="goal-item ${itemClass}">
-                                        <span class="goal-emoji-display">${(goal.emojis || []).sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b)).join('')}</span>
-                                        <span class="goal-text">${this.formatGoalText(goal)}</span>
-                                    </div>
-                                `;
-                            }).join('')}
+                            ${goalChecks.map(goal => `
+                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}">
+                                    <span class="goal-emoji-display">${goal.emoji}</span>
+                                    <span class="goal-text">${this.formatGoalText(goal)}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     `;
                 } else if (this.goals.length === 0 && this.showGoalsInTimeline) {
-                    goalsSection.innerHTML = `
-                        <div class="no-goals">
-                            no dailies set - add in settings
-                        </div>
-                    `;
+                    goalsSection.innerHTML = '<div class="no-goals">no dailies set - add in settings</div>';
                 } else {
                     goalsSection.innerHTML = '';
                 }
@@ -1917,63 +1600,20 @@
             renderHours() {
                 this.saveData();
                 const hoursContainer = document.getElementById('hoursContainer');
+                if (!hoursContainer) return;
+                
                 hoursContainer.innerHTML = `
                     <div class="hours-container">
-                        ${this.hours.map((hour, hourIndex) => {
+                        ${this.hours.map(hour => {
                             const entry = this.entries[hour] || { emojis: [], text: '' };
                             const isCurrent = this.isCurrentHour(hour);
                             const isEditing = this.editingHour === hour;
                             const hourFill = this.getHourFill(hour);
-                            const showAbove = this.shouldShowAbove(hourIndex);
-                            // Sort emojis according to their order in this.emojis and take first 9
-                            const emojis = (entry.emojis || [])
-                                .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b))
-                                .slice(0, 9);
+                            const emojis = (entry.emojis || []).slice(0, 6);
+
                             return `
                                 <div class="hour-row">
-                                    ${isEditing && showAbove ? `
-                                        <div class="emoji-picker above">
-                                            ${this.emojis.map(emoji => `
-                                                <button class="emoji-btn ${entry.emojis?.includes(emoji) ? 'selected' : ''}"
-                                                        onclick="app.toggleEmoji('${emoji}')">
-                                                    ${emoji}
-                                                </button>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
-                                    <div class="hour-entry ${isCurrent ? 'current' : ''} ${isEditing ? 'editing' : ''} ${hourFill === 100 && !entry.text.trim() && (!entry.emojis || entry.emojis.length === 0) ? 'empty-past' : ''}"
-                                         data-hour="${hour}"
-                                         onclick="this.scrollIntoView({behavior: 'smooth', block: 'center'}); app.editHour(${hour})">
-                                        ${hourFill > 0 ? `
-                                            <div class="hour-fill ${!entry.text && (!entry.emojis || entry.emojis.length === 0) ? 'empty' : ''}" style="width: ${hourFill}%;"></div>
-                                        ` : ''}
-                                        <div class="hour-content">
-                                            <span class="hour-time">${this.formatHour(hour)}</span>
-                                            <div class="hour-emojis">
-                                                ${emojis.map(emoji => `
-                                                    <span class="emoji">${emoji}</span>
-                                                `).join('')}
-                                            </div>
-                                            ${isEditing ? `
-                                                <div class="hour-input-container"
-                                                     onkeydown="app.handleHourInputKeydown(event, ${hour})">
-                                                    <textarea 
-                                                           class="hour-input"
-                                                           placeholder="${this.isFutureDate() ? 'Plan ahead...' : 
-                                                                       this.isPastDate() ? 'Remember what happened...' : 
-                                                                       'What is happening?'}"
-                                                           oninput="app.updateText(this.value); this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                                           onclick="event.stopPropagation()"
-                                                           rows="1">${entry.text}</textarea>
-                                                    <button class="clear-btn" 
-                                                            onclick="event.stopPropagation(); app.clearEntry(${hour})">×</button>
-                                                </div>
-                                            ` : `
-                                                <span class="hour-text">${entry.text}</span>
-                                            `}
-                                        </div>
-                                    </div>
-                                    ${isEditing && !showAbove ? `
+                                    ${isEditing ? `
                                         <div class="emoji-picker below">
                                             ${this.emojis.map(emoji => `
                                                 <button class="emoji-btn ${entry.emojis?.includes(emoji) ? 'selected' : ''}"
@@ -1983,55 +1623,63 @@
                                             `).join('')}
                                         </div>
                                     ` : ''}
+                                    
+                                    <div class="hour-entry ${isCurrent ? 'current' : ''} ${isEditing ? 'editing' : ''}"
+                                         data-hour="${hour}"
+                                         onclick="app.editHour(${hour})">
+                                        ${hourFill > 0 ? `<div class="hour-fill ${!entry.text && !entry.emojis?.length ? 'empty' : ''}" style="width: ${hourFill}%;"></div>` : ''}
+                                        <div class="hour-content">
+                                            <span class="hour-time">${this.formatHour(hour)}</span>
+                                            <div class="hour-emojis">
+                                                ${emojis.map(emoji => `<span class="emoji">${emoji}</span>`).join('')}
+                                            </div>
+                                            ${isEditing ? `
+                                                <div class="hour-input-container">
+                                                    <textarea class="hour-input"
+                                                           placeholder="${this.isFutureDate() ? 'Plan ahead...' : this.isPastDate() ? 'Remember...' : 'What happened?'}"
+                                                           oninput="app.updateText(this.value)"
+                                                           onkeydown="app.handleHourInputKeydown(event, ${hour})"
+                                                           onclick="event.stopPropagation()">${entry.text}</textarea>
+                                                    <button class="clear-btn" onclick="event.stopPropagation(); app.clearEntry(${hour})">×</button>
+                                                </div>
+                                            ` : `<span class="hour-text">${entry.text}</span>`}
+                                        </div>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? `
-                            <div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>
-                        ` : ''}
+                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
-                this.renderGoalsList();
-                this.renderGoals();
             }
 
             renderSettings() {
-                const container = document.getElementById('mainContainer');
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="settings-container">
-                       
-                        
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
-                            <input type="text" 
-                                   class="setting-input"
-                                   value="${this.emojis.join('')}"
-                                   oninput="app.emojis = [...this.value]; app.render()">
+                            <input type="text" class="setting-input" value="${this.emojis.join('')}"
+                                   oninput="app.emojis = [...this.value]; app.saveData()">
                         </div>
                         
                         <div class="setting-group">
-                            <div class="goals-header">
-                                <label class="setting-label">Dailies</label>
-                            </div>
+                            <label class="setting-label">Dailies</label>
                             <div id="goalsList"></div>
+                            <button class="add-goal-btn" onclick="app.addGoal()" style="margin-top: 12px;">+ Add Daily</button>
                         </div>
 
-                        <div class="setting-group" style="display: flex; justify-content: space-between; align-items: center;">
-                            <button class="add-goal-btn" onclick="app.addGoal()">+ Add Daily</button>
-                            <label class="checkbox-label" style="margin-bottom: 0;">
-                                <input type="checkbox" 
-                                       class="checkbox"
-                                       ${this.showGoalsInTimeline ? 'checked' : ''}
-                                       onchange="app.showGoalsInTimeline = this.checked; app.render()">
-                                <span>Show goals in timeline view</span>
+                        <div class="setting-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="checkbox" ${this.showGoalsInTimeline ? 'checked' : ''}
+                                       onchange="app.showGoalsInTimeline = this.checked; app.saveData()">
+                                <span>Show dailies in timeline</span>
                             </label>
-                            
                         </div>
 
-                         <div class="setting-group">
+                        <div class="setting-group">
                             <label class="setting-label">Start Hour</label>
-                            <select class="setting-input" onchange="app.startHour = parseInt(this.value); app.render()">
+                            <select class="setting-input" onchange="app.startHour = parseInt(this.value); app.saveData()">
                                 ${Array.from({length: 24}, (_, i) => `
                                     <option value="${i}" ${i === this.startHour ? 'selected' : ''}>
                                         ${this.formatHour(i)}:00
@@ -2039,44 +1687,9 @@
                                 `).join('')}
                             </select>
                         </div>
-
-                        <div class="setting-group">
-                            <div class="export-section">
-                                <button class="export-toggle" onclick="app.showExportAccordion = !app.showExportAccordion; app.renderSettings()">
-                                    <label class="setting-label">Data Export/Import</label>
-
-                                    <span class="export-arrow ${this.showExportAccordion ? 'open' : ''}">▼</span>
-                                </button>
-                                
-                                ${this.showExportAccordion ? `
-                                    <div class="export-content">
-                                        <button class="export-btn" onclick="app.exportAllCSV()">
-                                            Export All Data (CSV)
-                                        </button>
-                                        
-                                        <div class="import-section">
-                                            <input type="file" 
-                                                   class="import-input"
-                                                   accept=".csv"
-                                                   onchange="app.importCSV(event)">
-                                            <span class="import-label">Import CSV</span>
-                                        </div>
-                                        
-                                        <div class="export-help">
-                                            CSV export includes all dates, goals, and settings. 
-                                            Current day export copies to clipboard.
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
                         
-                        ${this.editingGoal !== null ? `
-                            <div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>
-                        ` : ''}
+                        ${this.editingGoal !== null ? '<div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
                     </div>
-
-                        </div>
                 `;
 
                 this.renderGoalsList();
@@ -2085,100 +1698,50 @@
             renderGoalsList() {
                 const goalsList = document.getElementById('goalsList');
                 if (!goalsList) return;
-
-                // Sort goals based on their emojis' order in the config
-                const sortedGoals = [...this.goals].sort((a, b) => {
-                    const aEmojis = a.emojis || [a.emoji];
-                    const bEmojis = b.emojis || [b.emoji];
-                    const aFirstEmoji = aEmojis[0];
-                    const bFirstEmoji = bEmojis[0];
-                    return this.emojis.indexOf(aFirstEmoji) - this.emojis.indexOf(bFirstEmoji);
-                });
                 
-                goalsList.innerHTML = sortedGoals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji])
-                        .filter(e => this.emojis.includes(e))
-                        .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b));
+                goalsList.innerHTML = this.goals.map(goal => {
                     const isEditing = this.editingGoal === goal.id;
-                    
                     return `
-                        <div class="goal-row ${isEditing ? 'editing' : ''}">
-                            <div class="goal-emojis">
-                                ${this.emojis.map(emoji => `
-                                    <button class="emoji-btn ${goalEmojis.includes(emoji) ? 'selected' : ''}"
-                                            onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
-                                        ${emoji}
-                                    </button>
-                                `).join('')}
+                        <div class="goal-row" style="width:100%">
+                            <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})" style="width:100%">
+                                <span class="goal-emoji-display">${goal.emoji}</span>
+                                <span class="goal-text-display">${this.formatGoalText(goal)}</span>
+                                <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
-                            <div class="goal-controls">
-                                <button class="goal-toggle ${goal.isNot ? 'active' : ''}"
-                                        onclick="app.updateGoal(${goal.id}, {isNot: !${goal.isNot}})">
-                                    ${goal.isNot ? 'is not' : 'is'}
-                                </button>
-                                <button class="goal-operator"
-                                        onclick="app.cycleOperator(${goal.id})">
-                                    ${goal.operator.replace('_', ' ')}
-                                </button>
-                                <input type="number" 
-                                       class="goal-value" 
-                                       data-goal="${goal.id}"
-                                       value="${goal.value}"
-                                       onkeydown="app.handleGoalInputKeydown(event, ${goal.id})"
-                                       onchange="app.updateGoal(${goal.id}, {value: parseInt(this.value) || 0})"
-                                       min="0"
-                                       ${isEditing ? 'focused' : ''}>
-                                <button class="remove-goal" 
-                                        onclick="app.removeGoal(${goal.id})">×</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                goalsList.innerHTML = sortedGoals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji])
-                        .filter(e => this.emojis.includes(e))
-                        .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b));
-                    const isEditing = this.editingGoal === goal.id;
-
-                    return `
-                        <div class="goal-row">
-                            <div class="goal-summary ${isEditing ? 'editing' : ''}"
-                                 onclick="app.editGoal(${goal.id})">
-                                <div class="goal-summary-content">
-                                    <span class="goal-emoji-display">${goalEmojis.join('')}</span>
-                                    <span class="goal-text-display">${this.formatGoalText(goal)}</span>
-                                    <button class="remove-goal-btn" 
-                                            onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
-                                </div>
-                            </div>
-                            
                             ${isEditing ? `
-                                <div class="goal-editor" style="z-index: 60;">
-                                    <div class="emoji-picker">
-                                        ${this.emojis.map(emoji => `
-                                            <button class="emoji-btn ${goalEmojis.includes(emoji) ? 'selected' : ''}"
-                                                    onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
-                                                ${emoji}
-                                            </button>
-                                        `).join('')}
+                                <div class="goal-editor" style="width:100%">
+                                    <div class="goal-editor-section" style="width:100%">
+                                        <div class="goal-emoji-grid" style="width:100%">
+                                            ${this.emojis.map(emoji => `
+                                                <button class="goal-emoji-btn ${goal.emoji === emoji ? 'selected' : ''}"
+                                                        onclick="app.updateGoal(${goal.id}, { emoji: '${emoji}' })">
+                                                    ${emoji}
+                                                </button>
+                                            `).join('')}
+                                        </div>
                                     </div>
-                                    <div class="goal-controls">
-                                        <button class="not-btn ${goal.isNot ? 'active' : 'inactive'}"
-                                                onclick="app.updateGoal(${goal.id}, { isNot: ${!goal.isNot} })">
-                                            ${goal.isNot ? 'NOT' : 'IS'}
-                                        </button>
-                                        <button class="operator-btn" onclick="app.cycleOperator(${goal.id})">
-                                            ${goal.operator.replace('_', ' ')}
-                                        </button>
-                                        <input type="number" 
-                                               class="value-input"
-                                               value="${goal.value}"
-                                               min="0" max="23"
-                                               oninput="app.updateGoal(${goal.id}, { value: parseInt(this.value) })">
-                                        <span class="value-suffix">
-                                            ${goal.operator.includes('than') ? 'times' : ''}
-                                        </span>
+                                    <div class="goal-editor-section" style="width:100%">
+                                        <div class="goal-controls-grid" style="width:100%">
+                                            <div class="operator-value-group" style="width:100%; display:flex; gap:8px; align-items:center;">
+                                                <button class="goal-action-btn secondary" style="margin-left:12px;" onclick="app.toggleGoalNegation(${goal.id})">
+                                                    ${goal.not ? 'is not' : 'is'}
+                                                </button>
+                                                <button class="goal-operator-btn" onclick="app.cycleOperator(${goal.id})">
+                                                    ${goal.operator.replace('_', ' ')}
+                                                </button>
+                                                <input type="number" 
+                                                       class="goal-value-input" 
+                                                       value="${goal.value}" 
+                                                       min="0" 
+                                                       max="23"
+                                                       onclick="event.stopPropagation()"
+                                                       onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
+                                                <span style="color: #9ca3af; font-size: 14px;">
+                                                    ${goal.operator.includes('than') ? 'times' : ''}
+                                                </span>
+                                                
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ` : ''}
@@ -2186,18 +1749,23 @@
                     `;
                 }).join('');
             }
+            toggleGoalNegation(goalId) {
+                const goal = this.goals.find(g => g.id === goalId);
+                this.updateGoal(goalId, { not: !goal.not });
+            }
+            
 
             renderDaily() {
-                const container = document.getElementById('mainContainer');
                 const dayEmojis = this.getDayEmojis();
                 const goalChecks = this.checkGoals();
                 
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="daily-container">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                            <button class="btn normal-size jump-btn" onclick="if(confirm('Are you sure you want to clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
-                            <button class="btn normal-size jump-btn" onclick="app.exportCurrentDayCSV()">copy 📋</button>
+                            <button class="jump-btn" onclick="if(confirm('Clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
+                            <button class="jump-btn" onclick="app.exportCurrentDayCSV()">📋 copy</button>
                         </div>
+                        
                         <div class="bubbles-container">
                             ${Object.entries(dayEmojis).map(([emoji, count], index) => {
                                 const maxCount = Math.max(...Object.values(dayEmojis), 1);
@@ -2218,29 +1786,22 @@
                             }).join('')}
                         </div>
                         
-                    <div class="dailies-section">
-                    <h3>Dailies</h3>
-                    ${goalChecks.map(goal => {
-                        const itemClass = goal.met ? 'passed' : (goal.applicable && !goal.met) ? 'failed' : '';
-                        return `
-                            <div class="goal-item ${itemClass}" style="font-size:18px; font-weight:500; margin-bottom:8px;">
-                            <span class="goal-emoji-display">${(goal.emojis || []).sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b)).join('')}</span>
-                            <span class="goal-text">${this.formatGoalText(goal)}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                    ${this.goals.length === 0 ? `<p class="no-goals-daily">No dailies set</p>` : ''}
-                    </div>
-
+                        <div class="dailies-section">
+                            <h3>Dailies</h3>
+                            ${goalChecks.map(goal => `
+                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="font-size:18px; font-weight:500; margin-bottom:8px;">
+                                    <span class="goal-emoji-display">${goal.emoji}</span>
+                                    <span class="goal-text">${this.formatGoalText(goal)} (${goal.emojiCount})</span>
+                                </div>
+                            `).join('')}
+                            ${this.goals.length === 0 ? '<p class="no-goals-daily">No dailies set</p>' : ''}
+                        </div>
                     </div>
                 `;
             }
-
-
         }
 
         const app = new HourliesApp();
     </script>
-    
 </body>
 </html>
