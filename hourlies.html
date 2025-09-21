@@ -4,178 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hourlies</title>
-    <!-- Space Mono font from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
         }
         
         body {
-            font-family: 'Space Mono', monospace;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
             background-color: #111827;
             color: white;
             height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        html {
-            height: 100%;
             overflow: hidden;
         }
         
+        /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: 0px 12%;
+            padding: env(safe-area-inset-top, 16px) 12% 12px 12%;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
+            min-height: calc(48px + env(safe-area-inset-top, 16px));
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
-        .header h1 {
-            font-size: 1.7em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-            color: #aeb6c3;
-            cursor: pointer;
+        .main-container {
+            height: calc(100vh - env(safe-area-inset-top, 16px) - 60px);
+            position: relative;
+            overflow-y: auto;
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer and Edge */
+            &::-webkit-scrollbar {
+                display: none;  /* Chrome, Safari, and Opera */
+            }
         }
         
-        .header h1:hover {
-            color: white;
+        .settings-container, .daily-container {
+            padding: 16px 12%;
+            min-height: 100%;
         }
         
-        .header-buttons,.btn {
-            font-size: 1.55em !important;
-        }   
-        .header-buttons {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-        .btn-label {
-            font-size: 0.65em;
-            vertical-align: middle;
+        .scroll-container {
+            padding: 16px 0;
+            margin: 0 12%;
+            min-height: 100%;
+            /* Hide default scrollbar */
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* Internet Explorer and Edge */
+            &::-webkit-scrollbar {
+                display: none;  /* Chrome, Safari, and Opera */
+            }
         }
         
+        /* BUTTONS & INPUTS */
         .btn {
             background: none;
             border: none;
             color: #aeb6c3;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        }
+        
+        .btn:hover, .btn-active {
+            color: white;
         }
         
         .btn-active {
-            color: white;
-            font-weight: 500;
-        }
-        .btn:hover {
-            color: white;
+            font-weight: 700;
         }
         
-        .btn.large {
-            font-size: 1.4em;
-            color: white;
-        }
-
-        .main-container {
-            height: calc(100vh - 72px);
-            position: relative;
-        }
-        
-        .scroll-container, .settings-container, .daily-container {
-            padding: 16px 12%;
-            height: 100%;
-            overflow-y: auto;
-        }
-        
-        .date-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .date-nav-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .date-nav-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .secondary-btn {
-            font-size: 32px;
-        }
-        .date-btn {
-            background: none;
-            border: none;
-            color: #aeb6c3;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        
-        .date-btn:hover {
-            color: white;
-        }
-        
-        .date-input {
+        input, select, textarea {
             background: none;
             border: none;
             color: #aeb6c3;
             font-family: inherit;
-            font-size: 32px;
-            text-align: center;
-            width: 160px;
             transition: color 0.2s;
-            cursor: pointer;
         }
         
-        .date-input:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             color: white;
         }
-
-        /* Remove spinners from number inputs */
+        
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+        
         input[type=number] {
             -webkit-appearance: textfield;
-            -moz-appearance: textfield;
-            appearance: textfield;
+        }
+        
+        textarea {
+            color: #d1d5db;
+            font-size: 20px;
+        }       
+        /* HEADER */
+        .header h1 {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.2s;
+            color: #aeb6c3;
+            padding-top: 16px;
+        }
+        
+        .header h1:hover {
+            color: white;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn-label {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            vertical-align: middle;
+        }
+        
+        /* DATE NAVIGATION */
+        .date-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .date-nav-left, .date-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #aeb6c3;
+        }
+        
+        .date-input {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            text-align: center;
+            width: clamp(120px, 30vw, 140px);
+            cursor: pointer;
+        }
+        .date-btn {
+            background-color: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+        }
+        .secondary-btn {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
         }
         
         .jump-btn {
             background-color: #1f2937;
             color: #6b7280;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
             cursor: pointer;
             transition: color 0.2s;
+            font-size: clamp(0.8rem, 3vw, 1rem);
         }
         
         .jump-btn:hover {
             color: #d1d5db;
         }
         
+        /* GOALS */
         .goals-section {
-            margin-bottom: 24px;
-            padding: 12px;
-            background-color: #1f2937;
+            margin-bottom: 16px;
+            padding: 0px;
+            background-color: transparent;
             border-radius: 8px;
         }
         
@@ -201,15 +208,13 @@
         
         .goal-item.failed {
             background-color: #5f3b3b;
-        }
-        
-        .goal-status {
-            font-size: 14px;
+            justify-content: flex-end;
+            text-align: right;
         }
         
         .goal-text {
             color: #d1d5db;
-            font-size: 1.4em;
+            font-size: 1.6em;
             font-weight: 500;
         }
         
@@ -222,10 +227,7 @@
             font-size: 14px;
         }
         
-        .hours-container {
-            position: relative;
-        }
-        
+        /* HOURS */
         .hour-row {
             position: relative;
             margin-bottom: 8px;
@@ -236,26 +238,13 @@
             cursor: pointer;
             padding: 12px 16px;
             border-radius: 4px;
-            background-color: #343d4e !important;
+            background-color: #343d4e;
             overflow: hidden;
-            user-select: none;
             transition: all 0.2s;
-        }
-
-        .hour-entry.editing {
-            user-select: text;
-        }
-
-        .hour-text {
-            user-select: none;
         }
         
         .hour-entry:hover {
-            background-color: #373e49 !important;
-        }
-        
-        .hour-fill.empty {
-            background-color: #1f242d;
+            background-color: #373e49;
         }
         
         .hour-entry.current {
@@ -265,16 +254,7 @@
         .hour-entry.editing {
             box-shadow: 0 0 0 2px #3108ea;
             z-index: 40;
-        }
-        
-        .hour-entry.editing .hour-text,
-        .hour-entry.editing .hour-input,
-        .setting-input,
-        .value-input {
             user-select: text;
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
         }
         
         .hour-fill {
@@ -284,47 +264,56 @@
             height: 100%;
             background-color: #334870;
         }
+        
+        .hour-fill.empty {
+            background-color: #1f242d;
+        }
+        
         .hour-content {
             position: relative;
             display: flex;
             align-items: flex-start;
-            gap: 12px;
+            gap: 6px;
         }
         
         .hour-time {
             font-size: 24px;
             width: 32px;
-            user-select: none;
         }
         
         .hour-emojis {
             display: grid;
-            margin: 0px;
-            padding-right: 24px;
             grid-template-columns: repeat(2, 30px);
             gap: 4px;
             min-height: 30px;
-            max-height: calc(30px * 3 +8);
+            max-height: calc(30px * 3 + 8px);
             overflow: hidden;
             max-width: 64px;
             min-width: 64px;
+            padding-right: 24px;
         }
-
+        
+        .hour-entry:not(.editing) .hour-content:has(.hour-text:empty) .hour-emojis {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 4px;
+            max-width: none;
+            min-width: 0;
+            overflow-x: auto;
+        }
+        
         .emoji {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            height: 100%;
             font-size: 28px;
             min-height: 28px;
         }
-
         
         .hour-input-container {
             flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             position: relative;
         }
         
@@ -332,60 +321,54 @@
             flex: 1;
             background: transparent;
             color: #d1d5db;
-            border: none;
-            outline: none;
-            font-size: 26px;
-            padding-right: 32px;
-            font-family: 'Space Mono', monospace;
             resize: none;
             overflow: hidden;
-            min-height: 1.5em;
+            min-height: 36px;
             line-height: 1.5;
-            width: 100%;
+            margin-top: 4px;
+            transition: height 0.15s ease-out;
+            user-select: text;
+            white-space: pre-wrap;
         }
         
         .hour-input::placeholder {
             color: #6b7280;
         }
         
+        .hour-input.empty {
+            color: #6b7280;
+        }
+        
+        .hour-input.scrolling {
+            overflow-y: auto;
+        }
+        
         .hour-text {
             color: #d1d5db;
-            font-size: 26px;
-            user-select: none;
+            font-size: 20px;
+            white-space: pre-wrap;
         }
         
         .clear-btn {
             position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 0;
+            top: 0;
             background: none;
             border: none;
-            color: #6b7280;
+            color: #eb6f6f;
             cursor: pointer;
-            font-size: 16px;
-            width: 20px;
-            height: 20px;
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             transition: all 0.2s ease;
-        }
-
-        .clear-btn:hover {
-            background-color: #374151;
-            color: #d1d5db;
-        }
-
-        .clear-btn:hover {
-            background-color: #374151;
-            color: #d1d5db;
-        }
-        .clear-btn:hover {
-            color: #ef4444;
+            z-index: 2;
         }
         
+        /* EMOJI PICKER */
         .emoji-picker {
             position: absolute;
             left: 0;
@@ -393,7 +376,8 @@
             background-color: #1f2937;
             padding: 12px;
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(auto-fit, 48px);
+            justify-content: center;
             gap: 8px;
             z-index: 50;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
@@ -407,6 +391,17 @@
         .emoji-picker.below {
             top: 100%;
             margin-top: 8px;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 90;
+            backdrop-filter: blur(2px);
         }
         
         .emoji-btn {
@@ -424,7 +419,7 @@
         }
         
         .emoji-btn.selected {
-            background-color: #334970;
+            background-color: #456090;
         }
         
         .emoji-btn.selected:hover {
@@ -441,21 +436,15 @@
             z-index: 30;
         }
         
+        /* SCROLL BAR */
         .scroll-bar {
-            position: absolute;
+            position: fixed;
             top: 0;
             right: 0;
             bottom: 0;
             width: 48px;
             cursor: ns-resize;
             transition: all 0.2s;
-        }
-        
-        .scroll-bar.hidden {
-            display: none;
-        }
-        
-        .scroll-pattern {
             background: repeating-linear-gradient(
                 45deg,
                 transparent 0px,
@@ -474,6 +463,10 @@
                 transparent 4px,
                 transparent 8px
             );
+        }
+        
+        .scroll-bar.hidden {
+            display: none;
         }
         
         .scroll-bar.dragging {
@@ -498,6 +491,7 @@
             50% { opacity: 0.5; }
         }
         
+        /* SETTINGS */
         .setting-group {
             margin-bottom: 24px;
         }
@@ -514,16 +508,17 @@
             padding: 12px;
             background-color: #2a313e;
             color: white;
-            border: none;
             border-radius: 4px;
             font-size: 18px;
-            font-family: 'Space Mono', monospace;
+            font-family: 'Atkinson Hyperlegible', monospace;
         }
-        
+        .emoji-input {
+            font-size: 2.2em;
+        }
         .checkbox-label {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             font-size: 18px;
             cursor: pointer;
         }
@@ -533,38 +528,36 @@
             height: 20px;
         }
         
-        .goals-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .add-goal-btn {
+        .add-goal-btn, .export-btn {
             background-color: #334970;
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 1px;
+            border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
         
-        .add-goal-btn:hover {
+        .add-goal-btn:hover, .export-btn:hover {
             background-color: #173ca4;
         }
         
+        /* GOAL EDITOR */
         .goal-row {
             position: relative;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         
         .goal-summary {
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 12px;
             background-color: #2a313e;
-            border-radius: 1px;
+            border-radius: 4px;
             transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
         }
         
         .goal-summary:hover {
@@ -572,118 +565,212 @@
         }
         
         .goal-summary.editing {
+            background-color: #1f2937;
             box-shadow: 0 0 0 2px #eab308;
-            z-index: 40;
         }
-        
-        .goal-summary-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .goal-emoji-display {
-            font-size: 24px;
-        }
-        
+                
         .goal-text-display {
             color: #d1d5db;
             flex: 1;
+            font-size: 18px;
         }
         
         .remove-goal-btn {
             background: none;
             border: none;
-            color: #aeb6c3;
+            color: #6b7280;
             cursor: pointer;
-            font-size: 18px;
-            width: 24px;
-            height: 24px;
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.2s;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
         
         .remove-goal-btn:hover {
+            background-color: #374151;
             color: #ef4444;
         }
         
         .goal-editor {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 4px;
             background-color: #1f2937;
-            padding: 12px;
-            z-index: 50;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border: 2px solid #eab308;
+            position: relative;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
-        .goal-controls {
+        .goal-editor-section {
+            margin-bottom: 24px;
+        }
+        
+        .goal-editor-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .goal-editor-label {
+            color: #d1d5db;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .goal-emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 56px);
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 4px;
+            background: #111827;
+            border-radius: 8px;
+        }
+        
+        .goal-emoji-btn {
+            width: 56px;
+            height: 56px;
+            background: #2d3748;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 28px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .goal-emoji-btn:hover {
+            background: #374151;
+            transform: scale(1.05);
+        }
+        
+        .goal-emoji-btn.selected {
+            border-color: #eab308;
+            background: #1f2937;
+        }
+        
+        .goal-emoji-btn:hover {
+            background-color: #4b5563;
+        }
+        
+        .goal-emoji-btn.selected {
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+        }
+        
+        .goal-controls-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
             gap: 12px;
-            margin-top: 12px;
+            align-items: center;
         }
         
-        .not-btn {
-            padding: 4px 12px;
-            font-weight: bold;
+        .operator-value-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .goal-operator-btn {
+            background-color: #374151;
+            color: #d1d5db;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
             font-size: 14px;
-            border: none;
-            border-radius: 1px;
+            min-width: 100px;
+        }
+        
+        .goal-operator-btn {
+            background-color: #2d3748;
+            color: #e5e7eb;
+            border: 2px solid transparent;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            font-size: 16px;
+            transition: all 0.2s;
+            min-width: 120px;
         }
         
-        .not-btn.active {
-            background-color: #991b1b;
-            color: #fecaca;
+        .goal-operator-btn:hover {
+            background-color: #374151;
+            border-color: #eab308;
         }
         
-        .not-btn.inactive {
-            background-color: #373e49;
-            color: white;
-        }
-        
-        .operator-btn {
-            background-color: #373e49;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 1px;
-            cursor: pointer;
-            flex: 1;
-            transition: background-color 0.2s;
-        }
-        
-        .operator-btn:hover {
-            background-color: #6b7280;
-        }
-        
-        .value-input {
-            background-color: #373e49;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 1px;
-            width: 80px;
+        .goal-value-input {
+            width: 70px;
             text-align: center;
+            background-color: #2d3748;
+            color: #e5e7eb;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s;
         }
         
-        .value-suffix {
-            font-size: 14px;
-            color: #aeb6c3;
+        .goal-value-input:hover,
+        .goal-value-input:focus {
+            background-color: #374151;
+            border-color: #eab308;
+            outline: none;
         }
         
+        .goal-editor-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .goal-action-btn {
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            background-color: #2d3748;
+            color: #e5e7eb;
+        }
+        
+        .goal-action-btn:hover {
+            background-color: #374151;
+            border-color: #eab308;
+        }
+        
+        .operator-value-group {
+            background: #111827;
+            padding: 16px;
+            border-radius: 8px;
+            gap: 12px !important;
+        }
+        
+        .goal-action-btn.secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        /* EXPORT/IMPORT */
         .export-section {
             background-color: #2a313e;
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .export-toggle {
             width: 100%;
             background-color: #2a313e;
@@ -714,22 +801,6 @@
             background-color: #2a313e;
         }
         
-        .export-btn {
-            width: 100%;
-            background-color: #334970;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 12px;
-            transition: background-color 0.2s;
-        }
-        
-        .export-btn:hover {
-            background-color: #1d4ed8;
-        }
-        
         .import-section {
             display: flex;
             gap: 8px;
@@ -741,15 +812,8 @@
             padding: 8px;
             background-color: #373e49;
             color: white;
-            border: none;
             border-radius: 4px;
             font-size: 14px;
-        }
-        
-        .import-label {
-            font-size: 12px;
-            color: #aeb6c3;
-            align-self: center;
         }
         
         .export-help {
@@ -759,9 +823,10 @@
             border-top: 1px solid #373e49;
         }
         
+        /* DAILY VIEW */
         .bubbles-container {
             border-radius: 8px;
-            height: 192px;
+            height: 350px;
             position: relative;
             overflow: hidden;
             border: 1px solid #2a313e;
@@ -775,6 +840,8 @@
             justify-content: center;
             border-radius: 50%;
             color: white;
+            background-color: #1F2937;
+            font-size: 40px;
         }
         
         .dailies-section h3 {
@@ -784,77 +851,86 @@
             margin-bottom: 12px;
         }
         
-        .daily-goal {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #d1d5db;
-            padding: 8px 0;
-        }
-        
-        .daily-goal-icon {
-            font-size: 24px;
-        }
-        
-        .daily-goal-text {
-            font-size: 14px;
-        }
-        
         .no-goals-daily {
             color: #6b7280;
             font-size: 14px;
         }
         
-
-        
-        .drag-handle {
-            cursor: grab;
-            padding: 4px;
-            color: #6b7280;
-            margin-right: 8px;
-        }
-        .drag-handle:hover {
-            color: #aeb6c3;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-        
-        @media (max-width: 768px) {
-            .scroll-bar {
-                display: none !important;
-            }
-            .header {
-                background-color: #1f2937;
-                padding: 0px 24px;
-            }
-            .scroll-container, .settings-container, .daily-container {
-                padding: 8px 24px;
-                height: 100%;
-                overflow-y: auto;
-            }
-        }
-        /* Flash effect when copying */
+        /* ANIMATIONS */
         @keyframes flash-border {
-        0%   { box-shadow: 0 0 0 2px white; }
-        100% { box-shadow: none; }
+            0% { box-shadow: 0 0 0 2px white; }
+            100% { box-shadow: none; }
         }
+        
         .hour-entry.flash {
-        animation: flash-border 0.5s ease;
+            animation: flash-border 0.5s ease;
         }
-
+        
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .scroll-bar { display: none !important; }
+            .header { 
+                padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 8px 16px;
+                min-height: calc(44px + env(safe-area-inset-top, 12px));
+            }
+            .settings-container, .daily-container { 
+                padding: 8px 16px;
+                padding-top: calc(env(safe-area-inset-top, 12px) + 60px);
+            }
+            .scroll-container { 
+                padding: 8px 0; 
+                margin: 0 16px;
+            }
+            .header h1 { font-size: 1.4em; }
+            .btn { font-size: 1.3em !important; }
+            .btn-label { font-size: 0.6em; }
+            .date-nav { margin-bottom: 12px; }
+            .secondary-btn, .date-input { font-size: 22px; }
+            .date-input { width: 140px; }
+            .hour-time { font-size: 20px; width: 28px; }
+            .hour-emojis { grid-template-columns: repeat(2, 26px); gap: 2px; max-width: 54px; min-width: 54px; }
+            .emoji { font-size: 24px; min-height: 24px; }
+            .hour-text, .hour-input { font-size: 16px; }
+            .emoji-picker { grid-template-columns: repeat(auto-fit, 42px); gap: 4px; padding: 8px; }
+            .emoji-btn { width: 42px; height: 42px; font-size: 28px; }
+            .setting-label, .setting-input, .checkbox-label { font-size: 16px; }
+            .setting-input { padding: 10px; }
+            .checkbox { width: 18px; height: 18px; }
+            .bubble { font-size: 32px !important; }
+            .dailies-section h3 { font-size: 16px; }
+            .goal-text-display { font-size: 16px; }
+        }
+        
+        @media (max-width: 375px) {
+            .header { 
+                padding: env(safe-area-inset-top, 12px) 12px 6px 12px;
+                min-height: calc(48px + env(safe-area-inset-top, 12px));
+            }
+            .header h1 { font-size: 1.2em; }
+            .btn { font-size: 1.2em !important; }
+            .btn-label { font-size: 0.55em; }
+            .settings-container, .daily-container { padding: 8px 12px; }
+            .scroll-container { padding: 8px 0; margin: 0 12px; }
+            .hour-time { font-size: 18px; width: 24px; }
+            .hour-emojis { grid-template-columns: repeat(2, 24px); max-width: 50px; min-width: 50px; }
+            .emoji { font-size: 22px; min-height: 22px; }
+            .hour-text, .hour-input { font-size: 16px; }
+            .emoji-picker { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px; }
+            .emoji-btn { padding: 4px; font-size: 24px; }
+            .date-input, .secondary-btn { font-size: 18px; }
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <div class="header">
-            <span style="display: flex; align-items: start; gap: 16px;">
-                <h1 onclick="app.setView('timeline')"><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
                 <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">↶</button>
-            </span>
-        <div class="header-buttons">
-                <button class="btn" onclick="app.setView('daily')">👁 <span class="btn-label">daily</span></button>
-                <button class="btn" onclick="app.setView('settings')">⚙ <span class="btn-label">edit</span></button>
+            </div>
+            <div class="header-buttons">
+                <button class="btn" onclick="app.setView('daily')" title="Press 'D'">🎯 <span class="btn-label">daily</span></button>
+                <button class="btn" onclick="app.setView('settings')" title="Press 'E'">⚙ <span class="btn-label">edit</span></button>
             </div>
         </div>
         <div class="main-container" id="mainContainer"></div>
@@ -862,129 +938,184 @@
 
     <script>
         class HourliesApp {
+
             constructor() {
                 this.currentTime = new Date();
-                this.currentDate = new Date();
                 this.startHour = 7;
                 this.allEntries = {};
-                this.goals = [
-                    {
-                        id: 1,
-                        emojis: ['☕'],
-                        isNot: false,
-                        operator: 'less_than',
-                        value: 3
-                    },
-                    {
-                        id: 2,
-                        emojis: ['☕'],
-                        isNot: true,
-                        operator: 'after',
-                        value: 17
-                    }
-                ];
+                this.goals = [];
+                this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                this.showGoalsInTimeline = false;
+                
+                this.currentDate = new Date();
                 this.editingHour = null;
                 this.editingGoal = null;
                 this.view = 'timeline';
-                this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '🔷'];
-                        this.showGoalsInTimeline = false;
                 this.undoStack = [];
-                this.showExportAccordion = false;
                 this.clipboardEntry = null;
-                this.longPressTimer = null;
-
-                this.isDragging = false;
-                this.dragSource = null;
-                this.dragStartTime = null;
-                this.dragThreshold = 150;
-                
-                this.scrollContainerRef = null;
-                this.lastTapTime = 0;
-                this.isScrollDragging = false;
-                this.scrollDragStart = { y: 0, scrollTop: 0 };
-                this.showFloatingNav = false;
                 this.timelineScrollPosition = 0;
+                this.hoveredHour = null; // Track which hour entry is currently being hovered
 
-                // Load saved data from localStorage
+                this.loadData();
+                this.currentDate = this.getEffectiveDate();
+                this.render();
+                this.startTimer();
+                this.setupEvents();
+                setTimeout(() => this.scrollToCurrentHour(), 100);
+            }
+
+            // === DATA ===
+            loadData() {
                 const saved = localStorage.getItem("hourliesData");
                 if (saved) {
                     try {
                         const data = JSON.parse(saved);
-                        if (data.allEntries) this.allEntries = data.allEntries;
-                        if (data.goals) this.goals = data.goals;
-                        if (data.emojis) this.emojis = data.emojis;
-                        if (typeof data.startHour === 'number') this.startHour = data.startHour;
-                        if (typeof data.showGoalsInTimeline === 'boolean') this.showGoalsInTimeline = data.showGoalsInTimeline;
+                        Object.assign(this, {
+                            allEntries: data.allEntries || {},
+                            goals: data.goals || [],
+                            emojis: data.emojis || this.emojis,
+                            startHour: data.startHour ?? this.startHour,
+                            showGoalsInTimeline: data.showGoalsInTimeline ?? false
+                        });
                     } catch (e) {
                         console.warn("Failed to load saved data", e);
                     }
                 } else {
-                    // Detect if user is on mobile
-                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    
-                    // First time user - add welcome message to current day
-                    const welcomeEntries = {
-                        7: { emojis: ['👋'], text: 'welcome to hourlies' },
-                        8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
-                        9: { emojis: [], text: '' },
-                        10: { emojis: ['✏️'], text: 'click any hour to add what you did' },
-                        11: { emojis: [], text: '' },
-                        12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
-                        13: { emojis: ['📝'], text: 'repeat on empty hour to paste' },
-                        14: { emojis: [], text: '' },
-                        15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
-                        16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
-                        17: { emojis: [], text: '' },
-                        18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
-                        19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' }
-                    };
-                    this.allEntries[this.currentDateKey] = welcomeEntries;
-                    
-                    // Add these emojis to the available emojis list if not already present
-                    const welcomeEmojis = ['👋', '📊', '✏️', '📄', '📝', '⚙️', '🎯', '🏠', '🗑️'];
-                    this.emojis = [...new Set([...this.emojis, ...welcomeEmojis])];
+                    this.createWelcomeMessage();
                 }
-
-                this.init();
             }
 
-            init() {
-                this.render();
-                this.startTimer();
-                this.setupEventListeners();
+            createWelcomeMessage() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const welcomeEntries = {
+                    7: { emojis: ['👋'], text: 'welcome to hourlies' },
+                    8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
+                    10: { emojis: ['✏️'], text: 'click any hour to add what you did or plan to do' },
+                    12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
+                    13: { emojis: ['📋'], text: 'repeat on empty hour to paste' },
+                    15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
+                    16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
+                    18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
+                    19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' },
+                    21: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
+                };
+                this.allEntries[this.currentDateKey] = welcomeEntries;
+
+                // Add default rules if none exist
+                if (!this.goals || this.goals.length === 0) {
+                    this.goals = [
+                        { id: Date.now() + 1, emoji: '☕', operator: 'after', value: 17, not: true }, // no coffee after 17
+                        { id: Date.now() + 2, emoji: '☕', operator: 'more_than', value: 3 }, // no more than 3 coffee
+                        { id: Date.now() + 3, emoji: '😴', operator: 'before', value: 0 } // sleep before 00
+                    ];
+                }
             }
 
-            dateKey(date) {
-                return date.toISOString().split('T')[0];
+            saveData() {
+                localStorage.setItem("hourliesData", JSON.stringify({
+                    allEntries: this.allEntries,
+                    goals: this.goals,
+                    emojis: this.emojis,
+                    startHour: this.startHour,
+                    showGoalsInTimeline: this.showGoalsInTimeline
+                }));
             }
 
-            get currentDateKey() {
-                return this.dateKey(this.currentDate);
+            updateEntries(newEntries) {
+                this.undoStack.push({ 
+                    entries: { ...this.entries }, 
+                    timestamp: Date.now(),
+                    date: new Date(this.currentDate) // Store the date for undo
+                });
+                if (this.undoStack.length > 100) this.undoStack.shift();
+                
+                // Split entries into correct calendar days
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Initialize storage objects
+                if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                
+                // Store entries in correct calendar days
+                Object.entries(newEntries).forEach(([hour, entry]) => {
+                    const hourNum = parseInt(hour);
+                    if (hourNum >= this.startHour) {
+                        // Hours 7-23 go to current calendar day
+                        this.allEntries[currentDayKey][hourNum] = entry;
+                    } else {
+                        // Hours 0-6 go to next calendar day
+                        this.allEntries[nextDayKey][hourNum] = entry;
+                    }
+                });
+                
+                this.updateUndoButton();
+                this.saveData();
             }
 
-            get entries() {
-                return this.allEntries[this.currentDateKey] || {};
+            // === UTILITIES ===
+            dateKey(date) { return date ? date.toISOString().split('T')[0] : ''; }
+            
+            get currentDateKey() { 
+                // For data storage, we need to account for hours that belong to previous day
+                const effectiveDate = new Date(this.currentDate);
+                return this.dateKey(effectiveDate);
+            }
+            
+            get entries() { 
+                // Get entries for the current logical day
+                const currentDayEntries = this.allEntries[this.currentDateKey] || {};
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                const nextDayEntries = this.allEntries[nextDayKey] || {};
+                
+                // Combine entries: hours 0-6 from next calendar day + hours 7-23 from current day
+                const combinedEntries = {};
+                
+                // Add hours 7-23 from current calendar day
+                for (let hour = this.startHour; hour < 24; hour++) {
+                    if (currentDayEntries[hour]) {
+                        combinedEntries[hour] = currentDayEntries[hour];
+                    }
+                }
+                
+                // Add hours 0-(startHour-1) from next calendar day
+                for (let hour = 0; hour < this.startHour; hour++) {
+                    if (nextDayEntries[hour]) {
+                        combinedEntries[hour] = nextDayEntries[hour];
+                    }
+                }
+                
+                return combinedEntries;
+            }
+            
+            get hours() { return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24); }
+            formatHour(hour) { return hour.toString().padStart(2, '0'); }
+            
+            formatDateInput() {
+                if (!this.currentDate) return '';
+                return [
+                    this.currentDate.getDate().toString().padStart(2, '0'),
+                    (this.currentDate.getMonth() + 1).toString().padStart(2, '0'),
+                    this.currentDate.getFullYear().toString().slice(-2)
+                ].join('/');
             }
 
-            formatHour(hour) {
-                return hour.toString().padStart(2, '0');
+            getEffectiveDate() {
+                // Get the current logical day based on start hour
+                const d = new Date(this.currentTime);
+                if (d.getHours() < this.startHour) {
+                    d.setDate(d.getDate() - 1);
+                }
+                return d;
             }
 
-            get hours() {
-                return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24);
-            }
-
-            isCurrentDate() {
-                return this.dateKey(this.currentTime) === this.currentDateKey;
-            }
-
-            isPastDate() {
-                return new Date(this.currentDateKey) < new Date(this.dateKey(this.currentTime));
-            }
-
-            isFutureDate() {
-                return new Date(this.currentDateKey) > new Date(this.dateKey(this.currentTime));
-            }
+            isCurrentDate() { return this.dateKey(this.getEffectiveDate()) === this.currentDateKey; }
+            isPastDate() { return this.dateKey(this.currentDate) < this.dateKey(this.getEffectiveDate()); }
+            isFutureDate() { return this.dateKey(this.currentDate) > this.dateKey(this.getEffectiveDate()); }
 
             getHourFill(hour) {
                 if (this.isFutureDate()) return 0;
@@ -996,10 +1127,7 @@
                 const adjustedCurrentHour = currentHour < this.startHour ? currentHour + 24 : currentHour;
                 
                 if (adjustedHour < adjustedCurrentHour) return 100;
-                if (adjustedHour === adjustedCurrentHour) {
-                    const minutes = this.currentTime.getMinutes();
-                    return (minutes / 60) * 100;
-                }
+                if (adjustedHour === adjustedCurrentHour) return (this.currentTime.getMinutes() / 60) * 100;
                 return 0;
             }
 
@@ -1007,204 +1135,487 @@
                 return this.isCurrentDate() && this.currentTime.getHours() === hour;
             }
 
-            startTimer() {
-                setInterval(() => {
-                    const now = new Date();
-                    this.currentTime = now;
-                    if (this.dateKey(now) !== this.currentDateKey) {
-                        this.currentDate = now;
+            // === EVENTS ===
+            setupEvents() {
+                // Global keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    // Don't trigger shortcuts when typing in input fields
+                    if (e.target.matches('input, textarea')) return;
+                    
+                    // Don't trigger when editing an hour
+                    if (this.editingHour !== null) return;
+                    
+                    switch (e.key.toLowerCase()) {
+                        case 'arrowleft':
+                            this.navigateDay(-1);
+                            e.preventDefault();
+                            break;
+                        case 'arrowright':
+                            this.navigateDay(1);
+                            e.preventDefault();
+                            break;
+                        case 'f':
+                            document.querySelector('.date-input')?.focus();
+                            e.preventDefault();
+                            break;
+                        case 'e':
+                            this.setView('settings');
+                            e.preventDefault();
+                            break;
+                        case 'd':
+                            this.setView('daily');
+                            e.preventDefault();
+                            break;
+                        case 'h':
+                            this.setView('timeline');
+                            e.preventDefault();
+                            break;
                     }
-                    this.updateTimeDisplay();
-                }, 60000);
-            }
-
-            setupEventListeners() {
-                document.addEventListener('mousemove', this.handleGlobalMouseMove.bind(this));
-                document.addEventListener('mouseup', this.handleGlobalMouseUp.bind(this));
-                document.addEventListener('click', this.handleGlobalClick.bind(this));
-            }
-            
-            handleGlobalClick(event) {
-                // Only handle clicks when in edit mode
-                if (this.editingHour === null) return;
+                });
                 
-                // Don't handle clicks on the overlay (it has its own handler)
-                if (event.target.classList.contains('overlay')) return;
-                
-                // Don't handle clicks inside the textarea or clear button
-                if (event.target.classList.contains('hour-input') || 
-                    event.target.classList.contains('clear-btn') ||
-                    event.target.classList.contains('emoji-btn')) return;
-                
-                // Refocus the textarea and set cursor to end
-                const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
-                if (textarea) {
-                    event.preventDefault();
-                    // Wait a bit to ensure the click event is fully processed
-                    setTimeout(() => {
-                        textarea.focus();
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                    }, 0);
-                }
-            }
-
-            handleCopyPaste(hour, entry, element) {
-            const hasNoContent = (!entry.text || entry.text.trim() === "") && (!entry.emojis || entry.emojis.length === 0);
-
-            if (!hasNoContent) {
-                // Only copy what exists in the source
-                this.clipboardEntry = {
-                    hasEmojis: entry.emojis && entry.emojis.length > 0,
-                    hasText: entry.text && entry.text.trim().length > 0 && entry.text.trim() !== "",
-                    emojis: entry.emojis ? [...entry.emojis] : [],
-                    text: entry.text || ""
-                };
-                element.classList.add("flash");
-                setTimeout(() => element.classList.remove("flash"), 500);
-            } else if (this.clipboardEntry) {
-                // Paste
-                const newEntries = { ...this.entries };
-                const targetHasText = entry.text && entry.text.trim() !== "";
-                
-                newEntries[hour] = {
-                    // If clipboard has emojis, use them, otherwise keep target emojis (or empty array)
-                    emojis: this.clipboardEntry.hasEmojis ? [...this.clipboardEntry.emojis] : (entry.emojis || []),
-                    // If target has text, keep it, otherwise use clipboard text only if it was copied
-                    text: targetHasText ? entry.text : (this.clipboardEntry.hasText ? this.clipboardEntry.text : "")
-                };
-                
-                this.updateEntries(newEntries);
-                this.renderHours();
-            }
-            }
-            attachCopyPasteEvents() {
-            const hourElements = document.querySelectorAll(".hour-entry");
-            hourElements.forEach(el => {
-                const hour = parseInt(el.dataset.hour);
-                const entry = this.entries[hour] || { emojis: [], text: "" };
-
-                el.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
-                this.handleCopyPaste(hour, entry, el);
+                // Handle backspace/delete on hover
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'Backspace' || e.key === 'Delete') && 
+                        this.editingHour === null && // Not in edit mode
+                        this.hoveredHour !== null && // Hovering over an entry
+                        this.view === 'timeline' && // In timeline view
+                        !e.target.matches('input, textarea')) { // Not typing in an input
+                        this.clearEntry(this.hoveredHour);
+                        e.preventDefault(); // Prevent browser back navigation
+                    }
                 });
 
-                el.addEventListener("touchstart", () => {
-                this.longPressTimer = setTimeout(() => {
-                    this.handleCopyPaste(hour, entry, el);
-                    el._suppressClick = true;
-                }, 500);
+                document.addEventListener('click', (e) => {
+                    if (this.editingHour === null) return;
+                    const isInterface = e.target.classList.contains('overlay') ||
+                                      e.target.classList.contains('hour-input') ||
+                                      e.target.classList.contains('clear-btn') ||
+                                      e.target.classList.contains('emoji-btn');
+                    if (!isInterface) {
+                        e.preventDefault();
+                        setTimeout(() => {
+                            const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
+                            if (textarea) {
+                                textarea.focus();
+                                textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                            }
+                        }, 0);
+                    }
                 });
-                el.addEventListener("touchend", () => clearTimeout(this.longPressTimer));
-                el.addEventListener("touchmove", () => clearTimeout(this.longPressTimer));
+            }
 
-                // Suppress click after long-press
-                el.addEventListener("click", (e) => {
-                if (el._suppressClick) {
-                    e.stopImmediatePropagation();
-                    el._suppressClick = false;
+            // === NAVIGATION ===
+            navigateDay(direction) {
+                this.currentDate.setDate(this.currentDate.getDate() + direction);
+                this.editingHour = null;
+                this.render();
+            }
+
+            jumpToToday() {
+                this.currentDate = this.getEffectiveDate();
+                this.editingHour = null;
+                this.render();
+                setTimeout(() => this.scrollToCurrentHour(), 100);
+            }
+
+            setView(view) {
+                if (this.view === 'timeline' && view !== 'timeline') {
+                    const container = document.querySelector('.daily-container');
+                    if (container) this.timelineScrollPosition = container.scrollTop;
                 }
-                }, true);
-            });
+
+                this.view = view;
+                this.editingHour = null;
+                this.editingGoal = null;
+                this.updateHeaderTitle();
+                this.render();
+            }
+
+            updateHeaderTitle() {
+                const floatingNavDate = document.getElementById('floatingNavDate');
+                if (!floatingNavDate) return;
+
+                if (this.view === 'timeline') {
+                    floatingNavDate.textContent = "hourlies";
+                    floatingNavDate.classList.add('btn-active');
+                } else {
+                    floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
+                    floatingNavDate.classList.remove('btn-active');
+                }
             }
 
             handleScroll(e) {
                 const scrolled = e.target.scrollTop > 150;
-                this.showFloatingNav = scrolled;
-                
-                if (this.view === 'timeline') {
-                    this.timelineScrollPosition = e.target.scrollTop;
-                }
-                
                 const floatingNavDate = document.getElementById('floatingNavDate');
-
-                floatingNavDate.classList.add('btn-active');
-                if (floatingNavDate && this.view === 'timeline') {
-                    if (scrolled) {
-                        floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                
+                if (floatingNavDate) {
+                    if (this.view === 'timeline') {
+                        if (scrolled) {
+                            floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                            floatingNavDate.onclick = () => {
+                                document.getElementById('mainContainer').scrollTo({ top: 0, behavior: 'smooth' });
+                            };
+                        } else {
+                            floatingNavDate.textContent = "hourlies";
+                            floatingNavDate.onclick = () => app.setView('timeline');
+                        }
+                        floatingNavDate.classList.add('btn-active');
                     } else {
-                        floatingNavDate.textContent = "hourlies";
+                        floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
+                        floatingNavDate.onclick = () => app.setView('timeline');
+                        floatingNavDate.classList.remove('btn-active');
                     }
                 }
             }
 
-            handleGlobalMouseMove(e) {
-                if (this.isScrollDragging && this.scrollContainerRef) {
-                    const deltaY = e.clientY - this.scrollDragStart.y;
-                    const newScrollTop = this.scrollDragStart.scrollTop - deltaY * 2;
-                    this.scrollContainerRef.scrollTop = newScrollTop;
+            // === DATE INPUT ===
+            handleDateInput(event) {
+                const value = event.target.value.replace(/\D/g, '');
+                event.target.value = value.match(/.{1,2}/g)?.join('/') || value;
+
+                const parseAndSetDate = (value, useCurrentYear = false) => {
+                    const day = parseInt(value.slice(0, 2), 10);
+                    const month = parseInt(value.slice(2, 4), 10) - 1;
+                    const year = useCurrentYear ? this.currentTime.getFullYear() : 2000 + parseInt(value.slice(4, 6), 10);
+
+                    // Set currentDate and currentTime to the user's entered date
+                    const inputDate = new Date(year, month, day, 12, 0, 0);
+
+                    if (!isNaN(inputDate.getTime()) && day > 0 && day <= 31 && month >= 0 && month < 12) {
+                        this.currentDate = new Date(year, month, day);
+                        this.currentTime = new Date(year, month, day, 12, 0, 0);
+                        event.target.value = this.formatDateInput();
+                        this.render();
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (value.length === 4 && (event.type === 'blur' || event.key === 'Enter')) {
+                    if (!parseAndSetDate(value, true)) {
+                        event.target.value = this.formatDateInput();
+                    }
+                } else if (value.length === 6) {
+                    parseAndSetDate(value);
                 }
             }
 
-            handleGlobalMouseUp() {
-                if (this.isScrollDragging) {
-                    this.isScrollDragging = false;
-                    this.updateScrollBar();
+            formatNavbarDate(date) {
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toLowerCase();
+            }
+
+            handleDateKeydown(event) {
+                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Escape'];
+                if (!/^\d$/.test(event.key) && !allowed.includes(event.key)) {
+                    event.preventDefault();
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.target.blur();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.target.value = this.formatDateInput();
+                    event.target.blur();
                 }
             }
 
-            updateEntries(newEntries) {
-                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
-                if (this.undoStack.length > 10) this.undoStack.shift();
+            handleDateFocus(event) {
+                event.target.select();
+                event.target.addEventListener('blur', (e) => this.handleDateInput(e), { once: true });
+            }
+
+            // === HOURS ===
+            editHour(hour) {
+                if (this.editingHour === hour) return;
+                this.editingHour = hour;
+                this.renderHours();
                 
+                setTimeout(() => {
+                    const hourElement = document.querySelector(`[data-hour="${hour}"]`);
+                    const textarea = hourElement?.querySelector('textarea');
+                    if (textarea) {
+                        if (window.innerWidth <= 768) {
+                            const container = document.querySelector('.scroll-container');
+                            const containerRect = container.getBoundingClientRect();
+                            const elementRect = hourElement.getBoundingClientRect();
+                            const relativeTop = elementRect.top - containerRect.top;
+                            const targetPosition = containerRect.height * 0.15;
+                            container.scrollTop = container.scrollTop + (relativeTop - targetPosition);
+                        } else {
+                            hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        
+                        setTimeout(() => {
+                            textarea.focus();
+                            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                        }, 100);
+                    }
+                }, 30);
+            }
+
+            updateText(text) {
+                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
+                const newEntries = { ...this.entries };
+                newEntries[this.editingHour] = { ...entry, text };
+                
+                this.undoStack.push({ 
+                    entries: { ...this.entries }, 
+                    timestamp: Date.now(),
+                    date: new Date(this.currentDate)
+                });
+                if (this.undoStack.length > 50) this.undoStack.shift();
                 this.allEntries[this.currentDateKey] = newEntries;
                 this.updateUndoButton();
-            
                 this.saveData();
             }
 
-            wipeCurrentDayData() {
-                const newEntries = {};
+            clearEntry(hour) {
+                const newEntries = { ...this.entries };
+                newEntries[hour] = { emojis: [], text: '' };
                 this.updateEntries(newEntries);
-                this.render();
+                this.editingHour = null;
+                this.renderHours();
             }
-            shiftHoursForNewStartHour(oldStartHour, newStartHour) {
-                const shiftedEntries = {};
-                
-                Object.entries(this.allEntries).forEach(([date, dayEntries]) => {
-                    shiftedEntries[date] = {};
-                    Object.entries(dayEntries).forEach(([hour, entry]) => {
-                        const hourNum = parseInt(hour);
-                        // Calculate how many hours this entry needs to shift
-                        // If it's after the old start hour, it belongs to the same day
-                        // If it's before, it belongs to the next day
-                        const dayOffset = hourNum < oldStartHour ? 1 : 0;
-                        const absoluteHour = hourNum + (dayOffset * 24);
-                        const shiftedAbsoluteHour = absoluteHour - (oldStartHour - newStartHour);
-                        const newHour = shiftedAbsoluteHour % 24;
+
+            toggleEmoji(emoji) {
+                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
+                const validEmojis = entry.emojis.filter(e => this.emojis.includes(e));
+                const newEmojis = validEmojis.includes(emoji)
+                    ? validEmojis.filter(e => e !== emoji)
+                    : [...validEmojis, emoji];
+                const newEntries = { ...this.entries };
+                newEntries[this.editingHour] = { ...entry, emojis: newEmojis };
+                this.updateEntries(newEntries);
+                this.renderHours();
+                this.renderGoals();
+                setTimeout(() => {
+                    const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
+                    if (textarea) {
+                        textarea.focus();
+                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                    }
+                }, 50);
+            }
+
+            handleHourInputKeydown(event, hour) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    this.editingHour = null;
+                    this.renderHours();
+                } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                    const textarea = event.target;
+                    const cursorAtEnd = textarea.selectionStart === textarea.value.length;
+                    
+                    // Only navigate if cursor is at the very end of the text
+                    if (cursorAtEnd) {
+                        event.preventDefault();
+                        const currentIndex = this.hours.indexOf(hour);
+                        const nextIndex = event.key === 'ArrowUp' 
+                            ? (currentIndex - 1 + this.hours.length) % this.hours.length
+                            : (currentIndex + 1) % this.hours.length;
+                        const nextHour = this.hours[nextIndex];
+
+                        this.editingHour = nextHour;
+                        this.renderHours();
                         
-                        const targetDate = dayOffset ? 
-                            new Date(date).setDate(new Date(date).getDate() + dayOffset) :
-                            date;
-                            
-                        if (!shiftedEntries[targetDate]) {
-                            shiftedEntries[targetDate] = {};
-                        }
-                        shiftedEntries[targetDate][newHour] = entry;
-                    });
-                });
-                
-                this.allEntries = shiftedEntries;
-            }
-            
-            saveData() {
-                const oldStartHour = JSON.parse(localStorage.getItem("hourliesData"))?.startHour;
-                if (oldStartHour !== undefined && oldStartHour !== this.startHour) {
-                    this.shiftHoursForNewStartHour(oldStartHour, this.startHour);
+                        setTimeout(() => {
+                            const nextTextarea = document.querySelector(`[data-hour="${nextHour}"] textarea`);
+                            if (nextTextarea) {
+                                nextTextarea.focus();
+                                nextTextarea.selectionStart = nextTextarea.selectionEnd = nextTextarea.value.length;
+                            }
+                        }, 0);
+                    }
                 }
-                
-                localStorage.setItem("hourliesData", JSON.stringify({
-                    allEntries: this.allEntries,
-                    goals: this.goals,
-                    emojis: this.emojis,
-                    startHour: this.startHour,
-                    showGoalsInTimeline: this.showGoalsInTimeline
-                }));            
             }
+
+            // === COPY/PASTE ===
+            handleCopyPaste(hour, entry, element) {
+                const hasContent = (entry.text && entry.text.trim()) || (entry.emojis && entry.emojis.length > 0);
+
+                if (hasContent) {
+                    this.clipboardEntry = {
+                        emojis: entry.emojis ? [...entry.emojis] : [],
+                        text: entry.text || ""
+                    };
+                    element.classList.add("flash");
+                    setTimeout(() => element.classList.remove("flash"), 500);
+                } else if (this.clipboardEntry) {
+                    const newEntries = { ...this.entries };
+                    newEntries[hour] = { ...this.clipboardEntry };
+                    this.updateEntries(newEntries);
+                    this.renderHours();
+                }
+            }
+
+            attachCopyPasteEvents() {
+                document.querySelectorAll(".hour-entry").forEach(el => {
+                    const hour = parseInt(el.dataset.hour);
+                    const entry = this.entries[hour] || { emojis: [], text: "" };
+
+                    el.addEventListener("mouseenter", () => {
+                        this.hoveredHour = hour;
+                    });
+
+                    el.addEventListener("mouseleave", () => {
+                        this.hoveredHour = null;
+                    });
+
+                    el.addEventListener("contextmenu", (e) => {
+                        e.preventDefault();
+                        this.handleCopyPaste(hour, entry, el);
+                    });
+
+                    let longPressTimer;
+                    el.addEventListener("touchstart", () => {
+                        longPressTimer = setTimeout(() => {
+                            this.handleCopyPaste(hour, entry, el);
+                            el._suppressClick = true;
+                        }, 500);
+                    });
+                    
+                    el.addEventListener("touchend", () => clearTimeout(longPressTimer));
+                    el.addEventListener("touchmove", () => clearTimeout(longPressTimer));
+
+                    el.addEventListener("click", (e) => {
+                        if (el._suppressClick) {
+                            e.stopImmediatePropagation();
+                            el._suppressClick = false;
+                        }
+                    }, true);
+                });
+            }
+
+            // === GOALS ===
+            addGoal() {
+                const newGoal = {
+                    id: Date.now(),
+                    emojis: ['📖'],
+                    operator: 'more_than',
+                    value: 1
+                };
+                this.goals.push(newGoal);
+                this.renderSettings();
+            }
+
+            updateGoal(id, updates) {
+                this.goals = this.goals.map(goal => goal.id === id ? { ...goal, ...updates } : goal);
+                this.saveData();
+                this.renderSettings();
+            }
+
+            removeGoal(id) {
+                this.goals = this.goals.filter(goal => goal.id !== id);
+                this.saveData();
+                this.renderSettings();
+            }
+
+            editGoal(id) {
+                this.editingGoal = this.editingGoal === id ? null : id;
+                this.renderSettings();
+            }
+
+            cycleOperator(goalId) {
+                const goal = this.goals.find(g => g.id === goalId);
+                const operators = ['more_than', 'less_than', 'before', 'after'];
+                const currentIndex = operators.indexOf(goal.operator);
+                const nextIndex = (currentIndex + 1) % operators.length;
+                this.updateGoal(goalId, { operator: operators[nextIndex] });
+            }
+
+            formatGoalText(goal) {
+                const opText = goal.operator.replace('_', ' ');
+                const suffix = goal.operator.includes('than') ? ' times' : '';
+                const negation = goal.not ? 'not ' : '';
+                const emojiText = Array.isArray(goal.emojis) ? goal.emojis.join(' ') : goal.emoji;
+                return `${negation}${emojiText} ${opText} ${goal.value}${suffix}`;
+            }
+
+            checkGoals() {
+                const dayEntries = Object.values(this.entries);
+                return this.goals.map(goal => {
+                    const emojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
+                    // Count total appearances of any emoji in the rule
+                    const emojiCount = dayEntries.reduce((count, entry) => {
+                        return count + emojis.reduce((c, emoji) => c + (entry.emojis?.filter(e => e === emoji).length || 0), 0);
+                    }, 0);
+                    // Find all hours where any emoji in the rule appears
+                    const emojiHours = Object.keys(this.entries).filter(hour => {
+                        const entryEmojis = this.entries[hour].emojis || [];
+                        return emojis.some(emoji => entryEmojis.includes(emoji));
+                    }).map(Number);
+                    let met = false;
+                    if (goal.operator === 'more_than') {
+                        met = emojiCount > goal.value;
+                    } else if (goal.operator === 'less_than') {
+                        met = emojiCount < goal.value;
+                    } else if (goal.operator === 'before' && emojiHours.length > 0) {
+                        const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
+                        const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
+                        met = Math.min(...adjustedHours) < adjustedTarget;
+                    } else if (goal.operator === 'after' && emojiHours.length > 0) {
+                        const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
+                        const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
+                        met = Math.max(...adjustedHours) > adjustedTarget;
+                    }
+                    if (goal.not) met = !met;
+                    return { ...goal, met, emojiCount };
+                });
+            }
+
+            // === TIMER ===
+            startTimer() {
+                setInterval(() => {
+                    this.currentTime = new Date();
+                    const effectiveDate = this.getEffectiveDate();
+                    if (this.dateKey(effectiveDate) !== this.currentDateKey) {
+                        this.currentDate = effectiveDate;
+                    }
+                    if (this.view === 'timeline' && this.editingHour === null) {
+                        this.renderHours();
+                    }
+                }, 60000);
+            }
+
             undo() {
                 if (this.undoStack.length === 0) return;
-                
                 const lastState = this.undoStack.pop();
-                this.allEntries[this.currentDateKey] = lastState.entries;
+                
+                // Restore the date from the undo state
+                if (lastState.date) {
+                    this.currentDate = new Date(lastState.date);
+                }
+                
+                // Apply the undo state using the same logic as updateEntries
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Clear current entries
+                if (this.allEntries[currentDayKey]) {
+                    for (let hour = this.startHour; hour < 24; hour++) {
+                        delete this.allEntries[currentDayKey][hour];
+                    }
+                }
+                if (this.allEntries[nextDayKey]) {
+                    for (let hour = 0; hour < this.startHour; hour++) {
+                        delete this.allEntries[nextDayKey][hour];
+                    }
+                }
+                
+                // Restore entries
+                Object.entries(lastState.entries).forEach(([hour, entry]) => {
+                    const hourNum = parseInt(hour);
+                    if (hourNum >= this.startHour) {
+                        if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                        this.allEntries[currentDayKey][hourNum] = entry;
+                    } else {
+                        if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                        this.allEntries[nextDayKey][hourNum] = entry;
+                    }
+                });
+                
                 this.updateUndoButton();
                 this.renderHours();
                 this.saveData();
@@ -1217,315 +1628,36 @@
                 }
             }
 
-            setView(view) {
-                // Store timeline position if leaving timeline view
-                if (this.view === 'timeline' && view !== 'timeline') {
-                    const container = document.querySelector('.scroll-container');
-                    if (container) {
-                        this.timelineScrollPosition = container.scrollTop;
-                    }
-                }
-
-                this.view = view;
-                this.editingHour = null;
-                this.editingGoal = null;
-                
-                // Update active button state
-                const buttons = document.querySelectorAll('.header-buttons .btn');
-                buttons.forEach(btn => {
-                    btn.classList.remove('btn-active');
-                    if (btn.onclick.toString().includes(`'${view}'`)) {
-                        btn.classList.add('btn-active');
-                    }
-                });
-
-                // Update header title and classes
-                const floatingNavDate = document.getElementById('floatingNavDate');
-                if (floatingNavDate) {
-                    if (view === 'timeline') {
-                        floatingNavDate.textContent = "hourlies";
-                        if (!this.showFloatingNav) {
-                            floatingNavDate.classList.add('btn-active');
-                        }
-                    } else {
-                        floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
-                        floatingNavDate.classList.remove('btn-active');
-                    }
-                }
-                
-                this.render();
-            }
-
-            updateTimeDisplay() {
-                if (this.view === 'timeline' && this.editingHour === null) {
-                    this.renderHours();
-                    this.updateScrollIndicator();
-                }
-            }
-
-            clearEntry(hour) {
-                const newEntries = { ...this.entries };
-                newEntries[hour] = { emojis: [], text: '' };
-                this.updateEntries(newEntries);
-                this.editingHour = null;
-                this.renderHours();
-            }
-
-            editHour(hour) {
-                if (this.editingHour === hour) return;
-                this.editingHour = hour;
-                this.renderHours();
-                setTimeout(() => {
-                    const hourElement = document.querySelector(`[data-hour="${hour}"]`);
-                    const textarea = hourElement?.querySelector('textarea');
-                    if (textarea && hourElement) {
-                        // Center the hour element in view
-                        hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        textarea.focus();
-                        // Move cursor to end
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                        // Adjust height for content
-                        textarea.style.height = '';
-                        textarea.style.height = textarea.scrollHeight + 'px';
-                    }
-                }, 50);
-            }
-
-            toggleEmoji(emoji) {
-                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
-                const validEmojis = entry.emojis.filter(e => this.emojis.includes(e));
-                const newEmojis = validEmojis.includes(emoji) 
-                    ? validEmojis.filter(e => e !== emoji)
-                    : [...validEmojis, emoji];
-                
-                const newEntries = { ...this.entries };
-                newEntries[this.editingHour] = { ...entry, emojis: newEmojis };
-                this.updateEntries(newEntries);
-                this.renderHours();
-                
-                setTimeout(() => {
-                    const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
-                    if (textarea) {
-                        textarea.focus();
-                        // Move cursor to end
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                    }
-                }, 50);
-            }
-
-            updateText(text) {
-                const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
-                const newEntries = { ...this.entries };
-                newEntries[this.editingHour] = { ...entry, text };
-                // Don't trigger a full render, just save
-                this.undoStack.push({ entries: { ...this.entries }, timestamp: Date.now() });
-                if (this.undoStack.length > 10) this.undoStack.shift();
-                this.allEntries[this.currentDateKey] = newEntries;
-                this.updateUndoButton();
-                this.saveData();
-            }
-
-            navigateDay(direction) {
-                const newDate = new Date(this.currentDate);
-                newDate.setDate(newDate.getDate() + direction);
-                this.currentDate = newDate;
-                this.editingHour = null;
-                this.render();
-            }
-
-            formatNavbarDate(date) {
-                return date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-
-            formatDateInput() {
-                const d = this.currentDate.getDate().toString().padStart(2, '0');
-                const m = (this.currentDate.getMonth() + 1).toString().padStart(2, '0');
-                const y = this.currentDate.getFullYear().toString().slice(-2);
-                return `${d}/${m}/${y}`;
-            }
-
-            handleDateFocus(event) {
-                event.target.select();
-            }
-
-            handleHourInputKeydown(event, hour) {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                    // Close edit mode only if Enter is pressed without Shift
-                    event.preventDefault();
-                    this.editingHour = null;
-                    this.renderHours();
-                } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                    const textarea = event.target;
-                    const atStart = textarea.selectionStart === 0;
-                    const atEnd = textarea.selectionEnd === textarea.value.length;
-                    const noSelection = textarea.selectionStart === textarea.selectionEnd;
-                    const isMultiline = textarea.value.includes('\n');
-
-                    // Only navigate between hours if we're at the edges of single-line content
-                    if ((event.key === 'ArrowUp' && (atStart || !isMultiline)) ||
-                        (event.key === 'ArrowDown' && (atEnd || !isMultiline))) {
-                        event.preventDefault();
-                        const currentIndex = this.hours.indexOf(hour);
-                        const nextIndex = event.key === 'ArrowUp' 
-                            ? (currentIndex - 1 + this.hours.length) % this.hours.length
-                            : (currentIndex + 1) % this.hours.length;
-                        const nextHour = this.hours[nextIndex];
-                        
-                        this.editHour(nextHour);
-                    }
-                }
-            }
-
-            handleDateKeydown(event) {
-                // Allow only numbers, backspace, delete, arrow keys, tab
-                if (!/^\d$/.test(event.key) && 
-                    !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
-                    event.preventDefault();
-                }
-            }
-
-            handleDateInput(event) {
-                let value = event.target.value.replace(/\D/g, '');
-                const parts = [];
-                
-                // Split into day/month/year parts
-                for (let i = 0; i < value.length && i < 6; i += 2) {
-                    parts.push(value.slice(i, i + 2));
-                }
-                
-                // Add slashes between parts
-                event.target.value = parts.join('/');
-                
-                // If we have a complete date (6 digits), try to update
-                if (value.length === 6) {
-                    const day = parseInt(value.slice(0, 2), 10);
-                    const month = parseInt(value.slice(2, 4), 10) - 1;
-                    const year = 2000 + parseInt(value.slice(4, 6), 10);
-                    
-                    const newDate = new Date(year, month, day);
-                    if (!isNaN(newDate.getTime())) {
-                        this.currentDate = newDate;
-                        this.render();
-                    }
-                }
-            }
-
-            jumpToToday() {
-                this.currentDate = new Date();
-                this.editingHour = null;
-                this.render();
-                setTimeout(() => {
-                    this.scrollToCurrentHour();
-                }, 100);
-            }
-
-            handleNavbarDateClick() {
-                if (this.scrollContainerRef) {
-                    this.scrollContainerRef.scrollTop = 0;
-                }
-            }
-
             scrollToCurrentHour() {
-                if (!this.scrollContainerRef) return;
+                const container = document.querySelector('.scroll-container');
+                if (!container) return;
                 const currentHourIndex = this.hours.findIndex(hour => hour === this.currentTime.getHours());
                 if (currentHourIndex === -1) return;
-                const hourElements = this.scrollContainerRef.querySelectorAll('[data-hour]');
+                const hourElements = container.querySelectorAll('[data-hour]');
                 const targetElement = hourElements[currentHourIndex];
                 if (targetElement) {
                     targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
 
-            handleScrollMouseDown(e) {
-                this.isScrollDragging = true;
-                this.scrollDragStart = {
-                    y: e.clientY,
-                    scrollTop: this.scrollContainerRef?.scrollTop || 0
-                };
-                e.preventDefault();
-                this.updateScrollBar();
-            }
-
-            handleRightBarClick() {
-                const now = Date.now();
-                if (now - this.lastTapTime < 300) {
-                    this.scrollToCurrentHour();
-                }
-                this.lastTapTime = now;
-            }
-
-            updateScrollBar() {
-                const scrollBar = document.querySelector('.scroll-bar');
-                if (scrollBar) {
-                    if (this.isScrollDragging) {
-                        scrollBar.classList.add('dragging');
-                        scrollBar.classList.remove('scroll-pattern');
-                    } else {
-                        scrollBar.classList.remove('dragging');
-                        scrollBar.classList.add('scroll-pattern');
-                    }
-                }
-            }
-
-            getCurrentHourPosition() {
-                if (!this.scrollContainerRef) return null;
-                
-                const currentHourIndex = this.hours.findIndex(hour => hour === this.currentTime.getHours());
-                if (currentHourIndex === -1) return null;
-                
-                const hourHeight = 60;
-                const hourTop = currentHourIndex * hourHeight;
-                const containerTop = this.scrollContainerRef.scrollTop;
-                const containerHeight = this.scrollContainerRef.clientHeight;
-                
-                const relativePosition = (hourTop - containerTop) / containerHeight;
-                
-                if (relativePosition < 0 || relativePosition > 1) {
-                    return Math.max(0.1, Math.min(0.9, relativePosition));
-                }
-                
-                return null;
-            }
-
-            updateScrollIndicator() {
-                const currentHourPos = this.getCurrentHourPosition();
-                const indicator = document.querySelector('.hour-indicator');
-                if (indicator) {
-                    if (currentHourPos !== null) {
-                        indicator.style.display = 'block';
-                        indicator.style.top = `${currentHourPos * 100}%`;
-                    } else {
-                        indicator.style.display = 'none';
-                    }
-                }
-            }
-
+            // === EXPORT ===
             exportCurrentDayCSV() {
-                let exportContent = "";
-                
+                let content = "";
                 this.hours.forEach(hour => {
                     const entry = this.entries[hour];
                     const emojis = entry?.emojis?.join('') || '';
                     const text = entry?.text || '';
-                    exportContent += `${emojis} ${text}"\n`;
+                    content += `${emojis} ${text}\n`;
                 });
-                // 02,"",""
-                // 03,"☕","kaffee"
-
                 
                 try {
-                    navigator.clipboard.writeText(exportContent);
+                    navigator.clipboard.writeText(content);
                 } catch (err) {
-                    const blob = new Blob([exportContent], { type: 'text/csv' });
+                    const blob = new Blob([content], { type: 'text/csv' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `hourlies-${this.currentDate.toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`;
+                    a.download = `hourlies-${this.formatDateInput()}.csv`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -1533,279 +1665,264 @@
                 }
             }
 
-            exportAllCSV() {
-                const years = Object.keys(this.allEntries)
-                    .map(date => new Date(date).getFullYear())
-                    .filter((v, i, a) => a.indexOf(v) === i)
-                    .sort();
-                
-                if (years.length === 0) return;
-
-                // Create workbook with multiple sheets
-                let csvContent = "";
-
-                // First tab: Settings and Rules
-                csvContent += "# Settings\n";
-                csvContent += `StartHour,${this.startHour}\n`;
-                csvContent += `ShowGoalsInTimeline,${this.showGoalsInTimeline}\n`;
-                csvContent += `Emojis,${this.emojis.join('')}\n\n`;
-                
-                csvContent += "# Dailies\n";
-                csvContent += "Emojis,IsNot,Operator,Value\n";
-                this.goals.forEach(goal => {
-                    const goalEmojis = goal.emojis || [goal.emoji];
-                    csvContent += `${goalEmojis.join('')},${goal.isNot},${goal.operator},${goal.value}\n`;
+            groupEntriesByMonth() {
+                const months = {};
+                Object.entries(this.allEntries).forEach(([dateKey, entries]) => {
+                    const [year, month] = dateKey.split('-');
+                    const monthKey = `${year}-${month}`;
+                    if (!months[monthKey]) months[monthKey] = {};
+                    months[monthKey][dateKey] = entries;
                 });
-                csvContent += "\n---\n\n"; // Sheet separator
-
-                // Create a sheet for each year with data
-                years.forEach(year => {
-                    const yearDates = Object.keys(this.allEntries)
-                        .filter(date => new Date(date).getFullYear() === year &&
-                                      Object.keys(this.allEntries[date] || {}).length > 0)
-                        .sort();
-
-                    if (yearDates.length === 0) return;
-
-                    // Group by months
-                    const monthGroups = {};
-                    yearDates.forEach(date => {
-                        const month = new Date(date).getMonth();
-                        if (!monthGroups[month]) monthGroups[month] = [];
-                        monthGroups[month].push(date);
-                    });
-
-                    // Prepare year data
-                    const yearData = [];
-
-                    Object.entries(monthGroups).forEach(([month, monthDates]) => {
-                        // Add month header
-                        const monthName = new Date(year, parseInt(month)).toLocaleString('default', { month: 'long' });
-                        yearData.push([`${monthName} ${year}`]);
-
-                        // Add date headers row
-                        const headers = ['Hour'].concat(monthDates.map(date => 
-                            new Date(date).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: '2-digit'
-                            })
-                        ));
-                        yearData.push(headers);
-
-                        // Add hour rows
-                        this.hours.forEach(hour => {
-                            const row = [this.formatHour(hour)];
-                            monthDates.forEach(date => {
-                                const entry = this.allEntries[date]?.[hour];
-                                const emojis = entry?.emojis?.join('') || '';
-                                const text = entry?.text || '';
-                                row.push(`${emojis}${text ? ' ' + text : ''}`);
-                            });
-                            yearData.push(row);
-                        });
-
-                        // Add empty row between months
-                        yearData.push([]);
-                    });
-
-                    // Create year sheet
-                    const yearSheet = XLSX.utils.aoa_to_sheet(yearData);
-                    XLSX.utils.book_append_sheet(workbook, yearSheet, year.toString());
-                });
-
-                // Write workbook and trigger download
-                const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-                
-                function s2ab(s) {
-                    const buf = new ArrayBuffer(s.length);
-                    const view = new Uint8Array(buf);
-                    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                    return buf;
-                }
-
-                const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'hourlies.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                document.head.removeChild(script);
+                return months;
             }
 
-            importCSV(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                
+            exportAllToCSV() {
+                const monthlyData = this.groupEntriesByMonth();
+                const settings = {
+                    version: 1,
+                    timestamp: new Date().toISOString(),
+                    settings: {
+                        emojis: this.emojis,
+                        startHour: this.startHour,
+                        showGoalsInTimeline: this.showGoalsInTimeline
+                    },
+                    rules: this.goals.map(goal => ({
+                        ...goal,
+                        emojis: Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji]
+                    }))
+                };
+
+                // Create a settings file
+                const settingsBlob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+                const settingsUrl = URL.createObjectURL(settingsBlob);
+                const settingsLink = document.createElement('a');
+                settingsLink.href = settingsUrl;
+                settingsLink.download = 'hourlies-settings.json';
+                document.body.appendChild(settingsLink);
+                settingsLink.click();
+                document.body.removeChild(settingsLink);
+                URL.revokeObjectURL(settingsUrl);
+
+                // Create CSV files for each month
+                Object.entries(monthlyData).forEach(([monthKey, monthEntries]) => {
+                    const [year, month] = monthKey.split('-');
+                    const dates = Object.keys(monthEntries).sort();
+                    const hours = Array.from({ length: 24 }, (_, i) => (this.startHour + i) % 24);
+
+                    // Create CSV content
+                    let csvContent = 'Date,' + hours.map(h => h.toString().padStart(2, '0')).join(',') + '\n';
+                    dates.forEach(date => {
+                        const dayEntries = monthEntries[date];
+                        const row = [date];
+                        hours.forEach(hour => {
+                            const entry = dayEntries[hour];
+                            const cellContent = entry ? (entry.emojis?.join('') || '') + ' ' + (entry.text || '') : '';
+                            row.push(this.escapeCSV(cellContent));
+                        });
+                        csvContent += row.join(',') + '\n';
+                    });
+
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `hourlies-${monthKey}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }
+
+            escapeCSV(str) {
+                if (!str) return '';
+                str = str.replace(/"/g, '""');
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    str = `"${str}"`;
+                }
+                return str;
+            }
+
+            importFromCSVFile(file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    try {
-                        const csv = e.target.result;
-                        const lines = csv.split('\n').filter(line => line.trim());
-                        const headers = lines[0].split(',');
-                        
-                        if (headers.includes('Date')) {
-                            const newEntries = {};
+                    if (file.name.endsWith('.json')) {
+                        // Import settings file
+                        try {
+                            const importData = JSON.parse(e.target.result);
+                            console.log('Importing settings:', importData);  // Debug log
                             
-                            lines.slice(1).forEach(line => {
-                                const [date, hour, emojis, text] = line.split(',').map(cell => 
-                                    cell.replace(/^"/, '').replace(/"$/, '')
-                                );
-                                
-                                if (date && hour) {
-                                    const isoDate = new Date(date.split('/').reverse().join('-')).toISOString().split('T')[0];
-                                    if (!newEntries[isoDate]) newEntries[isoDate] = {};
-                                    
-                                    newEntries[isoDate][parseInt(hour)] = {
-                                        emojis: emojis ? [...emojis] : [],
-                                        text: text || ''
-                                    };
+                            // Handle both old and new format
+                            if (importData.version === 1) {
+                                // New format
+                                if (importData.settings) {
+                                    if (Array.isArray(importData.settings.emojis)) {
+                                        this.emojis = [...importData.settings.emojis];
+                                    }
+                                    if (typeof importData.settings.startHour === 'number' && 
+                                        importData.settings.startHour >= 0 && 
+                                        importData.settings.startHour < 24) {
+                                        this.startHour = importData.settings.startHour;
+                                    }
+                                    if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
+                                        this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
+                                    }
                                 }
-                            });
-                            
-                            this.allEntries = { ...this.allEntries, ...newEntries };
-                        } else {
-                            const dayEntries = {};
-                            
-                            lines.slice(1).forEach(line => {
-                                const [hour, emojis, text] = line.split(',').map(cell => 
-                                    cell.replace(/^"/, '').replace(/"$/, '')
-                                );
-                                
-                                if (hour) {
-                                    dayEntries[parseInt(hour)] = {
-                                        emojis: emojis ? [...emojis] : [],
-                                        text: text || ''
-                                    };
+                                if (Array.isArray(importData.rules)) {
+                                    // Ensure all goals have required properties and valid values
+                                    this.goals = importData.rules.filter(goal => {
+                                        const validOperators = ['more_than', 'less_than', 'before', 'after'];
+                                        return goal && 
+                                               goal.id && 
+                                               Array.isArray(goal.emojis) && 
+                                               validOperators.includes(goal.operator) && 
+                                               typeof goal.value === 'number';
+                                    }).map(goal => ({
+                                        ...goal,
+                                        not: Boolean(goal.not),
+                                        value: Math.max(0, Math.min(23, goal.value))  // Clamp value between 0-23
+                                    }));
                                 }
-                            });
-                            
-                            this.allEntries[this.currentDateKey] = dayEntries;
+                            } else {
+                                // Old format for backward compatibility
+                                if (Array.isArray(importData.emojis)) {
+                                    this.emojis = [...importData.emojis].filter(emoji => /\p{Emoji}/u.test(emoji));
+                                }
+                                if (Array.isArray(importData.goals)) {
+                                    this.goals = importData.goals.map(goal => {
+                                        if (goal.emoji && !goal.emojis) {
+                                            goal.emojis = [goal.emoji];
+                                            delete goal.emoji;
+                                        }
+                                        return goal;
+                                    });
+                                }
+                                if (typeof importData.startHour === 'number' && 
+                                    importData.startHour >= 0 && 
+                                    importData.startHour < 24) {
+                                    this.startHour = importData.startHour;
+                                }
+                                if (typeof importData.showGoalsInTimeline === 'boolean') {
+                                    this.showGoalsInTimeline = Boolean(importData.showGoalsInTimeline);
+                                }
+                            }
+                            this.saveData();
+                            this.render();
+                            alert('Settings imported successfully');
+                        } catch (err) {
+                            alert('Error importing settings: Invalid JSON file');
                         }
-                        
-                        alert('CSV imported successfully!');
-                        this.render();
-                    } catch (error) {
-                        alert('Invalid CSV file: ' + error.message);
+                    } else if (file.name.endsWith('.csv')) {
+                        // Import CSV data file
+                        try {
+                            const lines = e.target.result.split(/\r?\n/);
+                            const headers = this.parseCSVLine(lines[0]);
+                            console.log('CSV headers:', headers);  // Debug log
+                            if (!headers[0].toLowerCase().includes('date')) {
+                                throw new Error('Invalid CSV format: first column must be Date');
+                            }
+                            const hours = headers.slice(1).map(h => {
+                                const hour = parseInt(h, 10);
+                                if (isNaN(hour) || hour < 0 || hour > 23) {
+                                    throw new Error(`Invalid hour in header: ${h}`);
+                                }
+                                return hour;
+                            });
+                            
+                            for (let i = 1; i < lines.length; i++) {
+                                const line = lines[i].trim();
+                                if (!line) continue;
+
+                                const cols = this.parseCSVLine(line);
+                                if (cols.length !== headers.length) {
+                                    throw new Error(`Row ${i + 1} has incorrect number of columns: expected ${headers.length}, got ${cols.length}`);
+                                }
+
+                                const date = new Date(cols[0]);
+                                if (isNaN(date.getTime())) {
+                                    throw new Error(`Invalid date in row ${i + 1}: ${cols[0]}`);
+                                }
+
+                                const entries = {};
+                                for (let j = 1; j < cols.length; j++) {
+                                    const hour = hours[j - 1];
+                                    const cellContent = cols[j].trim();
+                                    if (cellContent) {
+                                        const emojis = Array.from(cellContent.match(/\p{Emoji}/gu) || []);
+                                        const text = cellContent.replace(/\p{Emoji}/gu, '').trim();
+                                        entries[hour] = { emojis, text };
+                                    }
+                                }
+
+                                this.allEntries[date.toISOString().split('T')[0]] = entries;
+                            }
+
+                            this.saveData();
+                            this.render();
+                            alert('Data imported successfully');
+                        } catch (err) {
+                            alert('Error importing data: Invalid CSV format');
+                        }
                     }
                 };
-                reader.readAsText(file);
-                event.target.value = '';
-            }
 
-            addGoal() {
-                const newGoal = {
-                    id: Date.now(),
-                    emojis: ['📖'],
-                    isNot: false,
-                    operator: 'more_than',
-                    value: 1
-                };
-                this.goals.push(newGoal);
-                this.renderSettings();
-            }
-
-            updateGoal(id, updates) {
-                this.goals = this.goals.map(goal => goal.id === id ? { ...goal, ...updates } : goal);
-                this.renderSettings();
-            }
-
-            removeGoal(id) {
-                this.goals = this.goals.filter(goal => goal.id !== id);
-                this.renderSettings();
-            }
-
-            editGoal(id) {
-                this.editingGoal = this.editingGoal === id ? null : id;
-                this.renderSettings();
-                if (this.editingGoal !== null) {
-                    setTimeout(() => {
-                        const input = document.querySelector(`.goal-value[data-goal="${id}"]`);
-                        if (input) {
-                            input.focus();
-                            input.selectionStart = input.selectionEnd = input.value.length;
-                        }
-                    }, 50);
+                if (file.name.endsWith('.json')) {
+                    reader.readAsText(file);
+                } else if (file.name.endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    alert('Invalid file type. Please select a .csv or .json file.');
                 }
             }
 
-            handleGoalInputKeydown(event, goalId) {
-                if (event.key === 'Enter') {
-                    this.editingGoal = null;
-                    this.renderSettings();
-                } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                    event.preventDefault();
-                    const currentGoal = this.goals.find(g => g.id === goalId);
-                    const currentIndex = this.goals.indexOf(currentGoal);
-                    const nextIndex = event.key === 'ArrowUp'
-                        ? (currentIndex - 1 + this.goals.length) % this.goals.length
-                        : (currentIndex + 1) % this.goals.length;
-                    this.editGoal(this.goals[nextIndex].id);
-                }
-            }
-
-            toggleGoalEmoji(goalId, emoji) {
-                const goal = this.goals.find(g => g.id === goalId);
-                const currentEmojis = (goal.emojis || [goal.emoji]).filter(e => this.emojis.includes(e));
-                const newEmojis = currentEmojis.includes(emoji)
-                    ? currentEmojis.filter(e => e !== emoji)
-                    : [...currentEmojis, emoji];
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
                 
-                this.updateGoal(goalId, { emojis: newEmojis });
-            }
-
-            cycleOperator(goalId) {
-                const goal = this.goals.find(g => g.id === goalId);
-                const operators = ['more_than', 'less_than', 'before', 'after'];
-                const currentIndex = operators.indexOf(goal.operator);
-                const nextIndex = (currentIndex + 1) % operators.length;
-                this.updateGoal(goalId, { operator: operators[nextIndex] });
-            }
-
-            formatGoalText(goal) {
-                const notText = goal.isNot ? 'not ' : '';
-                const opText = goal.operator.replace('_', ' ');
-                const suffix = goal.operator.includes('than') ? ' times' : '';
-                return `${notText}${opText} ${goal.value}${suffix}`;
-            }
-
-            checkGoals() {
-                const dayEntries = Object.values(this.entries);
-                return this.goals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji]).filter(emoji => this.emojis.includes(emoji));
-                    
-                    const emojiCount = dayEntries.reduce((count, entry) => {
-                        return count + goalEmojis.reduce((emojiSum, emoji) => {
-                            return emojiSum + (entry.emojis?.filter(e => e === emoji).length || 0);
-                        }, 0);
-                    }, 0);
-                    
-                    const emojiHours = Object.keys(this.entries).filter(hour => 
-                        this.entries[hour].emojis?.some(emoji => goalEmojis.includes(emoji))
-                    ).map(Number);
-                    
-                    let met = false;
-                    let applicable = true;
-                    
-                    if (goal.operator === 'more_than') {
-                        met = goal.isNot ? emojiCount <= goal.value : emojiCount > goal.value;
-                    } else if (goal.operator === 'less_than') {
-                        met = goal.isNot ? emojiCount >= goal.value : emojiCount < goal.value;
-                    } else if (goal.operator === 'before') {
-                        applicable = emojiHours.length > 0;
-                        const condition = applicable && ((Math.min(...emojiHours)-this.startHour)+24%24) < ((goal.value - this.startHour)+24)%24;
-                        met = goal.isNot ? !condition : condition;
-                    } else if (goal.operator === 'after') {
-                        applicable = emojiHours.length > 0;
-                        const condition = applicable && ((Math.max(...emojiHours)-this.startHour)+24)%24 > ((goal.value - this.startHour)+24)%24;
-                        met = goal.isNot ? !condition : condition;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
                     }
-                    
-                    return { ...goal, met, applicable, emojis: goalEmojis };
-                });
+                }
+                result.push(current.trim());
+                return result;
+            }
+
+            wipeCurrentDayData() {
+                // Clear entries for the current logical day
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Clear hours 7-23 from current calendar day
+                if (this.allEntries[currentDayKey]) {
+                    for (let hour = this.startHour; hour < 24; hour++) {
+                        delete this.allEntries[currentDayKey][hour];
+                    }
+                }
+                
+                // Clear hours 0-6 from next calendar day
+                if (this.allEntries[nextDayKey]) {
+                    for (let hour = 0; hour < this.startHour; hour++) {
+                        delete this.allEntries[nextDayKey][hour];
+                    }
+                }
+                
+                this.render();
+                this.saveData();
             }
 
             getDayEmojis() {
@@ -1820,13 +1937,282 @@
                 return emojiCounts;
             }
 
-            shouldShowAbove(hourIndex) {
-                return hourIndex >= this.hours.length - 3;
+            startBubbleAnimation() {
+                // Clean up any existing animation
+                if (this.bubbleAnimationId) {
+                    cancelAnimationFrame(this.bubbleAnimationId);
+                    this.bubbleAnimationId = null;
+                }
+
+                const container = document.querySelector('.bubbles-container');
+                if (!container) return;
+                const bubbles = container.querySelectorAll('.bubble');
+                const containerRect = container.getBoundingClientRect();
+                const bubbleStates = new Map();
+                
+                // Physics constants
+                const centerGravity = 0.015;
+                const friction = 0.995;
+                const restitution = 0.3;
+                const repulsion = 2.0;
+                const maxSpeed = 1;
+                const minSpeed = 0;
+                const gravityDampening = 0.7;
+
+                // Initialize bubbles randomly across the entire container
+                // Initialize bubbles with no overlaps
+                bubbles.forEach((bubble) => {
+                    const size = parseFloat(bubble.style.width);
+                    const containerWidth = containerRect.width;
+                    const containerHeight = containerRect.height;
+                    const padding = size;
+                    
+                    let attempts = 0;
+                    let pixelX, pixelY;
+                    let overlap;
+                    
+                    // Try to find non-overlapping position
+                    do {
+                        pixelX = padding + Math.random() * (containerWidth - size - padding * 2);
+                        pixelY = padding + Math.random() * (containerHeight - size - padding * 2);
+                        
+                        overlap = false;
+                        // Check against all existing bubbles
+                        bubbleStates.forEach((existingState) => {
+                            const dx = (pixelX + size/2) - (existingState.x + existingState.size/2);
+                            const dy = (pixelY + size/2) - (existingState.y + existingState.size/2);
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance < (size + existingState.size) / 2) {
+                                overlap = true;
+                            }
+                        });
+                        attempts++;
+                    } while (overlap && attempts < 100); // Prevent infinite loop
+                    
+                    // Initial velocity with random direction
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 0.5 + 0.5; // 0.5-1.0 base speed
+                    const initialVelX = Math.cos(angle) * speed;
+                    const initialVelY = Math.sin(angle) * speed;
+                
+                bubbleStates.set(bubble, {
+                    x: pixelX,
+                    y: pixelY,
+                    vx: initialVelX === 0 ? 0.1 : initialVelX, // Ensure non-zero initial velocity
+                    vy: initialVelY === 0 ? 0.1 : initialVelY,
+                    size: size,
+                });
+                });
+
+                let lastFrame = performance.now();
+                const animate = (currentTime) => {
+                    if (!document.querySelector('.bubbles-container')) {
+                        cancelAnimationFrame(this.bubbleAnimationId);
+                        this.bubbleAnimationId = null;
+                        return; // Stop if container is gone
+                    }
+
+                    const deltaTime = Math.min(currentTime - lastFrame, 32); // Cap at ~30fps
+                    lastFrame = currentTime;
+
+                    // Apply forces and update positions
+                    bubbleStates.forEach((state, bubble) => {
+                        // Use mouse position as gravity center when hovering
+                        const bubbleCenterX = state.x + state.size / 2;
+                        const bubbleCenterY = state.y + state.size / 2;
+                        const containerRadius = Math.min(containerRect.width, containerRect.height) / 2;
+                        
+                        // Default to container center if mouse is not over container
+                        const containerCenterX = this.mouseX || containerRect.width / 2;
+                        const containerCenterY = this.mouseY || containerRect.height / 2;
+
+                        // Calculate gravity/repulsion with improved stability
+                        const dx = containerCenterX - bubbleCenterX;
+                        const dy = containerCenterY - bubbleCenterY;
+                        const distToCenter = Math.sqrt(dx * dx + dy * dy);
+                        if (distToCenter > 0) {
+                            // Calculate normalized direction
+                            const dirX = dx / distToCenter;
+                            const dirY = dy / distToCenter;
+                            
+                            // Calculate force strength with smooth falloff
+                            const normalizedDist = Math.min(distToCenter / containerRadius, 1);
+                            let forceStrength;
+                            
+                            // Repel if mouse is over container, attract otherwise
+                            if (this.mouseX != null && this.mouseY != null) {
+                                // Stronger repulsion when closer to mouse
+                                forceStrength = -centerGravity * 15 * (1 - Math.pow(normalizedDist, 0.8));
+                            } else {
+                                // Normal center attraction when no mouse
+                                forceStrength = centerGravity * 0.7 * Math.pow(normalizedDist, 1.2);
+                            }
+                            
+                            // Apply force with dampening based on current velocity
+                            const currentSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                            const dampening = Math.max(0, 1 - (currentSpeed / maxSpeed) * gravityDampening);
+                            
+                            state.vx += dirX * forceStrength * dampening;
+                            state.vy += dirY * forceStrength * dampening;
+                        }
+
+                        // Apply friction
+                        state.vx *= friction;
+                        state.vy *= friction;
+
+                        // Maintain minimum and maximum speed
+                        const speed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                        if (speed < minSpeed) {
+                            const scale = minSpeed / speed;
+                            state.vx *= scale;
+                            state.vy *= scale;
+                        } else if (speed > maxSpeed) {
+                            const scale = maxSpeed / speed;
+                            state.vx *= scale;
+                            state.vy *= scale;
+                        }
+
+                        // Update position
+                        state.x += state.vx;
+                        state.y += state.vy;
+
+                        // Bounce off container bounds (rectangular boundary)
+                        const radius = state.size / 2;
+                        
+                        // Right wall
+                        if (state.x + state.size > containerRect.width) {
+                            state.x = containerRect.width - state.size;
+                            state.vx *= -restitution;
+                        }
+                        // Left wall
+                        if (state.x < 0) {
+                            state.x = 0;
+                            state.vx *= -restitution;
+                        }
+                        // Bottom wall
+                        if (state.y + state.size > containerRect.height) {
+                            state.y = containerRect.height - state.size;
+                            state.vy *= -restitution;
+                        }
+                        // Top wall
+                        if (state.y < 0) {
+                            state.y = 0;
+                            state.vy *= -restitution;
+                        }
+
+                        const newX = (state.x / containerRect.width) * 100;
+                        const newY = (state.y / containerRect.height) * 100;
+                        
+                        if (Math.abs(parseFloat(bubble.style.left) - newX) > 0.01 ||
+                            Math.abs(parseFloat(bubble.style.top) - newY) > 0.01) {
+                            bubble.style.left = `${newX}%`;
+                            bubble.style.top = `${newY}%`;
+                        }
+                    });
+
+                    // Handle collisions between bubbles
+                    const bubbleArray = Array.from(bubbleStates.entries());
+                    for (let i = 0; i < bubbleArray.length; i++) {
+                        const [bubble1, state1] = bubbleArray[i];
+                        for (let j = i + 1; j < bubbleArray.length; j++) {
+                            const [bubble2, state2] = bubbleArray[j];
+                            
+                            // Calculate centers
+                            const center1X = state1.x + state1.size / 2;
+                            const center1Y = state1.y + state1.size / 2;
+                            const center2X = state2.x + state2.size / 2;
+                            const center2Y = state2.y + state2.size / 2;
+                            
+                            // Check collision
+                            const dx = center2X - center1X;
+                            const dy = center2Y - center1Y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const minDist = (state1.size + state2.size) / 2;
+
+                            if (distance < minDist) {
+                                // Normalize collision vector
+                                const nx = dx / distance;
+                                const ny = dy / distance;
+                                
+                                const relativeVelX = state2.vx - state1.vx;
+                                const relativeVelY = state2.vy - state1.vy;
+                                
+                                const relativeSpeed = relativeVelX * nx + relativeVelY * ny;
+                                
+                                if (relativeSpeed > 0) continue;
+                                
+                                const overlap = minDist - distance;
+                                state1.x -= nx * overlap * 0.5;
+                                state1.y -= ny * overlap * 0.5;
+                                state2.x += nx * overlap * 0.5;
+                                state2.y += ny * overlap * 0.5;
+                                
+                                const repulsionForce = repulsion * Math.min(1.0, overlap / minDist);
+                                state1.vx -= nx * repulsionForce;
+                                state1.vy -= ny * repulsionForce;
+                                state2.vx += nx * repulsionForce;
+                                state2.vy += ny * repulsionForce;
+                            }
+                        }
+                    }
+
+                    this.bubbleAnimationId = requestAnimationFrame(animate);
+                };
+                
+                this.bubbleAnimationId = requestAnimationFrame(animate);
+
+                // Track mouse position using event delegation
+                container.addEventListener('mouseenter', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    if (bubble) {
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.clientX - rect.left;
+                        this.mouseY = e.clientY - rect.top;
+                    }
+                });
+
+                container.addEventListener('mousemove', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    if (bubble) {
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.clientX - rect.left;
+                        this.mouseY = e.clientY - rect.top;
+                    }
+                });
+
+                container.addEventListener('mouseout', (e) => {
+                    const bubble = e.target.closest('.bubble');
+                    const relatedBubble = e.relatedTarget?.closest('.bubble');
+                    if (bubble && !relatedBubble) {
+                        this.mouseX = null;
+                        this.mouseY = null;
+                    }
+                });
+
+                // Handle window resize
+                this.resizeObserver?.disconnect();
+                this.resizeObserver = new ResizeObserver(() => {
+                    // Recalculate container dimensions
+                    const newRect = container.getBoundingClientRect();
+                    const scaleX = newRect.width / containerRect.width;
+                    const scaleY = newRect.height / containerRect.height;
+                    
+                    // Scale bubble positions to new container size
+                    bubbleStates.forEach((state, bubble) => {
+                        state.x *= scaleX;
+                        state.y *= scaleY;
+                    });
+                    
+                    // Update container rect reference
+                    Object.assign(containerRect, newRect);
+                });
             }
 
+            // === RENDER ===
             render() {
                 this.updateUndoButton();
-                
+                this.checkGoals(); // Always update/check dailies on UI update
+
                 if (this.view === 'timeline') {
                     this.renderTimeline();
                 } else if (this.view === 'settings') {
@@ -1837,78 +2223,92 @@
             }
 
             renderTimeline() {
-                const container = document.getElementById('mainContainer');
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="scroll-container">
                         <div class="date-nav">
                             <div class="date-nav-left">
-                                <button class="date-btn secondary-btn" onclick="app.navigateDay(-1)">←</button>
+                                <div class="date-btn" onclick="app.navigateDay(-1)" title="Previous day (Left Arrow)">←</div>
                                 <input type="text" 
-                                    class="date-input secondary-btn large"
+                                    class="date-input secondary-btn"
                                     value="${this.formatDateInput()}"
                                     maxlength="8"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
                                     onkeydown="app.handleDateKeydown(event)"
                                     oninput="app.handleDateInput(event)"
                                     onfocus="app.handleDateFocus(event)"
-                                    onclick="app.handleDateFocus(event)">
-                                <button class="date-btn secondary-btn" onclick="app.navigateDay(1)">→</button>
+                                    title="Focus date input (Press 'F')">
+                                <div class="date-btn" onclick="app.navigateDay(1)" title="Next day (Right Arrow)">→</div>
                             </div>
                             <div class="date-nav-right">
-                                <button class="jump-btn secondary-btn" onclick="app.jumpToToday()">now</button>
-                                <button class="btn normal-size" onclick="app.exportCurrentDayCSV()">📋</button>
+                                <div onclick="app.jumpToToday()" title="Return to current day">jump to now</div>
                             </div>
                         </div>
-                        
                         <div id="goalsSection"></div>
                         <div id="hoursContainer"></div>
                     </div>
-                    
-                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''} scroll-pattern"
-                         onmousedown="app.handleScrollMouseDown(event)"
-                         onclick="app.handleRightBarClick()">
-                        <div class="hour-indicator" style="display: none;"></div>
-                    </div>
+                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''}" id="customScrollBar"></div>
                 `;
 
-                this.scrollContainerRef = container.querySelector('.scroll-container');
-                this.scrollContainerRef.addEventListener('scroll', this.handleScroll.bind(this));
-
+                const container = document.querySelector('.main-container');
+                container.addEventListener('scroll', this.handleScroll.bind(this));
                 if (this.timelineScrollPosition > 0) {
-                    this.scrollContainerRef.scrollTop = this.timelineScrollPosition;
+                    container.scrollTop = this.timelineScrollPosition;
                 }
+
+                // Custom scrollbar logic
+                const scrollBar = document.getElementById('customScrollBar');
+                let isDragging = false;
+                let startY = 0;
+                let startScroll = 0;
+
+                scrollBar.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startY = e.clientY;
+                    startScroll = container.scrollTop;
+                    scrollBar.classList.add('dragging');
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const deltaY = e.clientY - startY;
+                    container.scrollTop = startScroll - deltaY * 2; // inverted direction, 2x impact
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        scrollBar.classList.remove('dragging');
+                        document.body.style.userSelect = '';
+                    }
+                });
+
+                // Double click to jump to now
+                scrollBar.addEventListener('dblclick', () => {
+                    app.jumpToToday();
+                });
 
                 this.renderGoals();
                 this.renderHours();
-                this.updateScrollIndicator();
             }
 
             renderGoals() {
                 const goalsSection = document.getElementById('goalsSection');
+                if (!goalsSection) return;
+                
                 const goalChecks = this.checkGoals();
 
                 if (this.goals.length > 0 && this.showGoalsInTimeline) {
                     goalsSection.innerHTML = `
                         <div class="goals-section">
-                            <h2 class="goals-title">dailies</h2>
-                            ${goalChecks.map(goal => {
-                                const itemClass = goal.met ? 'passed' : (goal.applicable && !goal.met) ? 'failed' : '';
-                                return `
-                                    <div class="goal-item ${itemClass}">
-                                        <span class="goal-emoji-display">${(goal.emojis || []).sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b)).join('')}</span>
-                                        <span class="goal-text">${this.formatGoalText(goal)}</span>
-                                    </div>
-                                `;
-                            }).join('')}
+                            ${goalChecks.map(goal => `
+                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}">
+                                    <span class="goal-text">${this.formatGoalText(goal)}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     `;
                 } else if (this.goals.length === 0 && this.showGoalsInTimeline) {
-                    goalsSection.innerHTML = `
-                        <div class="no-goals">
-                            no dailies set - add in settings
-                        </div>
-                    `;
+                    goalsSection.innerHTML = '<div class="no-goals">no dailies set - add in settings</div>';
                 } else {
                     goalsSection.innerHTML = '';
                 }
@@ -1917,63 +2317,21 @@
             renderHours() {
                 this.saveData();
                 const hoursContainer = document.getElementById('hoursContainer');
+                if (!hoursContainer) return;
+                
                 hoursContainer.innerHTML = `
                     <div class="hours-container">
-                        ${this.hours.map((hour, hourIndex) => {
+                        ${this.hours.map(hour => {
                             const entry = this.entries[hour] || { emojis: [], text: '' };
                             const isCurrent = this.isCurrentHour(hour);
                             const isEditing = this.editingHour === hour;
                             const hourFill = this.getHourFill(hour);
-                            const showAbove = this.shouldShowAbove(hourIndex);
-                            // Sort emojis according to their order in this.emojis and take first 9
-                            const emojis = (entry.emojis || [])
-                                .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b))
-                                .slice(0, 9);
+                            // Show all emojis if there's no text, otherwise limit to 6
+                            const emojis = (entry.emojis || []).slice(0, entry.text ? 6 : undefined);
+
                             return `
                                 <div class="hour-row">
-                                    ${isEditing && showAbove ? `
-                                        <div class="emoji-picker above">
-                                            ${this.emojis.map(emoji => `
-                                                <button class="emoji-btn ${entry.emojis?.includes(emoji) ? 'selected' : ''}"
-                                                        onclick="app.toggleEmoji('${emoji}')">
-                                                    ${emoji}
-                                                </button>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
-                                    <div class="hour-entry ${isCurrent ? 'current' : ''} ${isEditing ? 'editing' : ''} ${hourFill === 100 && !entry.text.trim() && (!entry.emojis || entry.emojis.length === 0) ? 'empty-past' : ''}"
-                                         data-hour="${hour}"
-                                         onclick="this.scrollIntoView({behavior: 'smooth', block: 'center'}); app.editHour(${hour})">
-                                        ${hourFill > 0 ? `
-                                            <div class="hour-fill ${!entry.text && (!entry.emojis || entry.emojis.length === 0) ? 'empty' : ''}" style="width: ${hourFill}%;"></div>
-                                        ` : ''}
-                                        <div class="hour-content">
-                                            <span class="hour-time">${this.formatHour(hour)}</span>
-                                            <div class="hour-emojis">
-                                                ${emojis.map(emoji => `
-                                                    <span class="emoji">${emoji}</span>
-                                                `).join('')}
-                                            </div>
-                                            ${isEditing ? `
-                                                <div class="hour-input-container"
-                                                     onkeydown="app.handleHourInputKeydown(event, ${hour})">
-                                                    <textarea 
-                                                           class="hour-input"
-                                                           placeholder="${this.isFutureDate() ? 'Plan ahead...' : 
-                                                                       this.isPastDate() ? 'Remember what happened...' : 
-                                                                       'What is happening?'}"
-                                                           oninput="app.updateText(this.value); this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                                           onclick="event.stopPropagation()"
-                                                           rows="1">${entry.text}</textarea>
-                                                    <button class="clear-btn" 
-                                                            onclick="event.stopPropagation(); app.clearEntry(${hour})">×</button>
-                                                </div>
-                                            ` : `
-                                                <span class="hour-text">${entry.text}</span>
-                                            `}
-                                        </div>
-                                    </div>
-                                    ${isEditing && !showAbove ? `
+                                    ${isEditing ? `
                                         <div class="emoji-picker below">
                                             ${this.emojis.map(emoji => `
                                                 <button class="emoji-btn ${entry.emojis?.includes(emoji) ? 'selected' : ''}"
@@ -1983,55 +2341,61 @@
                                             `).join('')}
                                         </div>
                                     ` : ''}
+                                    
+                                    <div class="hour-entry ${isCurrent ? 'current' : ''} ${isEditing ? 'editing' : ''}"
+                                         data-hour="${hour}"
+                                         onclick="app.editHour(${hour})">
+                                        ${hourFill > 0 ? `<div class="hour-fill ${!entry.text && !entry.emojis?.length ? 'empty' : ''}" style="width: ${hourFill}%;"></div>` : ''}
+                                        <div class="hour-content">
+                                            <span class="hour-time">${this.formatHour(hour)}</span>
+                                            <div class="hour-emojis">
+                                                ${emojis.map(emoji => `<span class="emoji">${emoji}</span>`).join('')}
+                                            </div>
+                                            ${isEditing ? `
+                                                <div class="hour-input-container">
+                                                    <textarea class="hour-input"
+                                                           placeholder="${this.isFutureDate() ? 'Plan ahead...' : this.isPastDate() ? 'Remember...' : 'What happened?'}"
+                                                           oninput="app.updateText(this.value)"
+                                                           onkeydown="app.handleHourInputKeydown(event, ${hour})"
+                                                           onclick="event.stopPropagation()">${entry.text}</textarea>
+                                                    <button class="clear-btn" onclick="event.stopPropagation(); app.clearEntry(${hour})">×</button>
+                                                </div>
+                                            ` : `<span class="hour-text">${entry.text.replace(/\n/g, '<br>')}</span>`}
+                                        </div>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? `
-                            <div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>
-                        ` : ''}
+                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
-                this.renderGoalsList();
-                this.renderGoals();
             }
 
             renderSettings() {
-                const container = document.getElementById('mainContainer');
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="settings-container">
-                       
-                        
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
-                            <input type="text" 
-                                   class="setting-input"
-                                   value="${this.emojis.join('')}"
-                                   oninput="app.emojis = [...this.value]; app.render()">
+                            <input type="text" class="setting-input emoji-input" value="${this.emojis.join('')}"
+                                   oninput="app.handleEmojiInput(this.value)">
                         </div>
                         
                         <div class="setting-group">
-                            <div class="goals-header">
-                                <label class="setting-label">Dailies</label>
-                            </div>
+                            <label class="setting-label">Dailies</label>
                             <div id="goalsList"></div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px;">
+                                <button class="add-goal-btn" onclick="app.addGoal()">+ Add Daily</button>
+                                <label class="checkbox-label" style="margin-bottom: 0;">
+                                    <input type="checkbox" class="checkbox" ${this.showGoalsInTimeline ? 'checked' : ''} onchange="app.showGoalsInTimeline = this.checked; app.saveData()">
+                                    <span>Show dailies in timeline</span>
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="setting-group" style="display: flex; justify-content: space-between; align-items: center;">
-                            <button class="add-goal-btn" onclick="app.addGoal()">+ Add Daily</button>
-                            <label class="checkbox-label" style="margin-bottom: 0;">
-                                <input type="checkbox" 
-                                       class="checkbox"
-                                       ${this.showGoalsInTimeline ? 'checked' : ''}
-                                       onchange="app.showGoalsInTimeline = this.checked; app.render()">
-                                <span>Show goals in timeline view</span>
-                            </label>
-                            
-                        </div>
-
-                         <div class="setting-group">
+                        <div class="setting-group">
                             <label class="setting-label">Start Hour</label>
-                            <select class="setting-input" onchange="app.startHour = parseInt(this.value); app.render()">
+                            <select class="setting-input" onchange="app.startHour = parseInt(this.value); app.saveData()">
                                 ${Array.from({length: 24}, (_, i) => `
                                     <option value="${i}" ${i === this.startHour ? 'selected' : ''}>
                                         ${this.formatHour(i)}:00
@@ -2039,44 +2403,32 @@
                                 `).join('')}
                             </select>
                         </div>
-
+                        
                         <div class="setting-group">
                             <div class="export-section">
-                                <button class="export-toggle" onclick="app.showExportAccordion = !app.showExportAccordion; app.renderSettings()">
-                                    <label class="setting-label">Data Export/Import</label>
-
-                                    <span class="export-arrow ${this.showExportAccordion ? 'open' : ''}">▼</span>
+                                <button class="export-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('.export-arrow').classList.toggle('open')">
+                                    Export/Import Data
+                                    <span class="export-arrow">▼</span>
                                 </button>
-                                
-                                ${this.showExportAccordion ? `
-                                    <div class="export-content">
-                                        <button class="export-btn" onclick="app.exportAllCSV()">
-                                            Export All Data (CSV)
-                                        </button>
-                                        
-                                        <div class="import-section">
-                                            <input type="file" 
-                                                   class="import-input"
-                                                   accept=".csv"
-                                                   onchange="app.importCSV(event)">
-                                            <span class="import-label">Import CSV</span>
-                                        </div>
-                                        
-                                        <div class="export-help">
-                                            CSV export includes all dates, goals, and settings. 
-                                            Current day export copies to clipboard.
-                                        </div>
+                                <div class="export-content" style="display: none;">
+                                    <button class="export-btn" onclick="app.exportAllToCSV()" style="margin-bottom: 12px;">
+                                        Export All Data
+                                    </button>
+                                    <div class="import-section">
+                                        <input type="file" class="import-input" accept=".csv,.json" 
+                                               onchange="if(this.files.length) app.importFromCSVFile(this.files[0])">
                                     </div>
-                                ` : ''}
+                                    <div class="export-help">
+                                        Export creates two files:
+                                        <br>• Monthly CSV files with daily entries
+                                        <br>• JSON file with settings and goals
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        ${this.editingGoal !== null ? `
-                            <div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>
-                        ` : ''}
+                        ${this.editingGoal !== null ? '<div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
                     </div>
-
-                        </div>
                 `;
 
                 this.renderGoalsList();
@@ -2085,100 +2437,49 @@
             renderGoalsList() {
                 const goalsList = document.getElementById('goalsList');
                 if (!goalsList) return;
-
-                // Sort goals based on their emojis' order in the config
-                const sortedGoals = [...this.goals].sort((a, b) => {
-                    const aEmojis = a.emojis || [a.emoji];
-                    const bEmojis = b.emojis || [b.emoji];
-                    const aFirstEmoji = aEmojis[0];
-                    const bFirstEmoji = bEmojis[0];
-                    return this.emojis.indexOf(aFirstEmoji) - this.emojis.indexOf(bFirstEmoji);
-                });
-                
-                goalsList.innerHTML = sortedGoals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji])
-                        .filter(e => this.emojis.includes(e))
-                        .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b));
+                goalsList.innerHTML = this.goals.map(goal => {
                     const isEditing = this.editingGoal === goal.id;
-                    
-                    return `
-                        <div class="goal-row ${isEditing ? 'editing' : ''}">
-                            <div class="goal-emojis">
-                                ${this.emojis.map(emoji => `
-                                    <button class="emoji-btn ${goalEmojis.includes(emoji) ? 'selected' : ''}"
-                                            onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
-                                        ${emoji}
-                                    </button>
-                                `).join('')}
-                            </div>
-                            <div class="goal-controls">
-                                <button class="goal-toggle ${goal.isNot ? 'active' : ''}"
-                                        onclick="app.updateGoal(${goal.id}, {isNot: !${goal.isNot}})">
-                                    ${goal.isNot ? 'is not' : 'is'}
-                                </button>
-                                <button class="goal-operator"
-                                        onclick="app.cycleOperator(${goal.id})">
-                                    ${goal.operator.replace('_', ' ')}
-                                </button>
-                                <input type="number" 
-                                       class="goal-value" 
-                                       data-goal="${goal.id}"
-                                       value="${goal.value}"
-                                       onkeydown="app.handleGoalInputKeydown(event, ${goal.id})"
-                                       onchange="app.updateGoal(${goal.id}, {value: parseInt(this.value) || 0})"
-                                       min="0"
-                                       ${isEditing ? 'focused' : ''}>
-                                <button class="remove-goal" 
-                                        onclick="app.removeGoal(${goal.id})">×</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                goalsList.innerHTML = sortedGoals.map(goal => {
-                    const goalEmojis = (goal.emojis || [goal.emoji])
-                        .filter(e => this.emojis.includes(e))
-                        .sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b));
-                    const isEditing = this.editingGoal === goal.id;
-
+                    const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
                     return `
                         <div class="goal-row">
-                            <div class="goal-summary ${isEditing ? 'editing' : ''}"
-                                 onclick="app.editGoal(${goal.id})">
-                                <div class="goal-summary-content">
-                                    <span class="goal-emoji-display">${goalEmojis.join('')}</span>
-                                    <span class="goal-text-display">${this.formatGoalText(goal)}</span>
-                                    <button class="remove-goal-btn" 
-                                            onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
-                                </div>
+                            <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})">
+                               <span class="goal-text-display">${this.formatGoalText(goal)}</span>
+                                <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
-                            
                             ${isEditing ? `
-                                <div class="goal-editor" style="z-index: 60;">
-                                    <div class="emoji-picker">
-                                        ${this.emojis.map(emoji => `
-                                            <button class="emoji-btn ${goalEmojis.includes(emoji) ? 'selected' : ''}"
-                                                    onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
-                                                ${emoji}
-                                            </button>
-                                        `).join('')}
+                                <div class="goal-editor">
+                                    <div class="goal-editor-section">
+                                        <label class="goal-editor-label">Choose Emojis</label>
+                                        <div class="goal-emoji-grid">
+                                            ${this.emojis.map(emoji => `
+                                                <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
+                                                        onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
+                                                    ${emoji}
+                                                </button>
+                                            `).join('')}
+                                        </div>
                                     </div>
-                                    <div class="goal-controls">
-                                        <button class="not-btn ${goal.isNot ? 'active' : 'inactive'}"
-                                                onclick="app.updateGoal(${goal.id}, { isNot: ${!goal.isNot} })">
-                                            ${goal.isNot ? 'NOT' : 'IS'}
-                                        </button>
-                                        <button class="operator-btn" onclick="app.cycleOperator(${goal.id})">
-                                            ${goal.operator.replace('_', ' ')}
-                                        </button>
-                                        <input type="number" 
-                                               class="value-input"
-                                               value="${goal.value}"
-                                               min="0" max="23"
-                                               oninput="app.updateGoal(${goal.id}, { value: parseInt(this.value) })">
-                                        <span class="value-suffix">
-                                            ${goal.operator.includes('than') ? 'times' : ''}
-                                        </span>
+                                    <div class="goal-editor-section">
+                                        <label class="goal-editor-label">Set Condition</label>
+                                        <div class="operator-value-group">
+                                            <button class="goal-action-btn" onclick="app.toggleGoalNegation(${goal.id})">
+                                                ${goal.not ? 'is not' : 'is'}
+                                            </button>
+                                            <button class="goal-operator-btn" onclick="app.cycleOperator(${goal.id})">
+                                                ${goal.operator.replace('_', ' ')}
+                                            </button>
+                                            <input type="number" 
+                                                   class="goal-value-input" 
+                                                   value="${goal.value}" 
+                                                   min="0" 
+                                                   max="23"
+                                                   onclick="event.stopPropagation()"
+                                                   onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
+                                            <span style="color: #e5e7eb; font-size: 16px;">
+                                                ${goal.operator.includes('than') ? 'times' : ''}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ` : ''}
@@ -2186,61 +2487,122 @@
                     `;
                 }).join('');
             }
+            handleEmojiInput(value) {
+                // First, keep only emoji characters
+                const emojiRegex = /\p{Emoji}/gu;
+                const emojis = Array.from(new Set(value.match(emojiRegex) || []));
+                
+                // Only update if we have at least one emoji
+                if (emojis.length > 0) {
+                    this.emojis = emojis;
+                    this.saveData();
+                }
+            }
+
+            toggleGoalEmoji(goalId, emoji) {
+                const goal = this.goals.find(g => g.id === goalId);
+                let emojis = Array.isArray(goal.emojis) ? [...goal.emojis] : [goal.emoji];
+                if (emojis.includes(emoji)) {
+                    emojis = emojis.filter(e => e !== emoji);
+                } else {
+                    emojis.push(emoji);
+                }
+                if (emojis.length === 0) emojis = [emoji];
+                this.updateGoal(goalId, { emojis });
+            }
+            toggleGoalNegation(goalId) {
+                const goal = this.goals.find(g => g.id === goalId);
+                this.updateGoal(goalId, { not: !goal.not });
+            }
+            
 
             renderDaily() {
-                const container = document.getElementById('mainContainer');
                 const dayEmojis = this.getDayEmojis();
                 const goalChecks = this.checkGoals();
                 
-                container.innerHTML = `
+                document.getElementById('mainContainer').innerHTML = `
                     <div class="daily-container">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                            <button class="btn normal-size jump-btn" onclick="if(confirm('Are you sure you want to clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
-                            <button class="btn normal-size jump-btn" onclick="app.exportCurrentDayCSV()">copy 📋</button>
-                        </div>
-                        <div class="bubbles-container">
-                            ${Object.entries(dayEmojis).map(([emoji, count], index) => {
-                                const maxCount = Math.max(...Object.values(dayEmojis), 1);
-                                const size = 30 + (count / maxCount) * 40;
-                                const x = (index * 80 + 50) % 300;
-                                const y = 30 + (index * 50) % 120;
-                                return `
-                                    <div class="bubble" style="
-                                        left: ${x}px; 
-                                        top: ${y}px; 
-                                        width: ${size}px; 
-                                        height: ${size}px; 
-                                        font-size: ${size * 0.5}px
-                                    ">
-                                        ${emoji}
-                                    </div>
-                                `;
-                            }).join('')}
+                            <button class="jump-btn" onclick="if(confirm('Clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
+                            <button class="jump-btn" onclick="app.exportCurrentDayCSV()">📋 copy</button>
                         </div>
                         
-                    <div class="dailies-section">
-                    <h3>Dailies</h3>
-                    ${goalChecks.map(goal => {
-                        const itemClass = goal.met ? 'passed' : (goal.applicable && !goal.met) ? 'failed' : '';
-                        return `
-                            <div class="goal-item ${itemClass}" style="font-size:18px; font-weight:500; margin-bottom:8px;">
-                            <span class="goal-emoji-display">${(goal.emojis || []).sort((a, b) => this.emojis.indexOf(a) - this.emojis.indexOf(b)).join('')}</span>
-                            <span class="goal-text">${this.formatGoalText(goal)}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                    ${this.goals.length === 0 ? `<p class="no-goals-daily">No dailies set</p>` : ''}
-                    </div>
+                        <div class="bubbles-container">
+                            ${(() => {
+                                let bubbles = [];
+                                Object.entries(this.entries).forEach(([hour, entry]) => {
+                                    if (entry.emojis && entry.emojis.length > 0) {
+                                        const uniqueEmojis = new Set(entry.emojis);
+                                        entry.emojis.forEach((emoji, index) => {
+                                            let size;
+                                            if (uniqueEmojis.size === 1) {
+                                                size = 70; // Large for single emoji
+                                            } else if (uniqueEmojis.size === 2) {
+                                                size = 50; // Medium for two emojis
+                                            } else {
+                                                size = 40; // Small for three or more
+                                            }
 
+                                            // Generate a unique ID for the bubble
+                                            const bubbleId = `bubble-${hour}-${index}`;
+                                            
+                                            // Use stored position if available, otherwise random
+                                            let x = 5, y = 5;
+                                            if (this.restoreBubbleStates) {
+                                                const stored = this.restoreBubbleStates.find(b => b.id === bubbleId);
+                                                if (stored) {
+                                                    x = (stored.state.x / containerWidth) * 100;
+                                                    y = (stored.state.y / containerHeight) * 100;
+                                                } else {
+                                                    x = Math.random() * 90 + 5; // 5-95%
+                                                    y = Math.random() * 90 + 5; // 5-95%
+                                                }
+                                            } else {
+                                                x = Math.random() * 90 + 5; // 5-95%
+                                                y = Math.random() * 90 + 5; // 5-95%
+                                            }
+                                            
+                                            bubbles.push(`
+                                                <div class="bubble" style="
+                                                    left: ${x}%; 
+                                                    top: ${y}%; 
+                                                    width: ${size}px; 
+                                                    height: ${size}px; 
+                                                    font-size: ${size * 0.5}px;
+                                                    transition: none;
+                                                    border-radius: 50%;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    background-color: rgba(31, 41, 55, 0.7);
+                                                ">
+                                                    ${emoji}
+                                                </div>
+                                            `);
+                                        });
+                                    }
+                                });
+                                return bubbles.join('');
+                            })()}
+                        </div>
+                        
+                        <div class="dailies-section">
+                            <h3>Dailies</h3>
+                            ${goalChecks.map(goal => `
+                                <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="margin-bottom:8px;">
+                                    <span class="goal-text">${this.formatGoalText(goal)}</span>
+                                </div>
+                            `).join('')}
+                            ${this.goals.length === 0 ? '<p class="no-goals-daily">No dailies set</p>' : ''}
+                        </div>
                     </div>
                 `;
+                
+                this.startBubbleAnimation();
             }
-
-
         }
 
         const app = new HourliesApp();
     </script>
-    
 </body>
 </html>
