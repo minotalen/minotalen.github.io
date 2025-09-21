@@ -546,27 +546,32 @@
         .goal-row {
             position: relative;
             margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
         }
         
         .goal-summary {
             cursor: pointer;
             padding: 12px;
             background-color: #2a313e;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            display: inline-flex;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
             align-items: center;
             gap: 12px;
-            min-width: 300px;
+            width:100%
         }
         
         .goal-summary:hover {
             background-color: #373e49;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         .goal-summary.editing {
             background-color: #1f2937;
-            box-shadow: 0 0 0 2px #eab308;
+            box-shadow: 0 0 0 2px #eab308, 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.02);
         }
                 
         .goal-text-display {
@@ -875,7 +880,7 @@
             }
             .settings-container, .daily-container { 
                 padding: 8px 16px;
-                padding-top: calc(env(safe-area-inset-top, 12px) + 60px);
+                padding-top: calc(env(safe-area-inset-top, 12px) + 8px);
             }
             .scroll-container { 
                 padding: 8px 0; 
@@ -2449,7 +2454,6 @@
                             ${isEditing ? `
                                 <div class="goal-editor">
                                     <div class="goal-editor-section">
-                                        <label class="goal-editor-label">Choose Emojis</label>
                                         <div class="goal-emoji-grid">
                                             ${this.emojis.map(emoji => `
                                                 <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
@@ -2458,9 +2462,6 @@
                                                 </button>
                                             `).join('')}
                                         </div>
-                                    </div>
-                                    <div class="goal-editor-section">
-                                        <label class="goal-editor-label">Set Condition</label>
                                         <div class="operator-value-group">
                                             <button class="goal-action-btn" onclick="app.toggleGoalNegation(${goal.id})">
                                                 ${goal.not ? 'is not' : 'is'}
@@ -2492,10 +2493,19 @@
                 const emojiRegex = /\p{Emoji}/gu;
                 const emojis = Array.from(new Set(value.match(emojiRegex) || []));
                 
-                // Only update if we have at least one emoji
+                // Only update if we have valid emojis
                 if (emojis.length > 0) {
                     this.emojis = emojis;
                     this.saveData();
+                } else {
+                    // If no valid emojis, restore from localStorage
+                    const saved = localStorage.getItem("hourliesData");
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        if (data.emojis && data.emojis.length > 0) {
+                            this.emojis = data.emojis;
+                        }
+                    }
                 }
             }
 
