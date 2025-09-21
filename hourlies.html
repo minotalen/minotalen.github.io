@@ -24,7 +24,7 @@
         /* LAYOUT */
         .header {
             background-color: #1f2937;
-            padding: 0 12%;
+            padding: env(safe-area-inset-top, 16px) 12% 0 12%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -786,7 +786,7 @@
         /* MOBILE */
         @media (max-width: 768px) {
             .scroll-bar { display: none !important; }
-            .header { padding: 0 16px; height: 54px; }
+            .header { padding: env(safe-area-inset-top, 16px) 16px 0 16px; height: 54px; }
             .scroll-container, .settings-container, .daily-container { padding: 8px 16px; }
             .header h1 { font-size: 1.4em; }
             .btn { font-size: 1.3em !important; }
@@ -810,7 +810,7 @@
         }
         
         @media (max-width: 375px) {
-            .header { padding: 0 12px; height: 48px; }
+            .header { padding: env(safe-area-inset-top, 12px) 12px 0 12px; height: 48px; }
             .header h1 { font-size: 1.2em; }
             .btn { font-size: 1.2em !important; }
             .btn-label { font-size: 0.55em; }
@@ -899,9 +899,20 @@
                     15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
                     16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
                     18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
-                    19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' }
+                    19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' },
+                    20: { emojis: [''], text: '' },
+                    12: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
                 };
                 this.allEntries[this.currentDateKey] = welcomeEntries;
+
+                // Add default rules if none exist
+                if (!this.goals || this.goals.length === 0) {
+                    this.goals = [
+                        { id: Date.now() + 1, emoji: '☕', operator: 'after', value: 17, not: true }, // no coffee after 17
+                        { id: Date.now() + 2, emoji: '☕', operator: 'more_than', value: 3 }, // no more than 3 coffee
+                        { id: Date.now() + 3, emoji: '😴', operator: 'before', value: 0 } // sleep before 00
+                    ];
+                }
             }
 
             saveData() {
@@ -1211,15 +1222,14 @@
             toggleEmoji(emoji) {
                 const entry = this.entries[this.editingHour] || { emojis: [], text: '' };
                 const validEmojis = entry.emojis.filter(e => this.emojis.includes(e));
-                const newEmojis = validEmojis.includes(emoji) 
+                const newEmojis = validEmojis.includes(emoji)
                     ? validEmojis.filter(e => e !== emoji)
                     : [...validEmojis, emoji];
-                
                 const newEntries = { ...this.entries };
                 newEntries[this.editingHour] = { ...entry, emojis: newEmojis };
                 this.updateEntries(newEntries);
                 this.renderHours();
-                
+                this.renderGoals();
                 setTimeout(() => {
                     const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
                     if (textarea) {
@@ -1314,7 +1324,7 @@
             addGoal() {
                 const newGoal = {
                     id: Date.now(),
-                    emoji: '📖',
+                    emojis: ['📖'],
                     operator: 'more_than',
                     value: 1
                 };
@@ -1350,38 +1360,39 @@
             formatGoalText(goal) {
                 const opText = goal.operator.replace('_', ' ');
                 const suffix = goal.operator.includes('than') ? ' times' : '';
-                return `${opText} ${goal.value}${suffix}`;
+                const negation = goal.not ? 'not ' : '';
+                const emojiText = Array.isArray(goal.emojis) ? goal.emojis.join(' ') : goal.emoji;
+                return `${negation}${emojiText} ${opText} ${goal.value}${suffix}`;
             }
 
             checkGoals() {
                 const dayEntries = Object.values(this.entries);
                 return this.goals.map(goal => {
+                    const emojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
+                    // Count total appearances of any emoji in the rule
                     const emojiCount = dayEntries.reduce((count, entry) => {
-                        return count + (entry.emojis?.filter(e => e === goal.emoji).length || 0);
+                        return count + emojis.reduce((c, emoji) => c + (entry.emojis?.filter(e => e === emoji).length || 0), 0);
                     }, 0);
-                    
-                    const emojiHours = Object.keys(this.entries).filter(hour => 
-                        this.entries[hour].emojis?.includes(goal.emoji)
-                    ).map(Number);
-                    
+                    // Find all hours where any emoji in the rule appears
+                    const emojiHours = Object.keys(this.entries).filter(hour => {
+                        const entryEmojis = this.entries[hour].emojis || [];
+                        return emojis.some(emoji => entryEmojis.includes(emoji));
+                    }).map(Number);
                     let met = false;
-                    
                     if (goal.operator === 'more_than') {
                         met = emojiCount > goal.value;
                     } else if (goal.operator === 'less_than') {
                         met = emojiCount < goal.value;
                     } else if (goal.operator === 'before' && emojiHours.length > 0) {
-                        // Adjust hours for start time
                         const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
                         const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
                         met = Math.min(...adjustedHours) < adjustedTarget;
                     } else if (goal.operator === 'after' && emojiHours.length > 0) {
-                        // Adjust hours for start time  
                         const adjustedHours = emojiHours.map(h => h < this.startHour ? h + 24 : h);
                         const adjustedTarget = goal.value < this.startHour ? goal.value + 24 : goal.value;
                         met = Math.max(...adjustedHours) > adjustedTarget;
                     }
-                    
+                    if (goal.not) met = !met;
                     return { ...goal, met, emojiCount };
                 });
             }
@@ -1554,12 +1565,10 @@
                                 <button class="btn" onclick="app.exportCurrentDayCSV()">📋</button>
                             </div>
                         </div>
-                        
                         <div id="goalsSection"></div>
                         <div id="hoursContainer"></div>
                     </div>
-                    
-                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''}"></div>
+                    <div class="scroll-bar ${this.editingHour !== null ? 'hidden' : ''}" id="customScrollBar"></div>
                 `;
 
                 const container = document.querySelector('.scroll-container');
@@ -1567,6 +1576,39 @@
                 if (this.timelineScrollPosition > 0) {
                     container.scrollTop = this.timelineScrollPosition;
                 }
+
+                // Custom scrollbar logic
+                const scrollBar = document.getElementById('customScrollBar');
+                let isDragging = false;
+                let startY = 0;
+                let startScroll = 0;
+
+                scrollBar.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startY = e.clientY;
+                    startScroll = container.scrollTop;
+                    scrollBar.classList.add('dragging');
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const deltaY = e.clientY - startY;
+                    container.scrollTop = startScroll - deltaY * 2; // inverted direction, 2x impact
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        scrollBar.classList.remove('dragging');
+                        document.body.style.userSelect = '';
+                    }
+                });
+
+                // Double click to jump to now
+                scrollBar.addEventListener('dblclick', () => {
+                    app.jumpToToday();
+                });
 
                 this.renderGoals();
                 this.renderHours();
@@ -1660,22 +1702,19 @@
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
                             <input type="text" class="setting-input" value="${this.emojis.join('')}"
-                                   oninput="app.emojis = [...this.value]; app.saveData()">
+                                   oninput="this.value = this.value.replace(/[^\p{Emoji}]/gu, ''); app.emojis = [...this.value]; app.saveData()">
                         </div>
                         
                         <div class="setting-group">
                             <label class="setting-label">Dailies</label>
                             <div id="goalsList"></div>
-                            <button class="add-goal-btn" onclick="app.addGoal()" style="margin-top: 12px;">+ Add Daily</button>
-                        </div>
-
-                        <div class="setting-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" class="checkbox" ${this.showGoalsInTimeline ? 'checked' : ''}
-                                       onchange="app.showGoalsInTimeline = this.checked; app.saveData()">
-                                <span>Show dailies in timeline</span>
-                            </label>
-                        </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px;">
+                                <button class="add-goal-btn" onclick="app.addGoal()">+ Add Daily</button>
+                                <label class="checkbox-label" style="margin-bottom: 0;">
+                                    <input type="checkbox" class="checkbox" ${this.showGoalsInTimeline ? 'checked' : ''} onchange="app.showGoalsInTimeline = this.checked; app.saveData()">
+                                    <span>Show dailies in timeline</span>
+                                </label>
+                            </div>
 
                         <div class="setting-group">
                             <label class="setting-label">Start Hour</label>
@@ -1698,13 +1737,13 @@
             renderGoalsList() {
                 const goalsList = document.getElementById('goalsList');
                 if (!goalsList) return;
-                
                 goalsList.innerHTML = this.goals.map(goal => {
                     const isEditing = this.editingGoal === goal.id;
+                    const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
                     return `
                         <div class="goal-row" style="width:100%">
                             <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})" style="width:100%">
-                                <span class="goal-emoji-display">${goal.emoji}</span>
+                                <span class="goal-emoji-display">${selectedEmojis.join(' ')}</span>
                                 <span class="goal-text-display">${this.formatGoalText(goal)}</span>
                                 <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
@@ -1713,8 +1752,8 @@
                                     <div class="goal-editor-section" style="width:100%">
                                         <div class="goal-emoji-grid" style="width:100%">
                                             ${this.emojis.map(emoji => `
-                                                <button class="goal-emoji-btn ${goal.emoji === emoji ? 'selected' : ''}"
-                                                        onclick="app.updateGoal(${goal.id}, { emoji: '${emoji}' })">
+                                                <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
+                                                        onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
                                                     ${emoji}
                                                 </button>
                                             `).join('')}
@@ -1739,7 +1778,6 @@
                                                 <span style="color: #9ca3af; font-size: 14px;">
                                                     ${goal.operator.includes('than') ? 'times' : ''}
                                                 </span>
-                                                
                                             </div>
                                         </div>
                                     </div>
@@ -1748,6 +1786,17 @@
                         </div>
                     `;
                 }).join('');
+            }
+            toggleGoalEmoji(goalId, emoji) {
+                const goal = this.goals.find(g => g.id === goalId);
+                let emojis = Array.isArray(goal.emojis) ? [...goal.emojis] : [goal.emoji];
+                if (emojis.includes(emoji)) {
+                    emojis = emojis.filter(e => e !== emoji);
+                } else {
+                    emojis.push(emoji);
+                }
+                if (emojis.length === 0) emojis = [emoji];
+                this.updateGoal(goalId, { emojis });
             }
             toggleGoalNegation(goalId) {
                 const goal = this.goals.find(g => g.id === goalId);
