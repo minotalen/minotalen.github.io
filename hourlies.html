@@ -518,17 +518,11 @@
             background-color: #1f2937;
             box-shadow: 0 0 0 2px #eab308;
         }
-        
-        .goal-emoji-display {
-            font-size: 28px;
-            min-width: 40px;
-            text-align: center;
-        }
-        
+                
         .goal-text-display {
             color: #d1d5db;
             flex: 1;
-            font-size: 16px;
+            font-size: 18px;
         }
         
         .remove-goal-btn {
@@ -805,7 +799,6 @@
             .checkbox { width: 18px; height: 18px; }
             .bubble { font-size: 24px !important; }
             .dailies-section h3 { font-size: 16px; }
-            .goal-emoji-display { font-size: 22px; }
             .goal-text-display { font-size: 16px; }
         }
         
@@ -1626,7 +1619,6 @@
                             <h2 class="goals-title">dailies</h2>
                             ${goalChecks.map(goal => `
                                 <div class="goal-item ${goal.met ? 'passed' : 'failed'}">
-                                    <span class="goal-emoji-display">${goal.emoji}</span>
                                     <span class="goal-text">${this.formatGoalText(goal)}</span>
                                 </div>
                             `).join('')}
@@ -1743,8 +1735,7 @@
                     return `
                         <div class="goal-row" style="width:100%">
                             <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})" style="width:100%">
-                                <span class="goal-emoji-display">${selectedEmojis.join(' ')}</span>
-                                <span class="goal-text-display">${this.formatGoalText(goal)}</span>
+                               <span class="goal-text-display">${this.formatGoalText(goal)}</span>
                                 <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
                             ${isEditing ? `
@@ -1839,8 +1830,7 @@
                             <h3>Dailies</h3>
                             ${goalChecks.map(goal => `
                                 <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="font-size:18px; font-weight:500; margin-bottom:8px;">
-                                    <span class="goal-emoji-display">${goal.emoji}</span>
-                                    <span class="goal-text">${this.formatGoalText(goal)} (${goal.emojiCount})</span>
+                                    <span class="goal-text">${this.formatGoalText(goal)}</span>
                                 </div>
                             `).join('')}
                             ${this.goals.length === 0 ? '<p class="no-goals-daily">No dailies set</p>' : ''}
