@@ -35,7 +35,7 @@
         }
         
         .main-container {
-            height: calc(100vh - env(safe-area-inset-top, 16px) - 60px);
+            height: calc(100vh - calc(48px + env(safe-area-inset-top, 16px)));
             position: relative;
             overflow-y: auto;
             scrollbar-width: none;  /* Firefox */
@@ -1228,10 +1228,12 @@
             isFutureDate() { return this.dateKey(this.currentDate) > this.dateKey(this.getEffectiveDate()); }
 
             getHourFill(hour) {
-                if (this.isFutureDate()) return 0;
-                if (this.isPastDate()) return 100;
-                if (!this.isCurrentDate()) return 0;
-                
+                // Skip fill logic if not on current day
+                if (!this.isCurrentDate()) {
+                    if (this.isPastDate()) return 100;
+                    return 0;
+                }
+
                 const currentHour = this.currentTime.getHours();
                 const adjustedHour = hour < this.startHour ? hour + 24 : hour;
                 const adjustedCurrentHour = currentHour < this.startHour ? currentHour + 24 : currentHour;
@@ -1351,7 +1353,8 @@
                 } else {
                     floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
                     floatingNavDate.classList.remove('btn-active');
-                    floatingNavDate.onclick = () => app.setView('timeline');
+
+                        floatingNavDate.onclick = () => app.setView('timeline');
                 }
             }
 
@@ -1678,11 +1681,9 @@
             startTimer() {
                 setInterval(() => {
                     this.currentTime = new Date();
-                    const effectiveDate = this.getEffectiveDate();
-                    if (this.dateKey(effectiveDate) !== this.currentDateKey) {
-                        this.currentDate = effectiveDate;
-                    }
-                    if (this.view === 'timeline' && this.editingHour === null) {
+                    
+                    // Only update the UI if we're on the current day and in timeline view
+                    if (this.isCurrentDate() && this.view === 'timeline' && this.editingHour === null) {
                         this.renderHours();
                     }
                 }, 60000);
@@ -2598,8 +2599,13 @@
             }
 
             extractEmojis(text) {
-                const emojiRegex = /\p{Emoji}/gu;
-                return Array.from(new Set(text.match(emojiRegex) || []));
+                // Split text into proper grapheme clusters using Intl.Segmenter
+                const segments = [...new Intl.Segmenter().segment(text)]
+                    .map(x => x.segment)
+                    .filter(segment => segment.match(/\p{Emoji}/u));
+                
+                // Remove duplicates
+                return Array.from(new Set(segments));
             }
 
             handleEmojiInput(value) {
