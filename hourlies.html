@@ -513,7 +513,72 @@
             font-family: 'Atkinson Hyperlegible', monospace;
         }
         .emoji-input {
-            font-size: 2.2em;
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 12px;
+            min-height: 120px;
+            resize: none;
+            transition: all 0.3s ease;
+            white-space: pre-wrap;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .emoji-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .emoji-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        
+        .emoji-input:focus {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            height: auto;
+            min-height: 50vh;
+            max-height: 80vh;
+            z-index: 1000;
+            margin: 0;
+            border-radius: 0;
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        .emoji-input:not(:focus) {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 600px) {
+            .emoji-input:focus {
+                width: calc(100% - 20px);
+                padding: 10px;
+            }
         }
         .checkbox-label {
             display: flex;
@@ -950,6 +1015,7 @@
                 this.allEntries = {};
                 this.goals = [];
                 this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                this.emojiNotes = {};
                 this.showGoalsInTimeline = false;
                 
                 this.currentDate = new Date();
@@ -979,6 +1045,7 @@
                             allEntries: data.allEntries || {},
                             goals: data.goals || [],
                             emojis: data.emojis || this.emojis,
+                            emojiNotes: data.emojiNotes || {},
                             startHour: data.startHour ?? this.startHour,
                             showGoalsInTimeline: data.showGoalsInTimeline ?? false
                         });
@@ -1021,6 +1088,7 @@
                     allEntries: this.allEntries,
                     goals: this.goals,
                     emojis: this.emojis,
+                    emojiNotes: this.emojiNotes,
                     startHour: this.startHour,
                     showGoalsInTimeline: this.showGoalsInTimeline
                 }));
@@ -1329,6 +1397,20 @@
                 event.target.addEventListener('blur', (e) => this.handleDateInput(e), { once: true });
             }
 
+            extractEmojis(text) {
+                // Save the full text for future editing
+                this.emojiNotes = text;
+                
+                // Extract all emojis from the text
+                const emojiRegex = /\p{Emoji}/gu;
+                const emojis = Array.from(new Set(text.match(emojiRegex) || []));
+                
+                // Update the emoji list
+                this.emojis = emojis;
+                this.saveData();
+                this.render();
+            }
+
             // === HOURS ===
             editHour(hour) {
                 if (this.editingHour === hour) return;
@@ -1374,6 +1456,11 @@
                 this.saveData();
             }
 
+            saveAndClose() {
+                this.editingHour = null;
+                this.renderHours();
+            }
+
             clearEntry(hour) {
                 const newEntries = { ...this.entries };
                 newEntries[hour] = { emojis: [], text: '' };
@@ -1405,6 +1492,14 @@
             handleHourInputKeydown(event, hour) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
+                    this.saveAndClose();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    const previousEntry = this.undoStack.pop(); // Remove the latest change
+                    if (previousEntry) {
+                        this.allEntries[this.currentDateKey] = previousEntry.entries;
+                        this.saveData();
+                    }
                     this.editingHour = null;
                     this.renderHours();
                 } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -1763,6 +1858,13 @@
                                 if (importData.settings) {
                                     if (Array.isArray(importData.settings.emojis)) {
                                         this.emojis = [...importData.settings.emojis];
+                                        // Only reset emojiNotes if not already set
+                                        if (!importData.settings.emojiNotes) {
+                                            this.emojiNotes = this.emojis.join('\n');
+                                        }
+                                    }
+                                    if (importData.settings.emojiNotes) {
+                                        this.emojiNotes = importData.settings.emojiNotes;
                                     }
                                     if (typeof importData.settings.startHour === 'number' && 
                                         importData.settings.startHour >= 0 && 
@@ -2371,7 +2473,7 @@
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>' : ''}
+                        ${this.editingHour !== null ? '<div class="overlay" onclick="event.stopPropagation(); app.saveAndClose()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
@@ -2382,8 +2484,10 @@
                     <div class="settings-container">
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
-                            <input type="text" class="setting-input emoji-input" value="${this.emojis.join('')}"
-                                   oninput="app.handleEmojiInput(this.value)">
+                            <div class="emoji-overlay" onclick="document.querySelector('.emoji-input').blur()"></div>
+                            <textarea class="setting-input emoji-input" 
+                                      onfocus="document.querySelector('.emoji-overlay').style.display = 'block'"
+                                      onblur="app.extractEmojis(this.value); document.querySelector('.emoji-overlay').style.display = 'none'">${this.emojiNotes || this.emojis.join('\n')}</textarea>
                         </div>
                         
                         <div class="setting-group">
@@ -2487,26 +2591,6 @@
                         </div>
                     `;
                 }).join('');
-            }
-            handleEmojiInput(value) {
-                // First, keep only emoji characters
-                const emojiRegex = /\p{Emoji}/gu;
-                const emojis = Array.from(new Set(value.match(emojiRegex) || []));
-                
-                // Only update if we have valid emojis
-                if (emojis.length > 0) {
-                    this.emojis = emojis;
-                    this.saveData();
-                } else {
-                    // If no valid emojis, restore from localStorage
-                    const saved = localStorage.getItem("hourliesData");
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        if (data.emojis && data.emojis.length > 0) {
-                            this.emojis = data.emojis;
-                        }
-                    }
-                }
             }
 
             toggleGoalEmoji(goalId, emoji) {
