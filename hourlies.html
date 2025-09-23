@@ -393,6 +393,17 @@
             margin-top: 8px;
         }
         
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 90;
+            backdrop-filter: blur(2px);
+        }
+        
         .emoji-btn {
             padding: 8px;
             font-size: 32px;
@@ -502,7 +513,72 @@
             font-family: 'Atkinson Hyperlegible', monospace;
         }
         .emoji-input {
-            font-size: 2.2em;
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 12px;
+            min-height: 120px;
+            resize: none;
+            transition: all 0.3s ease;
+            white-space: pre-wrap;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .emoji-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .emoji-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        
+        .emoji-input:focus {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            height: auto;
+            min-height: 50vh;
+            max-height: 80vh;
+            z-index: 1000;
+            margin: 0;
+            border-radius: 0;
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        .emoji-input:not(:focus) {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 600px) {
+            .emoji-input:focus {
+                width: calc(100% - 20px);
+                padding: 10px;
+            }
         }
         .checkbox-label {
             display: flex;
@@ -535,26 +611,32 @@
         .goal-row {
             position: relative;
             margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
         }
         
         .goal-summary {
             cursor: pointer;
             padding: 12px;
             background-color: #2a313e;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+            border-radius: 6px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 12px;
+            width:100%
         }
         
         .goal-summary:hover {
             background-color: #373e49;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         .goal-summary.editing {
             background-color: #1f2937;
-            box-shadow: 0 0 0 2px #eab308;
+            box-shadow: 0 0 0 2px #eab308, 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.02);
         }
                 
         .goal-text-display {
@@ -585,47 +667,64 @@
         
         .goal-editor {
             background-color: #1f2937;
-            padding: 16px;
-            border-radius: 4px;
-            margin-top: 8px;
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 12px;
             border: 2px solid #eab308;
             position: relative;
-            z-index: 60;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
         .goal-editor-section {
-            margin-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .goal-editor-section:last-child {
+            margin-bottom: 0;
         }
         
         .goal-editor-label {
             color: #d1d5db;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             display: block;
         }
         
         .goal-emoji-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, 44px);
-            gap: 6px;
-            max-height: 180px;
+            grid-template-columns: repeat(auto-fit, 56px);
+            gap: 8px;
+            max-height: 200px;
             overflow-y: auto;
+            padding: 4px;
+            background: #111827;
+            border-radius: 8px;
         }
         
         .goal-emoji-btn {
-            width: 44px;
-            height: 44px;
-            background: none;
+            width: 56px;
+            height: 56px;
+            background: #2d3748;
             border: 2px solid transparent;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 24px;
+            font-size: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-            background-color: #374151;
+        }
+        
+        .goal-emoji-btn:hover {
+            background: #374151;
+            transform: scale(1.05);
+        }
+        
+        .goal-emoji-btn.selected {
+            border-color: #eab308;
+            background: #1f2937;
         }
         
         .goal-emoji-btn:hover {
@@ -662,53 +761,73 @@
             min-width: 100px;
         }
         
+        .goal-operator-btn {
+            background-color: #2d3748;
+            color: #e5e7eb;
+            border: 2px solid transparent;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        
         .goal-operator-btn:hover {
-            background-color: #4b5563;
+            background-color: #374151;
+            border-color: #eab308;
         }
         
         .goal-value-input {
-            background-color: #374151;
-            color: #d1d5db;
-            border: none;
-            padding: 10px 12px;
-            border-radius: 6px;
-            width: 80px;
+            width: 70px;
             text-align: center;
-            font-size: 14px;
+            background-color: #2d3748;
+            color: #e5e7eb;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.2s;
         }
         
+        .goal-value-input:hover,
         .goal-value-input:focus {
+            background-color: #374151;
+            border-color: #eab308;
             outline: none;
-            background-color: #4b5563;
         }
         
         .goal-editor-actions {
             display: flex;
-            gap: 8px;
             justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
         }
         
         .goal-action-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
+            font-size: 16px;
+            transition: all 0.2s;
+            background-color: #2d3748;
+            color: #e5e7eb;
         }
         
-        .goal-action-btn.primary {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .goal-action-btn.primary:hover {
-            background-color: #2563eb;
-        }
-        
-        .goal-action-btn.secondary {
+        .goal-action-btn:hover {
             background-color: #374151;
-            color: #d1d5db;
+            border-color: #eab308;
+        }
+        
+        .operator-value-group {
+            background: #111827;
+            padding: 16px;
+            border-radius: 8px;
+            gap: 12px !important;
         }
         
         .goal-action-btn.secondary:hover {
@@ -792,6 +911,7 @@
             border-radius: 50%;
             color: white;
             background-color: #1F2937;
+            font-size: 40px;
         }
         
         .dailies-section h3 {
@@ -846,7 +966,7 @@
             .setting-label, .setting-input, .checkbox-label { font-size: 16px; }
             .setting-input { padding: 10px; }
             .checkbox { width: 18px; height: 18px; }
-            .bubble { font-size: 24px !important; }
+            .bubble { font-size: 32px !important; }
             .dailies-section h3 { font-size: 16px; }
             .goal-text-display { font-size: 16px; }
         }
@@ -879,8 +999,8 @@
                 <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">↶</button>
             </div>
             <div class="header-buttons">
-                <button class="btn" onclick="app.setView('daily')">🎯 <span class="btn-label">daily</span></button>
-                <button class="btn" onclick="app.setView('settings')">⚙ <span class="btn-label">edit</span></button>
+                <button class="btn" onclick="app.setView('daily')" title="Press 'D'">🎯 <span class="btn-label">daily</span></button>
+                <button class="btn" onclick="app.setView('settings')" title="Press 'E'">⚙ <span class="btn-label">edit</span></button>
             </div>
         </div>
         <div class="main-container" id="mainContainer"></div>
@@ -895,6 +1015,7 @@
                 this.allEntries = {};
                 this.goals = [];
                 this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                this.emojiNotes = {};
                 this.showGoalsInTimeline = false;
                 
                 this.currentDate = new Date();
@@ -924,6 +1045,7 @@
                             allEntries: data.allEntries || {},
                             goals: data.goals || [],
                             emojis: data.emojis || this.emojis,
+                            emojiNotes: data.emojiNotes || {},
                             startHour: data.startHour ?? this.startHour,
                             showGoalsInTimeline: data.showGoalsInTimeline ?? false
                         });
@@ -966,6 +1088,7 @@
                     allEntries: this.allEntries,
                     goals: this.goals,
                     emojis: this.emojis,
+                    emojiNotes: this.emojiNotes,
                     startHour: this.startHour,
                     showGoalsInTimeline: this.showGoalsInTimeline
                 }));
@@ -1087,6 +1210,42 @@
 
             // === EVENTS ===
             setupEvents() {
+                // Global keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    // Don't trigger shortcuts when typing in input fields
+                    if (e.target.matches('input, textarea')) return;
+                    
+                    // Don't trigger when editing an hour
+                    if (this.editingHour !== null) return;
+                    
+                    switch (e.key.toLowerCase()) {
+                        case 'arrowleft':
+                            this.navigateDay(-1);
+                            e.preventDefault();
+                            break;
+                        case 'arrowright':
+                            this.navigateDay(1);
+                            e.preventDefault();
+                            break;
+                        case 'f':
+                            document.querySelector('.date-input')?.focus();
+                            e.preventDefault();
+                            break;
+                        case 'e':
+                            this.setView('settings');
+                            e.preventDefault();
+                            break;
+                        case 'd':
+                            this.setView('daily');
+                            e.preventDefault();
+                            break;
+                        case 'h':
+                            this.setView('timeline');
+                            e.preventDefault();
+                            break;
+                    }
+                });
+                
                 // Handle backspace/delete on hover
                 document.addEventListener('keydown', (e) => {
                     if ((e.key === 'Backspace' || e.key === 'Delete') && 
@@ -1238,6 +1397,20 @@
                 event.target.addEventListener('blur', (e) => this.handleDateInput(e), { once: true });
             }
 
+            extractEmojis(text) {
+                // Save the full text for future editing
+                this.emojiNotes = text;
+                
+                // Extract all emojis from the text
+                const emojiRegex = /\p{Emoji}/gu;
+                const emojis = Array.from(new Set(text.match(emojiRegex) || []));
+                
+                // Update the emoji list
+                this.emojis = emojis;
+                this.saveData();
+                this.render();
+            }
+
             // === HOURS ===
             editHour(hour) {
                 if (this.editingHour === hour) return;
@@ -1283,6 +1456,11 @@
                 this.saveData();
             }
 
+            saveAndClose() {
+                this.editingHour = null;
+                this.renderHours();
+            }
+
             clearEntry(hour) {
                 const newEntries = { ...this.entries };
                 newEntries[hour] = { emojis: [], text: '' };
@@ -1314,6 +1492,14 @@
             handleHourInputKeydown(event, hour) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
+                    this.saveAndClose();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    const previousEntry = this.undoStack.pop(); // Remove the latest change
+                    if (previousEntry) {
+                        this.allEntries[this.currentDateKey] = previousEntry.entries;
+                        this.saveData();
+                    }
                     this.editingHour = null;
                     this.renderHours();
                 } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -1672,6 +1858,13 @@
                                 if (importData.settings) {
                                     if (Array.isArray(importData.settings.emojis)) {
                                         this.emojis = [...importData.settings.emojis];
+                                        // Only reset emojiNotes if not already set
+                                        if (!importData.settings.emojiNotes) {
+                                            this.emojiNotes = this.emojis.join('\n');
+                                        }
+                                    }
+                                    if (importData.settings.emojiNotes) {
+                                        this.emojiNotes = importData.settings.emojiNotes;
                                     }
                                     if (typeof importData.settings.startHour === 'number' && 
                                         importData.settings.startHour >= 0 && 
@@ -2141,18 +2334,19 @@
                     <div class="scroll-container">
                         <div class="date-nav">
                             <div class="date-nav-left">
-                                <div class="date-btn" onclick="app.navigateDay(-1)">←</div>
+                                <div class="date-btn" onclick="app.navigateDay(-1)" title="Previous day (Left Arrow)">←</div>
                                 <input type="text" 
                                     class="date-input secondary-btn"
                                     value="${this.formatDateInput()}"
                                     maxlength="8"
                                     onkeydown="app.handleDateKeydown(event)"
                                     oninput="app.handleDateInput(event)"
-                                    onfocus="app.handleDateFocus(event)">
-                                <div class="date-btn" onclick="app.navigateDay(1)">→</div>
+                                    onfocus="app.handleDateFocus(event)"
+                                    title="Focus date input (Press 'F')">
+                                <div class="date-btn" onclick="app.navigateDay(1)" title="Next day (Right Arrow)">→</div>
                             </div>
                             <div class="date-nav-right">
-                                <div onclick="app.jumpToToday()">jump to now</div>
+                                <div onclick="app.jumpToToday()" title="Return to current day">jump to now</div>
                             </div>
                         </div>
                         <div id="goalsSection"></div>
@@ -2279,7 +2473,7 @@
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>' : ''}
+                        ${this.editingHour !== null ? '<div class="overlay" onclick="event.stopPropagation(); app.saveAndClose()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
@@ -2290,8 +2484,10 @@
                     <div class="settings-container">
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
-                            <input type="text" class="setting-input emoji-input" value="${this.emojis.join('')}"
-                                   oninput="this.value = this.value.replace(/[^\p{Emoji}]/gu, ''); app.emojis = Array.from(this.value.match(/\p{Emoji}/gu) || []); app.saveData()">
+                            <div class="emoji-overlay" onclick="document.querySelector('.emoji-input').blur()"></div>
+                            <textarea class="setting-input emoji-input" 
+                                      onfocus="document.querySelector('.emoji-overlay').style.display = 'block'"
+                                      onblur="app.extractEmojis(this.value); document.querySelector('.emoji-overlay').style.display = 'none'">${this.emojiNotes || this.emojis.join('\n')}</textarea>
                         </div>
                         
                         <div class="setting-group">
@@ -2354,15 +2550,15 @@
                     const isEditing = this.editingGoal === goal.id;
                     const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
                     return `
-                        <div class="goal-row" style="width:100%">
-                            <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})" style="width:100%">
+                        <div class="goal-row">
+                            <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})">
                                <span class="goal-text-display">${this.formatGoalText(goal)}</span>
                                 <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
                             ${isEditing ? `
-                                <div class="goal-editor" style="width:100%">
-                                    <div class="goal-editor-section" style="width:100%">
-                                        <div class="goal-emoji-grid" style="width:100%">
+                                <div class="goal-editor">
+                                    <div class="goal-editor-section">
+                                        <div class="goal-emoji-grid">
                                             ${this.emojis.map(emoji => `
                                                 <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
                                                         onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
@@ -2370,25 +2566,22 @@
                                                 </button>
                                             `).join('')}
                                         </div>
-                                    </div>
-                                    <div class="goal-editor-section" style="width:100%">
-                                        <div class="goal-controls-grid" style="width:100%">
-                                            <div class="operator-value-group" style="width:100%; display:flex; gap:8px; align-items:center;">
-                                                <button class="goal-action-btn secondary" style="margin-left:12px;" onclick="app.toggleGoalNegation(${goal.id})">
-                                                    ${goal.not ? 'is not' : 'is'}
-                                                </button>
-                                                <button class="goal-operator-btn" onclick="app.cycleOperator(${goal.id})">
-                                                    ${goal.operator.replace('_', ' ')}
-                                                </button>
-                                                <input type="number" 
-                                                       class="goal-value-input" 
-                                                       value="${goal.value}" 
-                                                       min="0" 
-                                                       max="23"
-                                                       onclick="event.stopPropagation()"
-                                                       onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
-                                                <span style="color: #9ca3af; font-size: 14px;">
-                                                    ${goal.operator.includes('than') ? 'times' : ''}
+                                        <div class="operator-value-group">
+                                            <button class="goal-action-btn" onclick="app.toggleGoalNegation(${goal.id})">
+                                                ${goal.not ? 'is not' : 'is'}
+                                            </button>
+                                            <button class="goal-operator-btn" onclick="app.cycleOperator(${goal.id})">
+                                                ${goal.operator.replace('_', ' ')}
+                                            </button>
+                                            <input type="number" 
+                                                   class="goal-value-input" 
+                                                   value="${goal.value}" 
+                                                   min="0" 
+                                                   max="23"
+                                                   onclick="event.stopPropagation()"
+                                                   onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
+                                            <span style="color: #e5e7eb; font-size: 16px;">
+                                                ${goal.operator.includes('than') ? 'times' : ''}
                                                 </span>
                                             </div>
                                         </div>
@@ -2399,6 +2592,7 @@
                     `;
                 }).join('');
             }
+
             toggleGoalEmoji(goalId, emoji) {
                 const goal = this.goals.find(g => g.id === goalId);
                 let emojis = Array.isArray(goal.emojis) ? [...goal.emojis] : [goal.emoji];
