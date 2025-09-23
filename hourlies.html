@@ -13,23 +13,37 @@
             user-select: none;
         }
         
+        :root {
+            --header-height: calc(48px + env(safe-area-inset-top, 16px));
+        }
+
         body {
             font-family: 'Atkinson Hyperlegible', sans-serif;
             background-color: #111827;
             color: white;
-            height: 100vh;
+            margin: 0;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             overflow: hidden;
         }
         
         /* LAYOUT */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: -webkit-fill-available;
+        }
+
         .header {
             background-color: #1f2937;
             padding: env(safe-area-inset-top, 16px) 12% 12px 12%;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            min-height: calc(48px + env(safe-area-inset-top, 16px));
-            position: fixed;
+            min-height: var(--header-height);
+            flex-shrink: 0;
+            position: sticky;
             top: 0;
             left: 0;
             right: 0;
@@ -37,10 +51,9 @@
         }
         
         .main-container {
-            padding-top: calc(48px + env(safe-area-inset-top, 16px));
-            height: 100vh;
-            position: relative;
+            flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             scrollbar-width: none;  /* Firefox */
             -ms-overflow-style: none;  /* Internet Explorer and Edge */
             &::-webkit-scrollbar {
@@ -980,15 +993,15 @@
         @media (max-width: 768px) {
             .scroll-bar { display: none !important; }
             .header { 
-                padding: calc(env(safe-area-inset-top, 12px) + 8px) 16px 8px 16px;
-                min-height: calc(44px + env(safe-area-inset-top, 12px));
+                padding: calc(env(safe-area-inset-top, 16px)) 16px 8px 16px;
+                min-height: var(--header-height);
             }
             .settings-container, .daily-container { 
-                padding: 8px 16px;
-                padding-top: calc(env(safe-area-inset-top, 12px) + 8px);
+                padding: 16px;
+                margin-top: 0;
             }
             .scroll-container { 
-                padding: 8px 0; 
+                padding: 16px 0; 
                 margin: 0 16px;
             }
             .header h1 { font-size: 1.4em; }
