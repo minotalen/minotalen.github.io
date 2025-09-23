@@ -29,13 +29,16 @@
             justify-content: space-between;
             align-items: flex-end;
             min-height: calc(48px + env(safe-area-inset-top, 16px));
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 100;
         }
         
         .main-container {
-            height: calc(100vh - calc(48px + env(safe-area-inset-top, 16px)));
+            padding-top: calc(48px + env(safe-area-inset-top, 16px));
+            height: 100vh;
             position: relative;
             overflow-y: auto;
             scrollbar-width: none;  /* Firefox */
@@ -101,6 +104,7 @@
         
         input[type=number] {
             -webkit-appearance: textfield;
+            appearance: textfield;
         }
         
         textarea {
@@ -138,6 +142,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+            padding-top: 1rem;
         }
         
         .date-nav-left, .date-nav-right {
@@ -807,9 +812,6 @@
             font-size: 14px;
             text-align: center;
         }
-            font-size: 16px;
-            transition: all 0.2s;
-            min-width: 120px;
         }
         
         .goal-operator-btn:hover {
