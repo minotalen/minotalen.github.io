@@ -1132,8 +1132,16 @@
                     1: { emojis: ['⌨️'], text: isMobile ? '' : 'use keyboard shortcuts to navigate quickly between hours and days' },
                 };
 
-                // Set up calendar day keys
-                const { currentDayKey, nextDayKey } = this.ensureCalendarDaysExist();
+                // Use effective date logic to determine proper calendar days for welcome messages
+                const effectiveDate = this.getEffectiveDate();
+                const currentDayKey = this.dateKey(effectiveDate);
+                const nextDay = new Date(effectiveDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                
+                // Ensure the days exist
+                if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
                 
                 // Store entries in appropriate days with one loop
                 Object.entries(allWelcomeEntries).forEach(([hour, entry]) => {
