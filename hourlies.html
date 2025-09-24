@@ -1021,7 +1021,7 @@
         <div class="header">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <h1><div class="btn-active" id="floatingNavDate">hourlies</div></h1>
-                <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">↶</button>
+                <button class="btn" onclick="app.undo()" id="undoBtn" style="display: none;">⎌</button>
             </div>
             <div class="header-buttons">
                 <button class="btn" onclick="app.setView('daily')" title="Press 'D'">🎯 <span class="btn-label">daily</span></button>
@@ -1130,7 +1130,8 @@
                     23: { emojis: ['📄'], text: isMobile ? 'long-tap an hour to copy' : 'right-click an hour to copy its entry' },
                     0: { emojis: ['📄'], text: 'paste copied entries into empty hours' },
                     1: { emojis: ['⌨️'], text: isMobile ? '' : 'use arrow keys for quickly navigating between hours and days' },
-                };
+                    2: { emojis: ['📄'], text: 'if you make a mistake, you can undo it with the ⎌ button in the header bar' },
+                    };
 
                 // Use effective date logic to determine proper calendar days for welcome messages
                 const effectiveDate = this.getEffectiveDate();
@@ -1164,9 +1165,9 @@
 
 Everyday basics
 🍔 Food
-☕ Drinks / energy — coffee, tea, stimulants  
-😴 Sleep / nap — rest, recharge  
-🚶 Movement — walking, exercise
+☕ Caffeine / stimulants
+😴 Sleep / nap
+🚶 Movement / sports
 
 Social & emotional
 💬 Social
@@ -1176,8 +1177,8 @@ Social & emotional
 Extras
 📖 Reading  
 👾 Gaming
-👩‍💻 Coding / tech 
-🎨 Creative`;
+👩‍💻 Coding / tech
+▶️ Youtube`;
                     
                     // Extract emojis from the descriptions and update the emoji array
                     const extractedEmojis = this.extractEmojis(this.emojiDescriptions);
@@ -1880,34 +1881,23 @@ Extras
             }
 
             // === EXPORT ===
-            exportCurrentDayCSV() {
-                let content = "";
+            exportCurrentDayJSON() {
+                const currentDayData = {
+                    date: this.currentDateKey,
+                    entries: this.entries,
+                    timestamp: new Date().toISOString()
+                };
                 
-                // Export entries in order starting from day start time (this.startHour)
-                this.hours.forEach(hour => {
-                    const entry = this.entries[hour] || { emojis: [], text: '' };
-                    const emojis = entry.emojis?.join('') || '';
-                    const text = entry.text || '';
-                    
-                    // Format: [hour]: emojis text
-                    const hourFormatted = this.formatHour(hour);
-                    const entryContent = `${emojis}${text ? ' ' + text : ''}`.trim();
-                    
-                    if (entryContent) {
-                        content += `[${hourFormatted}]: ${entryContent}\n`;
-                    } else {
-                        content += `[${hourFormatted}]: \n`;
-                    }
-                });
+                const content = JSON.stringify(currentDayData, null, 2);
                 
                 try {
                     navigator.clipboard.writeText(content);
                 } catch (err) {
-                    const blob = new Blob([content], { type: 'text/csv' });
+                    const blob = new Blob([content], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `hourlies-${this.formatDateInput()}.txt`;
+                    a.download = `hourlies-${this.formatDateInput()}.json`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -1926,228 +1916,144 @@ Extras
                 return months;
             }
 
-            exportAllToCSV() {
-                const monthlyData = this.groupEntriesByMonth();
-                const settings = {
-                    version: 1,
+            exportAllToJSON() {
+                const exportData = {
+                    version: 2,
                     timestamp: new Date().toISOString(),
                     settings: {
                         emojis: this.emojis,
+                        emojiDescriptions: this.emojiDescriptions,
                         startHour: this.startHour,
                         showGoalsInTimeline: this.showGoalsInTimeline
                     },
-                    rules: this.goals.map(goal => ({
+                    goals: this.goals.map(goal => ({
                         ...goal,
                         emojis: Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji]
-                    }))
+                    })),
+                    entries: this.allEntries
                 };
 
-                // Create a settings file
-                const settingsBlob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
-                const settingsUrl = URL.createObjectURL(settingsBlob);
-                const settingsLink = document.createElement('a');
-                settingsLink.href = settingsUrl;
-                settingsLink.download = 'hourlies-settings.json';
-                document.body.appendChild(settingsLink);
-                settingsLink.click();
-                document.body.removeChild(settingsLink);
-                URL.revokeObjectURL(settingsUrl);
-
-                // Create CSV files for each month
-                Object.entries(monthlyData).forEach(([monthKey, monthEntries]) => {
-                    const [year, month] = monthKey.split('-');
-                    const dates = Object.keys(monthEntries).sort();
-                    const hours = Array.from({ length: 24 }, (_, i) => (this.startHour + i) % 24);
-
-                    // Create CSV content
-                    let csvContent = 'Date,' + hours.map(h => h.toString().padStart(2, '0')).join(',') + '\n';
-                    dates.forEach(date => {
-                        const dayEntries = monthEntries[date];
-                        const row = [date];
-                        hours.forEach(hour => {
-                            const entry = dayEntries[hour];
-                            const cellContent = entry ? (entry.emojis?.join('') || '') + ' ' + (entry.text || '') : '';
-                            row.push(this.escapeCSV(cellContent));
-                        });
-                        csvContent += row.join(',') + '\n';
-                    });
-
-                    const blob = new Blob([csvContent], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `hourlies-${monthKey}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                });
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const timestamp = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `hourlies-export-${timestamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
 
-            escapeCSV(str) {
-                if (!str) return '';
-                str = str.replace(/"/g, '""');
-                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                    str = `"${str}"`;
-                }
-                return str;
-            }
-
-            importFromCSVFile(file) {
+            importFromJSONFile(file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    if (file.name.endsWith('.json')) {
-                        // Import settings file
-                        try {
-                            const importData = JSON.parse(e.target.result);
-                            console.log('Importing settings:', importData);  // Debug log
-                            
-                            // Handle both old and new format
-                            if (importData.version === 1) {
-                                // New format
-                                if (importData.settings) {
-                                    if (Array.isArray(importData.settings.emojis)) {
-                                        this.emojis = [...importData.settings.emojis];
-                                    }
-                                    if (typeof importData.settings.startHour === 'number' && 
-                                        importData.settings.startHour >= 0 && 
-                                        importData.settings.startHour < 24) {
-                                        this.startHour = importData.settings.startHour;
-                                    }
-                                    if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
-                                        this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
-                                    }
+                    try {
+                        const importData = JSON.parse(e.target.result);
+                        console.log('Importing data:', importData);
+                        
+                        if (importData.version === 2) {
+                            // New complete export format
+                            if (importData.settings) {
+                                if (Array.isArray(importData.settings.emojis)) {
+                                    this.emojis = [...importData.settings.emojis];
                                 }
-                                if (Array.isArray(importData.rules)) {
-                                    // Ensure all goals have required properties and valid values
-                                    this.goals = importData.rules.filter(goal => {
-                                        const validOperators = ['more_than', 'less_than', 'before', 'after'];
-                                        return goal && 
-                                               goal.id && 
-                                               Array.isArray(goal.emojis) && 
-                                               validOperators.includes(goal.operator) && 
-                                               typeof goal.value === 'number';
-                                    }).map(goal => ({
-                                        ...goal,
-                                        not: Boolean(goal.not),
-                                        value: Math.max(0, Math.min(23, goal.value))  // Clamp value between 0-23
-                                    }));
+                                if (importData.settings.emojiDescriptions) {
+                                    this.emojiDescriptions = importData.settings.emojiDescriptions;
                                 }
-                            } else {
-                                // Old format for backward compatibility
-                                if (Array.isArray(importData.emojis)) {
-                                    this.emojis = [...importData.emojis].filter(emoji => /\p{Emoji}/u.test(emoji));
+                                if (typeof importData.settings.startHour === 'number' && 
+                                    importData.settings.startHour >= 0 && 
+                                    importData.settings.startHour < 24) {
+                                    this.startHour = importData.settings.startHour;
                                 }
-                                if (Array.isArray(importData.goals)) {
-                                    this.goals = importData.goals.map(goal => {
-                                        if (goal.emoji && !goal.emojis) {
-                                            goal.emojis = [goal.emoji];
-                                            delete goal.emoji;
-                                        }
-                                        return goal;
-                                    });
-                                }
-                                if (typeof importData.startHour === 'number' && 
-                                    importData.startHour >= 0 && 
-                                    importData.startHour < 24) {
-                                    this.startHour = importData.startHour;
-                                }
-                                if (typeof importData.showGoalsInTimeline === 'boolean') {
-                                    this.showGoalsInTimeline = Boolean(importData.showGoalsInTimeline);
+                                if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
+                                    this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
                                 }
                             }
-                            this.saveData();
-                            this.render();
-                            alert('Settings imported successfully');
-                        } catch (err) {
-                            alert('Error importing settings: Invalid JSON file');
+                            if (Array.isArray(importData.goals)) {
+                                this.goals = importData.goals.filter(goal => {
+                                    const validOperators = ['more_than', 'less_than', 'before', 'after'];
+                                    return goal && 
+                                           goal.id && 
+                                           Array.isArray(goal.emojis) && 
+                                           validOperators.includes(goal.operator) && 
+                                           typeof goal.value === 'number';
+                                }).map(goal => ({
+                                    ...goal,
+                                    not: Boolean(goal.not),
+                                    value: Math.max(0, Math.min(23, goal.value))
+                                }));
+                            }
+                            if (importData.entries && typeof importData.entries === 'object') {
+                                // Import all entries
+                                this.allEntries = { ...this.allEntries, ...importData.entries };
+                            }
+                        } else if (importData.version === 1) {
+                            // Old settings-only format for backward compatibility
+                            if (importData.settings) {
+                                if (Array.isArray(importData.settings.emojis)) {
+                                    this.emojis = [...importData.settings.emojis];
+                                }
+                                if (typeof importData.settings.startHour === 'number' && 
+                                    importData.settings.startHour >= 0 && 
+                                    importData.settings.startHour < 24) {
+                                    this.startHour = importData.settings.startHour;
+                                }
+                                if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
+                                    this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
+                                }
+                            }
+                            if (Array.isArray(importData.rules)) {
+                                const validOperators = ['more_than', 'less_than', 'before', 'after'];
+                                this.goals = importData.rules.filter(goal => {
+                                    return goal && 
+                                           goal.id && 
+                                           Array.isArray(goal.emojis) && 
+                                           validOperators.includes(goal.operator) && 
+                                           typeof goal.value === 'number';
+                                }).map(goal => ({
+                                    ...goal,
+                                    not: Boolean(goal.not),
+                                    value: Math.max(0, Math.min(23, goal.value))
+                                }));
+                            }
+                        } else if (importData.date && importData.entries) {
+                            // Single day export format
+                            this.allEntries[importData.date] = importData.entries;
+                        } else {
+                            // Legacy format for backward compatibility
+                            if (Array.isArray(importData.emojis)) {
+                                this.emojis = [...importData.emojis].filter(emoji => /\p{Emoji}/u.test(emoji));
+                            }
+                            if (Array.isArray(importData.goals)) {
+                                this.goals = importData.goals.map(goal => {
+                                    if (goal.emoji && !goal.emojis) {
+                                        goal.emojis = [goal.emoji];
+                                        delete goal.emoji;
+                                    }
+                                    return goal;
+                                });
+                            }
+                            if (typeof importData.startHour === 'number' && 
+                                importData.startHour >= 0 && 
+                                importData.startHour < 24) {
+                                this.startHour = importData.startHour;
+                            }
+                            if (typeof importData.showGoalsInTimeline === 'boolean') {
+                                this.showGoalsInTimeline = Boolean(importData.showGoalsInTimeline);
+                            }
                         }
-                    } else if (file.name.endsWith('.csv')) {
-                        // Import CSV data file
-                        try {
-                            const lines = e.target.result.split(/\r?\n/);
-                            const headers = this.parseCSVLine(lines[0]);
-                            console.log('CSV headers:', headers);  // Debug log
-                            if (!headers[0].toLowerCase().includes('date')) {
-                                throw new Error('Invalid CSV format: first column must be Date');
-                            }
-                            const hours = headers.slice(1).map(h => {
-                                const hour = parseInt(h, 10);
-                                if (isNaN(hour) || hour < 0 || hour > 23) {
-                                    throw new Error(`Invalid hour in header: ${h}`);
-                                }
-                                return hour;
-                            });
-                            
-                            for (let i = 1; i < lines.length; i++) {
-                                const line = lines[i].trim();
-                                if (!line) continue;
-
-                                const cols = this.parseCSVLine(line);
-                                if (cols.length !== headers.length) {
-                                    throw new Error(`Row ${i + 1} has incorrect number of columns: expected ${headers.length}, got ${cols.length}`);
-                                }
-
-                                const date = new Date(cols[0]);
-                                if (isNaN(date.getTime())) {
-                                    throw new Error(`Invalid date in row ${i + 1}: ${cols[0]}`);
-                                }
-
-                                const entries = {};
-                                for (let j = 1; j < cols.length; j++) {
-                                    const hour = hours[j - 1];
-                                    const cellContent = cols[j].trim();
-                                    if (cellContent) {
-                                        const emojis = Array.from(cellContent.match(/\p{Emoji}/gu) || []);
-                                        const text = cellContent.replace(/\p{Emoji}/gu, '').trim();
-                                        entries[hour] = { emojis, text };
-                                    }
-                                }
-
-                                this.allEntries[date.toISOString().split('T')[0]] = entries;
-                            }
-
-                            this.saveData();
-                            this.render();
-                            alert('Data imported successfully');
-                        } catch (err) {
-                            alert('Error importing data: Invalid CSV format');
-                        }
+                        
+                        this.saveData();
+                        this.render();
+                        alert('Data imported successfully');
+                    } catch (err) {
+                        console.error('Import error:', err);
+                        alert('Error importing data: Invalid JSON file');
                     }
                 };
 
-                if (file.name.endsWith('.json')) {
-                    reader.readAsText(file);
-                } else if (file.name.endsWith('.csv')) {
-                    reader.readAsText(file);
-                } else {
-                    alert('Invalid file type. Please select a .csv or .json file.');
-                }
-            }
-
-            parseCSVLine(line) {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
-                
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"') {
-                        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-                            current += '"';
-                            i++;
-                        } else {
-                            inQuotes = !inQuotes;
-                        }
-                    } else if (char === ',' && !inQuotes) {
-                        result.push(current.trim());
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                result.push(current.trim());
-                return result;
+                reader.readAsText(file);
             }
 
             wipeCurrentDayData() {
@@ -2597,7 +2503,7 @@ Extras
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
                             <textarea class="setting-input emoji-input" 
-                                onfocus="this.style.position='fixed'; this.style.top='50%'; this.style.left='50%'; this.style.transform='translate(-50%, -50%)'; this.style.zIndex='1000'; this.style.width='80%'; this.style.maxWidth='600px'; this.style.height='80vh';"
+                                onfocus="this.style.position='fixed'; this.style.top='50%'; this.style.left='50%'; this.style.transform='translate(-50%, -50%)'; this.style.zIndex='1000'; this.style.width='80%'; this.style.maxWidth='80%'; this.style.height='80vh';"
                                 onblur="app.handleEmojiInput(this.value); this.style.position=''; this.style.top=''; this.style.left=''; this.style.transform=''; this.style.zIndex=''; this.style.width=''; this.style.maxWidth=''; this.style.height='';"
                             >${this.emojiDescriptions || this.emojis.join('')}</textarea>
                         </div>
