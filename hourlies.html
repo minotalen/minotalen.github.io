@@ -2538,17 +2538,16 @@ Extras
                                     <span class="export-arrow">▼</span>
                                 </button>
                                 <div class="export-content" style="display: none;">
-                                    <button class="export-btn" onclick="app.exportAllToCSV()" style="margin-bottom: 12px;">
-                                        Export All Data
+                                    <button class="export-btn" onclick="app.exportAllToJSON()" style="margin-bottom: 12px;">
+                                        Export All Data as JSON
                                     </button>
                                     <div class="import-section">
-                                        <input type="file" class="import-input" accept=".csv,.json" 
-                                               onchange="if(this.files.length) app.importFromCSVFile(this.files[0])">
+                                        <input type="file" class="import-input" accept=".json" 
+                                               onchange="if(this.files.length) app.importFromJSONFile(this.files[0])">
                                     </div>
                                     <div class="export-help">
-                                        Export creates two files:
-                                        <br>• Monthly CSV files with daily entries
-                                        <br>• JSON file with settings and goals
+                                        Export creates a single JSON file with all your data, settings, and dailies.
+                                        <br>• Import supports both new and legacy formats
                                     </div>
                                 </div>
                             </div>
@@ -2659,7 +2658,7 @@ Extras
                     <div class="daily-container">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                             <button class="jump-btn" onclick="if(confirm('Clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
-                            <button class="jump-btn" onclick="app.exportCurrentDayCSV()">📋 copy</button>
+                            <button class="jump-btn" onclick="app.exportCurrentDayJSON()">📋 copy</button>
                         </div>
                         
                         <div class="bubbles-container">
