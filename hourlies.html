@@ -1096,6 +1096,7 @@
                 this.clipboardEntry = null;
                 this.timelineScrollPosition = 0;
                 this.hoveredHour = null; // Track which hour entry is currently being hovered
+                this.editStartState = null; // Store entries state when editing starts
 
                 this.loadData();
                 this.currentDate = this.getEffectiveDate();
@@ -1172,6 +1173,10 @@
                 });
                 if (this.undoStack.length > 100) this.undoStack.shift();
                 
+                this.updateEntriesWithoutUndo(newEntries);
+            }
+
+            updateEntriesWithoutUndo(newEntries) {
                 // Split entries into correct calendar days
                 const currentDayKey = this.dateKey(this.currentDate);
                 const nextDay = new Date(this.currentDate);
@@ -1351,14 +1356,14 @@
 
             // === NAVIGATION ===
             navigateDay(direction) {
+                this.finishEditing();
                 this.currentDate.setDate(this.currentDate.getDate() + direction);
-                this.editingHour = null;
                 this.render();
             }
 
             jumpToToday() {
+                this.finishEditing();
                 this.currentDate = this.getEffectiveDate();
-                this.editingHour = null;
                 this.render();
                 setTimeout(() => this.scrollToCurrentHour(), 100);
             }
@@ -1369,8 +1374,8 @@
                     if (container) this.timelineScrollPosition = container.scrollTop;
                 }
 
+                this.finishEditing();
                 this.view = view;
-                this.editingHour = null;
                 this.editingGoal = null;
                 this.updateHeaderTitle();
                 this.render();
@@ -1474,6 +1479,12 @@
             // === HOURS ===
             editHour(hour) {
                 if (this.editingHour === hour) return;
+                
+                // Finish any current editing session
+                this.finishEditing();
+                
+                // Save state when starting to edit (before any changes)
+                this.editStartState = { ...this.entries };
                 this.editingHour = hour;
                 this.renderHours();
                 
@@ -1505,22 +1516,44 @@
                 const newEntries = { ...this.entries };
                 newEntries[this.editingHour] = { ...entry, text };
                 
-                this.undoStack.push({ 
-                    entries: { ...this.entries }, 
-                    timestamp: Date.now(),
-                    date: new Date(this.currentDate)
-                });
-                if (this.undoStack.length > 50) this.undoStack.shift();
-                this.allEntries[this.currentDateKey] = newEntries;
-                this.updateUndoButton();
-                this.saveData();
+                // Update entries without adding to undo stack (we'll do that on edit completion)
+                this.updateEntriesWithoutUndo(newEntries);
+            }
+
+            finishEditing() {
+                if (this.editingHour === null) return;
+                
+                // Add undo entry for the entire edit session
+                if (this.editStartState) {
+                    // Check if anything actually changed
+                    const currentEntries = { ...this.entries };
+                    const hasChanges = JSON.stringify(this.editStartState) !== JSON.stringify(currentEntries);
+                    
+                    if (hasChanges) {
+                        this.undoStack.push({ 
+                            entries: { ...this.editStartState }, 
+                            timestamp: Date.now(),
+                            date: new Date(this.currentDate)
+                        });
+                        if (this.undoStack.length > 100) this.undoStack.shift();
+                    }
+                    
+                    this.editStartState = null;
+                }
+                
+                this.editingHour = null;
+                this.renderHours();
             }
 
             clearEntry(hour) {
+                // If we're clearing the currently edited hour, finish editing first
+                if (this.editingHour === hour) {
+                    this.finishEditing();
+                }
+                
                 const newEntries = { ...this.entries };
                 newEntries[hour] = { emojis: [], text: '' };
                 this.updateEntries(newEntries);
-                this.editingHour = null;
                 this.renderHours();
             }
 
@@ -1532,7 +1565,9 @@
                     : [...validEmojis, emoji];
                 const newEntries = { ...this.entries };
                 newEntries[this.editingHour] = { ...entry, emojis: newEmojis };
-                this.updateEntries(newEntries);
+                
+                // Update entries without adding to undo stack (we'll do that on edit completion)
+                this.updateEntriesWithoutUndo(newEntries);
                 this.renderHours();
                 this.renderGoals();
                 setTimeout(() => {
@@ -1547,8 +1582,7 @@
             handleHourInputKeydown(event, hour) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
-                    this.editingHour = null;
-                    this.renderHours();
+                    this.finishEditing();
                 } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                     const textarea = event.target;
                     const cursorAtEnd = textarea.selectionStart === textarea.value.length;
@@ -1562,6 +1596,11 @@
                             : (currentIndex + 1) % this.hours.length;
                         const nextHour = this.hours[nextIndex];
 
+                        // Finish current edit before moving to next
+                        this.finishEditing();
+                        
+                        // Start editing the next hour
+                        this.editStartState = { ...this.entries };
                         this.editingHour = nextHour;
                         this.renderHours();
                         
@@ -1788,6 +1827,13 @@
             // === EXPORT ===
             exportCurrentDayCSV() {
                 let content = "";
+                // Prepend the current hour as the first line: hour, emoji, text
+                const currentHour = this.currentTime.getHours();
+                const currentEntry = this.entries[currentHour] || { emojis: [], text: '' };
+                const currentEmojis = currentEntry.emojis?.join('') || '';
+                const currentText = currentEntry.text || '';
+                content += `${currentHour},${currentEmojis},${currentText}\n`;
+
                 this.hours.forEach(hour => {
                     const entry = this.entries[hour];
                     const emojis = entry?.emojis?.join('') || '';
@@ -2511,7 +2557,7 @@
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.editingHour = null; app.renderHours()"></div>' : ''}
+                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.finishEditing()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
