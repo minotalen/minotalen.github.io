@@ -33,6 +33,7 @@
             --color-accent-blue: #3b82f6;   /* Focus/current states */
             --color-accent-green: #364e36;  /* Success states */
             --color-accent-red: #d83939;    /* Error states */
+            --color-accent-red-muted: #852727;    /* Failed dailies */
         }
 
         html {
@@ -177,7 +178,7 @@
         
         .header-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 2rem;
             align-items: center;
         }
         
@@ -263,7 +264,7 @@
         }
         
         .goal-item.failed {
-            background-color: var(--color-accent-red);
+            background-color: var(--color-accent-red-muted);
         }
         
         .goal-text {
@@ -535,7 +536,7 @@
             display: block;
             color: var(--color-text-secondary);
             margin-bottom: 8px;
-            font-size: 18px;
+            font-size: 1.5rem;
         }
         
         .setting-input {
@@ -937,9 +938,8 @@
         }
         
         .dailies-section h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--color-text-primary);
+            font-size: 1.5rem;
+            color: var(--color-text-secondary);
             margin-bottom: 12px;
         }
         
@@ -1123,12 +1123,12 @@
                     16: { emojis: ['🗑️'], text: 'wipe button clears current day if you want to start fresh' },
                     
                     18: { emojis: ['🔄'], text: 'patterns over perfection. work with your reality instead of fighting it' },
-                    19: { emojis: ['🌙'], text: 'track honestly without shame. the patterns will surprise you' },
-                    
+                    19: { emojis: ['🌙'], text: 'track honestly to enable self-discovery, improvement starts with awareness' },
+
                     21: { emojis: ['🔒'], text: 'everything is completely private and stays on your device' },
                     
                     23: { emojis: ['📄'], text: isMobile ? 'tap on an entry to edit it, long-tap an hour to copy' : 'click on an entry to edit it, right-click an hour to copy its entry' },
-                    0: { emojis: ['📋'], text: 'paste copied entries into empty hours for longer tasks' },
+                    0: { emojis: ['📄'], text: 'paste copied entries into empty hours for longer tasks' },
                     1: { emojis: ['⌨️'], text: isMobile ? '' : 'use keyboard shortcuts to navigate quickly between hours and days' },
                 };
 
