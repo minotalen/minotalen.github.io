@@ -1881,23 +1881,35 @@ Extras
             }
 
             // === EXPORT ===
-            exportCurrentDayJSON() {
-                const currentDayData = {
-                    date: this.currentDateKey,
-                    entries: this.entries,
-                    timestamp: new Date().toISOString()
-                };
+            exportCurrentDayText() {
+                let content = "";
                 
-                const content = JSON.stringify(currentDayData, null, 2);
+                // Export entries in order starting from day start time (this.startHour)
+                this.hours.forEach(hour => {
+                    const entry = this.entries[hour] || { emojis: [], text: '' };
+                    const emojis = entry.emojis?.join('') || '';
+                    const text = entry.text || '';
+                    
+                    // Format: [hour]: emojis text
+                    const hourFormatted = this.formatHour(hour);
+                    const entryContent = `${emojis}${text ? ' ' + text : ''}`.trim();
+                    
+                    if (entryContent) {
+                        content += `${hourFormatted}: ${entryContent}\n`;
+                    } else {
+                        content += `${hourFormatted}\n`;
+                    }
+                });
                 
                 try {
                     navigator.clipboard.writeText(content);
                 } catch (err) {
-                    const blob = new Blob([content], { type: 'application/json' });
+                    // Fallback: create a text file download
+                    const blob = new Blob([content], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `hourlies-${this.formatDateInput()}.json`;
+                    a.download = `hourlies-${this.formatDateInput()}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -2620,7 +2632,7 @@ Extras
                     <div class="daily-container">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                             <button class="jump-btn" onclick="if(confirm('Clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
-                            <button class="jump-btn" onclick="app.exportCurrentDayJSON()">📋 copy</button>
+                            <button class="jump-btn" onclick="app.exportCurrentDayText()">📋 copy</button>
                         </div>
                         
                         <div class="bubbles-container">
