@@ -1953,7 +1953,7 @@ Extras
                         console.log('Importing data:', importData);
                         
                         if (importData.version === 2) {
-                            // New complete export format
+                            // Complete export format
                             if (importData.settings) {
                                 if (Array.isArray(importData.settings.emojis)) {
                                     this.emojis = [...importData.settings.emojis];
@@ -1971,8 +1971,8 @@ Extras
                                 }
                             }
                             if (Array.isArray(importData.goals)) {
+                                const validOperators = ['more_than', 'less_than', 'before', 'after'];
                                 this.goals = importData.goals.filter(goal => {
-                                    const validOperators = ['more_than', 'less_than', 'before', 'after'];
                                     return goal && 
                                            goal.id && 
                                            Array.isArray(goal.emojis) && 
@@ -1988,60 +1988,11 @@ Extras
                                 // Import all entries
                                 this.allEntries = { ...this.allEntries, ...importData.entries };
                             }
-                        } else if (importData.version === 1) {
-                            // Old settings-only format for backward compatibility
-                            if (importData.settings) {
-                                if (Array.isArray(importData.settings.emojis)) {
-                                    this.emojis = [...importData.settings.emojis];
-                                }
-                                if (typeof importData.settings.startHour === 'number' && 
-                                    importData.settings.startHour >= 0 && 
-                                    importData.settings.startHour < 24) {
-                                    this.startHour = importData.settings.startHour;
-                                }
-                                if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
-                                    this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
-                                }
-                            }
-                            if (Array.isArray(importData.rules)) {
-                                const validOperators = ['more_than', 'less_than', 'before', 'after'];
-                                this.goals = importData.rules.filter(goal => {
-                                    return goal && 
-                                           goal.id && 
-                                           Array.isArray(goal.emojis) && 
-                                           validOperators.includes(goal.operator) && 
-                                           typeof goal.value === 'number';
-                                }).map(goal => ({
-                                    ...goal,
-                                    not: Boolean(goal.not),
-                                    value: Math.max(0, Math.min(23, goal.value))
-                                }));
-                            }
                         } else if (importData.date && importData.entries) {
                             // Single day export format
                             this.allEntries[importData.date] = importData.entries;
                         } else {
-                            // Legacy format for backward compatibility
-                            if (Array.isArray(importData.emojis)) {
-                                this.emojis = [...importData.emojis].filter(emoji => /\p{Emoji}/u.test(emoji));
-                            }
-                            if (Array.isArray(importData.goals)) {
-                                this.goals = importData.goals.map(goal => {
-                                    if (goal.emoji && !goal.emojis) {
-                                        goal.emojis = [goal.emoji];
-                                        delete goal.emoji;
-                                    }
-                                    return goal;
-                                });
-                            }
-                            if (typeof importData.startHour === 'number' && 
-                                importData.startHour >= 0 && 
-                                importData.startHour < 24) {
-                                this.startHour = importData.startHour;
-                            }
-                            if (typeof importData.showGoalsInTimeline === 'boolean') {
-                                this.showGoalsInTimeline = Boolean(importData.showGoalsInTimeline);
-                            }
+                            throw new Error('Unsupported file format. Please use a file exported from the current version.');
                         }
                         
                         this.saveData();
@@ -2049,7 +2000,7 @@ Extras
                         alert('Data imported successfully');
                     } catch (err) {
                         console.error('Import error:', err);
-                        alert('Error importing data: Invalid JSON file');
+                        alert('Error importing data: ' + (err.message || 'Invalid JSON file'));
                     }
                 };
 
@@ -2624,9 +2575,20 @@ Extras
                 this.emojiDescriptions = value;
                 
                 // Extract and update emojis list
-                const emojis = this.extractEmojis(value);
-                if (emojis.length > 0) {
-                    this.emojis = emojis;
+                const extractedEmojis = this.extractEmojis(value);
+                if (extractedEmojis.length > 0) {
+                    // Check if any existing emojis are compound (contain ZWJ) and might have been split during extraction
+                    const preservedCompoundEmojis = this.emojis.filter(existingEmoji => {
+                        // Keep compound emojis that contain ZWJ (Zero Width Joiner) or variation selectors
+                        const isCompound = existingEmoji.includes('\u200D') || existingEmoji.includes('\uFE0F');
+                        // Only preserve if it's not already in the extracted list
+                        return isCompound && !extractedEmojis.includes(existingEmoji);
+                    });
+                    
+                    // Combine extracted emojis with preserved compound ones, removing duplicates
+                    this.emojis = [...new Set([...extractedEmojis, ...preservedCompoundEmojis])];
+                } else {
+                    this.emojis = extractedEmojis;
                 }
                 
                 this.saveData();
