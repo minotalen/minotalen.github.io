@@ -15,6 +15,24 @@
         
         :root {
             --header-height: calc(48px + env(safe-area-inset-top, 16px));
+            
+            /* Base Colors - 6 shades */
+            --color-bg-darkest: #111827;  /* Primary background */
+            --color-bg-dark: #1f2937;     /* Secondary/header background */
+            --color-bg-medium: #2a313e;   /* Tertiary/input background */
+            --color-bg-light: #343d4e;    /* Quaternary/card background */
+            --color-bg-lighter: #373e49;  /* Hover states */
+            --color-bg-accent: #334970;   /* Primary buttons */
+            
+            /* Text Colors - 3 shades */
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #d1d5db;
+            --color-text-muted: #b4bdd0;
+            
+            /* Accent Colors - 3 colors */
+            --color-accent-blue: #3b82f6;   /* Focus/current states */
+            --color-accent-green: #364e36;  /* Success states */
+            --color-accent-red: #5f3b3b;    /* Error states */
         }
 
         html {
@@ -23,8 +41,8 @@
 
         body {
             font-family: 'Atkinson Hyperlegible', sans-serif;
-            background-color: #111827;
-            color: white;
+            background-color: var(--color-bg-darkest);
+            color: var(--color-text-primary);
             margin: 0;
             min-height: 100vh;
             min-height: -webkit-fill-available;
@@ -47,7 +65,7 @@
         }
 
         .header {
-            background-color: #1f2937;
+            background-color: var(--color-bg-dark);
             padding: env(safe-area-inset-top, 16px) 12% 12px 12%;
             display: flex;
             justify-content: space-between;
@@ -68,9 +86,12 @@
             position: relative;
             scrollbar-width: none;  /* Firefox */
             -ms-overflow-style: none;  /* Internet Explorer and Edge */
-            &::-webkit-scrollbar {
-                display: none;  /* Chrome, Safari, and Opera */
-            }
+            padding: 0;
+            margin: 0;
+        }
+        
+        .main-container::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari, and Opera */
         }
         
         .settings-container, .daily-container {
@@ -79,32 +100,33 @@
         }
         
         .scroll-container {
-            padding: 16px 0;
-            margin: 0 12%;
+            padding: 16px 12%;
+            margin: 0;
             min-height: 100%;
             position: relative;
             /* Hide default scrollbar */
             scrollbar-width: none;  /* Firefox */
             -ms-overflow-style: none;  /* Internet Explorer and Edge */
-            &::-webkit-scrollbar {
-                display: none;  /* Chrome, Safari, and Opera */
-            }
-            -webkit-transform: translateZ(0);  /* Force hardware acceleration */
+            -webkit-transform: translateZ(0);
             transform: translateZ(0);
+        }
+        
+        .scroll-container::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari, and Opera */
         }
         
         /* BUTTONS & INPUTS */
         .btn {
             background: none;
             border: none;
-            color: #aeb6c3;
+            color: var(--color-text-muted);
             cursor: pointer;
             transition: color 0.2s;
             font-size: clamp(1.1rem, 4vw, 1.3rem);
         }
         
         .btn:hover, .btn-active {
-            color: white;
+            color: var(--color-text-primary);
         }
         
         .btn-active {
@@ -114,14 +136,14 @@
         input, select, textarea {
             background: none;
             border: none;
-            color: #aeb6c3;
+            color: var(--color-text-muted);
             font-family: inherit;
             transition: color 0.2s;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            color: white;
+            color: var(--color-text-primary);
         }
         
         input::-webkit-outer-spin-button,
@@ -136,7 +158,7 @@
         }
         
         textarea {
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             font-size: 20px;
         }       
         /* HEADER */
@@ -145,12 +167,12 @@
             font-weight: 700;
             cursor: pointer;
             transition: color 0.2s;
-            color: #aeb6c3;
+            color: var(--color-text-muted);
             padding-top: 16px;
         }
         
         .header h1:hover {
-            color: white;
+            color: var(--color-text-primary);
         }
         
         .header-buttons {
@@ -160,7 +182,7 @@
         }
         
         .btn-label {
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
             vertical-align: middle;
         }
         
@@ -177,7 +199,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #aeb6c3;
+            color: var(--color-text-muted);
         }
         
         .date-input {
@@ -188,7 +210,7 @@
         }
         .date-btn {
             background-color: transparent;
-            color: #6b7280;
+            color: var(--color-text-muted);
             cursor: pointer;
             transition: color 0.2s;
             font-size: clamp(1.2rem, 5vw, 1.5rem);
@@ -198,8 +220,8 @@
         }
         
         .jump-btn {
-            background-color: #1f2937;
-            color: #6b7280;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-muted);
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             cursor: pointer;
@@ -208,7 +230,7 @@
         }
         
         .jump-btn:hover {
-            color: #d1d5db;
+            color: var(--color-text-secondary);
         }
         
         /* GOALS */
@@ -221,7 +243,7 @@
         
         .goals-title {
             font-weight: 600;
-            color: #60a5fa;
+            color: var(--color-text-secondary);
             margin-bottom: 8px;
         }
         
@@ -233,20 +255,19 @@
             margin-bottom: 4px;
             padding: 4px 8px;
             border-radius: 4px;
+            width: fit-content;
         }
         
         .goal-item.passed {
-            background-color: #364e36;
+            background-color: var(--color-accent-green);
         }
         
         .goal-item.failed {
-            background-color: #5f3b3b;
-            justify-content: flex-end;
-            text-align: right;
+            background-color: var(--color-accent-red);
         }
         
         .goal-text {
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             font-size: 1.6em;
             font-weight: 500;
         }
@@ -254,8 +275,8 @@
         .no-goals {
             padding: 8px 12px;
             border-radius: 4px;
-            background-color: #2a313e;
-            color: #6b7280;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-muted);
             text-align: center;
             font-size: 14px;
         }
@@ -271,22 +292,23 @@
             cursor: pointer;
             padding: 12px 16px;
             border-radius: 4px;
-            background-color: #343d4e;
+            background-color: var(--color-bg-light);
             overflow: hidden;
             transition: all 0.2s;
         }
         
         .hour-entry:hover {
-            background-color: #373e49;
+            background-color: var(--color-bg-lighter);
         }
         
         .hour-entry.current {
-            box-shadow: 0 0 0 2px #3b82f6;
+            box-shadow: 0 0 0 2px var(--color-accent-blue);
         }
         
         .hour-entry.editing {
-            box-shadow: 0 0 0 2px #3108ea;
-            z-index: 40;
+            position: relative;
+            box-shadow: 0 0 0 2px var(--color-accent-blue);
+            z-index: 1000;
             user-select: text;
         }
         
@@ -295,11 +317,11 @@
             top: 0;
             left: 0;
             height: 100%;
-            background-color: #334870;
+            background-color: var(--color-bg-accent);
         }
         
         .hour-fill.empty {
-            background-color: #1f242d;
+            background-color: var(--color-bg-dark);
         }
         
         .hour-content {
@@ -353,7 +375,7 @@
         .hour-input {
             flex: 1;
             background: transparent;
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             resize: none;
             overflow: hidden;
             min-height: 36px;
@@ -365,11 +387,11 @@
         }
         
         .hour-input::placeholder {
-            color: #6b7280;
+            color: var(--color-text-muted);
         }
         
         .hour-input.empty {
-            color: #6b7280;
+            color: var(--color-text-muted);
         }
         
         .hour-input.scrolling {
@@ -377,7 +399,7 @@
         }
         
         .hour-text {
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             font-size: 20px;
             white-space: pre-wrap;
         }
@@ -388,7 +410,7 @@
             top: 0;
             background: none;
             border: none;
-            color: #eb6f6f;
+            color: var(--color-accent-red);
             cursor: pointer;
             font-size: 28px;
             width: 28px;
@@ -406,14 +428,15 @@
             position: absolute;
             left: 0;
             right: 0;
-            background-color: #1f2937;
+            background-color: var(--color-bg-dark);
             padding: 12px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, 48px);
+            grid-template-columns: repeat(auto-fit, 64px);
             justify-content: center;
             gap: 8px;
-            z-index: 50;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px var(rgba(0, 0, 0, 0.5));
         }
         
         .emoji-picker.above {
@@ -426,76 +449,9 @@
             margin-top: 8px;
         }
         
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            backdrop-filter: blur(2px);
-        }
-        
-        .goal-emoji-btn {
-            background: none;
-            border: 2px solid transparent;
-            padding: 8px;
-            font-size: 24px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            margin: 0;
-        }
-        
-        .goal-emoji-btn:hover {
-            background-color: #374151;
-            transform: scale(1.05);
-        }
-        
-        .goal-emoji-btn.selected {
-            border-color: #eab308;
-            background-color: #1f2937;
-        }
-        
-        .goal-action-btn,
-        .goal-operator-btn {
-            background-color: #2d3748;
-            color: #e5e7eb;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
-            transition: all 0.2s;
-            min-width: 100px;
-        }
-        
-        .goal-action-btn:hover,
-        .goal-operator-btn:hover {
-            background-color: #374151;
-        }
-        
-        .goal-value-input {
-            width: 80px;
-            padding: 8px 12px;
-            background-color: #2d3748;
-            border: none;
-            border-radius: 6px;
-            color: #e5e7eb;
-            font-size: 14px;
-            text-align: center;
-        }
-        
         .emoji-btn {
             padding: 8px;
-            font-size: 32px;
+            font-size: 48px;
             background: none;
             border: none;
             cursor: pointer;
@@ -504,25 +460,15 @@
         }
         
         .emoji-btn:hover {
-            background-color: #373e49;
+            background-color: var(--color-bg-lighter);
         }
         
         .emoji-btn.selected {
-            background-color: #456090;
+            background-color: var(--color-bg-accent);
         }
         
         .emoji-btn.selected:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 30;
+            background-color: var(--color-accent-blue);
         }
         
         /* SCROLL BAR */
@@ -559,7 +505,7 @@
         }
         
         .scroll-bar.dragging {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: var(rgba(255, 255, 255, 0.1));
         }
         
         .hour-indicator {
@@ -567,7 +513,7 @@
             right: 8px;
             width: 0;
             height: 0;
-            border-left: 6px solid #3b82f6;
+            border-left: 6px solid var(--color-accent-blue);
             border-top: 3px solid transparent;
             border-bottom: 3px solid transparent;
             animation: pulse 2s infinite;
@@ -587,7 +533,7 @@
         
         .setting-label {
             display: block;
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             margin-bottom: 8px;
             font-size: 18px;
         }
@@ -595,8 +541,8 @@
         .setting-input {
             width: 100%;
             padding: 12px;
-            background-color: #2a313e;
-            color: white;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-primary);
             border-radius: 4px;
             font-size: 18px;
             font-family: 'Atkinson Hyperlegible', monospace;
@@ -619,46 +565,58 @@
             width: 80%;
             max-width: 600px;
             height: 80vh;
-            z-index: 1001;
+            z-index: 1050;
             padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px var(rgba(0, 0, 0, 0.5));
         }
         
-        .emoji-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-        }
         .checkbox-label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             font-size: 18px;
+            font-weight: 500;
             cursor: pointer;
+            padding: 12px 16px;
+            background-color: var(--color-bg-lighter);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+            min-height: 48px;
+        }
+        
+        .checkbox-label:hover {
+            background-color: var(--color-bg-lighter);
+            border-color: var(--color-text-muted);
         }
         
         .checkbox {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
         }
         
         .add-goal-btn, .export-btn {
-            background-color: #334970;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            background-color: var(--color-bg-accent);
+            color: var(--color-text-primary);
+            border: 2px solid transparent;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-size: 18px;
+            font-weight: 500;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .add-goal-btn:hover, .export-btn:hover {
-            background-color: #173ca4;
+            background-color: var(--color-accent-blue);
+            border-color: var(--color-accent-blue);
+            transform: translateY(-1px);
         }
         
         /* GOAL EDITOR */
@@ -672,7 +630,7 @@
         .goal-summary {
             cursor: pointer;
             padding: 12px;
-            background-color: #2a313e;
+            background-color: var(--color-bg-medium);
             border-radius: 6px;
             transition: all 0.2s;
             display: flex;
@@ -682,27 +640,27 @@
         }
         
         .goal-summary:hover {
-            background-color: #373e49;
+            background-color: var(--color-bg-lighter);
             transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px var(rgba(0, 0, 0, 0.2));
         }
         
         .goal-summary.editing {
-            background-color: #1f2937;
-            box-shadow: 0 0 0 2px #eab308, 0 4px 12px rgba(0,0,0,0.3);
+            background-color: var(--color-bg-dark);
+            box-shadow: 0 4px 12px var(rgba(0, 0, 0, 0.3));
             transform: scale(1.02);
         }
                 
         .goal-text-display {
-            color: #d1d5db;
+            color: var(--color-text-secondary);
             flex: 1;
-            font-size: 18px;
+            font-size: 1.2rem;
         }
         
         .remove-goal-btn {
             background: none;
             border: none;
-            color: #6b7280;
+            color: var(--color-text-muted);
             cursor: pointer;
             font-size: 20px;
             width: 32px;
@@ -715,8 +673,8 @@
         }
         
         .remove-goal-btn:hover {
-            background-color: #374151;
-            color: #ef4444;
+            background-color: var(--color-bg-lighter);
+            color: var(--color-accent-red);
         }
         
         .goal-editor {
@@ -724,14 +682,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 600px;
+            width: min(90%, 800px);
+            max-width: 800px;
             padding: 24px;
-            background-color: #1f2937;
+            background-color: var(--color-bg-dark);
             border-radius: 8px;
-            border: 2px solid #eab308;
-            z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--color-bg-lighter);
+            z-index: 1100;
+            box-shadow: 0 4px 12px var(rgba(0, 0, 0, 0.3));
         }
         
         .goal-editor-section {
@@ -744,114 +702,119 @@
             gap: 8px;
             margin-bottom: 16px;
             width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 4px;
+            border-radius: 8px;
         }
 
         .operator-value-group {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
-        }
-        
-        .goal-editor-label {
-            color: #d1d5db;
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 12px;
-            display: block;
-        }
-        
-        .goal-emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, 56px);
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 4px;
-            background: #111827;
+            background: var(--color-bg-darkest);
+            padding: 16px;
             border-radius: 8px;
         }
         
         .goal-emoji-btn {
-            width: 56px;
-            height: 56px;
-            background: #2d3748;
+            background: var(--color-bg-medium);
             border: 2px solid transparent;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .goal-emoji-btn {
-            background: none;
-            border: 2px solid transparent;
-            padding: 8px;
             font-size: 24px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 48px;
             height: 48px;
             margin: 0;
+            padding: 8px;
+            transition: all 0.2s;
         }
         
         .goal-emoji-btn:hover {
-            background-color: #374151;
+            background-color: var(--color-bg-lighter);
             transform: scale(1.05);
         }
         
         .goal-emoji-btn.selected {
-            border-color: #eab308;
-            background-color: #1f2937;
+            border-color: var(--color-accent-blue);
+            background-color: var(--color-bg-dark);
+        }
+        
+        .goal-toggle {
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-secondary);
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s;
+            min-height: 44px;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .goal-toggle:hover {
+            background-color: var(--color-bg-lighter);
+            transform: translateY(-1px);
         }
         
         .goal-action-btn,
         .goal-operator-btn {
-            background-color: #2d3748;
-            color: #e5e7eb;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-secondary);
             border: none;
-            padding: 10px 16px;
+            padding: 12px 18px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 1.2em;
+            font-weight: 500;
             white-space: nowrap;
             transition: all 0.2s;
+            min-height: 44px;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 25%;
         }
         
         .goal-action-btn:hover,
         .goal-operator-btn:hover {
-            background-color: #374151;
+            background-color: var(--color-bg-lighter);
+            transform: translateY(-1px);
         }
         
         .goal-value-input {
             width: 80px;
             padding: 8px 12px;
-            background-color: #2d3748;
+            background-color: var(--color-bg-medium);
             border: none;
             border-radius: 6px;
-            color: #e5e7eb;
-            font-size: 14px;
+            color: var(--color-text-secondary);
+            font-size: 1.2em;
             text-align: center;
-        }
+            min-width: 25%;
         }
         
         .goal-operator-btn:hover {
-            background-color: #374151;
-            border-color: #eab308;
+            background-color: var(--color-bg-lighter);
+            border-color: var(--color-accent-blue);
         }
         
         .goal-value-input {
             width: 70px;
             text-align: center;
-            background-color: #2d3748;
-            color: #e5e7eb;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-secondary);
             border: 2px solid transparent;
             border-radius: 6px;
             padding: 10px;
@@ -864,8 +827,8 @@
         
         .goal-value-input:hover,
         .goal-value-input:focus {
-            background-color: #374151;
-            border-color: #eab308;
+            background-color: var(--color-bg-lighter);
+            border-color: var(--color-accent-blue);
             outline: none;
         }
         
@@ -883,37 +846,30 @@
             cursor: pointer;
             font-size: 16px;
             transition: all 0.2s;
-            background-color: #2d3748;
-            color: #e5e7eb;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-secondary);
         }
         
         .goal-action-btn:hover {
-            background-color: #374151;
-            border-color: #eab308;
-        }
-        
-        .operator-value-group {
-            background: #111827;
-            padding: 16px;
-            border-radius: 8px;
-            gap: 12px !important;
+            background-color: var(--color-bg-lighter);
+            border-color: var(--color-accent-blue);
         }
         
         .goal-action-btn.secondary:hover {
-            background-color: #4b5563;
+            background-color: var(--color-bg-lighter);
         }
         
         /* EXPORT/IMPORT */
         .export-section {
-            background-color: #2a313e;
+            background-color: var(--color-bg-medium);
             border-radius: 4px;
             overflow: hidden;
         }
 
         .export-toggle {
             width: 100%;
-            background-color: #2a313e;
-            color: white;
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-primary);
             border: none;
             padding: 12px;
             display: flex;
@@ -924,7 +880,7 @@
         }
         
         .export-toggle:hover {
-            background-color: #373e49;
+            background-color: var(--color-bg-lighter);
         }
         
         .export-arrow {
@@ -937,7 +893,7 @@
         
         .export-content {
             padding: 12px;
-            background-color: #2a313e;
+            background-color: var(--color-bg-medium);
         }
         
         .import-section {
@@ -949,17 +905,17 @@
         .import-input {
             flex: 1;
             padding: 8px;
-            background-color: #373e49;
-            color: white;
+            background-color: var(--color-bg-lighter);
+            color: var(--color-text-primary);
             border-radius: 4px;
             font-size: 14px;
         }
         
         .export-help {
             font-size: 12px;
-            color: #aeb6c3;
+            color: var(--color-text-muted);
             padding-top: 8px;
-            border-top: 1px solid #373e49;
+            border-top: 1px solid var(--color-bg-lighter);
         }
         
         /* DAILY VIEW */
@@ -968,7 +924,7 @@
             height: 350px;
             position: relative;
             overflow: hidden;
-            border: 1px solid #2a313e;
+            border: 1px solid var(--color-bg-medium);
             margin-bottom: 24px;
         }
         
@@ -978,19 +934,19 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            color: white;
-            background-color: #1F2937;
+            color: var(--color-text-primary);
+            background-color: var(--color-bg-dark);
         }
         
         .dailies-section h3 {
             font-size: 18px;
             font-weight: 600;
-            color: white;
+            color: var(--color-text-primary);
             margin-bottom: 12px;
         }
         
         .no-goals-daily {
-            color: #6b7280;
+            color: var(--color-text-muted);
             font-size: 14px;
         }
         
@@ -1017,7 +973,8 @@
             }
             .main-container {
                 padding-bottom: 6rem;
-
+            }
+            
             .scroll-container { 
                 padding: 16px 0; 
                 margin: 0 16px;
@@ -1033,7 +990,7 @@
             .emoji { font-size: 24px; min-height: 24px; }
             .hour-text, .hour-input { font-size: 16px; }
             .emoji-picker { grid-template-columns: repeat(auto-fit, 42px); gap: 4px; padding: 8px; }
-            .emoji-btn { width: 42px; height: 42px; font-size: 28px; }
+            .emoji-btn { width: 48px; height: 48px; font-size: 28px; }
             .setting-label, .setting-input, .checkbox-label { font-size: 16px; }
             .setting-input { padding: 10px; }
             .checkbox { width: 18px; height: 18px; }
@@ -1084,7 +1041,18 @@
                 this.startHour = 7;
                 this.allEntries = {};
                 this.goals = [];
-                this.emojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                this.emojis = [
+                    // Core categories
+                    '🔵', '🟡', '🟢', '🟣',
+                    // Everyday basics  
+                    '🍔', '☕', '�', '👣',
+                    // Social & emotional
+                    '💬', '♥️', '🥵',
+                    // Extras
+                    '�', '🎮', '👩‍💻', '🎨',
+                    // Additional commonly used
+                    '🌿', '🔴', '🟩', '📷', '💊', '🍕'
+                ];
                 this.emojiDescriptions = ''; // Store the full emoji input text
                 this.showGoalsInTimeline = false;
                 
@@ -1120,6 +1088,19 @@
                             startHour: data.startHour ?? this.startHour,
                             showGoalsInTimeline: data.showGoalsInTimeline ?? false
                         });
+                        
+                        // For existing users who have data but no emoji descriptions yet,
+                        // only set defaults if they're still using the old default emoji set
+                        const oldDefaultEmojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
+                        if (!this.emojiDescriptions && 
+                            JSON.stringify(this.emojis) === JSON.stringify(oldDefaultEmojis)) {
+                            
+                            // Extract emojis from the descriptions and update the emoji array
+                            const extractedEmojis = this.extractEmojis(this.emojiDescriptions);
+                            if (extractedEmojis.length > 0) {
+                                this.emojis = extractedEmojis;
+                            }
+                        }
                     } catch (e) {
                         console.warn("Failed to load saved data", e);
                     }
@@ -1130,26 +1111,82 @@
 
             createWelcomeMessage() {
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                const welcomeEntries = {
-                    7: { emojis: ['👋'], text: 'welcome to hourlies' },
-                    8: { emojis: ['📊'], text: 'track your daily activities with emojis and text' },
-                    10: { emojis: ['✏️'], text: 'click any hour to add what you did or plan to do' },
-                    12: { emojis: ['📄'], text: isMobile ? 'long tap to copy filled hour' : 'right click to copy filled hour' },
-                    13: { emojis: ['📋'], text: 'repeat on empty hour to paste' },
-                    15: { emojis: ['⚙️'], text: 'go to edit to customize emojis and dailies' },
-                    16: { emojis: ['🎯'], text: 'dailies are simple rules for tracking habits' },
-                    18: { emojis: ['🏠'], text: 'daily view shows your patterns visually' },
-                    19: { emojis: ['🗑️'], text: 'wipe current day there to start fresh' },
-                    21: { emojis: ['📄'], text: isMobile ? '' : 'you can use your keyboard to jump between entries' },
+
+                const allWelcomeEntries = {
+                    7: { emojis: ['👋'], text: 'welcome to hourlies!' },
+                    8: { emojis: ['📊'], text: 'see where your time really goes with minimal effort and zero guilt' },
+                    
+                    10: { emojis: ['✏️'], text: 'log what happened each hour, because honest data reveals real patterns' },
+                    11: { emojis: ['⚙️'], text: 'customize your emoji categories and set personal rules in Edit' },
+                    12: { emojis: ['🎯'], text: 'your rules, your metrics. track what matters to you, not what others expect' },
+                    
+                    14: { emojis: ['🔍'], text: 'goals compare your intentions against reality and show you the gaps' },
+                    15: { emojis: ['🏠'], text: 'daily view gives you a visual overview of your whole day' },
+                    16: { emojis: ['🗑️'], text: 'wipe button clears current day if you want to start fresh' },
+                    
+                    18: { emojis: ['🔄'], text: 'patterns over perfection. work with your reality instead of fighting it' },
+                    19: { emojis: ['🌙'], text: 'track honestly without shame. the patterns will surprise you' },
+                    
+                    21: { emojis: ['🔒'], text: 'everything is completely private and stays on your device' },
+                    
+                    23: { emojis: ['📄'], text: isMobile ? 'tap on an entry to edit it, long-tap an hour to copy' : 'click on an entry to edit it, right-click an hour to copy its entry' },
+                    0: { emojis: ['📋'], text: 'paste copied entries into empty hours for longer tasks' },
+                    1: { emojis: ['⌨️'], text: isMobile ? '' : 'use keyboard shortcuts to navigate quickly between hours and days' },
                 };
-                this.allEntries[this.currentDateKey] = welcomeEntries;
+
+                // Set up calendar day keys
+                const { currentDayKey, nextDayKey } = this.ensureCalendarDaysExist();
+                
+                // Store entries in appropriate days with one loop
+                Object.entries(allWelcomeEntries).forEach(([hour, entry]) => {
+                    const hourNum = parseInt(hour);
+                    if (hourNum >= this.startHour) {
+                        this.allEntries[currentDayKey][hourNum] = entry;
+                    } else {
+                        this.allEntries[nextDayKey][hourNum] = entry;
+                    }
+                });
+
+                // Set default emoji categories on first launch
+                if (!this.emojiDescriptions) {
+                    this.emojiDescriptions = `Use these categories as base for your own personalized set.
+
+🔵 Chores / errands — cleaning, shopping, cooking, transit  
+🟡 Rest / fun — TV, games, downtime  
+🟢 Work / projects — job tasks, creative work  
+🟣 Learning / study — courses, reading, practice
+
+Everyday basics
+🍔 Food
+☕ Drinks / energy — coffee, tea, stimulants  
+😴 Sleep / nap — rest, recharge  
+🚶 Movement — walking, exercise
+
+Social & emotional
+💬 Social
+♥️ Romance
+🥵 Stress
+
+Extras
+📖 Reading  
+👾 Gaming
+👩‍💻 Coding / tech 
+🎨 Creative`;
+                    
+                    // Extract emojis from the descriptions and update the emoji array
+                    const extractedEmojis = this.extractEmojis(this.emojiDescriptions);
+                    if (extractedEmojis.length > 0) {
+                        this.emojis = extractedEmojis;
+                    }
+                }
 
                 // Add default rules if none exist
                 if (!this.goals || this.goals.length === 0) {
                     this.goals = [
-                        { id: Date.now() + 1, emoji: '☕', operator: 'after', value: 17, not: true }, // no coffee after 17
-                        { id: Date.now() + 2, emoji: '☕', operator: 'more_than', value: 3 }, // no more than 3 coffee
-                        { id: Date.now() + 3, emoji: '😴', operator: 'before', value: 0 } // sleep before 00
+                        { id: Date.now() + 1, emojis: ['🚶'], operator: 'more_than', value: 0 }, // movement daily
+                        { id: Date.now() + 2, emojis: ['💬'], operator: 'more_than', value: 0 }, // social connection daily  
+                        { id: Date.now() + 3, emojis: ['😴'], operator: 'before', value: 1 }, // sleep before 1am
+                        { id: Date.now() + 4, emojis: ['☕'], operator: 'more_than', value: 3, not: true }, // limit coffee
                     ];
                 }
             }
@@ -1177,15 +1214,7 @@
             }
 
             updateEntriesWithoutUndo(newEntries) {
-                // Split entries into correct calendar days
-                const currentDayKey = this.dateKey(this.currentDate);
-                const nextDay = new Date(this.currentDate);
-                nextDay.setDate(nextDay.getDate() + 1);
-                const nextDayKey = this.dateKey(nextDay);
-                
-                // Initialize storage objects
-                if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
-                if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                const { currentDayKey, nextDayKey } = this.ensureCalendarDaysExist();
                 
                 // Store entries in correct calendar days
                 Object.entries(newEntries).forEach(([hour, entry]) => {
@@ -1213,14 +1242,7 @@
             }
             
             get entries() { 
-                // Get entries for the current logical day
-                const currentDayEntries = this.allEntries[this.currentDateKey] || {};
-                const nextDay = new Date(this.currentDate);
-                nextDay.setDate(nextDay.getDate() + 1);
-                const nextDayKey = this.dateKey(nextDay);
-                const nextDayEntries = this.allEntries[nextDayKey] || {};
-                
-                // Combine entries: hours 0-6 from next calendar day + hours 7-23 from current day
+                const { currentDayEntries, nextDayEntries } = this.getCalendarDayEntries();
                 const combinedEntries = {};
                 
                 // Add hours 7-23 from current calendar day
@@ -1243,6 +1265,62 @@
             get hours() { return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24); }
             formatHour(hour) { return hour.toString().padStart(2, '0'); }
             
+            // Helper methods for calendar day operations
+            getCalendarDayKeys() {
+                const currentDayKey = this.dateKey(this.currentDate);
+                const nextDay = new Date(this.currentDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const nextDayKey = this.dateKey(nextDay);
+                return { currentDayKey, nextDayKey };
+            }
+
+            ensureCalendarDaysExist() {
+                const { currentDayKey, nextDayKey } = this.getCalendarDayKeys();
+                if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
+                if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
+                return { currentDayKey, nextDayKey };
+            }
+
+            getCalendarDayEntries() {
+                const { currentDayKey, nextDayKey } = this.getCalendarDayKeys();
+                return {
+                    currentDayEntries: this.allEntries[currentDayKey] || {},
+                    nextDayEntries: this.allEntries[nextDayKey] || {}
+                };
+            }
+
+            clearCurrentDayEntries() {
+                const { currentDayKey, nextDayKey } = this.getCalendarDayKeys();
+                // Clear current entries
+                if (this.allEntries[currentDayKey]) {
+                    for (let hour = this.startHour; hour < 24; hour++) {
+                        delete this.allEntries[currentDayKey][hour];
+                    }
+                }
+                if (this.allEntries[nextDayKey]) {
+                    for (let hour = 0; hour < this.startHour; hour++) {
+                        delete this.allEntries[nextDayKey][hour];
+                    }
+                }
+            }
+
+            // Helper method for focusing textarea and setting cursor to end
+            focusTextareaAtEnd(hour, delay = 0) {
+                const focusAndSetCursor = () => {
+                    const textarea = document.querySelector(`[data-hour="${hour}"] textarea`);
+                    if (textarea) {
+                        textarea.focus();
+                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+                    }
+                };
+                
+                if (delay > 0) {
+                    setTimeout(focusAndSetCursor, delay);
+                } else {
+                    focusAndSetCursor();
+                }
+            }
+
             formatDateInput() {
                 if (!this.currentDate) return '';
                 return [
@@ -1261,9 +1339,16 @@
                 return d;
             }
 
-            isCurrentDate() { return this.dateKey(this.getEffectiveDate()) === this.currentDateKey; }
-            isPastDate() { return this.dateKey(this.currentDate) < this.dateKey(this.getEffectiveDate()); }
-            isFutureDate() { return this.dateKey(this.currentDate) > this.dateKey(this.getEffectiveDate()); }
+            compareDateToToday() {
+                const todayKey = this.dateKey(this.getEffectiveDate());
+                const currentKey = this.currentDateKey;
+                if (currentKey === todayKey) return 0;  // current
+                return currentKey < todayKey ? -1 : 1;   // past : future
+            }
+
+            isCurrentDate() { return this.compareDateToToday() === 0; }
+            isPastDate() { return this.compareDateToToday() < 0; }
+            isFutureDate() { return this.compareDateToToday() > 0; }
 
             getHourFill(hour) {
                 // Skip fill logic if not on current day
@@ -1337,19 +1422,13 @@
 
                 document.addEventListener('click', (e) => {
                     if (this.editingHour === null) return;
-                    const isInterface = e.target.classList.contains('overlay') ||
+                    const isInterface = e.target.classList.contains('app-overlay') ||
                                       e.target.classList.contains('hour-input') ||
                                       e.target.classList.contains('clear-btn') ||
                                       e.target.classList.contains('emoji-btn');
                     if (!isInterface) {
                         e.preventDefault();
-                        setTimeout(() => {
-                            const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
-                            if (textarea) {
-                                textarea.focus();
-                                textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                            }
-                        }, 0);
+                        this.focusTextareaAtEnd(this.editingHour, 0);
                     }
                 });
             }
@@ -1503,10 +1582,7 @@
                             hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                         
-                        setTimeout(() => {
-                            textarea.focus();
-                            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                        }, 100);
+                        this.focusTextareaAtEnd(hour, 100);
                     }
                 }, 30);
             }
@@ -1570,13 +1646,7 @@
                 this.updateEntriesWithoutUndo(newEntries);
                 this.renderHours();
                 this.renderGoals();
-                setTimeout(() => {
-                    const textarea = document.querySelector(`[data-hour="${this.editingHour}"] textarea`);
-                    if (textarea) {
-                        textarea.focus();
-                        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-                    }
-                }, 50);
+                this.focusTextareaAtEnd(this.editingHour, 50);
             }
 
             handleHourInputKeydown(event, hour) {
@@ -1604,13 +1674,7 @@
                         this.editingHour = nextHour;
                         this.renderHours();
                         
-                        setTimeout(() => {
-                            const nextTextarea = document.querySelector(`[data-hour="${nextHour}"] textarea`);
-                            if (nextTextarea) {
-                                nextTextarea.focus();
-                                nextTextarea.selectionStart = nextTextarea.selectionEnd = nextTextarea.value.length;
-                            }
-                        }, 0);
+                        this.focusTextareaAtEnd(nextHour, 0);
                     }
                 }
             }
@@ -1697,6 +1761,7 @@
             }
 
             editGoal(id) {
+                const wasEditing = this.editingGoal === id;
                 this.editingGoal = this.editingGoal === id ? null : id;
                 this.renderSettings();
             }
@@ -1770,32 +1835,16 @@
                     this.currentDate = new Date(lastState.date);
                 }
                 
-                // Apply the undo state using the same logic as updateEntries
-                const currentDayKey = this.dateKey(this.currentDate);
-                const nextDay = new Date(this.currentDate);
-                nextDay.setDate(nextDay.getDate() + 1);
-                const nextDayKey = this.dateKey(nextDay);
+                // Clear current entries and restore from undo state
+                this.clearCurrentDayEntries();
+                const { currentDayKey, nextDayKey } = this.ensureCalendarDaysExist();
                 
-                // Clear current entries
-                if (this.allEntries[currentDayKey]) {
-                    for (let hour = this.startHour; hour < 24; hour++) {
-                        delete this.allEntries[currentDayKey][hour];
-                    }
-                }
-                if (this.allEntries[nextDayKey]) {
-                    for (let hour = 0; hour < this.startHour; hour++) {
-                        delete this.allEntries[nextDayKey][hour];
-                    }
-                }
-                
-                // Restore entries
+                // Restore entries using same logic as updateEntriesWithoutUndo
                 Object.entries(lastState.entries).forEach(([hour, entry]) => {
                     const hourNum = parseInt(hour);
                     if (hourNum >= this.startHour) {
-                        if (!this.allEntries[currentDayKey]) this.allEntries[currentDayKey] = {};
                         this.allEntries[currentDayKey][hourNum] = entry;
                     } else {
-                        if (!this.allEntries[nextDayKey]) this.allEntries[nextDayKey] = {};
                         this.allEntries[nextDayKey][hourNum] = entry;
                     }
                 });
@@ -1827,18 +1876,22 @@
             // === EXPORT ===
             exportCurrentDayCSV() {
                 let content = "";
-                // Prepend the current hour as the first line: hour, emoji, text
-                const currentHour = this.currentTime.getHours();
-                const currentEntry = this.entries[currentHour] || { emojis: [], text: '' };
-                const currentEmojis = currentEntry.emojis?.join('') || '';
-                const currentText = currentEntry.text || '';
-                content += `${currentHour},${currentEmojis},${currentText}\n`;
-
+                
+                // Export entries in order starting from day start time (this.startHour)
                 this.hours.forEach(hour => {
-                    const entry = this.entries[hour];
-                    const emojis = entry?.emojis?.join('') || '';
-                    const text = entry?.text || '';
-                    content += `${emojis} ${text}\n`;
+                    const entry = this.entries[hour] || { emojis: [], text: '' };
+                    const emojis = entry.emojis?.join('') || '';
+                    const text = entry.text || '';
+                    
+                    // Format: [hour]: emojis text
+                    const hourFormatted = this.formatHour(hour);
+                    const entryContent = `${emojis}${text ? ' ' + text : ''}`.trim();
+                    
+                    if (entryContent) {
+                        content += `[${hourFormatted}]: ${entryContent}\n`;
+                    } else {
+                        content += `[${hourFormatted}]: \n`;
+                    }
                 });
                 
                 try {
@@ -1848,7 +1901,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `hourlies-${this.formatDateInput()}.csv`;
+                    a.download = `hourlies-${this.formatDateInput()}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -2092,40 +2145,9 @@
             }
 
             wipeCurrentDayData() {
-                // Clear entries for the current logical day
-                const currentDayKey = this.dateKey(this.currentDate);
-                const nextDay = new Date(this.currentDate);
-                nextDay.setDate(nextDay.getDate() + 1);
-                const nextDayKey = this.dateKey(nextDay);
-                
-                // Clear hours 7-23 from current calendar day
-                if (this.allEntries[currentDayKey]) {
-                    for (let hour = this.startHour; hour < 24; hour++) {
-                        delete this.allEntries[currentDayKey][hour];
-                    }
-                }
-                
-                // Clear hours 0-6 from next calendar day
-                if (this.allEntries[nextDayKey]) {
-                    for (let hour = 0; hour < this.startHour; hour++) {
-                        delete this.allEntries[nextDayKey][hour];
-                    }
-                }
-                
+                this.clearCurrentDayEntries();
                 this.render();
                 this.saveData();
-            }
-
-            getDayEmojis() {
-                const emojiCounts = {};
-                Object.values(this.entries).forEach(entry => {
-                    if (entry.emojis) {
-                        entry.emojis.forEach(emoji => {
-                            emojiCounts[emoji] = (emojiCounts[emoji] || 0) + 1;
-                        });
-                    }
-                });
-                return emojiCounts;
             }
 
             startBubbleAnimation() {
@@ -2557,7 +2579,7 @@
                                 </div>
                             `;
                         }).join('')}
-                        ${this.editingHour !== null ? '<div class="overlay" onclick="app.finishEditing()"></div>' : ''}
+                        ${this.editingHour !== null ? '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 500;" onclick="app.finishEditing()"></div>' : ''}
                     </div>
                 `;
                 this.attachCopyPasteEvents();
@@ -2569,10 +2591,9 @@
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
                             <textarea class="setting-input emoji-input" 
-                                onfocus="document.querySelector('.emoji-overlay').style.display='block'"
-                                onblur="app.handleEmojiInput(this.value); document.querySelector('.emoji-overlay').style.display='none'"
+                                onfocus="this.style.position='fixed'; this.style.top='50%'; this.style.left='50%'; this.style.transform='translate(-50%, -50%)'; this.style.zIndex='1000'; this.style.width='80%'; this.style.maxWidth='600px'; this.style.height='80vh';"
+                                onblur="app.handleEmojiInput(this.value); this.style.position=''; this.style.top=''; this.style.left=''; this.style.transform=''; this.style.zIndex=''; this.style.width=''; this.style.maxWidth=''; this.style.height='';"
                             >${this.emojiDescriptions || this.emojis.join('')}</textarea>
-                            <div class="emoji-overlay" onclick="document.querySelector('.emoji-input').blur()"></div>
                         </div>
                         
                         <div class="setting-group">
@@ -2621,7 +2642,7 @@
                             </div>
                         </div>
                         
-                        ${this.editingGoal !== null ? '<div class="overlay" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
+                        ${this.editingGoal !== null ? '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 500;" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
                     </div>
                 `;
 
@@ -2652,10 +2673,10 @@
                                             `).join('')}
                                         </div>
                                         <div class="operator-value-group">
-                                            <button class="goal-action-btn" onclick="app.toggleGoalNegation(${goal.id})">
+                                            <button class="goal-action-btn goal-toggle" onclick="app.toggleGoalNegation(${goal.id})">
                                                 ${goal.not ? 'is not' : 'is'}
                                             </button>
-                                            <button class="goal-operator-btn" onclick="app.cycleOperator(${goal.id})">
+                                            <button class="goal-operator-btn goal-toggle" onclick="app.cycleOperator(${goal.id})">
                                                 ${goal.operator.replace('_', ' ')}
                                             </button>
                                             <input type="number" 
@@ -2720,7 +2741,6 @@
             
 
             renderDaily() {
-                const dayEmojis = this.getDayEmojis();
                 const goalChecks = this.checkGoals();
                 
                 document.getElementById('mainContainer').innerHTML = `
@@ -2749,21 +2769,9 @@
                                             // Generate a unique ID for the bubble
                                             const bubbleId = `bubble-${hour}-${index}`;
                                             
-                                            // Use stored position if available, otherwise random
-                                            let x = 5, y = 5;
-                                            if (this.restoreBubbleStates) {
-                                                const stored = this.restoreBubbleStates.find(b => b.id === bubbleId);
-                                                if (stored) {
-                                                    x = (stored.state.x / containerWidth) * 100;
-                                                    y = (stored.state.y / containerHeight) * 100;
-                                                } else {
-                                                    x = Math.random() * 90 + 5; // 5-95%
-                                                    y = Math.random() * 90 + 5; // 5-95%
-                                                }
-                                            } else {
-                                                x = Math.random() * 90 + 5; // 5-95%
-                                                y = Math.random() * 90 + 5; // 5-95%
-                                            }
+                                            // Generate random position
+                                            const x = Math.random() * 90 + 5; // 5-95%
+                                            const y = Math.random() * 90 + 5; // 5-95%
                                             
                                             bubbles.push(`
                                                 <div class="bubble" style="
@@ -2777,7 +2785,7 @@
                                                     display: flex;
                                                     align-items: center;
                                                     justify-content: center;
-                                                    background-color: rgba(31, 41, 55, 0.7);
+                                                    background-color: var(--color-bg-dark);
                                                 ">
                                                     ${emoji}
                                                 </div>
