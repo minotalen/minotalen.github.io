@@ -1044,11 +1044,11 @@
         }
         
         .bubbles-container.billiards-mode {
-            background-color: rgba(0, 100, 0, 0.1);
+            background-color: rgba(0, 100, 0, 0.2);
         }
         
         .bubbles-container.repulsion-mode {
-            background-color: rgba(139, 0, 0, 0.1); /* Increased opacity for visibility */
+            background-color: rgba(139, 0, 0, 0.2); /* Increased opacity for visibility */
         }
         
         .bubble {
@@ -1218,7 +1218,7 @@
             }
             
             .bubbles-container {
-                height: 70%; /* Increased from 50% to 70% on mobile */
+                height: 50%;
                 flex-shrink: 0;
             }
             
@@ -1318,7 +1318,7 @@
             }
             
             .bubbles-container {
-                height: 300px; /* Increased from 200px to 300px for very small screens */
+                height: 220px; /* Reduced from 300px to 220px for more square aspect */
                 flex-shrink: 0;
             }
             
@@ -1809,8 +1809,8 @@ Extras
                     let estimatedContainerArea, targetFillPercent;
                     
                     if (isMobile) {
-                        // Mobile container is now 70% of viewport height
-                        const mobileHeight = window.innerHeight * 0.7;
+                        // Mobile container is now 50% of viewport height for more square aspect
+                        const mobileHeight = window.innerHeight * 0.5;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
                         targetFillPercent = 45; // Increased target fill for better visual density
@@ -1871,8 +1871,8 @@ Extras
                     let estimatedContainerArea, targetFillPercent;
                     
                     if (isMobile) {
-                        // Mobile container is now 70% of viewport height
-                        const mobileHeight = window.innerHeight * 0.7;
+                        // Mobile container is now 50% of viewport height for more square aspect
+                        const mobileHeight = window.innerHeight * 0.5;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
                         targetFillPercent = 45;
