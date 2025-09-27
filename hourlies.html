@@ -1414,7 +1414,6 @@
                 this.emojiDescriptions = ''; // Store the full emoji input text
                 this.showGoalsInTimeline = false;
                 this.emojiMergeMode = 'none'; // 'none', 'touch', 'all'
-                this.bubbleSizeModifier = 1.0; // Global size scaling factor
                 this.overlapFrameCount = 0; // Track consecutive frames with overlaps
                 
                 this.currentDate = new Date();
@@ -1763,17 +1762,17 @@ Extras
                         let totalArea = 0;
                         const uniqueEmojisInHour = new Set();
                         
-                        // Calculate area based on original sizing rules (scaled 1.5x for better visibility)
+                        // Calculate area based on original sizing rules
                         group.forEach(bubble => {
                             const hourEmojis = this.entries[bubble.hour].emojis || [];
                             const uniqueCount = new Set(hourEmojis).size;
                             let individualSize;
                             if (uniqueCount === 1) {
-                                individualSize = 105; // 70 * 1.5
+                                individualSize = 220;
                             } else if (uniqueCount === 2) {
-                                individualSize = 75; // 50 * 1.5
+                                individualSize = 150;
                             } else {
-                                individualSize = 60; // 40 * 1.5
+                                individualSize = 100;
                             }
                             // Area = π * r² = π * (size/2)²
                             const area = Math.PI * Math.pow(individualSize / 2, 2);
@@ -1784,7 +1783,7 @@ Extras
                         // Instead of pure area conservation, use logarithmic scaling to lose some total area
                         // This makes merging more realistic - merged bubbles are smaller than pure area sum
                         const idealRadius = Math.sqrt(totalArea / Math.PI); // Pure area conservation
-                        const logScalingFactor = 0.85 + (0.1 * Math.log(group.length + 1) / Math.log(10)); // Scale 0.85-0.95 based on group size
+                        const logScalingFactor = 0.8 + (0.15 * Math.log(group.length + 1) / Math.log(10)); // Scale 0.85-0.95 based on group size
                         const newRadius = idealRadius * logScalingFactor;
                         const newSize = newRadius * 2;
 
@@ -1825,12 +1824,12 @@ Extras
                     const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
                     
                     let scaleFactor = 1;
-                    // Always scale to target fill percentage
-                    if (mergedBubbles.length > 0) {
+                    // Only scale down if bubbles are too large (exceed target fill)
+                    if (mergedBubbles.length > 0 && currentFillPercent > targetFillPercent) {
                         scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
                     }
                     
-                    // Apply scaling to all bubbles
+                    // Apply scaling to all bubbles (only scale down, never up)
                     const scaledMergedBubbles = mergedBubbles.map(bubble => ({
                         ...bubble,
                         size: Math.max(bubble.size * scaleFactor, 20) // Minimum size of 20px
@@ -1887,12 +1886,12 @@ Extras
                     const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
                     
                     let scaleFactor = 1;
-                    // Always scale to target fill percentage
-                    if (individualBubbles.length > 0) {
+                    // Only scale down if bubbles are too large (exceed target fill)
+                    if (individualBubbles.length > 0 && currentFillPercent > targetFillPercent) {
                         scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
                     }
                     
-                    // Apply scaling to all bubbles
+                    // Apply scaling to all bubbles (only scale down, never up)
                     return individualBubbles.map(bubble => ({
                         ...bubble,
                         size: Math.max(bubble.size * scaleFactor, 20) // Minimum size of 20px
@@ -2976,11 +2975,15 @@ Extras
                 let dragVelocityX = 0;
                 let dragVelocityY = 0;
                 const maxThrowSpeed = 15;
-                let billiardsMode = false; // (gravity disabled)
-                let containerHasFocus = false; // Track focus state for repulsion
+                
+                // Mode state - only one can be active at a time
+                let currentMode = 'gravity'; // 'gravity' | 'repulsion' | 'billiards'
+                let isRepulsionLocked = false; // Mobile: lock repulsion mode until tap outside
+                
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 
                 // Physics constants
-                const centerGravity = 0.014;
+                const centerGravity = 0.022;
                 const friction = 0.995;
                 const gravityRestitution = 0.2; 
                 const billiardsRestitution = 0.95;
@@ -2994,49 +2997,72 @@ Extras
                 const maxAttractionDistance = 600;
                 const minDistance = 20; // Prevent division by very small numbers
 
-                // Helper function to manage visual state with proper priority
+                // Helper function to manage visual state with cleaner logic
                 const updateContainerVisualState = () => {
                     // Remove all mode classes first
                     container.classList.remove('billiards-mode', 'repulsion-mode');
                     
-                    // Priority: billiards/drag > repulsion > regular
-                    if (draggedBubble || billiardsMode) {
+                    // Apply class based on current mode
+                    if (currentMode === 'billiards') {
                         container.classList.add('billiards-mode');
-                    } else if (containerHasFocus) {
+                    } else if (currentMode === 'repulsion') {
                         container.classList.add('repulsion-mode');
                     }
-                    // Regular mode has no special class (default background)
+                    // gravity mode has no special class (default background)
                 };
 
-                // Initialize bubbles randomly across the entire container
-                // Initialize bubbles with no overlaps
+                // Initialize bubbles with improved overlap prevention
                 bubbles.forEach((bubble) => {
                     const size = parseFloat(bubble.style.width);
                     const containerWidth = containerRect.width;
                     const containerHeight = containerRect.height;
-                    const padding = size;
+                    
+                    // Increased padding and safety margin for merged bubbles
+                    const basePadding = size * 0.6; // 60% of bubble size as base padding
+                    const safetyMargin = size * 0.2; // Additional 20% safety margin
+                    const totalPadding = basePadding + safetyMargin;
                     
                     let attempts = 0;
                     let pixelX, pixelY;
                     let overlap;
                     
-                    // Try to find non-overlapping position
+                    // Try to find non-overlapping position with improved spacing
                     do {
-                        pixelX = padding + Math.random() * (containerWidth - size - padding * 2);
-                        pixelY = padding + Math.random() * (containerHeight - size - padding * 2);
+                        pixelX = totalPadding + Math.random() * (containerWidth - size - totalPadding * 2);
+                        pixelY = totalPadding + Math.random() * (containerHeight - size - totalPadding * 2);
                         
                         overlap = false;
-                        // Check against all existing bubbles
+                        // Check against all existing bubbles with enhanced overlap detection
                         bubbleStates.forEach((existingState) => {
                             const dx = (pixelX + size/2) - (existingState.x + existingState.size/2);
                             const dy = (pixelY + size/2) - (existingState.y + existingState.size/2);
                             const distance = Math.sqrt(dx * dx + dy * dy);
-                            if (distance < (size + existingState.size) / 2) {
+                            
+                            // Enhanced minimum distance calculation with safety buffer
+                            const minDistance = (size + existingState.size) / 2 + Math.max(size, existingState.size) * 0.3;
+                            
+                            if (distance < minDistance) {
                                 overlap = true;
                             }
                         });
                         attempts++;
-                    } while (overlap && attempts < 100); // Prevent infinite loop
+                    } while (overlap && attempts < 150); // Increased max attempts for better placement
+                    
+                    // If we couldn't find a perfect spot after many attempts, use grid-based fallback
+                    if (overlap && attempts >= 150) {
+                        const gridCols = Math.max(2, Math.floor(containerWidth / (size * 1.5)));
+                        const gridRows = Math.max(2, Math.floor(containerHeight / (size * 1.5)));
+                        const gridIndex = bubbleStates.size;
+                        const col = gridIndex % gridCols;
+                        const row = Math.floor(gridIndex / gridCols) % gridRows;
+                        
+                        pixelX = (col + 0.5) * (containerWidth / gridCols) - size / 2;
+                        pixelY = (row + 0.5) * (containerHeight / gridRows) - size / 2;
+                        
+                        // Ensure grid position stays within bounds
+                        pixelX = Math.max(0, Math.min(pixelX, containerWidth - size));
+                        pixelY = Math.max(0, Math.min(pixelY, containerHeight - size));
+                    }
                     
                     // Initial velocity with random direction
                     const angle = Math.random() * Math.PI * 2;
@@ -3056,24 +3082,25 @@ Extras
                 // Add drag event handlers
                 const handleDragStart = (e, bubble) => {
                     e.preventDefault();
-                    draggedBubble = bubble;
-                    updateContainerVisualState(); // Update to billiards mode during drag
                     
-                    // On mobile, ensure container focus is set for repulsion mode
-                    if (e.type.includes('touch')) {
-                        containerHasFocus = true;
-                        container.focus();
-                        // Set touch position for repulsion calculations
-                        const rect = container.getBoundingClientRect();
-                        this.mouseX = e.touches[0].clientX - rect.left;
-                        this.mouseY = e.touches[0].clientY - rect.top;
+                    // On mobile, prevent drag if in locked repulsion mode
+                    if (isMobile && isRepulsionLocked) {
+                        return;
                     }
                     
+                    draggedBubble = bubble;
+                    currentMode = 'billiards';
+                    updateContainerVisualState();
+                    
+                    // Set touch/mouse position for repulsion calculations
                     const rect = container.getBoundingClientRect();
                     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-                    dragStartX = lastDragX = clientX - rect.left;
-                    dragStartY = lastDragY = clientY - rect.top;
+                    this.mouseX = clientX - rect.left;
+                    this.mouseY = clientY - rect.top;
+                    
+                    dragStartX = lastDragX = this.mouseX;
+                    dragStartY = lastDragY = this.mouseY;
                     dragStartTime = performance.now();
                     dragVelocityX = dragVelocityY = 0;
                     bubble.style.cursor = 'grabbing';
@@ -3109,11 +3136,9 @@ Extras
                     const currentY = clientY - rect.top;
                     const currentTime = performance.now();
                     
-                    // Update touch/mouse position for repulsion calculations during touch
-                    if (e.type.includes('touch') && containerHasFocus) {
-                        this.mouseX = currentX;
-                        this.mouseY = currentY;
-                    }
+                    // Update touch/mouse position for physics calculations
+                    this.mouseX = currentX;
+                    this.mouseY = currentY;
                     
                     // Store drag path point
                     this.dragPath = this.dragPath || [];
@@ -3180,8 +3205,17 @@ Extras
                         }
                     }
                     
-                    // Enable billiards mode - gravity/repulsion stay disabled
-                    billiardsMode = true;
+                    // Transition to appropriate mode after drag ends
+                    if (isMobile) {
+                        // On mobile, go to gravity mode after drag (no repulsion flash)
+                        currentMode = 'gravity';
+                        this.mouseX = null;
+                        this.mouseY = null;
+                    } else {
+                        // On desktop, stay in billiards mode after drag
+                        currentMode = 'billiards';
+                    }
+                    
                     updateContainerVisualState();
                     
                     draggedBubble.style.cursor = 'grab';
@@ -3224,20 +3258,38 @@ Extras
 
                 // Add focus/blur listeners to exit billiards mode
                 const handleFocus = () => {
-                    billiardsMode = false; // Re-enable gravity/repulsion
-                    updateContainerVisualState();
+                    if (!isMobile) {
+                        // Desktop: normal focus behavior
+                        currentMode = 'gravity';
+                        updateContainerVisualState();
+                    }
                 };
                 
                 const handleBlur = () => {
-                    billiardsMode = false; // Re-enable gravity/repulsion
-                    updateContainerVisualState();
+                    if (!isMobile) {
+                        // Desktop: normal blur behavior
+                        currentMode = 'gravity';
+                        updateContainerVisualState();
+                    }
+                    // On mobile, blur doesn't change mode due to locking behavior
                 };
 
-                // Add click/tap outside container to exit billiards mode
+                // Add click/tap outside container to exit billiards mode and unlock repulsion
                 const handleOutsideClick = (e) => {
                     // Check if click is outside the bubbles container
-                    if (!container.contains(e.target) && billiardsMode) {
-                        billiardsMode = false; // Re-enable gravity/repulsion
+                    if (!container.contains(e.target)) {
+                        if (isMobile) {
+                            // Mobile: unlock repulsion and return to gravity
+                            isRepulsionLocked = false;
+                            currentMode = 'gravity';
+                            this.mouseX = null;
+                            this.mouseY = null;
+                        } else {
+                            // Desktop: exit billiards mode
+                            if (currentMode === 'billiards') {
+                                currentMode = 'gravity';
+                            }
+                        }
                         updateContainerVisualState();
                     }
                 };
@@ -3247,9 +3299,19 @@ Extras
                     if (e.touches.length > 0) {
                         const touch = e.touches[0];
                         const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-                        if (!container.contains(elementUnderTouch) && billiardsMode) {
-                            billiardsMode = false; // Re-enable gravity/repulsion
-                            updateContainerVisualState();
+                        if (!container.contains(elementUnderTouch)) {
+                            if (isMobile) {
+                                // Mobile: unlock repulsion and return to gravity
+                                isRepulsionLocked = false;
+                                currentMode = 'gravity';
+                                this.mouseX = null;
+                                this.mouseY = null;
+                                updateContainerVisualState();
+                            } else if (currentMode === 'billiards') {
+                                // Desktop: exit billiards mode
+                                currentMode = 'gravity';
+                                updateContainerVisualState();
+                            }
                         }
                     }
                 };
@@ -3291,9 +3353,9 @@ Extras
                             return; // Position is already being handled by drag events
                         }
                         
-                        // Skip gravity/repulsion for ALL bubbles when any bubble is being dragged OR in billiards mode
-                        if (!draggedBubble && !billiardsMode) {
-                            // Same-type attraction in touch merge mode (always enabled when not dragging)
+                        // Apply forces based on current mode
+                        if (currentMode === 'gravity' || currentMode === 'repulsion') {
+                            // Same-type attraction in touch merge mode (when not dragging or in billiards)
                             if (this.emojiMergeMode === 'touch') {
                                 const currentEmoji = bubble.dataset.emoji;
                                 const bubbleCenterX = state.x + state.size / 2;
@@ -3337,68 +3399,19 @@ Extras
                                     }
                                 }
                             }
-                        }
-                        
-                        // Same-type attraction in touch merge mode - also enabled in billiards mode
-                        if (this.emojiMergeMode === 'touch' && billiardsMode && !draggedBubble) {
-                            const currentEmoji = bubble.dataset.emoji;
-                            const bubbleCenterX = state.x + state.size / 2;
-                            const bubbleCenterY = state.y + state.size / 2;
-                            
-                            // Find and attract to nearest same-type bubble
-                            let nearestSameType = null;
-                            let nearestDistance = Infinity;
-                            
-                            bubbleStates.forEach((otherState, otherBubble) => {
-                                if (otherBubble === bubble || otherBubble === draggedBubble) return;
-                                if (otherBubble.dataset.emoji !== currentEmoji) return;
-                                
-                                const otherCenterX = otherState.x + otherState.size / 2;
-                                const otherCenterY = otherState.y + otherState.size / 2;
-                                const distance = Math.sqrt(
-                                    Math.pow(otherCenterX - bubbleCenterX, 2) + 
-                                    Math.pow(otherCenterY - bubbleCenterY, 2)
-                                );
-                                
-                                if (distance < nearestDistance) {
-                                    nearestDistance = distance;
-                                    nearestSameType = { x: otherCenterX, y: otherCenterY, distance };
-                                }
-                            });
-                            
-                            // Apply attraction to nearest same-type bubble with inverse distance relationship
-                            if (nearestSameType && nearestSameType.distance > 0) {
-                                if (nearestSameType.distance < maxAttractionDistance) {
-                                    const dx = nearestSameType.x - bubbleCenterX;
-                                    const dy = nearestSameType.y - bubbleCenterY;
-                                    const dirX = dx / nearestSameType.distance;
-                                    const dirY = dy / nearestSameType.distance;
-                                    
-                                    // Inverse proportional force: stronger when closer (F ∝ 1/distance)
-                                    const effectiveDistance = Math.max(nearestSameType.distance, minDistance);
-                                    const force = attractionStrength / effectiveDistance;
-                                    
-                                    state.vx += dirX * force;
-                                    state.vy += dirY * force;
-                                }
-                            }
-                        }
-                        
-                        // Regular gravity/repulsion (only when not in billiards mode)
-                        if (!draggedBubble && !billiardsMode) {
-                            
-                            // Use mouse position as gravity center when hovering
+
+                            // Center gravity/repulsion (not in billiards mode)
                             const bubbleCenterX = state.x + state.size / 2;
                             const bubbleCenterY = state.y + state.size / 2;
                             const containerRadius = Math.min(containerRect.width, containerRect.height) / 2;
                             
-                            // Default to container center if mouse is not over container
-                            const containerCenterX = this.mouseX || containerRect.width / 2;
-                            const containerCenterY = this.mouseY || containerRect.height / 2;
+                            // Default to container center if mouse is not set
+                            const centerX = this.mouseX || containerRect.width / 2;
+                            const centerY = this.mouseY || containerRect.height / 2;
 
                             // Calculate gravity/repulsion with improved stability
-                            const dx = containerCenterX - bubbleCenterX;
-                            const dy = containerCenterY - bubbleCenterY;
+                            const dx = centerX - bubbleCenterX;
+                            const dy = centerY - bubbleCenterY;
                             const distToCenter = Math.sqrt(dx * dx + dy * dy);
                             if (distToCenter > 0) {
                                 // Calculate normalized direction
@@ -3409,12 +3422,11 @@ Extras
                                 const normalizedDist = Math.min(distToCenter / containerRadius, 1);
                                 let forceStrength;
                                 
-                                // Repel if mouse is over container, attract otherwise
-                                if (this.mouseX != null && this.mouseY != null) {
-                                    // Stronger repulsion when closer to mouse
-                                    forceStrength = -centerGravity * 15 * (1 - Math.pow(normalizedDist, 0.8));
+                                if (currentMode === 'repulsion') {
+                                    // Stronger repulsion when closer to mouse/touch
+                                    forceStrength = -centerGravity * 10 * (1 - Math.pow(normalizedDist, 0.8));
                                 } else {
-                                    // Normal center attraction when no mouse
+                                    // Normal center attraction (gravity mode)
                                     forceStrength = centerGravity * 0.7 * Math.pow(normalizedDist, 1.2);
                                 }
                                 
@@ -3425,14 +3437,14 @@ Extras
                                 state.vx += dirX * forceStrength * dampening;
                                 state.vy += dirY * forceStrength * dampening;
                             }
-                        } // End of gravity/repulsion when not dragging
+                        } // End of gravity/repulsion when not in billiards mode
 
                         // Apply friction
                         state.vx *= friction;
                         state.vy *= friction;
 
-                        // Apply minimal movement dampening (kill tiny movements)
-                        if (!billiardsMode) {
+                        // Apply minimal movement dampening (kill tiny movements) - only in gravity mode
+                        if (currentMode === 'gravity') {
                             const dampening = 0.007; // flat dampening amount
                             if (Math.abs(state.vx) < dampening) state.vx = 0;
                             if (Math.abs(state.vy) < dampening) state.vy = 0;
@@ -3459,8 +3471,7 @@ Extras
                         state.y += state.vy;
 
                         // Bounce off container bounds (rectangular boundary)
-                        const radius = state.size / 2;
-                        const currentRestitution = billiardsMode ? billiardsRestitution : gravityRestitution;
+                        const currentRestitution = currentMode === 'billiards' ? billiardsRestitution : gravityRestitution;
                         
                         // Right wall
                         if (state.x + state.size > containerRect.width) {
@@ -3640,22 +3651,32 @@ Extras
                 this.bubbleAnimationId = requestAnimationFrame(animate);
 
                 // Focus/blur event listeners for the container
-                container.addEventListener('focus', () => {
-                    containerHasFocus = true;
-                    updateContainerVisualState();
+                container.addEventListener('focus', (e) => {
+                    if (!isMobile && currentMode !== 'billiards') {
+                        // Only set mouse coordinates if they weren't already set by click
+                        if (this.mouseX === null || this.mouseX === undefined) {
+                            // Fallback to container center if no mouse position available
+                            this.mouseX = containerRect.width / 2;
+                            this.mouseY = containerRect.height / 2;
+                        }
+                        currentMode = 'repulsion';
+                        updateContainerVisualState();
+                    }
                 });
 
                 container.addEventListener('blur', () => {
-                    containerHasFocus = false;
-                    updateContainerVisualState();
-                    // Clear mouse position when container loses focus
-                    this.mouseX = null;
-                    this.mouseY = null;
+                    if (!isMobile) {
+                        currentMode = 'gravity';
+                        updateContainerVisualState();
+                        // Clear mouse position when container loses focus on desktop
+                        this.mouseX = null;
+                        this.mouseY = null;
+                    }
                 });
 
-                // Mouse tracking - only when container has focus
+                // Mouse tracking - desktop only
                 container.addEventListener('mouseenter', (e) => {
-                    if (containerHasFocus) {
+                    if (!isMobile && currentMode === 'repulsion') {
                         const rect = container.getBoundingClientRect();
                         this.mouseX = e.clientX - rect.left;
                         this.mouseY = e.clientY - rect.top;
@@ -3663,7 +3684,7 @@ Extras
                 });
 
                 container.addEventListener('mousemove', (e) => {
-                    if (containerHasFocus) {
+                    if (!isMobile && currentMode === 'repulsion') {
                         const rect = container.getBoundingClientRect();
                         this.mouseX = e.clientX - rect.left;
                         this.mouseY = e.clientY - rect.top;
@@ -3671,29 +3692,46 @@ Extras
                 });
 
                 container.addEventListener('mouseout', (e) => {
-                    // Always clear mouse position on mouse out
-                    this.containerHasFocus = false
-                    this.mouseX = null;
-                    this.mouseY = null;
+                    if (!isMobile) {
+                        // Clear mouse position on mouse out
+                        this.mouseX = null;
+                        this.mouseY = null;
+                    }
                 });
 
-                // Click to focus the container
-                container.addEventListener('click', () => {
-                    container.focus();
-                });
-
-                // Touch to focus the container (mobile)
-                container.addEventListener('touchstart', (e) => {
-                    // Only set focus if touch is within container (not on bubbles)
-                    if (e.target === container) {
-                        containerHasFocus = true;
+                // Click to focus the container (desktop only)
+                container.addEventListener('click', (e) => {
+                    if (!isMobile && currentMode !== 'billiards') {
+                        // Set mouse coordinates immediately on click before focusing
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.clientX - rect.left;
+                        this.mouseY = e.clientY - rect.top;
                         container.focus();
+                    }
+                });
+
+                // Touch to enter repulsion mode (mobile only)
+                container.addEventListener('touchstart', (e) => {
+                    if (isMobile && e.target === container) {
+                        // Enter locked repulsion mode on mobile
+                        currentMode = 'repulsion';
+                        isRepulsionLocked = true;
                         const rect = container.getBoundingClientRect();
                         this.mouseX = e.touches[0].clientX - rect.left;
                         this.mouseY = e.touches[0].clientY - rect.top;
                         updateContainerVisualState();
                     }
                 }, { passive: true });
+
+                // Touch move to update repulsion center (mobile only)
+                container.addEventListener('touchmove', (e) => {
+                    if (isMobile && currentMode === 'repulsion' && e.target === container) {
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.touches[0].clientX - rect.left;
+                        this.mouseY = e.touches[0].clientY - rect.top;
+                        e.preventDefault(); // Prevent scrolling when in repulsion mode
+                    }
+                }, { passive: false });
 
                 // Handle window resize
                 this.resizeObserver?.disconnect();
