@@ -81,17 +81,6 @@
             position: relative; /* Make header relative for absolute positioning of center button */
         }
         
-        /* Center the middle button on desktop */
-        @media (min-width: 768px) {
-            #floatingNavDate {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                top: 50%;
-                transform: translate(-50%, -50%);
-            }
-        }
-        
         .main-container {
             flex: 1;
             overflow-y: scroll;
@@ -1045,11 +1034,21 @@
         /* DAILY VIEW */
         .bubbles-container {
             border-radius: 8px;
-            height: 350px;
+            height: 550px;
+            max-height: 60vh; /* Increased from 50vh to 80vh for more space */
             position: relative;
             overflow: hidden;
             border: 1px solid var(--color-bg-medium);
             margin-bottom: 24px;
+            outline: none;
+        }
+        
+        .bubbles-container.billiards-mode {
+            background-color: rgba(0, 100, 0, 0.1);
+        }
+        
+        .bubbles-container.repulsion-mode {
+            background-color: rgba(139, 0, 0, 0.1); /* Increased opacity for visibility */
         }
         
         .bubble {
@@ -1212,7 +1211,7 @@
             }
             
             .bubbles-container {
-                height: 50%; /* Fixed height on mobile */
+                height: 70%; /* Increased from 50% to 70% on mobile */
                 flex-shrink: 0;
             }
             
@@ -1312,7 +1311,7 @@
             }
             
             .bubbles-container {
-                height: 200px; /* Smaller height for very small screens */
+                height: 300px; /* Increased from 200px to 300px for very small screens */
                 flex-shrink: 0;
             }
             
@@ -1757,17 +1756,17 @@ Extras
                         let totalArea = 0;
                         const uniqueEmojisInHour = new Set();
                         
-                        // Calculate area based on original sizing rules
+                        // Calculate area based on original sizing rules (scaled 1.5x for better visibility)
                         group.forEach(bubble => {
                             const hourEmojis = this.entries[bubble.hour].emojis || [];
                             const uniqueCount = new Set(hourEmojis).size;
                             let individualSize;
                             if (uniqueCount === 1) {
-                                individualSize = 70;
+                                individualSize = 105; // 70 * 1.5
                             } else if (uniqueCount === 2) {
-                                individualSize = 50;
+                                individualSize = 75; // 50 * 1.5
                             } else {
-                                individualSize = 40;
+                                individualSize = 60; // 40 * 1.5
                             }
                             // Area = π * r² = π * (size/2)²
                             const area = Math.PI * Math.pow(individualSize / 2, 2);
@@ -1781,10 +1780,10 @@ Extras
                         mergedBubbles.push({
                             emoji,
                             count: group.length,
-                            size: Math.min(Math.max(newSize, 30), 150), // Clamp size between 30-150px
+                            size: Math.min(Math.max(newSize, 40), 200), // Larger size range: 40-200px
                             id: `merged-${emoji}`,
-                            x: Math.random() * 90 + 5,
-                            y: Math.random() * 90 + 5
+                            x: Math.random() * 90 + 5, // Use more of the full width
+                            y: Math.random() * 90 + 5  // Use more of the full height
                         });
                     });
 
@@ -1794,36 +1793,30 @@ Extras
                         return total + (Math.PI * radius * radius);
                     }, 0);
                     
-                    // Mobile-specific fill percentage vs desktop
+                    // Calculate container dimensions and target fill
                     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                     let estimatedContainerArea, targetFillPercent;
                     
                     if (isMobile) {
-                        // Mobile container is 50% of viewport height, typically around 300-400px wide
-                        const mobileHeight = window.innerHeight * 0.5;
+                        // Mobile container is now 70% of viewport height
+                        const mobileHeight = window.innerHeight * 0.7;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
-                        targetFillPercent = 35; // Reduced from 55% to fit properly on mobile
+                        targetFillPercent = 50; // Increased target fill for better visual density
                     } else {
-                        // Desktop: 350px x 350px container
-                        estimatedContainerArea = 350 * 350;
+                        // Desktop: actual container size is min(550px, 80vh) width varies
+                        const desktopHeight = Math.min(550, window.innerHeight * 0.8);
+                        const desktopWidth = Math.min(window.innerWidth * 0.8, 600); // Estimate container width
+                        estimatedContainerArea = desktopHeight * desktopWidth;
+                        targetFillPercent = 60; // Target 40% fill on desktop
                     }
                     
                     const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
                     
                     let scaleFactor = 1;
-                    if (isMobile) {
-                        // Target specific fill percentage on mobile
-                        if (mergedBubbles.length > 0) {
-                            scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
-                        }
-                    } else {
-                        // Desktop: keep fill between 30% and 60%
-                        if (currentFillPercent > 60) {
-                            scaleFactor = Math.sqrt(60 / currentFillPercent);
-                        } else if (currentFillPercent < 30 && mergedBubbles.length > 0) {
-                            scaleFactor = Math.sqrt(30 / currentFillPercent);
-                        }
+                    // Always scale to target fill percentage
+                    if (mergedBubbles.length > 0) {
+                        scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
                     }
                     
                     // Apply scaling to all bubbles
@@ -1840,19 +1833,19 @@ Extras
                         const uniqueCount = new Set(hourEmojis).size;
                         let size;
                         if (uniqueCount === 1) {
-                            size = 70;
+                            size = 105; // 70 * 1.5
                         } else if (uniqueCount === 2) {
-                            size = 50;
+                            size = 75; // 50 * 1.5
                         } else {
-                            size = 40;
+                            size = 60; // 40 * 1.5
                         }
 
                         return {
                             ...bubble,
                             size,
                             count: 1,
-                            x: Math.random() * 90 + 5,
-                            y: Math.random() * 90 + 5
+                            x: Math.random() * 90 + 5, // Use more of the full width
+                            y: Math.random() * 90 + 5  // Use more of the full height
                         };
                     });
 
@@ -1862,36 +1855,30 @@ Extras
                         return total + (Math.PI * radius * radius);
                     }, 0);
                     
-                    // Mobile-specific fill percentage vs desktop
+                    // Calculate container dimensions and target fill
                     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                     let estimatedContainerArea, targetFillPercent;
                     
                     if (isMobile) {
-                        // Mobile container is 50% of viewport height, typically around 300-400px wide
-                        const mobileHeight = window.innerHeight * 0.5;
+                        // Mobile container is now 70% of viewport height
+                        const mobileHeight = window.innerHeight * 0.7;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
-                        targetFillPercent = 35; // Reduced from 55% to fit properly on mobile
+                        targetFillPercent = 50; // Increased target fill for better visual density
                     } else {
-                        // Desktop: 350px x 350px container
-                        estimatedContainerArea = 350 * 350;
+                        // Desktop: actual container size is min(550px, 80vh) width varies
+                        const desktopHeight = Math.min(550, window.innerHeight * 0.5);
+                        const desktopWidth = Math.min(window.innerWidth * 0.5, 600); // Estimate container width
+                        estimatedContainerArea = desktopHeight * desktopWidth;
+                        targetFillPercent = 60; // Target 40% fill on desktop
                     }
                     
                     const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
                     
                     let scaleFactor = 1;
-                    if (isMobile) {
-                        // Target specific fill percentage on mobile
-                        if (individualBubbles.length > 0) {
-                            scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
-                        }
-                    } else {
-                        // Desktop: keep fill between 30% and 60%
-                        if (currentFillPercent > 60) {
-                            scaleFactor = Math.sqrt(60 / currentFillPercent);
-                        } else if (currentFillPercent < 30 && individualBubbles.length > 0) {
-                            scaleFactor = Math.sqrt(30 / currentFillPercent);
-                        }
+                    // Always scale to target fill percentage
+                    if (individualBubbles.length > 0) {
+                        scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
                     }
                     
                     // Apply scaling to all bubbles
@@ -2979,16 +2966,36 @@ Extras
                 let dragVelocityY = 0;
                 const maxThrowSpeed = 15;
                 let billiardsMode = false; // (gravity disabled)
+                let containerHasFocus = false; // Track focus state for repulsion
                 
                 // Physics constants
-                const centerGravity = 0.02;
+                const centerGravity = 0.014;
                 const friction = 0.995;
                 const gravityRestitution = 0.2; 
-                const billiardsRestitution = 0.85;
+                const billiardsRestitution = 0.95;
                 const repulsion = 0.2; // Increased from 0.2 to prevent overlaps
                 const maxSpeed = 10;
                 const minSpeed = 0;
                 const gravityDampening = 0.7;
+                
+                // Shared attraction constants for same-type bubbles
+                const attractionStrength = 1.2;
+                const maxAttractionDistance = 600;
+                const minDistance = 20; // Prevent division by very small numbers
+
+                // Helper function to manage visual state with proper priority
+                const updateContainerVisualState = () => {
+                    // Remove all mode classes first
+                    container.classList.remove('billiards-mode', 'repulsion-mode');
+                    
+                    // Priority: billiards/drag > repulsion > regular
+                    if (draggedBubble || billiardsMode) {
+                        container.classList.add('billiards-mode');
+                    } else if (containerHasFocus) {
+                        container.classList.add('repulsion-mode');
+                    }
+                    // Regular mode has no special class (default background)
+                };
 
                 // Initialize bubbles randomly across the entire container
                 // Initialize bubbles with no overlaps
@@ -3039,6 +3046,7 @@ Extras
                 const handleDragStart = (e, bubble) => {
                     e.preventDefault();
                     draggedBubble = bubble;
+                    updateContainerVisualState(); // Update to billiards mode during drag
                     const rect = container.getBoundingClientRect();
                     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -3146,6 +3154,7 @@ Extras
                     
                     // Enable billiards mode - gravity/repulsion stay disabled
                     billiardsMode = true;
+                    updateContainerVisualState();
                     
                     draggedBubble.style.cursor = 'grab';
                     draggedBubble.style.zIndex = '';
@@ -3188,10 +3197,12 @@ Extras
                 // Add focus/blur listeners to exit billiards mode
                 const handleFocus = () => {
                     billiardsMode = false; // Re-enable gravity/repulsion
+                    updateContainerVisualState();
                 };
                 
                 const handleBlur = () => {
                     billiardsMode = false; // Re-enable gravity/repulsion
+                    updateContainerVisualState();
                 };
 
                 // Add click/tap outside container to exit billiards mode
@@ -3199,6 +3210,7 @@ Extras
                     // Check if click is outside the bubbles container
                     if (!container.contains(e.target) && billiardsMode) {
                         billiardsMode = false; // Re-enable gravity/repulsion
+                        updateContainerVisualState();
                     }
                 };
 
@@ -3209,6 +3221,7 @@ Extras
                         const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
                         if (!container.contains(elementUnderTouch) && billiardsMode) {
                             billiardsMode = false; // Re-enable gravity/repulsion
+                            updateContainerVisualState();
                         }
                     }
                 };
@@ -3252,6 +3265,100 @@ Extras
                         
                         // Skip gravity/repulsion for ALL bubbles when any bubble is being dragged OR in billiards mode
                         if (!draggedBubble && !billiardsMode) {
+                            // Same-type attraction in touch merge mode (always enabled when not dragging)
+                            if (this.emojiMergeMode === 'touch') {
+                                const currentEmoji = bubble.dataset.emoji;
+                                const bubbleCenterX = state.x + state.size / 2;
+                                const bubbleCenterY = state.y + state.size / 2;
+                                
+                                // Find and attract to nearest same-type bubble
+                                let nearestSameType = null;
+                                let nearestDistance = Infinity;
+                                
+                                bubbleStates.forEach((otherState, otherBubble) => {
+                                    if (otherBubble === bubble || otherBubble === draggedBubble) return;
+                                    if (otherBubble.dataset.emoji !== currentEmoji) return;
+                                    
+                                    const otherCenterX = otherState.x + otherState.size / 2;
+                                    const otherCenterY = otherState.y + otherState.size / 2;
+                                    const distance = Math.sqrt(
+                                        Math.pow(otherCenterX - bubbleCenterX, 2) + 
+                                        Math.pow(otherCenterY - bubbleCenterY, 2)
+                                    );
+                                    
+                                    if (distance < nearestDistance) {
+                                        nearestDistance = distance;
+                                        nearestSameType = { x: otherCenterX, y: otherCenterY, distance };
+                                    }
+                                });
+                                
+                                // Apply attraction to nearest same-type bubble with inverse distance relationship
+                                if (nearestSameType && nearestSameType.distance > 0) {
+                                    if (nearestSameType.distance < maxAttractionDistance) {
+                                        const dx = nearestSameType.x - bubbleCenterX;
+                                        const dy = nearestSameType.y - bubbleCenterY;
+                                        const dirX = dx / nearestSameType.distance;
+                                        const dirY = dy / nearestSameType.distance;
+                                        
+                                        // Inverse proportional force: stronger when closer (F ∝ 1/distance)
+                                        const effectiveDistance = Math.max(nearestSameType.distance, minDistance);
+                                        const force = attractionStrength / effectiveDistance;
+                                        
+                                        state.vx += dirX * force;
+                                        state.vy += dirY * force;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Same-type attraction in touch merge mode - also enabled in billiards mode
+                        if (this.emojiMergeMode === 'touch' && billiardsMode && !draggedBubble) {
+                            const currentEmoji = bubble.dataset.emoji;
+                            const bubbleCenterX = state.x + state.size / 2;
+                            const bubbleCenterY = state.y + state.size / 2;
+                            
+                            // Find and attract to nearest same-type bubble
+                            let nearestSameType = null;
+                            let nearestDistance = Infinity;
+                            
+                            bubbleStates.forEach((otherState, otherBubble) => {
+                                if (otherBubble === bubble || otherBubble === draggedBubble) return;
+                                if (otherBubble.dataset.emoji !== currentEmoji) return;
+                                
+                                const otherCenterX = otherState.x + otherState.size / 2;
+                                const otherCenterY = otherState.y + otherState.size / 2;
+                                const distance = Math.sqrt(
+                                    Math.pow(otherCenterX - bubbleCenterX, 2) + 
+                                    Math.pow(otherCenterY - bubbleCenterY, 2)
+                                );
+                                
+                                if (distance < nearestDistance) {
+                                    nearestDistance = distance;
+                                    nearestSameType = { x: otherCenterX, y: otherCenterY, distance };
+                                }
+                            });
+                            
+                            // Apply attraction to nearest same-type bubble with inverse distance relationship
+                            if (nearestSameType && nearestSameType.distance > 0) {
+                                if (nearestSameType.distance < maxAttractionDistance) {
+                                    const dx = nearestSameType.x - bubbleCenterX;
+                                    const dy = nearestSameType.y - bubbleCenterY;
+                                    const dirX = dx / nearestSameType.distance;
+                                    const dirY = dy / nearestSameType.distance;
+                                    
+                                    // Inverse proportional force: stronger when closer (F ∝ 1/distance)
+                                    const effectiveDistance = Math.max(nearestSameType.distance, minDistance);
+                                    const force = attractionStrength / effectiveDistance;
+                                    
+                                    state.vx += dirX * force;
+                                    state.vy += dirY * force;
+                                }
+                            }
+                        }
+                        
+                        // Regular gravity/repulsion (only when not in billiards mode)
+                        if (!draggedBubble && !billiardsMode) {
+                            
                             // Use mouse position as gravity center when hovering
                             const bubbleCenterX = state.x + state.size / 2;
                             const bubbleCenterY = state.y + state.size / 2;
@@ -3295,6 +3402,17 @@ Extras
                         // Apply friction
                         state.vx *= friction;
                         state.vy *= friction;
+
+                        // Apply minimal movement dampening (kill tiny movements)
+                        if (!billiardsMode) {
+                            const dampening = 0.007; // flat dampening amount
+                            if (Math.abs(state.vx) < dampening) state.vx = 0;
+                            if (Math.abs(state.vy) < dampening) state.vy = 0;
+                            if (state.vx > 0) state.vx = Math.max(0, state.vx - dampening * 0.5);
+                            if (state.vx < 0) state.vx = Math.min(0, state.vx + dampening * 0.5);
+                            if (state.vy > 0) state.vy = Math.max(0, state.vy - dampening * 0.5);
+                            if (state.vy < 0) state.vy = Math.min(0, state.vy + dampening * 0.5);
+                        }
 
                         // Maintain minimum and maximum speed
                         const speed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
@@ -3378,35 +3496,74 @@ Extras
                                     const emoji2 = bubble2.dataset.emoji;
                                     
                                     if (emoji1 === emoji2) {
-                                        // Merge bubbles - calculate new size preserving total area
-                                        const area1 = Math.PI * Math.pow(state1.size / 2, 2);
-                                        const area2 = Math.PI * Math.pow(state2.size / 2, 2);
+                                        // Determine which bubble is larger (will be the absorber)
+                                        const size1 = state1.size;
+                                        const size2 = state2.size;
+                                        
+                                        let absorber, absorbed, absorberState, absorbedState;
+                                        if (size1 >= size2) {
+                                            absorber = bubble1;
+                                            absorbed = bubble2;
+                                            absorberState = state1;
+                                            absorbedState = state2;
+                                        } else {
+                                            absorber = bubble2;
+                                            absorbed = bubble1;
+                                            absorberState = state2;
+                                            absorbedState = state1;
+                                        }
+                                        
+                                        // Calculate target size preserving total area
+                                        const area1 = Math.PI * Math.pow(size1 / 2, 2);
+                                        const area2 = Math.PI * Math.pow(size2 / 2, 2);
                                         const totalArea = area1 + area2;
                                         const newRadius = Math.sqrt(totalArea / Math.PI);
-                                        const newSize = Math.min(Math.max(newRadius * 2, 30), 150);
+                                        const targetSize = Math.min(Math.max(newRadius * 2, 30), 150);
                                         
-                                        // Update bubble1 to be the merged bubble
-                                        state1.size = newSize;
-                                        state1.x = (center1X + center2X) / 2 - newSize / 2;
-                                        state1.y = (center1Y + center2Y) / 2 - newSize / 2;
+                                        // Calculate centers for momentum blending
+                                        const absorberCenterX = absorberState.x + absorberState.size / 2;
+                                        const absorberCenterY = absorberState.y + absorberState.size / 2;
+                                        const absorbedCenterX = absorbedState.x + absorbedState.size / 2;
+                                        const absorbedCenterY = absorbedState.y + absorbedState.size / 2;
                                         
-                                        // Average the velocities
-                                        state1.vx = (state1.vx + state2.vx) / 2;
-                                        state1.vy = (state1.vy + state2.vy) / 2;
+                                        // Smooth velocity blending based on mass
+                                        const mass1 = size1 * size1; // Mass proportional to area
+                                        const mass2 = size2 * size2;
+                                        const totalMass = mass1 + mass2;
                                         
-                                        // Update bubble1 display - no count numbers, just scale size and font
-                                        const currentCount = parseInt(bubble1.dataset.count || '1');
-                                        const bubble2Count = parseInt(bubble2.dataset.count || '1');
-                                        const newCount = currentCount + bubble2Count;
+                                        // Weighted velocity average based on mass
+                                        const blendedVx = (absorberState.vx * (absorberState.size * absorberState.size) + 
+                                                          absorbedState.vx * (absorbedState.size * absorbedState.size)) / 
+                                                         (absorberState.size * absorberState.size + absorbedState.size * absorbedState.size);
+                                        const blendedVy = (absorberState.vy * (absorberState.size * absorberState.size) + 
+                                                          absorbedState.vy * (absorbedState.size * absorbedState.size)) / 
+                                                         (absorberState.size * absorberState.size + absorbedState.size * absorbedState.size);
                                         
-                                        bubble1.style.width = `${newSize}px`;
-                                        bubble1.style.height = `${newSize}px`;
-                                        bubble1.style.fontSize = `${newSize * 0.85}px`;
-                                        bubble1.innerHTML = emoji1;
-                                        bubble1.dataset.count = newCount;
+                                        // Apply blended velocity to absorber
+                                        absorberState.vx = blendedVx;
+                                        absorberState.vy = blendedVy;
                                         
-                                        // Remove bubble2
-                                        bubblesToRemove.add(bubble2);
+                                        // Complete merge immediately
+                                        absorberState.size = targetSize;
+                                        
+                                        // Update bubble count
+                                        const count1 = parseInt(bubble1.dataset.count || '1');
+                                        const count2 = parseInt(bubble2.dataset.count || '1');
+                                        absorber.dataset.count = count1 + count2;
+                                        
+                                        // Update visual properties with smooth transition for size change
+                                        absorber.style.transition = 'width 0.15s ease-out, height 0.15s ease-out, font-size 0.15s ease-out';
+                                        absorber.style.width = `${targetSize}px`;
+                                        absorber.style.height = `${targetSize}px`;
+                                        absorber.style.fontSize = `${targetSize * 0.85}px`;
+                                        
+                                        // Clean up transition after animation
+                                        setTimeout(() => {
+                                            absorber.style.transition = '';
+                                        }, 150);
+                                        
+                                        // Remove absorbed bubble immediately
+                                        bubblesToRemove.add(absorbed);
                                         
                                         continue;
                                     }
@@ -3432,7 +3589,7 @@ Extras
                                 state2.y += ny * overlap * 0.5;
                                 
                                 // Apply repulsion force to prevent future overlaps
-                                const repulsionForce = repulsion * 1.5; // Stronger force to maintain separation
+                                const repulsionForce = repulsion * 1; // Stronger force to maintain separation
                                 state1.vx -= nx * repulsionForce;
                                 state1.vy -= ny * repulsionForce;
                                 state2.vx += nx * repulsionForce;
@@ -3454,10 +3611,23 @@ Extras
                 
                 this.bubbleAnimationId = requestAnimationFrame(animate);
 
-                // Track mouse position using event delegation
+                // Focus/blur event listeners for the container
+                container.addEventListener('focus', () => {
+                    containerHasFocus = true;
+                    updateContainerVisualState();
+                });
+
+                container.addEventListener('blur', () => {
+                    containerHasFocus = false;
+                    updateContainerVisualState();
+                    // Clear mouse position when container loses focus
+                    this.mouseX = null;
+                    this.mouseY = null;
+                });
+
+                // Mouse tracking - only when container has focus
                 container.addEventListener('mouseenter', (e) => {
-                    const bubble = e.target.closest('.bubble');
-                    if (bubble) {
+                    if (containerHasFocus) {
                         const rect = container.getBoundingClientRect();
                         this.mouseX = e.clientX - rect.left;
                         this.mouseY = e.clientY - rect.top;
@@ -3465,8 +3635,7 @@ Extras
                 });
 
                 container.addEventListener('mousemove', (e) => {
-                    const bubble = e.target.closest('.bubble');
-                    if (bubble) {
+                    if (containerHasFocus) {
                         const rect = container.getBoundingClientRect();
                         this.mouseX = e.clientX - rect.left;
                         this.mouseY = e.clientY - rect.top;
@@ -3474,12 +3643,15 @@ Extras
                 });
 
                 container.addEventListener('mouseout', (e) => {
-                    const bubble = e.target.closest('.bubble');
-                    const relatedBubble = e.relatedTarget?.closest('.bubble');
-                    if (bubble && !relatedBubble) {
-                        this.mouseX = null;
-                        this.mouseY = null;
-                    }
+                    // Always clear mouse position on mouse out
+                    this.containerHasFocus = false
+                    this.mouseX = null;
+                    this.mouseY = null;
+                });
+
+                // Click to focus the container
+                container.addEventListener('click', () => {
+                    container.focus();
                 });
 
                 // Handle window resize
@@ -3918,12 +4090,12 @@ Extras
                 this.updateGoal(goalId, { emojis });
             }
             
-                toggleGoalNegation(goalId) {
+            toggleGoalNegation(goalId) {
                     const goal = this.goals.find(g => g.id === goalId);
                     this.updateGoal(goalId, { not: !goal.not });
                 }
             
-
+                
             renderDaily() {
                 const goalChecks = this.checkGoals();
                 const isToday = this.isCurrentDate();
@@ -3951,7 +4123,7 @@ Extras
                             <button class="jump-btn" id="copyDayBtn" onclick="app.exportCurrentDayTextWithAnimation()">📋 ${copyLabel}</button>
                         </div>
                         
-                        <div class="bubbles-container">
+                        <div class="bubbles-container" tabindex="0">
                             ${(() => {
                                 const processedBubbles = this.processBubblesForMerging();
                                 
