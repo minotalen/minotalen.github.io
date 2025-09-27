@@ -1183,15 +1183,22 @@
                 margin-top: 0;
             }
             
-            /* Make daily view buttons stack vertically on mobile */
+            /* Make daily view buttons display in one row on mobile */
             .daily-container > div:first-child {
-                flex-direction: column !important;
-                gap: 8px !important;
+                flex-direction: row !important;
+                gap: 4px !important;
+                flex-wrap: nowrap !important;
             }
             
             .daily-container .jump-btn {
-                width: 100% !important;
+                flex: 1 !important;
+                width: auto !important;
                 text-align: center;
+                font-size: clamp(0.7rem, 2.5vw, 0.9rem) !important;
+                padding: 0.2rem 0.3rem !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }            .main-container:has(.daily-container) {
                 overflow: hidden;
             }
@@ -1773,8 +1780,12 @@ Extras
                             totalArea += area;
                         });
 
-                        // Calculate new radius from total area: r = sqrt(totalArea / π)
-                        const newRadius = Math.sqrt(totalArea / Math.PI);
+                        // Calculate new radius with logarithmic scaling for area loss during merge
+                        // Instead of pure area conservation, use logarithmic scaling to lose some total area
+                        // This makes merging more realistic - merged bubbles are smaller than pure area sum
+                        const idealRadius = Math.sqrt(totalArea / Math.PI); // Pure area conservation
+                        const logScalingFactor = 0.85 + (0.1 * Math.log(group.length + 1) / Math.log(10)); // Scale 0.85-0.95 based on group size
+                        const newRadius = idealRadius * logScalingFactor;
                         const newSize = newRadius * 2;
 
                         mergedBubbles.push({
@@ -1802,13 +1813,13 @@ Extras
                         const mobileHeight = window.innerHeight * 0.7;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
-                        targetFillPercent = 50; // Increased target fill for better visual density
+                        targetFillPercent = 45; // Increased target fill for better visual density
                     } else {
                         // Desktop: actual container size is min(550px, 80vh) width varies
                         const desktopHeight = Math.min(550, window.innerHeight * 0.8);
                         const desktopWidth = Math.min(window.innerWidth * 0.8, 600); // Estimate container width
                         estimatedContainerArea = desktopHeight * desktopWidth;
-                        targetFillPercent = 60; // Target 40% fill on desktop
+                        targetFillPercent = 60; // Target 60% fill on desktop
                     }
                     
                     const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
@@ -1864,7 +1875,7 @@ Extras
                         const mobileHeight = window.innerHeight * 0.7;
                         const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
                         estimatedContainerArea = mobileHeight * mobileWidth;
-                        targetFillPercent = 50; // Increased target fill for better visual density
+                        targetFillPercent = 45;
                     } else {
                         // Desktop: actual container size is min(550px, 80vh) width varies
                         const desktopHeight = Math.min(550, window.innerHeight * 0.5);
@@ -3047,6 +3058,17 @@ Extras
                     e.preventDefault();
                     draggedBubble = bubble;
                     updateContainerVisualState(); // Update to billiards mode during drag
+                    
+                    // On mobile, ensure container focus is set for repulsion mode
+                    if (e.type.includes('touch')) {
+                        containerHasFocus = true;
+                        container.focus();
+                        // Set touch position for repulsion calculations
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.touches[0].clientX - rect.left;
+                        this.mouseY = e.touches[0].clientY - rect.top;
+                    }
+                    
                     const rect = container.getBoundingClientRect();
                     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -3086,6 +3108,12 @@ Extras
                     const currentX = clientX - rect.left;
                     const currentY = clientY - rect.top;
                     const currentTime = performance.now();
+                    
+                    // Update touch/mouse position for repulsion calculations during touch
+                    if (e.type.includes('touch') && containerHasFocus) {
+                        this.mouseX = currentX;
+                        this.mouseY = currentY;
+                    }
                     
                     // Store drag path point
                     this.dragPath = this.dragPath || [];
@@ -3653,6 +3681,19 @@ Extras
                 container.addEventListener('click', () => {
                     container.focus();
                 });
+
+                // Touch to focus the container (mobile)
+                container.addEventListener('touchstart', (e) => {
+                    // Only set focus if touch is within container (not on bubbles)
+                    if (e.target === container) {
+                        containerHasFocus = true;
+                        container.focus();
+                        const rect = container.getBoundingClientRect();
+                        this.mouseX = e.touches[0].clientX - rect.left;
+                        this.mouseY = e.touches[0].clientY - rect.top;
+                        updateContainerVisualState();
+                    }
+                }, { passive: true });
 
                 // Handle window resize
                 this.resizeObserver?.disconnect();
