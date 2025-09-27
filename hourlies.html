@@ -78,6 +78,18 @@
             left: 0;
             right: 0;
             z-index: 100;
+            position: relative; /* Make header relative for absolute positioning of center button */
+        }
+        
+        /* Center the middle button on desktop */
+        @media (min-width: 768px) {
+            #floatingNavDate {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
         }
         
         .main-container {
@@ -232,6 +244,18 @@
         
         .jump-btn:hover {
             color: var(--color-text-secondary);
+        }
+        
+        .jump-btn.wipe-confirmation {
+            background-color: var(--color-accent-red-muted);
+            color: var(--color-text-primary);
+            font-weight: bold;
+            animation: pulse-warning 1s infinite alternate;
+        }
+        
+        @keyframes pulse-warning {
+            0% { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(1.02); opacity: 1; }
         }
         
         /* GOALS */
@@ -558,17 +582,14 @@
             transition: all 0.3s ease;
         }
         
-        .emoji-input:focus {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 600px;
-            height: 80vh;
-            z-index: 1050;
+        .emoji-modal .emoji-input {
+            width: 100%;
+            height: calc(100% - 20px);
+            resize: none;
+            font-size: 1.1em;
             padding: 20px;
-            box-shadow: 0 0 20px var(rgba(0, 0, 0, 0.5));
+            border: none;
+            outline: none;
         }
         
         .checkbox-label {
@@ -658,6 +679,100 @@
             font-size: 1.2rem;
         }
         
+        /* SHARED MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal {
+            position: relative;
+            width: min(95%, 1000px);
+            max-width: 1000px;
+            max-height: 90vh;
+            padding: 8px;
+            background-color: var(--color-bg-dark);
+            border-radius: 8px;
+            border: 2px solid var(--color-bg-lighter);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.2s ease-out;
+            overflow-y: auto;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* SHARED MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal {
+            position: relative;
+            width: min(95%, 1000px);
+            max-width: 1000px;
+            max-height: 90vh;
+            padding: 4px;
+            background-color: var(--color-bg-dark);
+            border-radius: 8px;
+            border: 2px solid var(--color-bg-lighter);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.2s ease-out;
+            overflow-y: auto;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
         .remove-goal-btn {
             background: none;
             border: none;
@@ -678,45 +793,46 @@
             color: var(--color-accent-red);
         }
         
+        .goal-editor-section {
+            width: 100%;
+        }
+        
         .goal-editor {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: min(90%, 800px);
-            max-width: 800px;
-            padding: 24px;
+            width: min(95%, 1000px);
+            max-width: 1000px;
+            padding: 32px;
             background-color: var(--color-bg-dark);
             border-radius: 8px;
             border: 2px solid var(--color-bg-lighter);
             z-index: 1100;
-            box-shadow: 0 4px 12px var(rgba(0, 0, 0, 0.3));
-        }
-        
-        .goal-editor-section {
-            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .goal-emoji-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
             width: 100%;
             max-height: 200px;
             overflow-y: auto;
-            padding: 4px;
+            padding: 2px;
             border-radius: 8px;
         }
 
         .operator-value-group {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             background: var(--color-bg-darkest);
-            padding: 16px;
+            padding: 8px;
             border-radius: 8px;
+            min-width: 100%;
         }
         
         .goal-emoji-btn {
@@ -748,15 +864,15 @@
         .goal-toggle {
             background-color: var(--color-bg-medium);
             color: var(--color-text-secondary);
-            padding: 12px 18px;
+            padding: 10px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 500;
             white-space: nowrap;
             transition: all 0.2s;
-            min-height: 44px;
-            min-width: 80px;
+            min-height: 40px;
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -771,19 +887,18 @@
         .goal-operator-btn {
             background-color: var(--color-bg-medium);
             color: var(--color-text-secondary);
-            padding: 12px 18px;
+            padding: 10px 14px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 1.2em;
+            font-size: 1rem;
             font-weight: 500;
             white-space: nowrap;
             transition: all 0.2s;
-            min-height: 44px;
-            min-width: 80px;
+            min-height: 40px;
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 25%;
         }
         
         .goal-action-btn:hover,
@@ -794,14 +909,24 @@
         }
         
         .goal-value-input {
-            width: 80px;
-            padding: 8px 12px;
+            width: 60px;
+            padding: 8px 10px;
             background-color: var(--color-bg-medium);
             border-radius: 6px;
             color: var(--color-text-secondary);
-            font-size: 1.2em;
+            font-size: 1rem;
             text-align: center;
-            min-width: 25%;
+            flex-shrink: 0;
+            min-height: 40px;
+            box-sizing: border-box;
+        }
+        
+        .goal-times-text {
+            color: var(--color-text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         
         .goal-operator-btn:hover {
@@ -954,11 +1079,100 @@
             100% { box-shadow: none; }
         }
         
+        @keyframes copy-success {
+            0% { 
+                transform: scale(1); 
+                background-color: var(--color-bg-dark);
+                color: var(--color-text-muted);
+            }
+            20% { 
+                transform: scale(1.05); 
+                background-color: var(--color-accent-green);
+                color: var(--color-text-primary);
+            }
+            40% { 
+                transform: scale(0.98); 
+            }
+            60% { 
+                transform: scale(1.02); 
+            }
+            100% { 
+                transform: scale(1); 
+                background-color: var(--color-accent-green);
+                color: var(--color-text-primary);
+            }
+        }
+        
+        @keyframes wipe-success {
+            0% { 
+                transform: scale(1); 
+                background-color: var(--color-accent-red-muted);
+                color: var(--color-text-primary);
+            }
+            15% { 
+                transform: scale(1.08); 
+                background-color: var(--color-accent-red);
+                color: var(--color-text-primary);
+            }
+            30% { 
+                transform: scale(0.95);
+                background-color: var(--color-accent-red-muted); 
+            }
+            45% { 
+                transform: scale(1.03);
+                background-color: var(--color-accent-red); 
+            }
+            60% { 
+                transform: scale(0.99);
+                background-color: var(--color-accent-red-muted); 
+            }
+            75% { 
+                transform: scale(1.01);
+                background-color: var(--color-accent-red); 
+            }
+            100% { 
+                transform: scale(1); 
+                background-color: var(--color-accent-red);
+                color: var(--color-text-primary);
+            }
+        }
+        
         .hour-entry.flash {
             animation: flash-border 0.5s ease;
         }
         
-        /* MOBILE */
+        .copy-success {
+            animation: copy-success 0.6s ease-out;
+        }
+        
+        .wipe-success {
+            animation: wipe-success 0.8s ease-out;
+        }
+        
+        /* SWIPE INDICATOR */
+        .swipe-indicator {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 24px;
+            z-index: 1500;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        
+        .swipe-indicator.left {
+            left: 20px;
+        }
+        
+        .swipe-indicator.right {
+            right: 20px;
+        }
+        
+            /* MOBILE */
         @media (max-width: 768px) {
             .scroll-bar { display: none !important; }
             .header { 
@@ -969,8 +1183,37 @@
                 padding: 16px;
                 margin-top: 0;
             }
-            .main-container {
-                padding-bottom: 6rem;
+            
+            /* Make daily view buttons stack vertically on mobile */
+            .daily-container > div:first-child {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+            
+            .daily-container .jump-btn {
+                width: 100% !important;
+                text-align: center;
+            }            .main-container:has(.daily-container) {
+                overflow: hidden;
+            }
+            
+            .daily-container {
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .dailies-section {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                min-height: 0;
+            }
+            
+            .bubbles-container {
+                height: 50%; /* Fixed height on mobile */
+                flex-shrink: 0;
             }
             
             .scroll-container { 
@@ -979,7 +1222,7 @@
             }
             .header h1 { font-size: 1.4em; }
             .btn { font-size: 1.3em !important; }
-            .btn-label { font-size: 0.6em; }
+            .btn-label { font-size: 0.8 em; }
             .date-nav { margin-bottom: 12px; }
             .secondary-btn, .date-input { font-size: 22px; }
             .date-input { width: 140px; }
@@ -994,6 +1237,49 @@
             .checkbox { width: 18px; height: 18px; }
             .dailies-section h3 { font-size: 16px; }
             .goal-text-display { font-size: 16px; }
+            .goal-text { font-size: 1.3em;  }
+            .add-goal-btn, .export-btn { 
+                white-space: nowrap; 
+                padding: 8px 16px;
+                font-size: 16px;
+                min-height: 40px;
+            }
+            .goal-summary { padding: 8px; gap: 8px; }
+            .hour-entry { padding: 8px 12px; }
+            .setting-group { margin-bottom: 16px; }
+            .checkbox-label { padding: 8px 12px; }
+            
+            /* Modal adjustments for mobile */
+            .modal {
+                width: 95% !important;
+                max-width: 95% !important;
+                padding: 6px !important;
+            }
+            
+            .operator-value-group {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 6px;
+            }
+            
+            .goal-action-btn,
+            .goal-operator-btn,
+            .goal-toggle {
+                min-width: 80px;
+                font-size: 0.9rem;
+                min-height: 36px;
+                padding: 8px 12px;
+            }
+            
+            .goal-value-input {
+                width: 50px;
+                min-height: 36px;
+                font-size: 0.9rem;
+            }
+            
+            .goal-times-text {
+                font-size: 0.9rem;
+            }
         }
         
         @media (max-width: 375px) {
@@ -1005,6 +1291,31 @@
             .btn { font-size: 1.2em !important; }
             .btn-label { font-size: 0.55em; }
             .settings-container, .daily-container { padding: 8px 12px; }
+            
+            /* Apply same daily view fixes for smaller screens */
+            .main-container:has(.daily-container) {
+                overflow: hidden;
+            }
+            
+            .daily-container {
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .dailies-section {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                min-height: 0;
+            }
+            
+            .bubbles-container {
+                height: 200px; /* Smaller height for very small screens */
+                flex-shrink: 0;
+            }
+            
             .scroll-container { padding: 8px 0; margin: 0 12px; }
             .hour-time { font-size: 18px; width: 24px; }
             .hour-emojis { grid-template-columns: repeat(2, 24px); max-width: 50px; min-width: 50px; }
@@ -1013,6 +1324,49 @@
             .emoji-picker { grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px; }
             .emoji-btn { padding: 4px; font-size: 24px; }
             .date-input, .secondary-btn { font-size: 18px; }
+            .add-goal-btn, .export-btn { 
+                white-space: nowrap; 
+                padding: 6px 12px;
+                font-size: 14px;
+                min-height: 36px;
+            }
+            .goal-summary { padding: 6px; gap: 6px; }
+            .hour-entry { padding: 6px 10px; }
+            .setting-group { margin-bottom: 12px; }
+            .checkbox-label { padding: 6px 10px; }
+            
+            /* Modal adjustments for small mobile */
+            .modal {
+                width: 98% !important;
+                max-width: 98% !important;
+                padding: 4px !important;
+            }
+            
+            .operator-value-group {
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 4px;
+            }
+            
+            .goal-action-btn,
+            .goal-operator-btn,
+            .goal-toggle {
+                min-width: 70px;
+                font-size: 0.8rem;
+                padding: 8px 10px;
+                min-height: 32px;
+            }
+            
+            .goal-value-input {
+                width: 45px;
+                min-height: 32px;
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+            
+            .goal-times-text {
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -1053,6 +1407,9 @@
                 ];
                 this.emojiDescriptions = ''; // Store the full emoji input text
                 this.showGoalsInTimeline = false;
+                this.emojiMergeMode = 'none'; // 'none', 'touch', 'all'
+                this.bubbleSizeModifier = 1.0; // Global size scaling factor
+                this.overlapFrameCount = 0; // Track consecutive frames with overlaps
                 
                 this.currentDate = new Date();
                 this.editingHour = null;
@@ -1060,6 +1417,7 @@
                 this.view = 'timeline';
                 this.undoStack = [];
                 this.clipboardEntry = null;
+                this.wipeConfirmationStep = 0; // Track multi-step wipe confirmation (0-3)
                 this.timelineScrollPosition = 0;
                 this.hoveredHour = null; // Track which hour entry is currently being hovered
                 this.editStartState = null; // Store entries state when editing starts
@@ -1084,21 +1442,9 @@
                             emojis: data.emojis || this.emojis,
                             emojiDescriptions: data.emojiDescriptions || '',
                             startHour: data.startHour ?? this.startHour,
-                            showGoalsInTimeline: data.showGoalsInTimeline ?? false
+                            showGoalsInTimeline: data.showGoalsInTimeline ?? false,
+                            emojiMergeMode: data.emojiMergeMode || 'none'
                         });
-                        
-                        // For existing users who have data but no emoji descriptions yet,
-                        // only set defaults if they're still using the old default emoji set
-                        const oldDefaultEmojis = ['☕', '📖', '😴', '🎮', '🍕', '💊', '🌿', '🔴', '🟩', '📷'];
-                        if (!this.emojiDescriptions && 
-                            JSON.stringify(this.emojis) === JSON.stringify(oldDefaultEmojis)) {
-                            
-                            // Extract emojis from the descriptions and update the emoji array
-                            const extractedEmojis = this.extractEmojis(this.emojiDescriptions);
-                            if (extractedEmojis.length > 0) {
-                                this.emojis = extractedEmojis;
-                            }
-                        }
                     } catch (e) {
                         console.warn("Failed to load saved data", e);
                     }
@@ -1205,7 +1551,8 @@ Extras
                     emojis: this.emojis,
                     emojiDescriptions: this.emojiDescriptions,
                     startHour: this.startHour,
-                    showGoalsInTimeline: this.showGoalsInTimeline
+                    showGoalsInTimeline: this.showGoalsInTimeline,
+                    emojiMergeMode: this.emojiMergeMode
                 }));
             }
 
@@ -1267,6 +1614,292 @@ Extras
                 }
                 
                 return combinedEntries;
+            }
+
+            getTotalEmojiCount() {
+                return Object.values(this.entries).reduce((total, entry) => {
+                    return total + (entry.emojis ? entry.emojis.length : 0);
+                }, 0);
+            }
+
+            cycleMergeMode() {
+                const modes = ['none', 'touch', 'all'];
+                const currentIndex = modes.indexOf(this.emojiMergeMode);
+                const nextIndex = (currentIndex + 1) % modes.length;
+                const oldMode = this.emojiMergeMode;
+                this.emojiMergeMode = modes[nextIndex];
+                this.saveData();
+                
+                // Update button text without full redraw
+                const mergeButton = document.querySelector('button[onclick*="cycleMergeMode"]');
+                if (mergeButton) {
+                    mergeButton.textContent = this.getMergeModeLabel();
+                }
+                
+                // Handle mode-specific transitions
+                if (this.emojiMergeMode === 'all' && oldMode !== 'all') {
+                    // Switching to 'all' mode - needs immediate merge
+                    this.render();
+                } else if (this.emojiMergeMode === 'none' && oldMode === 'all') {
+                    // Switching from 'all' to 'none' - split merged bubbles without redraw
+                    this.splitMergedBubbles();
+                }
+            }
+
+            splitMergedBubbles() {
+                const container = document.querySelector('.bubbles-container');
+                if (!container) return;
+                
+                const bubbles = container.querySelectorAll('.bubble');
+                const newBubbles = [];
+                
+                bubbles.forEach(bubble => {
+                    const count = parseInt(bubble.dataset.count || '1');
+                    if (count > 1) {
+                        // This is a merged bubble - split it
+                        const emoji = bubble.dataset.emoji;
+                        const currentSize = parseFloat(bubble.style.width);
+                        const currentX = parseFloat(bubble.style.left);
+                        const currentY = parseFloat(bubble.style.top);
+                        
+                        // Calculate individual bubble size (reverse of merge calculation)
+                        const totalArea = Math.PI * Math.pow(currentSize / 2, 2);
+                        const individualArea = totalArea / count;
+                        const individualSize = Math.sqrt(individualArea / Math.PI) * 2;
+                        
+                        // Remove the merged bubble
+                        bubble.remove();
+                        
+                        // Create individual bubbles
+                        for (let i = 0; i < count; i++) {
+                            // Position them in a small cluster around the original position
+                            const angle = (i / count) * Math.PI * 2;
+                            const radius = currentSize * 0.3; // Small spread
+                            const offsetX = Math.cos(angle) * radius * (i > 0 ? 1 : 0); // First bubble stays in center
+                            const offsetY = Math.sin(angle) * radius * (i > 0 ? 1 : 0);
+                            
+                            const newBubble = document.createElement('div');
+                            newBubble.className = 'bubble';
+                            newBubble.dataset.emoji = emoji;
+                            newBubble.dataset.count = '1';
+                            newBubble.style.left = `${Math.max(0, Math.min(currentX + offsetX / container.offsetWidth * 100, 100 - individualSize / container.offsetWidth * 100))}%`;
+                            newBubble.style.top = `${Math.max(0, Math.min(currentY + offsetY / container.offsetHeight * 100, 100 - individualSize / container.offsetHeight * 100))}%`;
+                            newBubble.style.width = `${individualSize}px`;
+                            newBubble.style.height = `${individualSize}px`;
+                            newBubble.style.fontSize = `${individualSize * 0.85}px`;
+                            newBubble.style.position = 'absolute';
+                            newBubble.style.borderRadius = '50%';
+                            newBubble.style.display = 'flex';
+                            newBubble.style.alignItems = 'center';
+                            newBubble.style.justifyContent = 'center';
+                            newBubble.style.backgroundColor = 'var(--color-bg-dark)';
+                            newBubble.style.lineHeight = '1';
+                            newBubble.style.transition = 'none';
+                            newBubble.innerHTML = emoji;
+                            
+                            container.appendChild(newBubble);
+                            newBubbles.push(newBubble);
+                        }
+                    }
+                });
+                
+                // Restart animation with new bubbles if there were any splits
+                if (newBubbles.length > 0) {
+                    setTimeout(() => this.startBubbleAnimation(), 50);
+                }
+            }
+
+            getMergeModeLabel() {
+                // COMMENTED OUT: Auto-merge lock logic
+                // const isLocked = this.isAutoMergeActive();
+                // const lockIcon = isLocked ? '🔒 ' : '';
+                const lockIcon = ''; // No lock icon for testing
+                
+                switch (this.emojiMergeMode) {
+                    case 'none': return `${lockIcon}⚫ no merge`;
+                    case 'touch': return `${lockIcon}🤝 merge on touch`;
+                    case 'all': return `${lockIcon}🟡 merge all`;
+                    default: return `${lockIcon}⚫ no merge`;
+                }
+            }
+
+            processBubblesForMerging() {
+                const bubbles = [];
+                
+                // Collect all emojis with their hour and index
+                Object.entries(this.entries).forEach(([hour, entry]) => {
+                    if (entry.emojis && entry.emojis.length > 0) {
+                        entry.emojis.forEach((emoji, index) => {
+                            bubbles.push({
+                                emoji,
+                                hour: parseInt(hour),
+                                originalIndex: index,
+                                id: `${hour}-${index}`
+                            });
+                        });
+                    }
+                });
+
+                if (this.emojiMergeMode === 'all') {
+                    // Group by emoji type and calculate merged bubble sizes
+                    const emojiGroups = {};
+                    bubbles.forEach(bubble => {
+                        if (!emojiGroups[bubble.emoji]) {
+                            emojiGroups[bubble.emoji] = [];
+                        }
+                        emojiGroups[bubble.emoji].push(bubble);
+                    });
+
+                    const mergedBubbles = [];
+                    Object.entries(emojiGroups).forEach(([emoji, group]) => {
+                        // Calculate total area: area of each bubble is π * (size/2)²
+                        // For individual bubbles, we need to determine their size first
+                        let totalArea = 0;
+                        const uniqueEmojisInHour = new Set();
+                        
+                        // Calculate area based on original sizing rules
+                        group.forEach(bubble => {
+                            const hourEmojis = this.entries[bubble.hour].emojis || [];
+                            const uniqueCount = new Set(hourEmojis).size;
+                            let individualSize;
+                            if (uniqueCount === 1) {
+                                individualSize = 70;
+                            } else if (uniqueCount === 2) {
+                                individualSize = 50;
+                            } else {
+                                individualSize = 40;
+                            }
+                            // Area = π * r² = π * (size/2)²
+                            const area = Math.PI * Math.pow(individualSize / 2, 2);
+                            totalArea += area;
+                        });
+
+                        // Calculate new radius from total area: r = sqrt(totalArea / π)
+                        const newRadius = Math.sqrt(totalArea / Math.PI);
+                        const newSize = newRadius * 2;
+
+                        mergedBubbles.push({
+                            emoji,
+                            count: group.length,
+                            size: Math.min(Math.max(newSize, 30), 150), // Clamp size between 30-150px
+                            id: `merged-${emoji}`,
+                            x: Math.random() * 90 + 5,
+                            y: Math.random() * 90 + 5
+                        });
+                    });
+
+                    // Calculate total bubble area and apply scaling for fill percentage
+                    const totalBubbleArea = mergedBubbles.reduce((total, bubble) => {
+                        const radius = bubble.size / 2;
+                        return total + (Math.PI * radius * radius);
+                    }, 0);
+                    
+                    // Mobile-specific fill percentage vs desktop
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    let estimatedContainerArea, targetFillPercent;
+                    
+                    if (isMobile) {
+                        // Mobile container is 50% of viewport height, typically around 300-400px wide
+                        const mobileHeight = window.innerHeight * 0.5;
+                        const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
+                        estimatedContainerArea = mobileHeight * mobileWidth;
+                        targetFillPercent = 35; // Reduced from 55% to fit properly on mobile
+                    } else {
+                        // Desktop: 350px x 350px container
+                        estimatedContainerArea = 350 * 350;
+                    }
+                    
+                    const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
+                    
+                    let scaleFactor = 1;
+                    if (isMobile) {
+                        // Target specific fill percentage on mobile
+                        if (mergedBubbles.length > 0) {
+                            scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
+                        }
+                    } else {
+                        // Desktop: keep fill between 30% and 60%
+                        if (currentFillPercent > 60) {
+                            scaleFactor = Math.sqrt(60 / currentFillPercent);
+                        } else if (currentFillPercent < 30 && mergedBubbles.length > 0) {
+                            scaleFactor = Math.sqrt(30 / currentFillPercent);
+                        }
+                    }
+                    
+                    // Apply scaling to all bubbles
+                    const scaledMergedBubbles = mergedBubbles.map(bubble => ({
+                        ...bubble,
+                        size: Math.max(bubble.size * scaleFactor, 20) // Minimum size of 20px
+                    }));
+
+                    return scaledMergedBubbles;
+                } else {
+                    // For 'none' and 'touch' modes, return individual bubbles with original sizing
+                    const individualBubbles = bubbles.map(bubble => {
+                        const hourEmojis = this.entries[bubble.hour].emojis || [];
+                        const uniqueCount = new Set(hourEmojis).size;
+                        let size;
+                        if (uniqueCount === 1) {
+                            size = 70;
+                        } else if (uniqueCount === 2) {
+                            size = 50;
+                        } else {
+                            size = 40;
+                        }
+
+                        return {
+                            ...bubble,
+                            size,
+                            count: 1,
+                            x: Math.random() * 90 + 5,
+                            y: Math.random() * 90 + 5
+                        };
+                    });
+
+                    // Calculate total bubble area and apply scaling for fill percentage
+                    const totalBubbleArea = individualBubbles.reduce((total, bubble) => {
+                        const radius = bubble.size / 2;
+                        return total + (Math.PI * radius * radius);
+                    }, 0);
+                    
+                    // Mobile-specific fill percentage vs desktop
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    let estimatedContainerArea, targetFillPercent;
+                    
+                    if (isMobile) {
+                        // Mobile container is 50% of viewport height, typically around 300-400px wide
+                        const mobileHeight = window.innerHeight * 0.5;
+                        const mobileWidth = Math.min(window.innerWidth * 0.76, 400); // Account for 12% side padding
+                        estimatedContainerArea = mobileHeight * mobileWidth;
+                        targetFillPercent = 35; // Reduced from 55% to fit properly on mobile
+                    } else {
+                        // Desktop: 350px x 350px container
+                        estimatedContainerArea = 350 * 350;
+                    }
+                    
+                    const currentFillPercent = (totalBubbleArea / estimatedContainerArea) * 100;
+                    
+                    let scaleFactor = 1;
+                    if (isMobile) {
+                        // Target specific fill percentage on mobile
+                        if (individualBubbles.length > 0) {
+                            scaleFactor = Math.sqrt(targetFillPercent / currentFillPercent);
+                        }
+                    } else {
+                        // Desktop: keep fill between 30% and 60%
+                        if (currentFillPercent > 60) {
+                            scaleFactor = Math.sqrt(60 / currentFillPercent);
+                        } else if (currentFillPercent < 30 && individualBubbles.length > 0) {
+                            scaleFactor = Math.sqrt(30 / currentFillPercent);
+                        }
+                    }
+                    
+                    // Apply scaling to all bubbles
+                    return individualBubbles.map(bubble => ({
+                        ...bubble,
+                        size: Math.max(bubble.size * scaleFactor, 20) // Minimum size of 20px
+                    }));
+                }
             }
             
             get hours() { return Array.from({length: 24}, (_, i) => (this.startHour + i) % 24); }
@@ -1379,6 +2012,18 @@ Extras
 
             // === EVENTS ===
             setupEvents() {
+                // Initialize swipe state with responsive thresholds
+                this.swipeState = {
+                    startX: 0,
+                    startY: 0,
+                    startTime: 0,
+                    isDragging: false,
+                    minSwipeDistance: Math.min(80, window.innerWidth * 0.2), // 20% of screen width, max 80px
+                    maxVerticalDistance: 150, // Allow more vertical movement for scrolling
+                    maxSwipeTime: 600, // Slightly longer time allowance for swipes
+                    minHorizontalThreshold: 15 // Minimum horizontal movement to start tracking
+                };
+
                 // Global keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
                     // Don't trigger shortcuts when typing in input fields
@@ -1440,10 +2085,130 @@ Extras
                 });
             }
 
+            // === SWIPE DETECTION ===
+            setupSwipeEvents(container) {
+                if (!container) return;
+
+                let swipeIndicator = null;
+
+                const showSwipeIndicator = (direction) => {
+                    // Remove existing indicator
+                    if (swipeIndicator) {
+                        swipeIndicator.remove();
+                    }
+                    
+                    // Create new indicator
+                    swipeIndicator = document.createElement('div');
+                    swipeIndicator.className = `swipe-indicator ${direction}`;
+                    swipeIndicator.innerHTML = direction === 'left' ? '→' : '←';
+                    document.body.appendChild(swipeIndicator);
+                    
+                    // Auto-remove after animation
+                    setTimeout(() => {
+                        if (swipeIndicator) {
+                            swipeIndicator.remove();
+                            swipeIndicator = null;
+                        }
+                    }, 300);
+                };
+
+                const handleTouchStart = (e) => {
+                    // Don't interfere with editing or form inputs
+                    if (this.editingHour !== null || e.target.matches('input, textarea, button')) {
+                        return;
+                    }
+
+                    // Disable day swiping if touch is within the bubbles container
+                    const bubblesContainer = document.querySelector('.bubbles-container');
+                    if (bubblesContainer && bubblesContainer.contains(e.target)) {
+                        return; // Exit early to prevent swipe handling
+                    }
+
+                    const touch = e.touches[0];
+                    this.swipeState.startX = touch.clientX;
+                    this.swipeState.startY = touch.clientY;
+                    this.swipeState.startTime = Date.now();
+                    this.swipeState.isDragging = false;
+                };
+
+                const handleTouchMove = (e) => {
+                    if (this.editingHour !== null || !e.touches[0]) return;
+
+                    // Don't process swipe moves if touch started in bubbles container
+                    const bubblesContainer = document.querySelector('.bubbles-container');
+                    if (bubblesContainer && bubblesContainer.contains(e.target)) {
+                        return;
+                    }
+
+                    const touch = e.touches[0];
+                    const deltaX = Math.abs(touch.clientX - this.swipeState.startX);
+                    const deltaY = Math.abs(touch.clientY - this.swipeState.startY);
+
+                    // Start tracking as potential swipe if horizontal movement exceeds threshold
+                    if (!this.swipeState.isDragging && deltaX > this.swipeState.minHorizontalThreshold) {
+                        // Only start dragging if horizontal movement is significantly greater than vertical
+                        if (deltaX > deltaY * 1.5) {
+                            this.swipeState.isDragging = true;
+                        }
+                    }
+
+                    // Prevent vertical scrolling if we're in a horizontal swipe
+                    if (this.swipeState.isDragging) {
+                        e.preventDefault();
+                    }
+                };
+
+                const handleTouchEnd = (e) => {
+                    if (this.editingHour !== null) {
+                        this.swipeState.isDragging = false;
+                        return;
+                    }
+
+                    // Don't process swipe end if touch is within bubbles container
+                    const bubblesContainer = document.querySelector('.bubbles-container');
+                    if (bubblesContainer && bubblesContainer.contains(e.target)) {
+                        this.swipeState.isDragging = false;
+                        return;
+                    }
+
+                    const touch = e.changedTouches[0];
+                    const deltaX = touch.clientX - this.swipeState.startX;
+                    const deltaY = Math.abs(touch.clientY - this.swipeState.startY);
+                    const deltaTime = Date.now() - this.swipeState.startTime;
+
+                    // Check if this qualifies as a horizontal swipe
+                    const isHorizontalSwipe = 
+                        Math.abs(deltaX) >= this.swipeState.minSwipeDistance &&
+                        deltaY <= this.swipeState.maxVerticalDistance &&
+                        deltaTime <= this.swipeState.maxSwipeTime &&
+                        this.swipeState.isDragging;
+
+                    if (isHorizontalSwipe) {
+                        // Determine direction: negative deltaX = swipe left (next day), positive = swipe right (previous day)
+                        const direction = deltaX < 0 ? 1 : -1;
+                        const swipeDirection = deltaX < 0 ? 'left' : 'right';
+                        
+                        // Show visual feedback
+                        showSwipeIndicator(swipeDirection);
+                        
+                        // Navigate after brief delay for visual feedback
+                        setTimeout(() => this.navigateDay(direction), 100);
+                    }
+
+                    this.swipeState.isDragging = false;
+                };
+
+                // Add touch event listeners
+                container.addEventListener('touchstart', handleTouchStart, { passive: true });
+                container.addEventListener('touchmove', handleTouchMove, { passive: false });
+                container.addEventListener('touchend', handleTouchEnd, { passive: true });
+            }
+
             // === NAVIGATION ===
             navigateDay(direction) {
                 this.finishEditing();
                 this.currentDate.setDate(this.currentDate.getDate() + direction);
+                this.updateHeaderTitle();
                 this.render();
             }
 
@@ -1472,7 +2237,14 @@ Extras
                 if (!floatingNavDate) return;
 
                 if (this.view === 'timeline') {
-                    floatingNavDate.textContent = "hourlies";
+                    // Always show date if not today, otherwise show "hourlies"
+                    if (!this.isCurrentDate()) {
+                        floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                        floatingNavDate.onclick = () => app.jumpToToday();
+                    } else {
+                        floatingNavDate.textContent = "hourlies";
+                        floatingNavDate.onclick = () => app.setView('timeline');
+                    }
                     floatingNavDate.classList.add('btn-active');
                 } else {
                     floatingNavDate.textContent = "← " + this.formatNavbarDate(this.currentDate).toLowerCase();
@@ -1488,12 +2260,18 @@ Extras
                 
                 if (floatingNavDate) {
                     if (this.view === 'timeline') {
-                        if (scrolled) {
+                        if (!this.isCurrentDate()) {
+                            // Always show date if not today, regardless of scroll
+                            floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
+                            floatingNavDate.onclick = () => app.jumpToToday();
+                        } else if (scrolled) {
+                            // Show date when scrolled and on today
                             floatingNavDate.textContent = this.formatNavbarDate(this.currentDate).toLowerCase();
                             floatingNavDate.onclick = () => {
                                 document.getElementById('mainContainer').scrollTo({ top: 0, behavior: 'smooth' });
                             };
                         } else {
+                            // Show "hourlies" when not scrolled and on today
                             floatingNavDate.textContent = "hourlies";
                             floatingNavDate.onclick = () => app.setView('timeline');
                         }
@@ -1521,7 +2299,7 @@ Extras
 
                     if (!isNaN(inputDate.getTime()) && day > 0 && day <= 31 && month >= 0 && month < 12) {
                         this.currentDate = new Date(year, month, day);
-                        this.currentTime = new Date(year, month, day, 12, 0, 0);
+                        // Don't modify currentTime - it should always be the actual current time
                         event.target.value = this.formatDateInput();
                         this.render();
                         return true;
@@ -1589,7 +2367,7 @@ Extras
                             hourElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                         
-                        this.focusTextareaAtEnd(hour, 100);
+                        this.focusTextareaAtEnd(hour, 20);
                     }
                 }, 30);
             }
@@ -1653,7 +2431,7 @@ Extras
                 this.updateEntriesWithoutUndo(newEntries);
                 this.renderHours();
                 this.renderGoals();
-                this.focusTextareaAtEnd(this.editingHour, 50);
+                this.focusTextareaAtEnd(this.editingHour, 20);
             }
 
             handleHourInputKeydown(event, hour) {
@@ -1747,7 +2525,7 @@ Extras
             addGoal() {
                 const newGoal = {
                     id: Date.now(),
-                    emojis: ['📖'],
+                    emojis: [this.emojis[0] || '📖'],
                     operator: 'more_than',
                     value: 1
                 };
@@ -1758,13 +2536,57 @@ Extras
             updateGoal(id, updates) {
                 this.goals = this.goals.map(goal => goal.id === id ? { ...goal, ...updates } : goal);
                 this.saveData();
-                this.renderSettings();
+                
+                // If we're editing this goal in a modal, update the modal content instead of full re-render
+                if (this.editingGoal === id) {
+                    this.updateGoalModal();
+                } else {
+                    this.renderSettings();
+                }
             }
 
             removeGoal(id) {
                 this.goals = this.goals.filter(goal => goal.id !== id);
                 this.saveData();
                 this.renderSettings();
+            }
+            
+            updateGoalModal() {
+                // Update only the modal content without re-rendering the entire settings view
+                const modalContent = document.querySelector('.modal .goal-editor-section');
+                if (modalContent && this.editingGoal !== null) {
+                    const goal = this.goals.find(g => g.id === this.editingGoal);
+                    if (goal) {
+                        const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
+                        
+                        // Update emoji selection
+                        const emojiButtons = modalContent.querySelectorAll('.goal-emoji-btn');
+                        emojiButtons.forEach(btn => {
+                            const emoji = btn.textContent.trim();
+                            if (selectedEmojis.includes(emoji)) {
+                                btn.classList.add('selected');
+                            } else {
+                                btn.classList.remove('selected');
+                            }
+                        });
+                        
+                        // Update toggle buttons
+                        const negationBtn = modalContent.querySelector('.goal-action-btn');
+                        if (negationBtn) negationBtn.textContent = goal.not ? 'is not' : 'is';
+                        
+                        const operatorBtn = modalContent.querySelector('.goal-operator-btn');
+                        if (operatorBtn) operatorBtn.textContent = goal.operator.replace('_', ' ');
+                        
+                        const valueInput = modalContent.querySelector('.goal-value-input');
+                        if (valueInput) valueInput.value = goal.value;
+                        
+                        const timesText = modalContent.querySelector('.goal-times-text');
+                        if (timesText) timesText.textContent = goal.operator.includes('than') ? 'times' : '';
+                    }
+                }
+                
+                // Also update the goal list to reflect changes
+                this.renderGoalsList();
             }
 
             editGoal(id) {
@@ -1917,6 +2739,25 @@ Extras
                 }
             }
 
+            exportCurrentDayTextWithAnimation() {
+                const copyBtn = document.getElementById('copyDayBtn');
+                const isToday = this.isCurrentDate();
+                const originalLabel = isToday ? '📋 copy today' : '📋 share your day';
+                
+                // First, execute the copy functionality
+                this.exportCurrentDayText();
+                
+                // Then animate and update button
+                copyBtn.classList.add('copy-success');
+                copyBtn.innerHTML = '✅ copied to clipboard';
+                
+                // Reset after 5 seconds
+                setTimeout(() => {
+                    copyBtn.classList.remove('copy-success');
+                    copyBtn.innerHTML = originalLabel;
+                }, 5000);
+            }
+
             groupEntriesByMonth() {
                 const months = {};
                 Object.entries(this.allEntries).forEach(([dateKey, entries]) => {
@@ -1930,13 +2771,13 @@ Extras
 
             exportAllToJSON() {
                 const exportData = {
-                    version: 2,
                     timestamp: new Date().toISOString(),
                     settings: {
                         emojis: this.emojis,
                         emojiDescriptions: this.emojiDescriptions,
                         startHour: this.startHour,
-                        showGoalsInTimeline: this.showGoalsInTimeline
+                        showGoalsInTimeline: this.showGoalsInTimeline,
+                        emojiMergeMode: this.emojiMergeMode
                     },
                     goals: this.goals.map(goal => ({
                         ...goal,
@@ -1964,49 +2805,46 @@ Extras
                         const importData = JSON.parse(e.target.result);
                         console.log('Importing data:', importData);
                         
-                        if (importData.version === 2) {
-                            // Complete export format
-                            if (importData.settings) {
-                                if (Array.isArray(importData.settings.emojis)) {
-                                    this.emojis = [...importData.settings.emojis];
-                                }
-                                if (importData.settings.emojiDescriptions) {
-                                    this.emojiDescriptions = importData.settings.emojiDescriptions;
-                                }
-                                if (typeof importData.settings.startHour === 'number' && 
-                                    importData.settings.startHour >= 0 && 
-                                    importData.settings.startHour < 24) {
-                                    this.startHour = importData.settings.startHour;
-                                }
-                                if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
-                                    this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
-                                }
+                        // Complete export format
+                        if (importData.settings) {
+                            if (Array.isArray(importData.settings.emojis)) {
+                                this.emojis = [...importData.settings.emojis];
                             }
-                            if (Array.isArray(importData.goals)) {
-                                const validOperators = ['more_than', 'less_than', 'before', 'after'];
-                                this.goals = importData.goals.filter(goal => {
-                                    return goal && 
-                                           goal.id && 
-                                           Array.isArray(goal.emojis) && 
-                                           validOperators.includes(goal.operator) && 
-                                           typeof goal.value === 'number';
-                                }).map(goal => ({
-                                    ...goal,
-                                    not: Boolean(goal.not),
-                                    value: Math.max(0, Math.min(23, goal.value))
-                                }));
+                            if (importData.settings.emojiDescriptions) {
+                                this.emojiDescriptions = importData.settings.emojiDescriptions;
                             }
-                            if (importData.entries && typeof importData.entries === 'object') {
-                                // Import all entries
-                                this.allEntries = { ...this.allEntries, ...importData.entries };
+                            if (typeof importData.settings.startHour === 'number' && 
+                                importData.settings.startHour >= 0 && 
+                                importData.settings.startHour < 24) {
+                                this.startHour = importData.settings.startHour;
                             }
-                        } else if (importData.date && importData.entries) {
-                            // Single day export format
-                            this.allEntries[importData.date] = importData.entries;
-                        } else {
-                            throw new Error('Unsupported file format. Please use a file exported from the current version.');
+                            if (typeof importData.settings.showGoalsInTimeline === 'boolean') {
+                                this.showGoalsInTimeline = Boolean(importData.settings.showGoalsInTimeline);
+                            }
+                            if (importData.settings.emojiMergeMode && 
+                                ['none', 'touch', 'all'].includes(importData.settings.emojiMergeMode)) {
+                                this.emojiMergeMode = importData.settings.emojiMergeMode;
+                            }
                         }
-                        
+                        if (Array.isArray(importData.goals)) {
+                            const validOperators = ['more_than', 'less_than', 'before', 'after'];
+                            this.goals = importData.goals.filter(goal => {
+                                return goal && 
+                                        goal.id && 
+                                        Array.isArray(goal.emojis) && 
+                                        validOperators.includes(goal.operator) && 
+                                        typeof goal.value === 'number';
+                            }).map(goal => ({
+                                ...goal,
+                                not: Boolean(goal.not),
+                                value: Math.max(0, Math.min(23, goal.value))
+                            }));
+                        }
+                        if (importData.entries && typeof importData.entries === 'object') {
+                            // Import all entries
+                            this.allEntries = { ...this.allEntries, ...importData.entries };
+                        }
+                                                
                         this.saveData();
                         this.render();
                         alert('Data imported successfully');
@@ -2020,9 +2858,95 @@ Extras
             }
 
             wipeCurrentDayData() {
+                // Save current entries to undo stack before wiping
+                this.undoStack.push({ 
+                    entries: { ...this.entries }, 
+                    timestamp: Date.now(),
+                    date: new Date(this.currentDate)
+                });
+                if (this.undoStack.length > 100) this.undoStack.shift();
+                
+                // Clear the day and update UI
                 this.clearCurrentDayEntries();
+                this.wipeConfirmationStep = 0; // Reset confirmation state
+                this.updateUndoButton();
                 this.render();
                 this.saveData();
+            }
+
+            wipeCurrentDayDataWithAnimation() {
+                const wipeBtn = document.getElementById('wipeDayBtn');
+                const isToday = this.isCurrentDate();
+                const originalLabel = isToday ? '🗑️ wipe today' : '🗑️ wipe current day';
+                
+                // First, execute the wipe functionality (this will clear entries and re-render)
+                this.wipeCurrentDayData();
+                
+                // Get the button reference again after re-render and animate it
+                setTimeout(() => {
+                    const newWipeBtn = document.getElementById('wipeDayBtn');
+                    if (newWipeBtn) {
+                        // Remove any existing confirmation classes and add success animation
+                        newWipeBtn.classList.remove('wipe-confirmation');
+                        newWipeBtn.classList.add('wipe-success');
+                        newWipeBtn.innerHTML = '✅ day cleared';
+                        
+                        // Reset after 3 seconds
+                        setTimeout(() => {
+                            if (newWipeBtn) {
+                                newWipeBtn.classList.remove('wipe-success');
+                                newWipeBtn.innerHTML = originalLabel;
+                            }
+                        }, 3000);
+                    }
+                }, 50);
+            }
+
+            handleWipeConfirmation() {
+                if (this.wipeConfirmationStep >= 1) {
+                    // Second step - actually wipe the data with animation
+                    this.wipeCurrentDayDataWithAnimation();
+                } else {
+                    // First step - advance to confirmation
+                    this.wipeConfirmationStep++;
+                    this.updateWipeButton();
+                }
+            }
+
+            resetWipeConfirmation() {
+                if (this.wipeConfirmationStep > 0) {
+                    this.wipeConfirmationStep = 0;
+                    this.updateWipeButton();
+                }
+            }
+
+            updateWipeButton() {
+                const wipeBtn = document.getElementById('wipeDayBtn');
+                if (!wipeBtn) return;
+
+                const isToday = this.isCurrentDate();
+                const wipeLabel = isToday ? 'wipe today' : 'wipe current day';
+                
+                // Get wipe button text based on confirmation step
+                let wipeButtonText;
+                if (this.wipeConfirmationStep === 0) {
+                    wipeButtonText = `🗑️ ${wipeLabel}`;
+                } else if (this.wipeConfirmationStep === 1) {
+                    const dayText = isToday ? 'today' : 'day';
+                    wipeButtonText = `⚠️ delete all entries of ${dayText}`;
+                } else {
+                    wipeButtonText = '🚨 are you sure?';
+                }
+
+                // Update button text and styling
+                wipeBtn.innerHTML = wipeButtonText;
+                
+                // Update CSS classes
+                if (this.wipeConfirmationStep > 0) {
+                    wipeBtn.classList.add('wipe-confirmation');
+                } else {
+                    wipeBtn.classList.remove('wipe-confirmation');
+                }
             }
 
             startBubbleAnimation() {
@@ -2032,18 +2956,37 @@ Extras
                     this.bubbleAnimationId = null;
                 }
 
+                // Clean up any existing drag event listeners
+                if (this.dragCleanupFunctions) {
+                    this.dragCleanupFunctions.forEach(cleanup => cleanup());
+                    this.dragCleanupFunctions = [];
+                }
+
                 const container = document.querySelector('.bubbles-container');
                 if (!container) return;
                 const bubbles = container.querySelectorAll('.bubble');
                 const containerRect = container.getBoundingClientRect();
                 const bubbleStates = new Map();
                 
+                // Drag state
+                let draggedBubble = null;
+                let dragStartX = 0;
+                let dragStartY = 0;
+                let dragStartTime = 0;
+                let lastDragX = 0;
+                let lastDragY = 0;
+                let dragVelocityX = 0;
+                let dragVelocityY = 0;
+                const maxThrowSpeed = 15;
+                let billiardsMode = false; // (gravity disabled)
+                
                 // Physics constants
-                const centerGravity = 0.015;
+                const centerGravity = 0.02;
                 const friction = 0.995;
-                const restitution = 0.3;
-                const repulsion = 2.0;
-                const maxSpeed = 1;
+                const gravityRestitution = 0.2; 
+                const billiardsRestitution = 0.85;
+                const repulsion = 0.2; // Increased from 0.2 to prevent overlaps
+                const maxSpeed = 10;
                 const minSpeed = 0;
                 const gravityDampening = 0.7;
 
@@ -2092,9 +3035,206 @@ Extras
                 });
                 });
 
+                // Add drag event handlers
+                const handleDragStart = (e, bubble) => {
+                    e.preventDefault();
+                    draggedBubble = bubble;
+                    const rect = container.getBoundingClientRect();
+                    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    dragStartX = lastDragX = clientX - rect.left;
+                    dragStartY = lastDragY = clientY - rect.top;
+                    dragStartTime = performance.now();
+                    dragVelocityX = dragVelocityY = 0;
+                    bubble.style.cursor = 'grabbing';
+                    bubble.style.zIndex = '1000';
+                    
+                    // Store drag path for better velocity calculation
+                    this.dragPath = [{ x: dragStartX, y: dragStartY, time: dragStartTime }];
+                    
+                    // Immediately position bubble under cursor
+                    const state = bubbleStates.get(draggedBubble);
+                    if (state) {
+                        state.x = Math.max(0, Math.min(dragStartX - state.size / 2, containerRect.width - state.size));
+                        state.y = Math.max(0, Math.min(dragStartY - state.size / 2, containerRect.height - state.size));
+                        state.vx = 0;
+                        state.vy = 0;
+                        
+                        // Immediately update visual position
+                        const newX = (state.x / containerRect.width) * 100;
+                        const newY = (state.y / containerRect.height) * 100;
+                        draggedBubble.style.left = `${newX}%`;
+                        draggedBubble.style.top = `${newY}%`;
+                    }
+                };
+
+                const handleDragMove = (e) => {
+                    if (!draggedBubble) return;
+                    e.preventDefault();
+                    
+                    const rect = container.getBoundingClientRect();
+                    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    const currentX = clientX - rect.left;
+                    const currentY = clientY - rect.top;
+                    const currentTime = performance.now();
+                    
+                    // Store drag path point
+                    this.dragPath = this.dragPath || [];
+                    this.dragPath.push({ x: currentX, y: currentY, time: currentTime });
+                    
+                    // Keep only recent path points (last 100ms for smooth velocity calculation)
+                    const cutoffTime = currentTime - 100;
+                    this.dragPath = this.dragPath.filter(point => point.time >= cutoffTime);
+                    
+                    // Calculate velocity from recent path
+                    if (this.dragPath.length >= 2) {
+                        const recent = this.dragPath[this.dragPath.length - 1];
+                        const previous = this.dragPath[Math.max(0, this.dragPath.length - 3)]; // Use point from 2-3 frames ago
+                        const timeDelta = recent.time - previous.time;
+                        
+                        if (timeDelta > 0) {
+                            dragVelocityX = (recent.x - previous.x) / timeDelta * 16; // Scale to ~60fps
+                            dragVelocityY = (recent.y - previous.y) / timeDelta * 16;
+                        }
+                    }
+                    
+                    // Update bubble position immediately for fluid dragging
+                    const state = bubbleStates.get(draggedBubble);
+                    if (state) {
+                        state.x = Math.max(0, Math.min(currentX - state.size / 2, containerRect.width - state.size));
+                        state.y = Math.max(0, Math.min(currentY - state.size / 2, containerRect.height - state.size));
+                        state.vx = 0; // Stop physics velocity while dragging
+                        state.vy = 0;
+                        
+                        // Immediately update visual position for fluid feel
+                        const newX = (state.x / containerRect.width) * 100;
+                        const newY = (state.y / containerRect.height) * 100;
+                        draggedBubble.style.left = `${newX}%`;
+                        draggedBubble.style.top = `${newY}%`;
+                    }
+                    
+                    lastDragX = currentX;
+                    lastDragY = currentY;
+                };
+
+                const handleDragEnd = (e) => {
+                    if (!draggedBubble) return;
+                    
+                    const state = bubbleStates.get(draggedBubble);
+                    if (state) {
+                        // Apply throw velocity with max speed limit as force
+                        const throwSpeed = Math.sqrt(dragVelocityX * dragVelocityX + dragVelocityY * dragVelocityY);
+                        if (throwSpeed > maxThrowSpeed) {
+                            const scale = maxThrowSpeed / throwSpeed;
+                            dragVelocityX *= scale;
+                            dragVelocityY *= scale;
+                        }
+                        
+                        // Apply velocity as force (additive to current velocity for billiards effect)
+                        state.vx += dragVelocityX;
+                        state.vy += dragVelocityY;
+                        
+                        // Cap the final velocity to max speed
+                        const finalSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                        if (finalSpeed > maxSpeed) {
+                            const scale = maxSpeed / finalSpeed;
+                            state.vx *= scale;
+                            state.vy *= scale;
+                        }
+                    }
+                    
+                    // Enable billiards mode - gravity/repulsion stay disabled
+                    billiardsMode = true;
+                    
+                    draggedBubble.style.cursor = 'grab';
+                    draggedBubble.style.zIndex = '';
+                    draggedBubble = null;
+                    this.dragPath = []; // Clear drag path
+                };
+
+                // Add event listeners to bubbles
+                this.dragCleanupFunctions = [];
+                bubbles.forEach(bubble => {
+                    bubble.style.cursor = 'grab';
+                    const mouseDownHandler = (e) => handleDragStart(e, bubble);
+                    const touchStartHandler = (e) => handleDragStart(e, bubble);
+                    
+                    bubble.addEventListener('mousedown', mouseDownHandler);
+                    bubble.addEventListener('touchstart', touchStartHandler, { passive: false });
+                    
+                    // Store cleanup functions
+                    this.dragCleanupFunctions.push(() => {
+                        bubble.removeEventListener('mousedown', mouseDownHandler);
+                        bubble.removeEventListener('touchstart', touchStartHandler);
+                        bubble.style.cursor = '';
+                    });
+                });
+
+                // Add global event listeners for drag move and end
+                document.addEventListener('mousemove', handleDragMove);
+                document.addEventListener('mouseup', handleDragEnd);
+                document.addEventListener('touchmove', handleDragMove, { passive: false });
+                document.addEventListener('touchend', handleDragEnd);
+
+                // Store global cleanup functions
+                this.dragCleanupFunctions.push(() => {
+                    document.removeEventListener('mousemove', handleDragMove);
+                    document.removeEventListener('mouseup', handleDragEnd);
+                    document.removeEventListener('touchmove', handleDragMove);
+                    document.removeEventListener('touchend', handleDragEnd);
+                });
+
+                // Add focus/blur listeners to exit billiards mode
+                const handleFocus = () => {
+                    billiardsMode = false; // Re-enable gravity/repulsion
+                };
+                
+                const handleBlur = () => {
+                    billiardsMode = false; // Re-enable gravity/repulsion
+                };
+
+                // Add click/tap outside container to exit billiards mode
+                const handleOutsideClick = (e) => {
+                    // Check if click is outside the bubbles container
+                    if (!container.contains(e.target) && billiardsMode) {
+                        billiardsMode = false; // Re-enable gravity/repulsion
+                    }
+                };
+
+                const handleOutsideTouch = (e) => {
+                    // Check if touch is outside the bubbles container
+                    if (e.touches.length > 0) {
+                        const touch = e.touches[0];
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (!container.contains(elementUnderTouch) && billiardsMode) {
+                            billiardsMode = false; // Re-enable gravity/repulsion
+                        }
+                    }
+                };
+
+                window.addEventListener('focus', handleFocus);
+                window.addEventListener('blur', handleBlur);
+                document.addEventListener('click', handleOutsideClick);
+                document.addEventListener('touchstart', handleOutsideTouch);
+                
+                // Clean up all event listeners
+                this.dragCleanupFunctions.push(() => {
+                    window.removeEventListener('focus', handleFocus);
+                    window.removeEventListener('blur', handleBlur);
+                    document.removeEventListener('click', handleOutsideClick);
+                    document.removeEventListener('touchstart', handleOutsideTouch);
+                });
+
                 let lastFrame = performance.now();
                 const animate = (currentTime) => {
                     if (!document.querySelector('.bubbles-container')) {
+                        // Clean up drag event listeners when animation stops
+                        if (this.dragCleanupFunctions) {
+                            this.dragCleanupFunctions.forEach(cleanup => cleanup());
+                            this.dragCleanupFunctions = [];
+                        }
+                        
                         cancelAnimationFrame(this.bubbleAnimationId);
                         this.bubbleAnimationId = null;
                         return; // Stop if container is gone
@@ -2105,44 +3245,52 @@ Extras
 
                     // Apply forces and update positions
                     bubbleStates.forEach((state, bubble) => {
-                        // Use mouse position as gravity center when hovering
-                        const bubbleCenterX = state.x + state.size / 2;
-                        const bubbleCenterY = state.y + state.size / 2;
-                        const containerRadius = Math.min(containerRect.width, containerRect.height) / 2;
-                        
-                        // Default to container center if mouse is not over container
-                        const containerCenterX = this.mouseX || containerRect.width / 2;
-                        const containerCenterY = this.mouseY || containerRect.height / 2;
-
-                        // Calculate gravity/repulsion with improved stability
-                        const dx = containerCenterX - bubbleCenterX;
-                        const dy = containerCenterY - bubbleCenterY;
-                        const distToCenter = Math.sqrt(dx * dx + dy * dy);
-                        if (distToCenter > 0) {
-                            // Calculate normalized direction
-                            const dirX = dx / distToCenter;
-                            const dirY = dy / distToCenter;
-                            
-                            // Calculate force strength with smooth falloff
-                            const normalizedDist = Math.min(distToCenter / containerRadius, 1);
-                            let forceStrength;
-                            
-                            // Repel if mouse is over container, attract otherwise
-                            if (this.mouseX != null && this.mouseY != null) {
-                                // Stronger repulsion when closer to mouse
-                                forceStrength = -centerGravity * 15 * (1 - Math.pow(normalizedDist, 0.8));
-                            } else {
-                                // Normal center attraction when no mouse
-                                forceStrength = centerGravity * 0.7 * Math.pow(normalizedDist, 1.2);
-                            }
-                            
-                            // Apply force with dampening based on current velocity
-                            const currentSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
-                            const dampening = Math.max(0, 1 - (currentSpeed / maxSpeed) * gravityDampening);
-                            
-                            state.vx += dirX * forceStrength * dampening;
-                            state.vy += dirY * forceStrength * dampening;
+                        // Skip physics for dragged bubble
+                        if (bubble === draggedBubble) {
+                            return; // Position is already being handled by drag events
                         }
+                        
+                        // Skip gravity/repulsion for ALL bubbles when any bubble is being dragged OR in billiards mode
+                        if (!draggedBubble && !billiardsMode) {
+                            // Use mouse position as gravity center when hovering
+                            const bubbleCenterX = state.x + state.size / 2;
+                            const bubbleCenterY = state.y + state.size / 2;
+                            const containerRadius = Math.min(containerRect.width, containerRect.height) / 2;
+                            
+                            // Default to container center if mouse is not over container
+                            const containerCenterX = this.mouseX || containerRect.width / 2;
+                            const containerCenterY = this.mouseY || containerRect.height / 2;
+
+                            // Calculate gravity/repulsion with improved stability
+                            const dx = containerCenterX - bubbleCenterX;
+                            const dy = containerCenterY - bubbleCenterY;
+                            const distToCenter = Math.sqrt(dx * dx + dy * dy);
+                            if (distToCenter > 0) {
+                                // Calculate normalized direction
+                                const dirX = dx / distToCenter;
+                                const dirY = dy / distToCenter;
+                                
+                                // Calculate force strength with smooth falloff
+                                const normalizedDist = Math.min(distToCenter / containerRadius, 1);
+                                let forceStrength;
+                                
+                                // Repel if mouse is over container, attract otherwise
+                                if (this.mouseX != null && this.mouseY != null) {
+                                    // Stronger repulsion when closer to mouse
+                                    forceStrength = -centerGravity * 15 * (1 - Math.pow(normalizedDist, 0.8));
+                                } else {
+                                    // Normal center attraction when no mouse
+                                    forceStrength = centerGravity * 0.7 * Math.pow(normalizedDist, 1.2);
+                                }
+                                
+                                // Apply force with dampening based on current velocity
+                                const currentSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+                                const dampening = Math.max(0, 1 - (currentSpeed / maxSpeed) * gravityDampening);
+                                
+                                state.vx += dirX * forceStrength * dampening;
+                                state.vy += dirY * forceStrength * dampening;
+                            }
+                        } // End of gravity/repulsion when not dragging
 
                         // Apply friction
                         state.vx *= friction;
@@ -2166,26 +3314,27 @@ Extras
 
                         // Bounce off container bounds (rectangular boundary)
                         const radius = state.size / 2;
+                        const currentRestitution = billiardsMode ? billiardsRestitution : gravityRestitution;
                         
                         // Right wall
                         if (state.x + state.size > containerRect.width) {
                             state.x = containerRect.width - state.size;
-                            state.vx *= -restitution;
+                            state.vx *= -currentRestitution;
                         }
                         // Left wall
                         if (state.x < 0) {
                             state.x = 0;
-                            state.vx *= -restitution;
+                            state.vx *= -currentRestitution;
                         }
                         // Bottom wall
                         if (state.y + state.size > containerRect.height) {
                             state.y = containerRect.height - state.size;
-                            state.vy *= -restitution;
+                            state.vy *= -currentRestitution;
                         }
                         // Top wall
                         if (state.y < 0) {
                             state.y = 0;
-                            state.vy *= -restitution;
+                            state.vy *= -currentRestitution;
                         }
 
                         const newX = (state.x / containerRect.width) * 100;
@@ -2200,10 +3349,15 @@ Extras
 
                     // Handle collisions between bubbles
                     const bubbleArray = Array.from(bubbleStates.entries());
+                    const bubblesToRemove = new Set();
+                    
                     for (let i = 0; i < bubbleArray.length; i++) {
                         const [bubble1, state1] = bubbleArray[i];
+                        if (bubblesToRemove.has(bubble1) || bubble1 === draggedBubble) continue;
+                        
                         for (let j = i + 1; j < bubbleArray.length; j++) {
                             const [bubble2, state2] = bubbleArray[j];
+                            if (bubblesToRemove.has(bubble2) || bubble2 === draggedBubble) continue;
                             
                             // Calculate centers
                             const center1X = state1.x + state1.size / 2;
@@ -2218,7 +3372,47 @@ Extras
                             const minDist = (state1.size + state2.size) / 2;
 
                             if (distance < minDist) {
-                                // Normalize collision vector
+                                // Check for merge in 'touch' mode
+                                if (this.emojiMergeMode === 'touch') {
+                                    const emoji1 = bubble1.dataset.emoji;
+                                    const emoji2 = bubble2.dataset.emoji;
+                                    
+                                    if (emoji1 === emoji2) {
+                                        // Merge bubbles - calculate new size preserving total area
+                                        const area1 = Math.PI * Math.pow(state1.size / 2, 2);
+                                        const area2 = Math.PI * Math.pow(state2.size / 2, 2);
+                                        const totalArea = area1 + area2;
+                                        const newRadius = Math.sqrt(totalArea / Math.PI);
+                                        const newSize = Math.min(Math.max(newRadius * 2, 30), 150);
+                                        
+                                        // Update bubble1 to be the merged bubble
+                                        state1.size = newSize;
+                                        state1.x = (center1X + center2X) / 2 - newSize / 2;
+                                        state1.y = (center1Y + center2Y) / 2 - newSize / 2;
+                                        
+                                        // Average the velocities
+                                        state1.vx = (state1.vx + state2.vx) / 2;
+                                        state1.vy = (state1.vy + state2.vy) / 2;
+                                        
+                                        // Update bubble1 display - no count numbers, just scale size and font
+                                        const currentCount = parseInt(bubble1.dataset.count || '1');
+                                        const bubble2Count = parseInt(bubble2.dataset.count || '1');
+                                        const newCount = currentCount + bubble2Count;
+                                        
+                                        bubble1.style.width = `${newSize}px`;
+                                        bubble1.style.height = `${newSize}px`;
+                                        bubble1.style.fontSize = `${newSize * 0.85}px`;
+                                        bubble1.innerHTML = emoji1;
+                                        bubble1.dataset.count = newCount;
+                                        
+                                        // Remove bubble2
+                                        bubblesToRemove.add(bubble2);
+                                        
+                                        continue;
+                                    }
+                                }
+                                
+                                // Prevent any overlap - immediate and complete separation
                                 const nx = dx / distance;
                                 const ny = dy / distance;
                                 
@@ -2230,12 +3424,15 @@ Extras
                                 if (relativeSpeed > 0) continue;
                                 
                                 const overlap = minDist - distance;
+                                
+                                // Immediately separate bubbles to eliminate all overlap
                                 state1.x -= nx * overlap * 0.5;
                                 state1.y -= ny * overlap * 0.5;
                                 state2.x += nx * overlap * 0.5;
                                 state2.y += ny * overlap * 0.5;
                                 
-                                const repulsionForce = repulsion * Math.min(1.0, overlap / minDist);
+                                // Apply repulsion force to prevent future overlaps
+                                const repulsionForce = repulsion * 1.5; // Stronger force to maintain separation
                                 state1.vx -= nx * repulsionForce;
                                 state1.vy -= ny * repulsionForce;
                                 state2.vx += nx * repulsionForce;
@@ -2243,6 +3440,14 @@ Extras
                             }
                         }
                     }
+                    
+                    // Remove merged bubbles
+                    bubblesToRemove.forEach(bubble => {
+                        bubbleStates.delete(bubble);
+                        if (bubble.parentNode) {
+                            bubble.parentNode.removeChild(bubble);
+                        }
+                    });
 
                     this.bubbleAnimationId = requestAnimationFrame(animate);
                 };
@@ -2341,6 +3546,9 @@ Extras
                 if (this.timelineScrollPosition > 0) {
                     container.scrollTop = this.timelineScrollPosition;
                 }
+
+                // Set up swipe events for the main container
+                this.setupSwipeEvents(container);
 
                 // Custom scrollbar logic
                 const scrollBar = document.getElementById('customScrollBar');
@@ -2466,19 +3674,20 @@ Extras
                         <div class="setting-group">
                             <label class="setting-label">Available Emojis</label>
                             <textarea class="setting-input emoji-input" 
-                                onfocus="this.style.position='fixed'; this.style.top='50%'; this.style.left='50%'; this.style.transform='translate(-50%, -50%)'; this.style.zIndex='1000'; this.style.width='80%'; this.style.maxWidth='80%'; this.style.height='80vh';"
-                                onblur="app.handleEmojiInput(this.value); this.style.position=''; this.style.top=''; this.style.left=''; this.style.transform=''; this.style.zIndex=''; this.style.width=''; this.style.maxWidth=''; this.style.height='';"
+                                onfocus="app.openEmojiModal(this)"
+                                onblur="app.handleEmojiBlur(this)"
                             >${this.emojiDescriptions || this.emojis.join('')}</textarea>
+                            
                         </div>
                         
+                            
                         <div class="setting-group">
-                            <label class="setting-label">Dailies</label>
                             <div id="goalsList"></div>
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px;">
                                 <button class="add-goal-btn" onclick="app.addGoal()">+ Add Daily</button>
-                                <label class="checkbox-label" style="margin-bottom: 0;">
+                                <label class="checkbox-label" style="margin-bottom: 0; background-color: transparent;">
                                     <input type="checkbox" class="checkbox" ${this.showGoalsInTimeline ? 'checked' : ''} onchange="app.showGoalsInTimeline = this.checked; app.saveData()">
-                                    <span>Show dailies in timeline</span>
+                                    <span>Show in timeline</span>
                                 </label>
                             </div>
                         </div>
@@ -2516,7 +3725,45 @@ Extras
                             </div>
                         </div>
                         
-                        ${this.editingGoal !== null ? '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 500;" onclick="app.editingGoal = null; app.renderSettings()"></div>' : ''}
+                        ${this.editingGoal !== null ? `
+                            <div class="modal-overlay" onclick="if(event.target === this) { app.editingGoal = null; app.renderSettings(); }">
+                                <div class="modal" onclick="event.stopPropagation();">
+                                    ${this.goals.filter(g => g.id === this.editingGoal).map(goal => {
+                                        const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
+                                        return `
+                                            <div class="goal-editor-section">
+                                                <div class="goal-emoji-grid">
+                                                    ${this.emojis.map(emoji => `
+                                                        <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
+                                                                onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
+                                                            ${emoji}
+                                                        </button>
+                                                    `).join('')}
+                                                </div>
+                                                <div class="operator-value-group">
+                                                    <button class="goal-action-btn goal-toggle" onclick="app.toggleGoalNegation(${goal.id})">
+                                                        ${goal.not ? 'is not' : 'is'}
+                                                    </button>
+                                                    <button class="goal-operator-btn goal-toggle" onclick="app.cycleOperator(${goal.id})">
+                                                        ${goal.operator.replace('_', ' ')}
+                                                    </button>
+                                                    <input type="number" 
+                                                           class="goal-value-input" 
+                                                           value="${goal.value}" 
+                                                           min="0" 
+                                                           max="23"
+                                                           onclick="event.stopPropagation()"
+                                                           onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
+                                                    <span class="goal-times-text">
+                                                        ${goal.operator.includes('than') ? 'times' : ''}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
 
@@ -2526,47 +3773,14 @@ Extras
             renderGoalsList() {
                 const goalsList = document.getElementById('goalsList');
                 if (!goalsList) return;
-                goalsList.innerHTML = this.goals.map(goal => {
+                goalsList.innerHTML = "<h3>Dailies</h3>" + this.goals.map(goal => {
                     const isEditing = this.editingGoal === goal.id;
-                    const selectedEmojis = Array.isArray(goal.emojis) ? goal.emojis : [goal.emoji];
                     return `
                         <div class="goal-row">
                             <div class="goal-summary ${isEditing ? 'editing' : ''}" onclick="app.editGoal(${goal.id})">
                                <span class="goal-text-display">${this.formatGoalText(goal)}</span>
                                 <button class="remove-goal-btn" onclick="event.stopPropagation(); app.removeGoal(${goal.id})">×</button>
                             </div>
-                            ${isEditing ? `
-                                <div class="goal-editor">
-                                    <div class="goal-editor-section">
-                                        <div class="goal-emoji-grid">
-                                            ${this.emojis.map(emoji => `
-                                                <button class="goal-emoji-btn ${selectedEmojis.includes(emoji) ? 'selected' : ''}"
-                                                        onclick="app.toggleGoalEmoji(${goal.id}, '${emoji}')">
-                                                    ${emoji}
-                                                </button>
-                                            `).join('')}
-                                        </div>
-                                        <div class="operator-value-group">
-                                            <button class="goal-action-btn goal-toggle" onclick="app.toggleGoalNegation(${goal.id})">
-                                                ${goal.not ? 'is not' : 'is'}
-                                            </button>
-                                            <button class="goal-operator-btn goal-toggle" onclick="app.cycleOperator(${goal.id})">
-                                                ${goal.operator.replace('_', ' ')}
-                                            </button>
-                                            <input type="number" 
-                                                   class="goal-value-input" 
-                                                   value="${goal.value}" 
-                                                   min="0" 
-                                                   max="23"
-                                                   onclick="event.stopPropagation()"
-                                                   onblur="app.updateGoal(${goal.id}, { value: parseInt(this.value) || 0 })">
-                                            <span style="color: #e5e7eb; font-size: 1.2rem;">
-                                                ${goal.operator.includes('than') ? 'times' : ''}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
                         </div>
                     `;
                 }).join('');
@@ -2580,6 +3794,91 @@ Extras
                 
                 // Remove duplicates
                 return Array.from(new Set(segments));
+            }
+
+            openEmojiModal(textarea) {
+                // Prevent the blur handler from closing modal immediately
+                textarea._isOpeningModal = true;
+                
+                // Create modal overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay emoji-modal-overlay';
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        this.closeEmojiModal(textarea);
+                    }
+                };
+                
+                // Create modal container
+                const modal = document.createElement('div');
+                modal.className = 'modal emoji-modal';
+                modal.style.width = 'min(90%, 800px)';
+                modal.style.height = '80vh';
+                modal.onclick = (e) => e.stopPropagation();
+                
+                // Create the textarea clone
+                const modalTextarea = document.createElement('textarea');
+                modalTextarea.className = 'setting-input emoji-input';
+                modalTextarea.style.width = '100%';
+                modalTextarea.style.height = 'calc(100% - 20px)';
+                modalTextarea.style.resize = 'none';
+                modalTextarea.style.border = 'none';
+                modalTextarea.style.outline = 'none';
+                modalTextarea.style.fontSize = '1.1em';
+                modalTextarea.style.padding = '20px';
+                modalTextarea.value = textarea.value;
+                
+                // Set up blur handler for the modal textarea
+                modalTextarea.onblur = () => {
+                    setTimeout(() => {
+                        if (!modal.contains(document.activeElement)) {
+                            this.closeEmojiModal(textarea);
+                        }
+                    }, 100);
+                };
+                
+                modal.appendChild(modalTextarea);
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+                
+                // Store reference for cleanup
+                textarea._emojiModalOverlay = overlay;
+                textarea._emojiModalTextarea = modalTextarea;
+                
+                // Focus the modal textarea after a brief delay
+                setTimeout(() => {
+                    modalTextarea.focus();
+                    textarea._isOpeningModal = false;
+                }, 100);
+            }
+            
+            handleEmojiBlur(textarea) {
+                // Don't close if we're in the process of opening the modal
+                if (textarea._isOpeningModal || textarea._emojiModalOverlay) {
+                    return;
+                }
+                // Handle normal blur (save the content)
+                this.handleEmojiInput(textarea.value);
+            }
+            
+            closeEmojiModal(textarea) {
+                const overlay = textarea._emojiModalOverlay;
+                const modalTextarea = textarea._emojiModalTextarea;
+                
+                if (overlay && modalTextarea) {
+                    // Update the original textarea value
+                    textarea.value = modalTextarea.value;
+                    
+                    // Handle the emoji input
+                    this.handleEmojiInput(modalTextarea.value);
+                    
+                    // Remove the modal
+                    document.body.removeChild(overlay);
+                    
+                    // Clean up references
+                    delete textarea._emojiModalOverlay;
+                    delete textarea._emojiModalTextarea;
+                }
             }
 
             handleEmojiInput(value) {
@@ -2627,63 +3926,65 @@ Extras
 
             renderDaily() {
                 const goalChecks = this.checkGoals();
+                const isToday = this.isCurrentDate();
+                const wipeLabel = isToday ? 'clear today' : 'clear day';
+                const copyLabel = isToday ? 'copy today' : 'share this day';
+                
+                // Get wipe button text based on confirmation step (simplified to 2 steps)
+                let wipeButtonText;
+                if (this.wipeConfirmationStep === 0) {
+                    wipeButtonText = `🗑️ ${wipeLabel}`;
+                } else if (this.wipeConfirmationStep === 1) {
+                    const dayText = isToday ? 'today' : 'day';
+                    wipeButtonText = `⚠️ delete all entries of ${dayText}`;
+                } else {
+                    wipeButtonText = '🚨 are you sure?';
+                }
                 
                 document.getElementById('mainContainer').innerHTML = `
-                    <div class="daily-container">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                            <button class="jump-btn" onclick="if(confirm('Clear all data for this day?')) { app.wipeCurrentDayData(); }">🗑️ wipe</button>
-                            <button class="jump-btn" onclick="app.exportCurrentDayText()">📋 copy</button>
+                    <div class="daily-container" onclick="app.resetWipeConfirmation()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 8px;">
+                            <button class="jump-btn ${this.wipeConfirmationStep > 0 ? 'wipe-confirmation' : ''}" id="wipeDayBtn" onclick="event.stopPropagation(); app.handleWipeConfirmation();">${wipeButtonText}</button>
+                            <button class="jump-btn" 
+                                    onclick="event.stopPropagation(); app.cycleMergeMode()" 
+                                    title="Toggle emoji merge mode">${this.getMergeModeLabel()}</button>
+                            <button class="jump-btn" id="copyDayBtn" onclick="app.exportCurrentDayTextWithAnimation()">📋 ${copyLabel}</button>
                         </div>
                         
                         <div class="bubbles-container">
                             ${(() => {
-                                let bubbles = [];
-                                Object.entries(this.entries).forEach(([hour, entry]) => {
-                                    if (entry.emojis && entry.emojis.length > 0) {
-                                        const uniqueEmojis = new Set(entry.emojis);
-                                        entry.emojis.forEach((emoji, index) => {
-                                            let size;
-                                            if (uniqueEmojis.size === 1) {
-                                                size = 70; // Large for single emoji
-                                            } else if (uniqueEmojis.size === 2) {
-                                                size = 50; // Medium for two emojis
-                                            } else {
-                                                size = 40; // Small for three or more
-                                            }
-
-                                            // Generate a unique ID for the bubble
-                                            const bubbleId = `bubble-${hour}-${index}`;
-                                            
-                                            // Generate random position
-                                            const x = Math.random() * 90 + 5; // 5-95%
-                                            const y = Math.random() * 90 + 5; // 5-95%
-                                            
-                                            bubbles.push(`
-                                                <div class="bubble" style="
-                                                    left: ${x}%; 
-                                                    top: ${y}%; 
-                                                    width: ${size}px; 
-                                                    height: ${size}px; 
-                                                    font-size: ${size * 0.85}px;
-                                                    transition: none;
-                                                    border-radius: 50%;
-                                                    display: flex;
-                                                    align-items: center;
-                                                    justify-content: center;
-                                                    background-color: var(--color-bg-dark);
-                                                ">
-                                                    ${emoji}
-                                                </div>
-                                            `);
-                                        });
-                                    }
-                                });
-                                return bubbles.join('');
+                                const processedBubbles = this.processBubblesForMerging();
+                                
+                                return processedBubbles.map(bubble => {
+                                    // Always show just the emoji, no count numbers
+                                    const displayText = bubble.emoji;
+                                    // Scale font size proportionally with bubble size (85% of bubble size)
+                                    const fontSize = bubble.size * 0.85;
+                                    
+                                    return `
+                                        <div class="bubble" data-emoji="${bubble.emoji}" data-id="${bubble.id}" data-count="${bubble.count || 1}" style="
+                                            left: ${bubble.x}%; 
+                                            top: ${bubble.y}%; 
+                                            width: ${bubble.size}px; 
+                                            height: ${bubble.size}px; 
+                                            font-size: ${fontSize}px;
+                                            transition: none;
+                                            border-radius: 50%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            background-color: var(--color-bg-dark);
+                                            line-height: 1;
+                                        ">
+                                            ${displayText}
+                                        </div>
+                                    `;
+                                }).join('');
                             })()}
                         </div>
-                        
+
+                        <h3>Dailies</h3>
                         <div class="dailies-section">
-                            <h3>Dailies</h3>
                             ${goalChecks.map(goal => `
                                 <div class="goal-item ${goal.met ? 'passed' : 'failed'}" style="margin-bottom:8px;">
                                     <span class="goal-text">${this.formatGoalText(goal)}</span>
@@ -2693,6 +3994,10 @@ Extras
                         </div>
                     </div>
                 `;
+                
+                // Set up swipe events for the daily container
+                const dailyContainer = document.querySelector('.daily-container');
+                this.setupSwipeEvents(dailyContainer);
                 
                 this.startBubbleAnimation();
             }
