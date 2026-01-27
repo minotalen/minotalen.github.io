@@ -267,18 +267,30 @@
         
         /* DATE NAVIGATION */
         .date-nav {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
             margin-bottom: 1rem;
             padding-top: 1rem;
+            position: relative;
         }
         
-        .date-nav-left, .date-nav-right {
+        .date-nav-left {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             color: var(--color-text-muted);
+            grid-column: 1;
+            justify-self: start;
+        }
+        
+        .date-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text-muted);
+            grid-column: 3;
+            justify-self: end;
         }
         
         .date-input {
@@ -306,6 +318,12 @@
             cursor: pointer;
             transition: color 0.2s;
             font-size: clamp(0.8rem, 3vw, 1rem);
+            min-width: max-content;
+        }
+        
+        #wipeDayBtn {
+            width: fit-content;
+            flex-shrink: 0;
         }
         
         .jump-btn:hover {
@@ -313,15 +331,54 @@
         }
         
         .jump-btn.wipe-confirmation {
-            background-color: var(--color-accent-red-muted);
-            color: var(--color-text-primary);
-            font-weight: bold;
-            animation: pulse-warning 1s infinite alternate;
+            animation: morph-confirm 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        
-        @keyframes pulse-warning {
+
+.jump-btn.wipe-closing {
+    animation: morph-close 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes morph-confirm {
+    0% { 
+        background-color: transparent;
+        color: var(--color-text-muted);
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    50% {
+        background-color: rgba(211, 57, 57, 0.3);
+        color: var(--color-text-muted);
+    }
+    100% { 
+        background-color: var(--color-accent-red-muted);
+        color: var(--color-text-primary);
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+        font-weight: bold;
+    }
+}
+
+@keyframes morph-close {
+    0% { 
+        background-color: var(--color-accent-red-muted);
+        color: var(--color-text-primary);
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+        font-weight: bold;
+    }
+    50% {
+        background-color: rgba(211, 57, 57, 0.3);
+        color: var(--color-text-muted);
+    }
+    100% { 
+        background-color: transparent;
+        color: var(--color-text-muted);
+        padding-left: 1rem;
+        padding-right: 1rem;
+        font-weight: normal;
             0% { transform: scale(1); opacity: 0.9; }
             100% { transform: scale(1.02); opacity: 1; }
+        }
         }
         
         /* GOALS */

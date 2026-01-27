@@ -680,6 +680,12 @@ Extras
         });
 
         document.addEventListener('click', (e) => {
+            // Reset wipe confirmation if clicking outside the wipe button
+            const wipeBtnBtn = document.getElementById('wipeDayBtn');
+            if (wipeBtnBtn && this.wipeConfirmationStep > 0 && !wipeBtnBtn.contains(e.target)) {
+                this.resetWipeConfirmation();
+            }
+            
             if (this.editingHour === null) return;
             const isInterface = e.target.classList.contains('app-overlay') ||
                                 e.target.classList.contains('hour-input') ||
@@ -1684,14 +1690,24 @@ Extras
             wipeButtonText = '🚨 are you sure?';
         }
 
-        // Update button text and styling
-        wipeBtn.innerHTML = wipeButtonText;
-        
-        // Update CSS classes
+        // Update CSS classes and schedule text change at animation midpoint (200ms)
         if (this.wipeConfirmationStep > 0) {
             wipeBtn.classList.add('wipe-confirmation');
+            wipeBtn.classList.remove('wipe-closing');
+            
+            // Change text midway through the morph animation (at 50% = 200ms for 0.4s animation)
+            setTimeout(() => {
+                wipeBtn.innerHTML = wipeButtonText;
+            }, 200);
         } else {
-            wipeBtn.classList.remove('wipe-confirmation');
+            wipeBtn.classList.add('wipe-closing');
+            
+            // Change text midway through the closing animation
+            setTimeout(() => {
+                wipeBtn.innerHTML = wipeButtonText;
+                wipeBtn.classList.remove('wipe-confirmation');
+                wipeBtn.classList.remove('wipe-closing');
+            }, 200);
         }
     }
 
