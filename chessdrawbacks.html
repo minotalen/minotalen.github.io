@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chess Drawback Cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anaheim:wght@400;700&family=Quintessential&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111;
+      --panel-2: #151515;
+      --text: #f2f2f2;
+      --muted: #a8a8a8;
+      --line: #3a3a3a;
+      --line-strong: #f2f2f2;
+      --focus: #ffffff;
+      --easy: #d7d7d7;
+      --medium: #c2c2c2;
+      --hard: #9e9e9e;
+      --brutal: #ffffff;
+      --shadow: 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Anaheim', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.25;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      padding: 18px 16px;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      min-height: 100vh;
+      background: #0c0c0c;
+    }
+
+    .title {
+      margin: 0;
+      font-family: 'Quintessential', serif;
+      font-size: 2rem;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 6px 0 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: grid;
+      gap: 12px;
+    }
+
+    .control {
+      display: grid;
+      gap: 5px;
+    }
+
+    .control label,
+    .count,
+    .draw-meta,
+    .result-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      letter-spacing: 0.01em;
+    }
+
+    .hidden-print {}
+
+    input[type="search"],
+    input[type="number"],
+    select,
+    button {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 2px;
+      padding: 10px 11px;
+      font: inherit;
+      outline: none;
+    }
+
+    input[type="search"]::-webkit-search-cancel-button { filter: invert(1); }
+
+    button {
+      cursor: pointer;
+      background: var(--panel-2);
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover { background: #1b1b1b; }
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    .card:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 1px var(--focus);
+    }
+
+    .main {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .draw-panel {
+      border: 1px solid var(--line);
+      background: #0d0d0d;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .draw-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .draw-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+
+    .draw-actions > button {
+      width: auto;
+    }
+
+    .set-stepper {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .set-stepper button {
+      width: 28px;
+      padding: 10px 0;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    .set-stepper button:hover { background: #1b1b1b; color: var(--text); }
+
+    .set-stepper-val {
+      width: 36px;
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: center;
+      padding: 10px 0;
+      font: inherit;
+      color: var(--text);
+      display: inline-block;
+      line-height: 1.25;
+    }
+
+    .draw-result {
+      min-height: 80px;
+      border: 1px solid var(--line);
+      background: #0a0a0a;
+      padding: 10px 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .result-placeholder {
+      color: var(--muted);
+      align-self: center;
+    }
+
+    .result-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .result-title {
+      margin: 0;
+      font-family: 'Quintessential', serif;
+      font-weight: 400;
+      font-size: 1.55rem;
+      line-height: 1.05;
+    }
+
+    .difficulty {
+      white-space: nowrap;
+      color: var(--text);
+      font-size: 0.83rem;
+    }
+
+    .result-text {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #efefef;
+    }
+
+    .result-set {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px;
+    }
+
+    .mini-result {
+      border: 1px solid var(--line);
+      padding: 8px;
+      background: #121212;
+      min-height: 96px;
+    }
+
+    .mini-result h3 {
+      margin: 0 0 5px;
+      font-family: 'Quintessential', serif;
+      font-weight: 400;
+      font-size: 1.05rem;
+      line-height: 1.05;
+    }
+
+    .mini-result p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #ededed;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 8px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: #101010;
+      padding: 9px;
+      min-height: 100px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 7px;
+      border-radius: 1px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0;
+      font-family: 'Quintessential', serif;
+      font-weight: 400;
+      font-size: 1.08rem;
+      line-height: 1.02;
+      letter-spacing: 0.01em;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 0.89rem;
+      color: #ededed;
+    }
+
+    .card .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      border-top: none;
+      padding-top: 6px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      padding: 1px 5px;
+      border-radius: 2px;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .tag-tracking {
+      color: #e8c96a;
+      background: #1e1700;
+      border: 1px solid #4a3c10;
+    }
+
+    .tag-complex {
+      color: #c47be8;
+      background: #160020;
+      border: 1px solid #3c1050;
+    }
+
+    .tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .card-marks {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mark {
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    .mark-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .mark-toggle input { width: auto; }
+
+    .card.easy   { border-color: #5c5c5c; background: #111111; }
+    .card.medium { border-color: #6f6f6f; background: #121212; }
+    .card.hard   { border-color: #888888; background: #141414; }
+    .card.brutal { border-color: #a5a5a5; background: #161616; }
+
+    .card.easy   .difficulty { color: #6aaa7c; border-color: inherit; }
+    .card.medium .difficulty { color: #6a8ec0; border-color: inherit; }
+    .card.hard   .difficulty { color: #c09060; border-color: inherit; }
+    .card.brutal .difficulty { color: #c06878; border-color: inherit; }
+
+    .diff-easy   { color: #6aaa7c; }
+    .diff-medium { color: #6a8ec0; }
+    .diff-hard   { color: #c09060; }
+    .diff-brutal { color: #c06878; }
+    .diff-sep    { color: var(--muted); }
+
+    .empty {
+      border: 1px solid var(--line);
+      padding: 20px;
+      color: var(--muted);
+      background: #101010;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .draw-row {
+        grid-template-columns: 1fr;
+      }
+      .draw-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+      /* ── Variable & global resets ─────────────────────────────────────── */
+      :root {
+        --bg: #fff;
+        --text: #000;
+        --muted: #000;
+        --line: #000;
+        --line-strong: #000;
+        --shadow: none;
+      }
+
+      /* Strip decorations from all elements (not pseudo-elements — * won't
+         match ::before / ::after, so crop-mark backgrounds are safe here) */
+      * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        animation: none !important;
+        transition: none !important;
+        border-radius: 0 !important;
+        background-image: none !important;
+        background-color: transparent !important;
+        color: #000 !important;
+      }
+
+      html, body {
+        width: 210mm !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        font-family: 'Anaheim', sans-serif !important;
+        /* Needed for background-color on cards to actually print */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* ── Hide all non-card UI chrome ──────────────────────────────────── */
+      .sidebar,
+      .draw-panel,
+      .topline,
+      .empty,
+      .hidden-print,
+      button,
+      input,
+      select,
+      label {
+        display: none !important;
+      }
+
+      /* ── Strip container layout so the grid sits flush ────────────────── */
+      .app,
+      .main,
+      main,
+      section {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        border: none !important;
+      }
+
+      /* ── Print grid: 4 cols × 6 rows = 24 cards per A4 page ───────────
+         52.5 mm × 4 = 210 mm  (A4 width)
+         49.5 mm × 6 = 297 mm  (A4 height)
+         gap: 0 so adjacent card borders touch — produces a single hairline
+         when both cards have a 0.25 mm border (visually ~0.5 mm combined,
+         still thin enough for a paper trimmer to split cleanly). ───────── */
+      .grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 52.5mm) !important;
+        grid-auto-rows: 49.5mm !important;
+        width: 210mm !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      /* ── Card reset — covers all difficulty variants ─────────────────── */
+      .card,
+      .card.easy,
+      .card.medium,
+      .card.hard,
+      .card.brutal {
+        position: relative !important;
+        width: 52.5mm !important;
+        height: 49.5mm !important;
+        min-height: 0 !important;
+        max-height: 49.5mm !important;
+        margin: 0 !important;
+        padding: 3mm 3mm 2.5mm !important;
+        border: 0.25mm solid #000 !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        display: grid !important;
+        grid-template-rows: auto auto 1fr !important;
+        gap: 1.2mm !important;
+        overflow: hidden !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* ── Cut / crop marks at each corner (L-shape, 3 mm arms) ───────────
+         Drawn as layered solid-color gradients inside the card boundary.
+         The !important ensures these survive the * { background-image: none }
+         rule, which targets elements — pseudo-elements are exempt from *,
+         but being explicit here is safer for browser quirks. ─────────── */
+      .card::before {
+        content: "" !important;
+        display: block !important;
+        position: absolute !important;
+        inset: 0 !important;
+        pointer-events: none !important;
+        /* top-left */
+        background:
+          linear-gradient(#000, #000) left 1.5mm top 1.5mm / 3mm 0.2mm no-repeat,
+          linear-gradient(#000, #000) left 1.5mm top 1.5mm / 0.2mm 3mm no-repeat,
+          /* top-right */
+          linear-gradient(#000, #000) right 1.5mm top 1.5mm / 3mm 0.2mm no-repeat,
+          linear-gradient(#000, #000) right 1.5mm top 1.5mm / 0.2mm 3mm no-repeat,
+          /* bottom-left */
+          linear-gradient(#000, #000) left 1.5mm bottom 1.5mm / 3mm 0.2mm no-repeat,
+          linear-gradient(#000, #000) left 1.5mm bottom 1.5mm / 0.2mm 3mm no-repeat,
+          /* bottom-right */
+          linear-gradient(#000, #000) right 1.5mm bottom 1.5mm / 3mm 0.2mm no-repeat,
+          linear-gradient(#000, #000) right 1.5mm bottom 1.5mm / 0.2mm 3mm no-repeat !important;
+      }
+
+      .card::after {
+        display: none !important;
+      }
+
+      /* ── Card typography ─────────────────────────────────────────────── */
+      .card h2 {
+        margin: 0 !important;
+        font-family: 'Quintessential', serif !important;
+        font-size: 13pt !important;
+        line-height: 1.05 !important;
+        color: #000 !important;
+      }
+
+      .difficulty {
+        display: inline-block !important;
+        width: fit-content !important;
+        margin: 0 !important;
+        padding: 0 0 0.5mm !important;
+        font-size: 8.5pt !important;
+        line-height: 1 !important;
+        color: #000 !important;
+        border: none !important;
+        border-bottom: 0.2mm solid #000 !important;
+        background: transparent !important;
+        white-space: nowrap !important;
+      }
+
+      .card p {
+        margin: 0 !important;
+        font-size: 10pt !important;
+        line-height: 1.2 !important;
+        color: #000 !important;
+        align-self: start !important;
+      }
+
+      /* ── Hide inline badge row (index / difficulty chip at bottom) ────── */
+      .card .meta {
+        display: none !important;
+      }
+
+      .card-marks {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Controls">
+      <h1 class="title">Chess Drawback Cards</h1>
+      <p class="subtitle">Printable drawbacks for board play.</p>
+
+      <div class="controls">
+        <div class="control">
+          <label for="search">Search</label>
+          <input id="search" type="search" placeholder="Title or rule" autocomplete="off" />
+        </div>
+
+        <div class="control">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option value="difficulty-asc" selected>Easy→Brutal</option>
+            <option value="difficulty-desc">Brutal→Easy</option>
+            <option value="title-asc">A→Z</option>
+            <option value="title-desc">Z→A</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="difficultyFilter">Difficulty</label>
+          <select id="difficultyFilter">
+            <option value="All">All</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+            <option value="Brutal">Brutal</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label>Marks</label>
+          <label class="mark-toggle"><input type="checkbox" id="hideTracking"> Hide turn-tracking cards <span class="mark mark-tracking">T</span></label>
+          <label class="mark-toggle"><input type="checkbox" id="hideComplex"> Hide complex-state cards <span class="mark mark-complex">C</span></label>
+        </div>
+
+        <div class="control">
+          <label for="targetValue">Set-draw value</label>
+          <input id="targetValue" type="number" min="1" step="1" value="5" inputmode="numeric" />
+        </div>
+
+        <div class="count" id="countText" aria-live="polite"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="draw-panel" aria-labelledby="drawHeading">        
+        <div class="draw-row">
+          <div class="draw-actions">
+            <button id="drawOneBtn" type="button">Draw one</button>
+            <button id="drawSetBtn" type="button">Draw set</button>
+            <div class="set-stepper">
+              <button type="button" id="targetDec">−</button>
+              <span id="targetDisplay" class="set-stepper-val">5</span>
+              <button type="button" id="targetInc">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="draw-result" id="drawResult" aria-live="polite">
+          <div class="result-placeholder">No draw yet.</div>
+        </div>
+      </section>
+
+      <div class="topline hidden-print">
+        <div class="count" id="countLine"></div>
+      </div>
+
+      <section>
+        <div class="grid" id="cardGrid"></div>
+        <div class="empty" id="emptyState" hidden>No matching cards.</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+const drawbacks = [
+  { title: "Lucky", difficulty: "Easy", text: "No drawback" },
+
+  { title: "Noble Steed", difficulty: "Hard", text: "Your non-knight pieces can only move if they’re adjacent to one of your knights" },
+  { title: "Alternator", difficulty: "Easy", text: "You must alternate pawn moves and non-pawn moves" },
+  { title: "Bottled Lightning", difficulty: "Hard", text: "If you can move your king, you must" },
+  { title: "Boxing with Shadows", difficulty: "Medium", text: "When your opponent moves a piece, if you can move to the square they moved from, you must" },
+  { title: "Cowardly", difficulty: "Hard", text: "When your opponent captures, you must move backward (or lose)" },
+  { title: "Reflective", difficulty: "Hard", text: "You can only move non-pawns to squares whose reflected opposite square is occupied" },
+  { title: "Exclusivity Clause", difficulty: "Hard", text: "You can’t move to squares that more than one of your pieces can move to" },
+  { title: "Friendly Fire", difficulty: "Brutal", text: "Can only move to squares defended by your other pieces" },
+  { title: "Leaps and Bounds", difficulty: "Easy", text: "You can’t move a piece adjacent to where it was" },
+  { title: "Left to Right", difficulty: "Hard", text: "Unless you just moved to the rightmost file, you must move to a file to the right of where you last moved" },
+  { title: "Relay Race", difficulty: "Medium", text: "If you can move a piece that’s adjacent to the destination of your last move, you must" },
+  { title: "Edgelord", difficulty: "Hard", text: "If you have fewer pieces and pawns on the rim than your opponent, you lose" },
+  { title: "Jumpy", difficulty: "Medium", text: "When possible, you must move a piece that is being attacked" },
+  { title: "Two Steps Forward, One Drawback", difficulty: "Easy", text: "If you move forward twice in a row, you must move backward" },
+  { title: "Checkers", difficulty: "Medium", text: "You must capture if able" },
+  { title: "Closed Book", difficulty: "Brutal", text: "You lose if you start your turn while there’s an open file" },
+  { title: "Covering Fire", difficulty: "Hard", text: "You can only capture a piece if you can capture it two different ways" },
+  { title: "Fixation", difficulty: "Medium", text: "You lock into the moved pawn or non-pawn until switching categories" },
+  { title: "Pacman", difficulty: "Hard", text: "If you can capture a pawn, you must" },
+  { title: "Death Wish", difficulty: "Brutal", text: "If you can move your king into check, you must" },
+  { title: "Hedonic Treadmill", difficulty: "Hard", text: "You must move a piece at least as valuable as your opponent’s last moved piece" },
+  { title: "Irresistible", difficulty: "Hard", text: "If you can move a piece adjacent to your opponent’s king that isn’t already, you must" },
+  { title: "Left for Dead", difficulty: "Medium", text: "You can only capture to the left" },
+  { title: "Pack Mentality", difficulty: "Hard", text: "Your pieces must move to squares adjacent to another one of your pieces" },
+  { title: "Boastful", difficulty: "Brutal", text: "You lose if you have fewer pieces than your opponent" },
+  { title: "Eat Your Vegetables", difficulty: "Medium", text: "You can’t capture non-pawns until your opponent only has 4 pawns remaining" },
+  { title: "Eye for an Eye", difficulty: "Hard", text: "If your opponent captures, you must capture on your next move (or lose)" },
+  { title: "Flatterer", difficulty: "Medium", text: "If your opponent moves a pawn, you must move a pawn; if they move a non-pawn, you must move a non-pawn" },
+  { title: "Spice of Life", difficulty: "Medium", text: "You can’t move the same piece type twice in a row" },
+  { title: "Botez Gambit", difficulty: "Brutal", text: "At move 11, you can't have a queen and your opponent must have one", tracking: true },
+  { title: "Cowering in Fear", difficulty: "Hard", text: "You can’t move a piece of less value than one your opponent has taken" },
+  { title: "Messy Divorce", difficulty: "Hard", text: "Your pieces can’t move from the queenside to the kingside or vice versa" },
+  { title: "Simon Says", difficulty: "Medium", text: "You must move onto the same color square as your opponent’s last move" },
+  { title: "True Love", difficulty: "Hard", text: "Your king and queen must stay adjacent when they move" },
+  { title: "Always Check, It Might Be Mate", difficulty: "Brutal", text: "If you are checked, you lose" },
+  { title: "Far Sighted", difficulty: "Hard", text: "Your pieces can’t capture pieces that are adjacent to them" },
+  { title: "Homeland Security", difficulty: "Brutal", text: "If your opponent moves into your 16 starting squares, you lose" },
+  { title: "Leveling Up", difficulty: "Brutal", text: "You can’t capture a piece until you captured its predecessor in the list [pawn, knight, bishop, rook, queen, king]" },
+  { title: "Monkey See", difficulty: "Hard", text: "You can only capture with piece types that your opponent has captured with" },
+  { title: "Peons First", difficulty: "Medium", text: "Can’t move pieces that are one square behind one of your pawns" },
+  { title: "Religious Dispute", difficulty: "Medium", text: "If your opponent moves a bishop, you must move a bishop (or lose)" },
+  { title: "Spread Out", difficulty: "Hard", text: "You can’t move a non-pawn piece adjacent to another one of your non-pawn pieces, and you can’t castle" },
+  { title: "Whites of Their Eyes", difficulty: "Medium", text: "Your capturing move must be of distance 2 or less" },
+  { title: "Barbarian Rage", difficulty: "Hard", text: "If you captured on your last move, you must capture if able" },
+  { title: "Centralized Command", difficulty: "Hard", text: "You can only capture if you moved your king in the last three turns" },
+  { title: "Cheerleaders", difficulty: "Hard", text: "Your non-pawn pieces can only capture if they’re adjacent to one of your pawns" },
+  { title: "Gloomstalker", difficulty: "Hard", text: "You can only capture from dark squares" },
+  { title: "My Kingdom for a Horse", difficulty: "Brutal", text: "If your opponent captures a knight, you lose" },
+  { title: "Savior Complex", difficulty: "Hard", text: "When in check, you must move your queen (or lose)" },
+  { title: "Stand Your Ground", difficulty: "Hard", text: "Your pieces can only capture if they are attacked" },
+  { title: "Turn the Other Cheek", difficulty: "Hard", text: "You cannot recapture" },
+  { title: "Chivalry", difficulty: "Hard", text: "You can only capture their heavies (rooks and queens) with a knight" },
+  { title: "Drag", difficulty: "Brutal", text: "Your queen is a king. It moves like one, and if it’s captured, you lose" },
+  { title: "Guerilla Tactics", difficulty: "Hard", text: "After a capturing move, you must return the capturing piece to its previous location if possible" },
+  { title: "Lethal Attraction", difficulty: "Hard", text: "You can’t make moves that place the moving piece farther away from your opponent’s king than it started" },
+  { title: "Medusa", difficulty: "Hard", text: "Any pieces currently attacked by your opponent’s queen can’t move" },
+  { title: "Scouting Ahead", difficulty: "Hard", text: "As long as you have a pawn, you cannot move non-pawn pieces ahead of your most advanced pawn" },
+  { title: "Social Distance", difficulty: "Medium", text: "You cannot make non-capturing moves to squares adjacent to your opponent’s pieces" },
+  { title: "Bishop Fan Club", difficulty: "Hard", text: "You must promote to bishops. Your king and queen can only move diagonally" },
+  { title: "Control Center", difficulty: "Medium", text: "Your non-capturing moves must be to the four central files" },
+  { title: "Hold them Back", difficulty: "Brutal", text: "You lose if your opponent moves a pawn to your side of the board" },
+  { title: "Indecisive", difficulty: "Hard", text: "Your pieces can’t capture if they could make multiple capturing moves" },
+  { title: "King of the Hill", difficulty: "Hard", text: "Except for the first turn, if you start your turn without a piece in the center 4 squares, you lose" },
+  { title: "Lame Duck", difficulty: "Brutal", text: "You can’t move your king" },
+  { title: "Paranoid", difficulty: "Hard", text: "Your king must always be defended" },
+  { title: "Stop Stalling", difficulty: "Hard", text: "Your pieces can’t move laterally" },
+  { title: "Thunderdome", difficulty: "Hard", text: "The middle 16 squares are the thunderdome. Once one of your pieces enters it, it can't leave unless it's the only piece there", complex: true },
+  { title: "Truant", difficulty: "Medium", text: "You can’t move the same piece twice in a row" },
+  { title: "Abstinence", difficulty: "Brutal", text: "If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose" },
+  { title: "Body Snatcher", difficulty: "Brutal", text: "If your opponent captures a non-pawn piece with a piece of the same type, you lose" },
+  { title: "Bridge Over Troubled Water", difficulty: "Hard", text: "There is a river in the middle of the board. You can’t land on it and you can only pass over it via the bridge in the center two files" },
+  { title: "Hipster", difficulty: "Medium", text: "Can’t move the same piece type as your opponent’s last move" },
+  { title: "Ivory Tower", difficulty: "Brutal", text: "You lose if there’s an opposing piece adjacent to your king" },
+  { title: "Pawn Battle", difficulty: "Brutal", text: "If your opponent ever has more pawns than you, you lose" },
+  { title: "Shellshocked", difficulty: "Hard", text: "Whenever your opponent captures, pieces adjacent to the capture can't move for one turn", complex: true },
+  { title: "Sibling Rivalry", difficulty: "Medium", text: "You cannot move a piece to a square adjacent to an opponent’s piece of the same type" },
+  { title: "The Scent of Blood", difficulty: "Hard", text: "You can’t make a non-capturing move with a piece that can capture" },
+  { title: "Respectful", difficulty: "Hard", text: "You can’t give check" },
+  { title: "Royal Berth", difficulty: "Medium", text: "You can’t make moves that place a piece adjacent to your king" },
+  { title: "Simp", difficulty: "Brutal", text: "Lose if you have no queen" },
+  { title: "Simplifier", difficulty: "Hard", text: "If you can capture a piece with a piece of lesser or equal value, you must" },
+  { title: "Trophy Wife", difficulty: "Hard", text: "Your queen can’t capture" },
+  { title: "Atomic Bomb", difficulty: "Hard", text: "If your opponent captures adjacent to your king, you lose" },
+  { title: "Champing at the Bit", difficulty: "Medium", text: "Your pawn moves must all be distance 2" },
+  { title: "Conscientious Objectors", difficulty: "Medium", text: "Can’t capture with pawns" },
+  { title: "Eisoptrophobia", difficulty: "Hard", text: "You can’t take pieces with pieces of the same type" },
+  { title: "False Prophets", difficulty: "Easy", text: "You can’t capture with bishops" },
+  { title: "No Shuffling", difficulty: "Medium", text: "Your rooks can’t move sideways" },
+  { title: "Noblesse Oblige", difficulty: "Hard", text: "Your king and queen can only capture king and queen" },
+  { title: "Nurturer", difficulty: "Medium", text: "You can’t capture their king until you promoted a pawn" },
+  { title: "Outflanked", difficulty: "Hard", text: "Except for capturing king, you can’t capture on the rim" },
+  { title: "Prince Charming", difficulty: "Easy", text: "If your queen is attacked, you must move a knight if possible" },
+  { title: "Rook Fan Club", difficulty: "Hard", text: "You must promote to rooks. Your king and queen cannot move diagonally" },
+  { title: "Snipers", difficulty: "Hard", text: "Your bishops can only capture from a distance of at least 8 (4 diagonal squares)" },
+  { title: "Stay at Home Mom", difficulty: "Hard", text: "Your queen can only make moves to your two home ranks" },
+  { title: "Diplomatic Immunity", difficulty: "Hard", text: "You can’t capture a piece that just moved unless that move was a capture" },
+  { title: "Doctor Octopus", difficulty: "Hard", text: "You can only capture non-king pieces 8 times", tracking: true },
+
+  { title: "Rook Buddies", difficulty: "Easy", text: "You can’t move your rooks until you connected them" },
+  { title: "Skittish", difficulty: "Medium", text: "While in check, you must move your king" },
+  { title: "Greedy", difficulty: "Hard", text: "You can’t capture a piece if you could have captured a higher-value piece" },
+  { title: "Separation Anxiety", difficulty: "Medium", text: "Your pawns that are adjacent to your king cannot make moves that leave the squares adjacent to him" },
+  { title: "Crossing the Rubicon", difficulty: "Medium", text: "Once one of your pieces crosses onto your opponent’s side of the board, it can’t return back to you" },
+  { title: "Queen Disguise", difficulty: "Hard", text: "Your queen is secretly either a rook or a bishop. Once you move like one, you can’t move it like the other" },
+  { title: "Queen Bee", difficulty: "Hard", text: "Once you capture with a queen, you can no longer move queens" },
+  { title: "Entrenched", difficulty: "Easy", text: "Your rooks can’t move more than 2 squares" },
+  { title: "Cess", difficulty: "Easy", text: "You can’t move to the h file" },
+  { title: "Out of Breath", difficulty: "Hard", text: "You can only move your king once" },
+  { title: "Shadow Queen", difficulty: "Medium", text: "Your queen can only move to dark squares" },
+  { title: "Horse Tranquilizer", difficulty: "Medium", text: "Your knights can’t capture" },
+  { title: "Quit Horsing Around", difficulty: "Easy", text: "If you moved a knight on your last move, you can’t move a knight" },
+  { title: "Royal Jubilee", difficulty: "Medium", text: "Whenever you capture a non-pawn piece, you must move your king or queen on the next move" },
+  { title: "Three Check", difficulty: "Hard", text: "If you are checked three times, you lose", tracking: true },
+  { title: "Number of the Beast", difficulty: "Easy", text: "You can’t move to the sixth rank" },
+  { title: "Prima Donna", difficulty: "Hard", text: "You can’t have more than one pawn on the same file" },
+  { title: "Separation of Church and State", difficulty: "Medium", text: "You can’t move your bishops next to a king and you can’t move your king next to a bishop" },
+  { title: "Escort Mission", difficulty: "Medium", text: "If your king can capture, it must" },
+  { title: "Battle Fatigue", difficulty: "Hard", text: "When one of your pieces captures, it can't capture again until it has made a non-capturing move", complex: true },
+  { title: "Professional Courtesy", difficulty: "Medium", text: "You can’t capture non-pawn pieces with pieces of the same type" },
+  { title: "Sleepy King", difficulty: "Hard", text: "Your king can only move when in check" },
+  { title: "Femme Fatale", difficulty: "Hard", text: "You can only capture their king with a queen" },
+  { title: "Get Down Mr. President", difficulty: "Brutal", text: "You can’t move your king when in check" },
+  { title: "Power Cells", difficulty: "Hard", text: "You can’t move a piece farther than the number of pawns you have" },
+  { title: "Evil Twin", difficulty: "Hard", text: "If you can capture a piece with a piece of the same type, you must" },
+  { title: "Protected Pawns", difficulty: "Medium", text: "Can only move pawns to defended squares" },
+  { title: "Remorseful", difficulty: "Medium", text: "You can’t capture twice in a row" },
+  { title: "Siege", difficulty: "Hard", text: "You must take at least one of your opponent's rooks by move 20 or you lose", tracking: true },
+  { title: "Shapeshifter", difficulty: "Hard", text: "Your queen starts out as a bishop. Whenever you capture a non-pawn piece, your queen becomes a copy of it. If you capture a knight, your queen becomes confused and can’t move" },
+  { title: "Horse Eats First", difficulty: "Hard", text: "As long as you have a knight, you can only capture with knights" },
+  { title: "Punching Down", difficulty: "Hard", text: "Your pieces can’t capture pieces worth more than them" },
+  { title: "Elephants Fear Mice", difficulty: "Hard", text: "Your non-pawn pieces can’t capture pawns" },
+  { title: "Windup Toys", difficulty: "Hard", text: "After the first 12 moves of the game, you can't move your knights and bishops", tracking: true },
+  { title: "You Best Not Miss", difficulty: "Brutal", text: "If you end your turn checking your opponent, you must capture their king on the next move (or lose)" },
+  { title: "Eye of Sauron", difficulty: "Hard", text: "As long as you have a rook, your non-pawn pieces can’t move to a rank more advanced than the farthest square your rooks can see" },
+  { title: "Haunted", difficulty: "Medium", text: "You can't move to a square that you have captured on", complex: true },
+  { title: "Tower Defense", difficulty: "Brutal", text: "You can’t move your rooks. If you lose all your rooks, you lose" },
+  { title: "Bipartisanship", difficulty: "Easy", text: "You cannot move left twice in a row or right twice in a row" },
+  { title: "True Gentleman", difficulty: "Easy", text: "Can’t capture queens" },
+  { title: "Modest", difficulty: "Brutal", text: "You lose if you have more pieces than your opponent" },
+  { title: "Torchlight", difficulty: "Hard", text: "Your non-pawn pieces can only make moves that start or stop adjacent to one of your pawns" },
+  { title: "Vegan", difficulty: "Easy", text: "You can’t capture knights" },
+  { title: "Moving Day", difficulty: "Medium", text: "At the start of move 21 and onwards, your pieces can't be on your home row", tracking: true },
+  { title: "Oddball", difficulty: "Medium", text: "You can only capture on odd-numbered moves", tracking: true },
+  { title: "Even Keeled", difficulty: "Medium", text: "You can only capture on even-numbered moves", tracking: true },
+  { title: "Stir Crazy", difficulty: "Easy", text: "If you haven't moved your king 4 turns in a row, you must move it on the fifth", tracking: true },
+  { title: "Rook on the Seventh", difficulty: "Medium", text: "By move 15, you must move a rook to the seventh rank", tracking: true },
+  { title: "Warlord", difficulty: "Hard", text: "At the start of move 12 and onwards, your king must not be on the first two ranks (or you lose)", tracking: true },
+  { title: "Fischer Random", difficulty: "Hard", text: "On or before move 20, all your remaining non-pawn pieces must be on your home row, on a square they could not have started on", tracking: true },
+  { title: "Superstitious", difficulty: "Medium", text: "You can’t move to a square that your opponent has captured on", complex: true },
+  { title: "Rising Water", difficulty: "Hard", text: "Every 10 turns, the water level rises one rank. You can't move pieces that are underwater and you can't move to squares that are underwater", tracking: true },
+  { title: "Bloodthirsty", difficulty: "Hard", text: "After the first 3 rounds, if you go 2 turns without capturing, you must capture on the third (or lose)", tracking: true },
+  { title: "Scorched Earth", difficulty: "Medium", text: "You can’t move to a square that you’ve moved from", complex: true },
+  { title: "Hopscotch", difficulty: "Medium", text: "You must alternate moving to light and dark squares" },
+  { title: "Inching Forward", difficulty: "Brutal", text: "After move 6, your king must be in front of your home rank. Every six moves after, the rank it must be moves forward by one", tracking: true },
+
+  { title: "Leading the Charge", difficulty: "Hard", text: "As long as you have a knight, you cannot move non-knights ahead of your most advanced knight" },
+  { title: "Absolution", difficulty: "Hard", text: "When one of your non-bishop pieces captures, it must start its turn adjacent to one of your bishops before it can capture again", complex: true },
+  { title: "Quicksand", difficulty: "Hard", text: "The middle two ranks are quicksand. If one of your pieces ends the turn on the same square there twice in a row, it can never move again", complex: true },
+  { title: "Ladies First", difficulty: "Medium", text: "You can only move your king if you moved your queen on the previous move" },
+  { title: "Inside the Lines", difficulty: "Medium", text: "You can’t move onto the rim, but you can make moves that start and stop on the rim" },
+  { title: "Velociraptor", difficulty: "Hard", text: "You can only capture a piece if your opponent has moved a piece of that type in their last three moves", complex: true },
+  { title: "Forward March", difficulty: "Medium", text: "Can’t move backwards" },
+  { title: "Unrequited Love", difficulty: "Hard", text: "Your king can’t move away from your queen, and your queen can’t move toward your king" },
+  { title: "Torpedos", difficulty: "Easy", text: "If you made a non-capturing move with a pawn on your previous turn and you can move it again this turn, you must" }
+];
+
+(function () {
+  const difficultyOrder = { Easy: 1, Medium: 2, Hard: 3, Brutal: 4 };
+  const weightMap = { Easy: 1, Medium: 2, Hard: 3, Brutal: 5 };
+
+  function normalizeTitle(title) {
+    return String(title)
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  function dedupeCards(items) {
+    const seen = new Set();
+    return items.filter((item) => {
+      const key = normalizeTitle(item.title);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).map((item, index) => ({ ...item, originalIndex: index }));
+  }
+
+  const allCards = dedupeCards(drawbacks);
+
+  const els = {
+    search: document.getElementById('search'),
+    sort: document.getElementById('sort'),
+    difficultyFilter: document.getElementById('difficultyFilter'),
+    hideTracking: document.getElementById('hideTracking'),
+    hideComplex: document.getElementById('hideComplex'),
+    targetValue: { _v: 5, get value() { return this._v; } },
+    drawOneBtn: document.getElementById('drawOneBtn'),
+    drawSetBtn: document.getElementById('drawSetBtn'),
+    drawResult: document.getElementById('drawResult'),
+    cardGrid: document.getElementById('cardGrid'),
+    emptyState: document.getElementById('emptyState'),
+    countText: document.getElementById('countText'),
+    countLine: document.getElementById('countLine')
+  };
+
+  let visibleCards = [];
+
+  function compareCards(a, b, sortBy) {
+    switch (sortBy) {
+      case 'title-asc':
+        return a.title.localeCompare(b.title);
+      case 'title-desc':
+        return b.title.localeCompare(a.title);
+      case 'difficulty-asc': {
+        const diff = difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+        return diff || a.title.localeCompare(b.title);
+      }
+      case 'difficulty-desc': {
+        const diff = difficultyOrder[b.difficulty] - difficultyOrder[a.difficulty];
+        return diff || a.title.localeCompare(b.title);
+      }
+      default:
+        return a.title.localeCompare(b.title);
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function dotted(str) {
+    const s = String(str).trimEnd();
+    return /[.!?]$/.test(s) ? s : s + '.';
+  }
+
+  function getFilteredCards() {
+    const q = els.search.value.trim().toLowerCase();
+    const diff = els.difficultyFilter.value;
+    const sortBy = els.sort.value;
+    const hideTracking = els.hideTracking.checked;
+    const hideComplex = els.hideComplex.checked;
+
+    return allCards
+      .filter(card => {
+        if (hideTracking && card.tracking) return false;
+        if (hideComplex && card.complex) return false;
+        const matchesDifficulty = diff === 'All' || card.difficulty === diff;
+        const haystack = (card.title + ' ' + card.text).toLowerCase();
+        const matchesQuery = !q || haystack.includes(q);
+        return matchesDifficulty && matchesQuery;
+      })
+      .sort((a, b) => compareCards(a, b, sortBy));
+  }
+
+  function renderCards(cards) {
+    els.cardGrid.innerHTML = cards.map(card => {
+      const marksHtml = [
+        card.tracking ? '<span class="mark mark-tracking" title="Turn tracking">T</span>' : '',
+        card.complex  ? '<span class="mark mark-complex" title="Complex state">C</span>'   : ''
+      ].filter(Boolean).join('');
+      return `
+      <article class="card ${card.difficulty.toLowerCase()}" tabindex="0" aria-label="${escapeHtml(card.title)}">
+        <h2>${escapeHtml(card.title)}</h2>
+        <p>${escapeHtml(dotted(card.text))}</p>
+        <div class="meta">
+          <span class="difficulty">${escapeHtml(card.difficulty)}</span>
+          ${marksHtml ? `<span class="card-marks">${marksHtml}</span>` : ''}
+        </div>
+      </article>`;
+    }).join('');
+    els.emptyState.hidden = cards.length !== 0;
+  }
+
+  function updateCounts(cards) {
+    const text = `${cards.length} card${cards.length === 1 ? '' : 's'}`;
+    els.countText.textContent = text;
+    els.countLine.textContent = text;
+  }
+
+  function render() {
+    visibleCards = getFilteredCards();
+    renderCards(visibleCards);
+    updateCounts(visibleCards);
+  }
+
+  function randomItem(items) {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
+  function shuffle(items) {
+    const arr = items.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function drawOne() {
+    if (!visibleCards.length) {
+      els.drawResult.innerHTML = '<div class="result-placeholder">No matching cards.</div>';
+      return;
+    }
+    const card = randomItem(visibleCards);
+    const diffClass = card.difficulty.toLowerCase();
+    els.drawResult.innerHTML = `
+      <div class="result-head">
+        <h2 class="result-title">${escapeHtml(card.title)}</h2>
+        <span class="diff-${diffClass}" style="font-size:0.83rem;white-space:nowrap">${escapeHtml(card.difficulty)}</span>
+      </div>
+      <p class="result-text">${escapeHtml(dotted(card.text))}</p>
+    `;
+  }
+
+  function drawWeightedSet() {
+    if (!visibleCards.length) {
+      els.drawResult.innerHTML = '<div class="result-placeholder">No matching cards.</div>';
+      return;
+    }
+
+    const target = els.targetValue._v;
+    const weightedCards = visibleCards.map(card => ({ ...card, weight: weightMap[card.difficulty] || 999 }));
+    const shuffled = shuffle(weightedCards);
+
+    let best = [];
+    let bestWeight = 0;
+    const maxChecks = Math.min(7000, Math.max(800, shuffled.length * 45));
+
+    for (let i = 0; i < maxChecks; i++) {
+      const order = i === 0 ? shuffled : shuffle(shuffled);
+      let set = [];
+      let total = 0;
+      for (const card of order) {
+        if (total + card.weight <= target) {
+          set.push(card);
+          total += card.weight;
+        }
+      }
+      if (total > bestWeight) {
+        best = set;
+        bestWeight = total;
+        if (bestWeight === target) break;
+      }
+    }
+
+    if (!best.length) {
+      const smallest = weightedCards.reduce((min, card) => card.weight < min.weight ? card : min, weightedCards[0]);
+      best = [smallest];
+      bestWeight = smallest.weight;
+    }
+
+    const diffSummary = best.map(card =>
+      `<span class="diff-${card.difficulty.toLowerCase()}">${escapeHtml(card.difficulty)}</span>`
+    ).join(' <span class="diff-sep">+</span> ');
+
+    els.drawResult.innerHTML = `
+      <div class="result-head">
+        <h2 class="result-title"></h2>
+        <div style="display:flex;align-items:baseline;gap:8px;font-size:0.83rem">${diffSummary}</div>
+      </div>
+      <div class="result-set">
+        ${best.map(card => `
+          <article class="mini-result">
+            <h3>${escapeHtml(card.title)}</h3>
+            <p>${escapeHtml(dotted(card.text))}</p>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function setTarget(v) {
+    els.targetValue._v = Math.min(9, Math.max(1, v));
+    document.getElementById('targetDisplay').textContent = els.targetValue._v;
+  }
+
+  els.search.addEventListener('input', render);
+  els.sort.addEventListener('change', render);
+  els.difficultyFilter.addEventListener('change', render);
+  document.getElementById('targetDec').addEventListener('click', () => setTarget(els.targetValue._v - 1));
+  document.getElementById('targetInc').addEventListener('click', () => setTarget(els.targetValue._v + 1));
+  els.drawOneBtn.addEventListener('click', drawOne);
+  els.drawSetBtn.addEventListener('click', drawWeightedSet);
+  els.hideTracking.addEventListener('change', render);
+  els.hideComplex.addEventListener('change', render);
+
+  render();
+})();
+  </script>
+</body>
+</html>
