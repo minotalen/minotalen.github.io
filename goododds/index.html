@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="An incremental boss-slayer where you auto-attack while clicking resource buttons to upgrade and defeat increasingly powerful bosses.">
 <title>goododds</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -88,17 +89,25 @@
   .log-entry{animation:logSlideIn 200ms ease-out;will-change:transform,opacity}
   .log-entry:hover{filter:brightness(1.25);cursor:default}
   @keyframes btnPress{
-    0%   {transform:scale(1) translateY(0)}
-    50%  {transform:scale(0.92) translateY(2px)}
-    100% {transform:scale(1) translateY(0)}
+    0%   {transform:scale(1)}
+    50%  {transform:scale(0.92)}
+    100% {transform:scale(1)}
   }
-  button:active{animation:btnPress 140ms cubic-bezier(0.34,1.56,0.64,1);transform:scale(0.92) translateY(2px) !important;box-shadow:none !important}
+  button:active{animation:btnPress 140ms cubic-bezier(0.34,1.56,0.64,1);transform:scale(0.92) !important;box-shadow:none !important;transform-origin:center}
   @keyframes resJuice{
-    0%   {transform:scale(1) translateY(0)}
-    40%  {transform:scale(0.88) translateY(3px)}
-    100% {transform:scale(1) translateY(0)}
+    0%   {transform:scale(1)}
+    40%  {transform:scale(0.88)}
+    100% {transform:scale(1)}
   }
-  button.juice{animation:resJuice 200ms cubic-bezier(0.34,1.56,0.64,1)}
+  @keyframes barShrink{
+    0%   {transform:scaleX(1) scaleY(1)}
+    40%  {transform:scaleX(0.95) scaleY(0.85)}
+    100% {transform:scaleX(1) scaleY(1)}
+  }
+  button.juice{animation:resJuice 200ms cubic-bezier(0.34,1.56,0.64,1);transform-origin:center}
+  button.juice > div{animation:barShrink 200ms cubic-bezier(0.34,1.56,0.64,1);transform-origin:center}
+  @keyframes pipeFade{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
+  .res-pipe{animation:pipeFade 1000ms ease-in forwards;pointer-events:none;position:fixed;width:3px;transform:translateX(-50%);}
   @keyframes atkSlide{
     0%   {transform:translateY(0) scaleX(1)}
     60%  {transform:translateY(-8px) scaleX(0.98)}
@@ -113,6 +122,12 @@
     70%{transform:rotate(1deg)}
   }
   .atk-wiggle{animation:wimpyWiggle 240ms ease-in-out}
+  @keyframes hpJuice{
+    0%   {background:#1a1a1a;transform:scaleY(1.15) scaleX(0.95)}
+    50%  {background:#0d0d0d;transform:scaleY(1.08) scaleX(0.98)}
+    100% {background:#1e1e1e;transform:scaleY(1) scaleX(1)}
+  }
+  .hp-juice{animation:hpJuice 200ms cubic-bezier(0.34,1.56,0.64,1);transform-origin:center}
   @media(max-width:640px){
     input[type="range"]::-webkit-slider-runnable-track{height:6px;border-radius:3px}
     input[type="range"]::-webkit-slider-thumb{width:22px;height:22px;border-radius:11px}
@@ -261,9 +276,10 @@ const Particles=(()=>{
 /* ─── PROCEDURAL SFX ENGINE ───────────────────────────────────────── */
 const SFX=(()=>{
   let ctx=null,master=null,warm=null,verb=null,verbWet=null,verbDry=null,shaper=null;
-  let vol=0.5,muted=false;
+  let vol=0.5,muted=false,suppressed=false;
   const CH={res:true,hit:true,upgrade:true,mod:true,forge:true,prestige:true,ready:true};
-  function ch(k){return !muted&&CH[k];}
+  function ch(k){return !muted&&!suppressed&&CH[k];}
+  function suppress(s){suppressed=!!s;}
 
   const TONES={α:247,β:311,γ:370,δ:466};  // B3 Eb4 F#4 Bb4 (warmer voicing)
   const QTONE=[415,494,622,740,932];        // Ab4 B4 Eb5 F#5 Bb5
@@ -764,7 +780,7 @@ const SFX=(()=>{
     }
   }catch(e){}
 
-  return{ready,res,hit,kill,block,upgrade,mod,forge,prestige,setVol,getVol,setMute,isMuted,getCh,setCh,getChannels,init};
+  return{ready,res,hit,kill,block,upgrade,mod,forge,prestige,setVol,getVol,setMute,isMuted,getCh,setCh,getChannels,init,suppress};
 })();
 
 /* ─── FORGE CORE LOGIC ───────────────────────────────────────────── */
@@ -821,6 +837,8 @@ function doForge(state, action, FORGE_CHANCES, MOD_DEFS, le, iLbl) {
       // Stat improvement
       if (def.type === 'stat') {
         item.value = def.float ? parseFloat((item.value + def.perLvl).toFixed(2)) : item.value + def.perLvl;
+      } else if (def.effect === 'refund') {
+        item.pct = (item.pct || 0) + def.perLvl;
       } else {
         item.chance = Math.min(95, item.chance + def.perLvl);
       }
@@ -845,6 +863,8 @@ function doForge(state, action, FORGE_CHANCES, MOD_DEFS, le, iLbl) {
           if (def.type === 'stat') {
             const nv = item.value - def.perLvl;
             item.value = def.float ? parseFloat(Math.max(item.baseValue, nv).toFixed(2)) : Math.max(item.baseValue, Math.round(nv));
+          } else if (def.effect === 'refund') {
+            item.pct = Math.max(item.basePct || 0, (item.pct || 0) - def.perLvl);
           } else {
             item.chance = Math.max(item.baseChance, item.chance - def.perLvl);
           }
@@ -1005,7 +1025,7 @@ const QRANGE=[[0.8,1.2],[1.5,2.4],[2.5,3.9],[4.5,5.9],[7.0,10.0]];
 // Proc chance bonus added per tier (C=0 but C items can't have procs)
 const QPROC=[0,5,10,15,20];
 // Minimum quality tier to access each proc multiplier subtype
-const PROC_MIN_Q={'2x':1,'3x':2,'5x':3};
+const PROC_MIN_Q={'2x':1,'3x':3,'5x':4};
 const ATK_CD=5000;
 const SCALE=1.3;
 const FORGE_CHANCES=[100,90,80,70,60,50,40,25,10];
@@ -1014,10 +1034,6 @@ const FORGE_CHANCES=[100,90,80,70,60,50,40,25,10];
 const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const rf=(a,b)=>Math.random()*(b-a)+a;
 const fmt=n=>n>=1e9?`${(n/1e9).toFixed(2)}B`:n>=1e6?`${(n/1e6).toFixed(2)}M`:n>=1e3?`${(n/1e3).toFixed(1)}k`:String(n);
-// Cookie helpers for dev mode
-const getCookie=(name)=>{const m=document.cookie.split('; ').find(c=>c.startsWith(name+'='));return m?m.split('=')[1]:null;};
-const setCookie=(name,val,days=365)=>{const d=new Date();d.setTime(d.getTime()+(days*24*60*60*1000));document.cookie=`${name}=${val};expires=${d.toUTCString()};path=/`;};
-const DEV_COOKIE='goododds.devmode';
 const fmtHp=n=>{if(n<1e5)return String(n);if(n<1e6){const v=n/1e3;return`${v.toFixed(v<10?3:v<100?2:1)}k`;}if(n<1e9){const v=n/1e6;return`${v.toFixed(v<10?3:v<100?2:1)}m`;}const v=n/1e9;return`${v.toFixed(v<10?3:v<100?2:1)}b`;};
 const hpCol=p=>{
   if(p>.5){const t=(p-.5)/.5;return`rgb(${Math.round(255*(1-t))},${Math.round(160+95*t)},0)`;}
@@ -1095,6 +1111,11 @@ const MOD_DEFS={
   βharvest:{label:'β.harvest',type:'proc',effect:'harvest',res:'β',minResIdx:1,minQ:4,base:3, perLvl:0.5},
   γharvest:{label:'γ.harvest',type:'proc',effect:'harvest',res:'γ',minResIdx:2,minQ:4,base:3, perLvl:0.5},
   δharvest:{label:'δ.harvest',type:'proc',effect:'harvest',res:'δ',minResIdx:3,minQ:4,base:3, perLvl:0.5},
+  // refund: on resource spend, chance to get some back
+  αrfnd:   {label:'α.rfnd',   type:'proc',effect:'refund',  res:'α',minResIdx:0,minQ:2,base:8, basePct:5, perLvl:2  },
+  βrfnd:   {label:'β.rfnd',   type:'proc',effect:'refund',  res:'β',minResIdx:1,minQ:2,base:8, basePct:5, perLvl:2  },
+  γrfnd:   {label:'γ.rfnd',   type:'proc',effect:'refund',  res:'γ',minResIdx:2,minQ:2,base:8, basePct:5, perLvl:2  },
+  δrfnd:   {label:'δ.rfnd',   type:'proc',effect:'refund',  res:'δ',minResIdx:3,minQ:2,base:8, basePct:5, perLvl:2  },
 };
 
 /* ─── UPGRADES ────────────────────────────────────────────────────── */
@@ -1211,6 +1232,12 @@ function mkDrop(lMin,lMax,maxResIdx=3,lW){
     // proc chance: base + tier bonus + small random variance
     const bc=Math.min(90,Math.round(def.base+QPROC[q-1]+(Math.random()*4-2)));
     item.chance=bc; item.baseChance=bc;
+    if(def.effect==='refund'){
+      const[sMin,sMax]=QRANGE[q-1];
+      const scale=sMin+Math.random()*(sMax-sMin);
+      const pct=Math.round(def.basePct*scale);
+      item.pct=pct; item.basePct=pct;
+    }
   }
   return item;
 }
@@ -1234,6 +1261,7 @@ function iLblBase(item){
     const v=isMult?item.value.toFixed(2):item.value;
     return `${def.label}+${v}`;
   }
+  if(def.effect==='refund') return `${def.label} ${item.chance}%/${item.pct}%`;
   return `${def.label} ${item.chance}%`;
 }
 const upgSym=lv=>lv<=0?'':lv<=3?'+'.repeat(lv):'+'+lv;
@@ -1246,6 +1274,7 @@ function computeMods(slots,slotCount){
   const echo={α:[],β:[],γ:[],δ:[]};
   const bonk={α:[],β:[],γ:[],δ:[]};
   const harvest={α:[],β:[],γ:[],δ:[]};
+  const rfnd={α:[],β:[],γ:[],δ:[]};
   for(let i=0;i<slotCount;i++){
     const item=slots[i];
     if(!item||item.type!=='mod') continue;
@@ -1258,9 +1287,10 @@ function computeMods(slots,slotCount){
       else if(eff==='echo')    echo[def.res].push({chance:item.chance,slotIdx:i});
       else if(eff==='bonk')    bonk[def.res].push({chance:item.chance,slotIdx:i});
       else if(eff==='harvest') harvest[def.res].push({chance:item.chance,slotIdx:i});
+      else if(eff==='refund')  rfnd[def.res].push({chance:item.chance,pct:item.pct,slotIdx:i});
     }
   }
-  return{st,pr,chain,echo,bonk,harvest};
+  return{st,pr,chain,echo,bonk,harvest,rfnd};
 }
 
 /* ─── PERSISTENCE ────────────────────────────────────────────────── */
@@ -1289,6 +1319,7 @@ function migrate(raw,version){
   // ensure slotCount is consistent with slotsDone (prestige-bought)
   if(raw.slotsDone) raw.slotCount=Math.max(raw.slotCount||3, 3+raw.slotsDone.filter(Boolean).length);
   if(!raw.pulvl) raw.pulvl=Object.fromEntries(Object.keys(UPG).map(k=>[k,0]));
+  if(!raw.procCount) raw.procCount=0;
   // backfill any UPG keys added after an existing save was created
   for(const k of Object.keys(UPG)){
     if(raw.ulvl  &&!(k in raw.ulvl))  raw.ulvl[k]=0;
@@ -1325,6 +1356,7 @@ const S0={
   slots:Array(8).fill(null),slotCount:3,
   slotsDone:[false,false,false,false,false],
   inv:[],invMax:BAG_START,bagLvl:0,log:[],prestige:0,
+  procCount:0,
   lastTriggers:[],
   runResult:null,
   lastAtk:null,
@@ -1369,13 +1401,18 @@ function statsFromUlvl(ulvl){
 
 /* ─── APPLY UPGRADE EFFECT (shared BUY / BUY_P) ─────────────────── */
 // Returns {res, prestige} refund amounts from held refund consumables
-function calcRefund(inv, cost, isPp){
+function calcRefund(inv, cost, isPp, slotRfnd){
   let totalRefund=0;
   for(const item of inv){
     if(item.type==='consumable'&&item.subtype==='refund'){
       if(Math.random()*100<item.chance){
         totalRefund+=Math.floor(cost*(item.pct/100));
       }
+    }
+  }
+  for(const rp of slotRfnd||[]){
+    if(Math.random()*100<rp.chance){
+      totalRefund+=Math.floor(cost*(rp.pct/100));
     }
   }
   return totalRefund;
@@ -1428,9 +1465,17 @@ function reduce(s,a){
       if(Math.random()*100<p.chance){
         triggered.push({slotIdx:p.slotIdx,effect:'mult',res:k,mult:p.mult});
         amt=Math.floor(amt*p.mult);
-        for(const ep of mb.echo[k]||[]){
-          if(Math.random()*100<ep.chance) amt=Math.floor(amt*p.mult);
-        }
+        // echo: retrigger the mult; each retrigger can also echo (cap 20 total)
+        let echoHits=0;
+        const applyEcho=(a)=>{
+          let r=a;
+          for(const ep of mb.echo[k]||[]){
+            if(echoHits>=20) break;
+            if(Math.random()*100<ep.chance){echoHits++;r=Math.floor(r*p.mult);r=applyEcho(r);}
+          }
+          return r;
+        };
+        amt=applyEcho(amt);
       }
     }
     // Chain: free cooldown
@@ -1488,7 +1533,10 @@ function reduce(s,a){
       logs.push(le(`🌾 ${RES.filter(r=>harvestRes[r]).map(r=>`+${harvestRes[r]} ${r}`).join(' ')}`,'#fbbf24','R'));
       triggered.push({slotIdx:-1,effect:'harvest',res:k,mult:1});
     }
-    const procTag=triggered.length?' [proc]':chained?' [chain]':luckyReset?' [lucky!]':'';
+    const multProcs=triggered.filter(t=>t.effect==='mult');
+    let newProcCount=s.procCount||0;
+    const procParts=multProcs.map(tr=>{newProcCount++;return`#${newProcCount} ${tr.res}x${tr.mult}`;});
+    const procTag=procParts.length?` [proc ${procParts.join(', ')}]`:chained?' [chain]':luckyReset?' [lucky!]':'';
     logs.push(le(`+${amt} ${k}${procTag}`,COL[k],'R'));
     // SFX — one call per distinct effect type
     const seenEff=new Set();
@@ -1506,6 +1554,7 @@ function reduce(s,a){
       res:newRes,tot:newTot,fightHp:newFightHp,
       cd:{...s.cd,[k]:(chained||luckyReset)?0:effCd(k,s.cdLvl)},
       lastTriggers:bonkSlot?[...triggered,bonkSlot]:triggered,
+      procCount:newProcCount,
       log:[...logs,...s.log].slice(0,80),
     };
   }
@@ -1631,7 +1680,8 @@ function reduce(s,a){
     if(def.req&&!s[def.req]) return s;
     const cost=upgCost(a.k,lvl);
     if(s.res[def.res]<cost) return s;
-    const refund=calcRefund(s.inv,cost,false);
+    const mb=computeMods(s.slots,s.slotCount);
+    const refund=calcRefund(s.inv,cost,false,mb.rfnd[def.res]);
     let ns={...s,res:{...s.res,[def.res]:s.res[def.res]-cost+refund},ulvl:{...s.ulvl,[a.k]:lvl+1}};
     applyUpg(ns,s,a.k);
     const rfStr=refund>0?`  [+${refund}${def.res} refund]`:'';
@@ -1653,6 +1703,7 @@ function reduce(s,a){
 
   case 'BUY_N':{
     const limit=a.n==='max'?Infinity:a.n;
+    const mb_buy=computeMods(s.slots,s.slotCount);
     let ns=s,bought=0;
     for(let i=0;i<limit;i++){
       const def=UPG[a.k],lvl=ns.ulvl[a.k];
@@ -1664,15 +1715,24 @@ function reduce(s,a){
       if(ns.res[def.res]<reducedCost) break;
       const isFree=(ns.freeChance&&(ns.freeChance[def.res]||0)>0)&&Math.random()*100<ns.freeChance[def.res];
       const cost=isFree?0:reducedCost;
-      const refund=isFree?0:calcRefund(ns.inv,cost,false);
+      const refund=isFree?0:calcRefund(ns.inv,cost,false,mb_buy.rfnd[def.res]);
       const prev=ns;
-      ns={...ns,res:{...ns.res,[def.res]:ns.res[def.res]-cost+refund},ulvl:{...ns.ulvl,[a.k]:lvl+1}};
+      
+      // If upgrading attack cooldown, scale current cooldown proportionally
+      let atkCdScaled=ns.atkCd;
+      if(def.st==='atkCd'){
+        const oldEffAtk=Math.floor(ATK_CD*Math.pow(1.05,-(ns.atkCdLvl||0)));
+        const newEffAtk=Math.floor(ATK_CD*Math.pow(1.05,-(ns.atkCdLvl+1)));
+        atkCdScaled=Math.max(0,Math.round(ns.atkCd*(newEffAtk/oldEffAtk)));
+      }
+      
+      ns={...ns,res:{...ns.res,[def.res]:ns.res[def.res]-cost+refund},ulvl:{...ns.ulvl,[a.k]:lvl+1},atkCd:atkCdScaled};
       applyUpg(ns,prev,a.k);
       bought++;
     }
     if(!bought) return s;
     SFX.upgrade(UPG[a.k].res,false,bought);
-    return{...ns,log:[le(`${UPG[a.k].label} ×${bought}`,'#6b7280','U'),...ns.log].slice(0,80)};
+    return{...ns,log:[le(`${UPG[a.k].label}${bought>1?` ×${bought}`:''} → ${ns.ulvl[a.k]}`,'#6b7280','U'),...ns.log].slice(0,80)};
   }
 
   case 'BUY_NP':{
@@ -1686,13 +1746,22 @@ function reduce(s,a){
       if(ns.prestige<cost) break;
       const refund=calcRefund(ns.inv,cost,true);
       const prev=ns;
-      ns={...ns,prestige:ns.prestige-cost+refund,ulvl:{...ns.ulvl,[a.k]:lvl+1},pulvl:{...ns.pulvl,[a.k]:(ns.pulvl[a.k]||0)+1}};
+      
+      // If upgrading attack cooldown, scale current cooldown proportionally
+      let atkCdScaled=ns.atkCd;
+      if(def.st==='atkCd'){
+        const oldEffAtk=Math.floor(ATK_CD*Math.pow(1.05,-(ns.atkCdLvl||0)));
+        const newEffAtk=Math.floor(ATK_CD*Math.pow(1.05,-(ns.atkCdLvl+1)));
+        atkCdScaled=Math.max(0,Math.round(ns.atkCd*(newEffAtk/oldEffAtk)));
+      }
+      
+      ns={...ns,prestige:ns.prestige-cost+refund,ulvl:{...ns.ulvl,[a.k]:lvl+1},pulvl:{...ns.pulvl,[a.k]:(ns.pulvl[a.k]||0)+1},atkCd:atkCdScaled};
       applyUpg(ns,prev,a.k);
       bought++;
     }
     if(!bought) return s;
     SFX.upgrade(UPG[a.k].res,true,bought);
-    return{...ns,log:[le(`${UPG[a.k].label} ×${bought}`,'#fbbf24','U'),...ns.log].slice(0,80)};
+    return{...ns,log:[le(`${UPG[a.k].label}${bought>1?` ×${bought}`:''} → ${ns.ulvl[a.k]}`,'#fbbf24','U'),...ns.log].slice(0,80)};
   }
 
   case 'BUY_SLOT':{
@@ -1776,6 +1845,12 @@ function reduce(s,a){
         const newBaseChance = Math.min(90, Math.round(def.base + QPROC[item.q-1] + (Math.random()*4-2)));
         updatedItem.baseChance = newBaseChance;
         updatedItem.chance = Math.min(95, newBaseChance + item.upgradeLevel*def.perLvl);
+        if(def.effect==='refund'){
+          const[sMin_r,sMax_r]=QRANGE[item.q-1];
+          const newBasePct=Math.round(def.basePct*(sMin_r+Math.random()*(sMax_r-sMin_r)));
+          updatedItem.basePct=newBasePct;
+          updatedItem.pct=newBasePct+item.upgradeLevel*def.perLvl;
+        }
       }
       stateForForge = { ...baseState, inv: baseState.inv.map(i => i.id === item.id ? updatedItem : i) };
     }
@@ -1831,10 +1906,6 @@ function reduce(s,a){
     return{...s,fightHp:newHp,log:[le(`ADM hp → ${a.pct}%`,'#4ade80'),...s.log].slice(0,80)};
   }
 
-  case 'LOG_DEV':{
-    return{...s,log:[le(a.msg||'Developer mode activated','#c084fc'),...s.log].slice(0,80)};
-  }
-
   case 'OFFLINE_DONE':{
     // Account for simulated offline time
     const elapsed=a.elapsed||0;
@@ -1874,9 +1945,10 @@ function modDesc(def){
   const r=def.res;
   if(eff==='mult')    return `on ${r} click: multiply ${r} yield ×${def.mult}`;
   if(eff==='chain')   return `on ${r} click: ${r} cooldown not consumed`;
-  if(eff==='echo')    return `when a ${r} proc fires: re-apply its mult once`;
+  if(eff==='echo')    return `when a ${r} proc fires: retrigger it (and that can echo too)`;
   if(eff==='bonk')    return `on ${r} click: fire a free bonus attack`;
   if(eff==='harvest') return `on ${r} click: instantly yield all resources`;
+  if(eff==='refund')  return `on ${r} spend: chance to refund a portion of the cost`;
   return def.label;
 }
 function Tooltip({tip}){
@@ -1928,7 +2000,8 @@ function Tooltip({tip}){
                   {ROW('type','proc')}
                   {ROW('chance',`${item.chance}%`)}
                   {eff==='mult'&&ROW('mult',`×${def.mult}`)}
-                  {ROW('per lvl',`+${def.perLvl}%`)}
+                  {eff==='refund'&&ROW('refund',`${item.pct}%`)}
+                  {ROW('per lvl',eff==='refund'?`+${def.perLvl}% refund`:`+${def.perLvl}%`)}
                   <div style={{color:'#aaa',fontSize:'13px',marginTop:'4px',fontStyle:'italic'}}>{modDesc(def)}</div>
                 </>
               )}
@@ -1975,6 +2048,11 @@ function SlotBadge({item,slotIdx,d,setTip,flashKey,forgeOpen,forgeSelId,setForge
 /* ─── TOGGLE ROW (reusable colored square toggles) ────────────────── */
 function ToggleRow({items,size=14,gap=5,showLabels=false}){
   const [,rerender]=useState(0);
+  const darkenHex=(hex)=>{
+    const rgb=parseInt(hex.slice(1),16);
+    const r=(rgb>>16)&255,g=(rgb>>8)&255,b=rgb&255;
+    return`rgb(${Math.floor(r*0.25)},${Math.floor(g*0.25)},${Math.floor(b*0.25)})`;
+  };
   return(
     <div style={{display:'flex',gap:gap+'px',alignItems:'center'}}>
       {items.map(({k,col,on,toggle,label})=>(
@@ -1983,10 +2061,19 @@ function ToggleRow({items,size=14,gap=5,showLabels=false}){
             style={{width:size+'px',height:size+'px',borderRadius:'3px',border:'none',cursor:'pointer',padding:0,
               background:on()?col:col+'33',
               outline:on()?`2px solid ${col}88`:undefined,
-              transition:'all .1s'}}
-          />
-          {showLabels&&label&&<span style={{fontSize:'10px',color:on()?col+'cc':'#444',fontFamily:'monospace',
-            userSelect:'none',cursor:'pointer'}} onClick={()=>{toggle();rerender(n=>n+1);}}>{label}</span>}
+              transition:'all .1s',
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              fontSize:Math.round(size*0.7)+'px',
+              lineHeight:1,
+              color:showLabels&&label?darkenHex(col):'inherit',
+              fontFamily:"'PT Mono', monospace",
+              fontWeight:on()?'900':'700',
+              userSelect:'none',
+              textShadow:on()?'0 0 8px rgba(0,0,0,0.6)':'0 0 4px rgba(0,0,0,0.4)',
+              letterSpacing:'0'}}
+          >{showLabels&&label?(k==='Z'&&!on()?'':label):''}</button>
         </div>
       ))}
     </div>
@@ -2101,6 +2188,7 @@ function ForgePanel({s,d,setTip,forgeSelId,setForgeSelId,forgeCons,setForgeCons,
       const nv=isMult?parseFloat((target.value+def.perLvl).toFixed(2)):target.value+def.perLvl;
       return `${def.label}+${isMult?nv.toFixed(2):nv}`;
     }
+    if(def.effect==='refund') return `${def.label} ${target.chance}%/${target.pct+def.perLvl}%`;
     return `${def.label} ${Math.min(95,target.chance+def.perLvl)}%`;
   };
 
@@ -2127,7 +2215,9 @@ function ForgePanel({s,d,setTip,forgeSelId,setForgeSelId,forgeCons,setForgeCons,
               <div style={{fontSize:'14px',lineHeight:2.2,color:'#bbb'}}>
                 <div>type&nbsp;&nbsp;&nbsp;&nbsp;<span style={{color:'#ddd'}}>proc</span></div>
                 <div>trigger&nbsp;<span style={{color:'#ddd'}}>{target.chance}%</span></div>
-                <div>effect&nbsp;&nbsp;<span style={{color:'#ddd'}}>{def.res} ×{def.mult} on click</span></div>
+                {def.effect==='refund'
+                  ?<div>refund&nbsp;&nbsp;<span style={{color:'#ddd'}}>{target.pct}% of cost</span></div>
+                  :<div>effect&nbsp;&nbsp;<span style={{color:'#ddd'}}>{def.res} ×{def.mult} on click</span></div>}
               </div>
             )}
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginTop:'8px',paddingTop:'8px',borderTop:`1px solid ${c}22`}}>
@@ -2153,17 +2243,19 @@ function ForgePanel({s,d,setTip,forgeSelId,setForgeSelId,forgeCons,setForgeCons,
         <div>
           <div style={{...HDR,marginBottom:'6px'}}>CONSUMABLES</div>
           <div style={{display:'flex',gap:'8px',marginBottom:'5px'}}>
-            {[0,1].map(slot=>(
+            {[0,1].map(slot=>{
+              const cc=conItems[slot]?(conItems[slot].q?QCOL[conItems[slot].q-1]:'#60a5fa'):null;
+              return(
               <div key={slot} onClick={()=>{conItems[slot]&&removeCon(slot);setTip(null);}}
                 onMouseEnter={e=>conItems[slot]&&setTip({item:conItems[slot],x:e.clientX,y:e.clientY})}
                 onMouseLeave={()=>setTip(null)}
-                style={{flex:1,height:'38px',border:`1px solid ${conItems[slot]?'#60a5fa44':'#1e1e1e'}`,
+                style={{flex:1,height:'38px',border:`1px solid ${cc?cc+'44':'#1e1e1e'}`,
                   borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center',
                   cursor:conItems[slot]?'pointer':'default',background:'#0d0d0d',
-                  color:conItems[slot]?'#60a5fa':'#ccc',fontSize:'14px'}}>
+                  color:cc||'#ccc',fontSize:'14px'}}>
                 {conItems[slot]?`${iLbl(conItems[slot])} ×`:'[ empty ]'}
               </div>
-            ))}
+            );})}
           </div>
           {cons.every(c=>c===null)&&<div style={{color:'#333',fontSize:'13px'}}>click consumables in inventory↗ to slot</div>}
           {(hasStatForce||hasFull)&&(
@@ -2208,6 +2300,7 @@ function RunInterstitial({result,s,d,onClose}){
   const [selEnemy,setSelEnemy]=useState(result.enemyId);
   const [tip,setTip]=useState(null);
   const [peekKey,setPeekKey]=useState(null);
+  const [xDesc,setXDesc]=useState(null);
   const ul=k=>!PREV[k]||s.tot[PREV[k]]>=NEED[k];
 
   // highest beaten index (-1 if none)
@@ -2309,9 +2402,26 @@ function RunInterstitial({result,s,d,onClose}){
     );
   };
 
-  const secHdr=lbl=>(
-    <div style={{color:'#999',fontSize:'11px',letterSpacing:'0.5px',margin:'6px 0 3px'}}>{lbl}</div>
-  );
+  const secHdr=(lbl,opts={})=>{
+    const {stats,desc,sKey}=opts;
+    const open=!!(sKey&&xDesc===sKey);
+    return(
+      <div onClick={e=>e.stopPropagation()}>
+        <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 5px',fontWeight:'bold',
+          display:'flex',alignItems:'center',gap:'6px',userSelect:'none'}}>
+          <span style={{flex:1}}>── {lbl}{stats&&<span style={{color:'#777'}}> {stats}</span>}</span>
+          {desc&&sKey&&<span
+            onClick={()=>setXDesc(open?null:sKey)}
+            style={{color:open?'#ddd':'#555',fontSize:'11px',cursor:'pointer',
+              padding:'1px 5px',border:`1px solid ${open?'#555':'#333'}`,borderRadius:'3px',
+              lineHeight:'1.4',transition:'color .1s,border-color .1s',flexShrink:0}}>[?]</span>}
+        </div>
+        {desc&&sKey&&<div style={{maxHeight:open?'100px':'0',overflow:'hidden',
+          transition:'max-height 0.25s ease',color:'#888',fontSize:'12px',lineHeight:'1.5',
+          paddingBottom:open?'6px':'0',width:'100%'}}>{desc}</div>}
+      </div>
+    );
+  };
 
   return(
     <div style={{position:'fixed',inset:0,background:'#0d0d0d',zIndex:190,
@@ -2326,15 +2436,15 @@ function RunInterstitial({result,s,d,onClose}){
           <div style={{color:'#bbb',fontSize:'12px'}}>{result.concede?`E${result.enemyId} — no rewards`:`E${result.enemyId}  |  ${result.drops.length} drops`}</div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
-          <div style={{background:'#0a1a0a',border:'1px solid #1a3a1a',borderRadius:'4px',
-            padding:'8px 12px',textAlign:'center'}}>
-            <div style={{color:'#bbb',fontSize:'10px',letterSpacing:'1px',fontFamily:"'PT Mono', monospace"}}>TOTAL</div>
-            <div style={{color:'#4ade80',fontSize:'20px',fontWeight:'bold',lineHeight:1}}>✦{s.prestige}</div>
-          </div>
           <div style={{background:'#1a1400',border:'1px solid #3a3010',borderRadius:'4px',
             padding:'8px 12px',textAlign:'center'}}>
             <div style={{color:'#bbb',fontSize:'10px',letterSpacing:'1px',fontFamily:"'PT Mono', monospace"}}>EARNED</div>
             <div style={{color:'#fbbf24',fontSize:'20px',fontWeight:'bold',lineHeight:1}}>+{result.pp}✦</div>
+          </div>
+          <div style={{background:'#0a1a0a',border:'1px solid #1a3a1a',borderRadius:'4px',
+            padding:'8px 12px',textAlign:'center'}}>
+            <div style={{color:'#bbb',fontSize:'10px',letterSpacing:'1px',fontFamily:"'PT Mono', monospace"}}>TOTAL</div>
+            <div style={{color:'#4ade80',fontSize:'20px',fontWeight:'bold',lineHeight:1}}>✦{s.prestige}</div>
           </div>
         </div>
       </div>
@@ -2349,7 +2459,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* combat upgrades group */}
           {ul('α')&&(
             <>
-              {secHdr('damage')}
+              {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Raise your base damage floor and ceiling. Min cannot exceed max.',sKey:'damage'})}
               <PairRow label="dmg" kMin="dm" kMax="dx"/>
               <SingleRow k="acd" label={UPG.acd.label}/>
             </>
@@ -2357,7 +2467,7 @@ function RunInterstitial({result,s,d,onClose}){
           
           {ul('β')&&(
             <>
-              {secHdr('mult / armor')}
+              {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pen ${s.armorPen}`,desc:'Scale all hits by a random multiplier in range. Armor pen ignores enemy defense.',sKey:'mult'})}
               <PairRow label="mult" kMin="mm" kMax="mx"/>
               <SingleRow k="pen" label={UPG.pen.label}/>
             </>
@@ -2368,7 +2478,7 @@ function RunInterstitial({result,s,d,onClose}){
             if(!ul(r)) return null;
             return(
               <div key={r}>
-                {secHdr(<><span style={{color:COL[r]}}>{r}</span> [{s.rMin[r]}–{s.rMax[r]}]</>)}
+                {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Raise yield range and reduce cooldown for ${r} resource collection.`,sKey:`res_${r}`})}
                 <PairRow label="min/max" kMin={`${r}m`} kMax={`${r}x`}/>
                 <SingleRow k={`${r}cd`} label={UPG[`${r}cd`].label}/>
               </div>
@@ -2378,7 +2488,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* crit upgrades */}
           {ul('γ')&&(
             <>
-              {secHdr('crit')}
+              {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Chance to land a critical hit — amplifies the final damage output.',sKey:'crit'})}
               <SingleRow k="γcrit" label="chance %"/>
               <SingleRow k="γcritdmg" label="damage x"/>
             </>
@@ -2387,7 +2497,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* damage exponent upgrades */}
           {ul('δ')&&(
             <>
-              {secHdr('exponent')}
+              {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)}`,desc:'Damage is raised to a random exponent in this range. Higher exponents amplify strong rolls.',sKey:'exp'})}
               <SingleRow k="δdmgexpMin" label="exp min"/>
               <SingleRow k="δdmgexpMax" label="exp max"/>
             </>
@@ -2396,7 +2506,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* prestige upgrades */}
           {(
             <>
-              {secHdr('prestige')}
+              {secHdr('prestige',{stats:`×${s.ppMulti.toFixed(1)}`,desc:'Each purchase multiplies prestige points earned per kill by ×1.5.',sKey:'prestige'})}
 
               {/* prestige multiplier */}
               {s.beaten[3]
@@ -2404,7 +2514,7 @@ function RunInterstitial({result,s,d,onClose}){
                 :showLocked('δppx')&&<LockedSingleRow k="δppx"/>}
 
               {/* atk trigger */}
-              {secHdr('atk trigger')}
+              {secHdr('atk trigger',{desc:'Spending a resource has a % chance to fire an extra auto-attack immediately.',sKey:'atktrig'})}
               {RES.map(r=>{
                 const k=`${r}atk`;
                 const val=(s.atkTrig&&s.atkTrig[r])||0;
@@ -2414,7 +2524,7 @@ function RunInterstitial({result,s,d,onClose}){
               })}
 
               {/* resource prestige */}
-              {secHdr('res prestige')}
+              {secHdr('res prestige',{desc:'Permanent per-resource bonuses: reduce upgrade costs, gain free purchase chances, or trigger lucky resets.',sKey:'resprestige'})}
               {RES.map(r=>{
                 const crK=`${r}cr`,fcK=`${r}fc`,lcK=`${r}lc`;
                 const crOn=s.beaten[UPG[crK].unlock],fcOn=s.beaten[UPG[fcK].unlock],lcOn=s.beaten[UPG[lcK].unlock];
@@ -2434,7 +2544,7 @@ function RunInterstitial({result,s,d,onClose}){
               })}
 
               {/* mod slots — purchasable after beating corresponding enemy */}
-              {secHdr('mod slots')}
+              {secHdr('mod slots',{stats:`${s.slotCount}/8`,desc:'Buy additional gear slots to equip more mods, and expand your inventory bag.',sKey:'slots'})}
               {s.slotsDone.map((done,i)=>{
                 const slotN=4+i;
                 const enemyReq=i+1;
@@ -2577,6 +2687,7 @@ const b64Decode=b64=>{
 function HamburgerMenu({onHelp,onSettings,onStats}){
   const [open,setOpen]=useState(false);
   const [hover,setHover]=useState(false);
+  const [menuHover,setMenuHover]=useState(null);
   return(
     <div style={{position:'relative'}}>
       {open&&<div onClick={()=>setOpen(false)} style={{position:'fixed',inset:0,zIndex:98}}/>}
@@ -2594,16 +2705,18 @@ function HamburgerMenu({onHelp,onSettings,onStats}){
           padding:'4px 0',zIndex:99,minWidth:'130px',boxShadow:'0 4px 12px #000a'}}>
           {[['stats',onStats],['help',onHelp],['settings',onSettings]].map(([lbl,fn])=>(
             <button key={lbl} onClick={()=>{setOpen(false);fn();}}
-              style={{display:'block',width:'100%',background:'none',border:'none',
-                color:'#bbb',fontFamily:'monospace',fontSize:'13px',letterSpacing:'1px',
-                padding:'8px 16px',cursor:'pointer',textAlign:'left'}}>
+              onMouseEnter={()=>setMenuHover(lbl)}
+              onMouseLeave={()=>setMenuHover(null)}
+              style={{display:'block',width:'100%',background:menuHover===lbl?'#1a1a1a':'none',border:'none',
+                color:menuHover===lbl?'#ddd':'#bbb',fontFamily:'monospace',fontSize:'13px',letterSpacing:'1px',
+                padding:'8px 16px',cursor:'pointer',textAlign:'left',transition:'all 100ms ease-out'}}>
               {lbl}
             </button>
           ))}
           <div style={{padding:'8px 16px',fontSize:'13px',color:'#555',fontFamily:'monospace',
             letterSpacing:'1px',borderTop:'1px solid #222',marginTop:'4px'}}>
             made by <a href="https://minotalen.itch.io" target="_blank" rel="noopener noreferrer"
-              style={{color:'#888',textDecoration:'none'}}>mino</a>
+              style={{color:'#888',textDecoration:'none',cursor:'pointer',transition:'color 100ms ease-out'}} onMouseEnter={(e)=>e.target.style.color='#aaa'} onMouseLeave={(e)=>e.target.style.color='#888'}>mino</a>
           </div>
         </div>
       )}
@@ -2611,7 +2724,8 @@ function HamburgerMenu({onHelp,onSettings,onStats}){
   );
 }
 /* ─── HELP MODAL ────────────────────────────────────── */
-function HelpModal({onClose}){
+function HelpModal({tab='intro',onTabChange,onClose}){
+  const tabs=[['intro','intro'],['mods','mods'],['forge','forge']];
   return(
     <div onClick={e=>{if(e.target===e.currentTarget)onClose();}}
       style={{position:'fixed',inset:0,background:'#000000cc',zIndex:200,
@@ -2630,12 +2744,39 @@ function HelpModal({onClose}){
             style={{position:'absolute',top:0,right:0,background:'none',border:'none',
               color:'#888',fontSize:'18px',cursor:'pointer',padding:'0 4px'}}>&times;</button>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:'12px',fontSize:'13px',lineHeight:'1.6',color:'#bbb'}}>
-          <p style={{margin:0}}>You auto-attack the current enemy. Each hit deals damage in your <span style={{color:'#eee'}}>dmg.min–dmg.max</span> range scaled by a random <span style={{color:'#eee'}}>multiplier</span>, then reduced by enemy defense. Kill it to earn <span style={{color:'#fbbf24'}}>prestige (✦)</span> and loot.</p>
-          <p style={{margin:0}}>Resource buttons (α, β, γ, δ) charge on a timer — click them to collect. They unlock on harder enemies and are spent in <span style={{color:'#eee'}}>Upgrades</span> to raise stats, attack speed, and unlock new damage layers.</p>
-          <p style={{margin:0}}>Loot lands in your <span style={{color:'#eee'}}>Inventory</span> as mods. Each mod has a rolled stat. Equip them in slots for passive bonuses. Higher rarity means stronger rolls.</p>
-          <p style={{margin:0}}>Pick harder enemies for more prestige and better loot.</p>
+        <div style={{display:'flex',gap:'4px',marginBottom:'16px'}}>
+          {tabs.map(([id,label])=>(
+            <button key={id} onClick={()=>onTabChange&&onTabChange(id)}
+              style={{background:tab===id?'#2a2a2a':'none',border:'1px solid',
+                borderColor:tab===id?'#444':'transparent',borderRadius:'4px',
+                color:tab===id?'#eee':'#666',fontFamily:'monospace',fontSize:'11px',
+                letterSpacing:'1.5px',padding:'4px 10px',cursor:'pointer',transition:'all 120ms'}}>
+              {label}
+            </button>
+          ))}
         </div>
+        {tab==='intro'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:'12px',fontSize:'13px',lineHeight:'1.6',color:'#bbb'}}>
+            <p style={{margin:0}}>You auto-attack the current enemy. Each hit deals damage in your <span style={{color:'#eee'}}>dmg.min–dmg.max</span> range scaled by a random <span style={{color:'#eee'}}>multiplier</span>, then reduced by enemy defense. Kill it to earn <span style={{color:'#fbbf24'}}>prestige (✦)</span> and loot.</p>
+            <p style={{margin:0}}>Resource buttons (α, β, γ, δ) charge on a timer — click them to collect. They unlock on harder enemies and are spent in <span style={{color:'#eee'}}>Upgrades</span> to raise stats, attack speed, and unlock new damage layers.</p>
+            <p style={{margin:0}}>Loot lands in your <span style={{color:'#eee'}}>Inventory</span> as mods. Each mod has a rolled stat and rarity, some also have an associated %chance. Equip them in slots for passive bonuses. Higher rarity means stronger rolls.</p>
+            <p style={{margin:0}}>Pick harder enemies for more prestige and better loot.</p>
+          </div>
+        )}
+        {tab==='mods'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:'12px',fontSize:'13px',lineHeight:'1.6',color:'#bbb'}}>
+            <p style={{margin:0}}>Mods drop from kills. <span style={{color:'#eee'}}>Stat mods</span> give a passive bonus. <span style={{color:'#eee'}}>Proc mods</span> have a % chance to trigger an effect when you click a resource.</p>
+            <p style={{margin:0}}>Rarity goes Common to Legendary. Higher rarity means a stronger roll at drop.</p>
+            <p style={{margin:0}}>Equip mods in gear slots for the bonus to apply. Start with 3 slots, unlock more with prestige. Extras sit in inventory. Sell what you don't want.</p>
+          </div>
+        )}
+        {tab==='forge'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:'12px',fontSize:'13px',lineHeight:'1.6',color:'#bbb'}}>
+            <p style={{margin:0}}>Spend <span style={{color:'#eee'}}>✨</span> to upgrade a mod's stat. Failure destroys it.</p>
+            <p style={{margin:0}}>Chance by level: <span style={{color:'#eee'}}>100 / 90 / 80 / 70 / 60 / 50 / 40 / 25 / 10%</span></p>
+            <p style={{margin:0}}>Shards: <span style={{color:'#eee'}}>prot</span> protects on fail, <span style={{color:'#eee'}}>luck</span> adds chance, <span style={{color:'#eee'}}>stat</span> ensures stat gain, <span style={{color:'#eee'}}>reroll</span> randomizes base stat, <span style={{color:'#eee'}}>full</span> upgrades both, <span style={{color:'#eee'}}>refund</span> can return upgrade costs.</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2662,56 +2803,56 @@ function StatsModal({s,onClose}){
       style={{position:'fixed',inset:0,background:'#000000cc',zIndex:200,
         display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div style={{background:'#161616',border:'1px solid #333',borderRadius:'8px',
-        padding:'24px 28px',width:'min(520px,92vw)',fontFamily:'monospace',color:'#d0d0d0',
+        padding:'16px 20px',width:'min(520px,92vw)',fontFamily:'monospace',color:'#d0d0d0',
         maxHeight:'90vh',overflowY:'auto',boxSizing:'border-box'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px'}}>
-          <span style={{fontSize:'14px',letterSpacing:'2.5px',color:'#bbb',fontFamily:"'PT Mono', monospace",fontWeight:'bold'}}>STATS</span>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+          <span style={{fontSize:'12px',letterSpacing:'2px',color:'#bbb',fontFamily:"'PT Mono', monospace",fontWeight:'bold'}}>STATS</span>
           <button onClick={onClose} style={{background:'none',border:'none',color:'#555',
-            cursor:'pointer',fontSize:'18px',lineHeight:1,padding:'0 2px'}}>×</button>
+            cursor:'pointer',fontSize:'16px',lineHeight:1,padding:'0 2px'}}>×</button>
         </div>
 
         {/* Run stats */}
-        <div style={{marginBottom:'20px',paddingBottom:'20px',borderBottom:'1px solid #1e1e1e'}}>
-          <div style={{fontSize:'13px',color:'#666',letterSpacing:'2px',marginBottom:'10px',fontFamily:"'PT Mono', monospace"}}>CURRENT RUN</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',marginBottom:'10px'}}>
-            <div style={{background:'#0a1a0a',border:'1px solid #1a3a1a',borderRadius:'6px',padding:'10px 12px',textAlign:'center'}}>
-              <div style={{color:'#bbb',fontSize:'11px',letterSpacing:'1.5px',marginBottom:'4px'}}>ENEMIES BEATEN</div>
-              <div style={{color:'#4ade80',fontSize:'24px',fontWeight:'bold'}}>{currentRunEnemiesBeaten}</div>
+        <div style={{marginBottom:'12px',paddingBottom:'12px',borderBottom:'1px solid #1e1e1e'}}>
+          <div style={{fontSize:'11px',color:'#666',letterSpacing:'1.5px',marginBottom:'6px',fontFamily:"'PT Mono', monospace"}}>CURRENT RUN</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px',marginBottom:'6px'}}>
+            <div style={{background:'#0a1a0a',border:'1px solid #1a3a1a',borderRadius:'4px',padding:'8px 10px',textAlign:'center'}}>
+              <div style={{color:'#bbb',fontSize:'9px',letterSpacing:'1px',marginBottom:'2px'}}>ENEMIES BEATEN</div>
+              <div style={{color:'#4ade80',fontSize:'18px',fontWeight:'bold'}}>{currentRunEnemiesBeaten}</div>
             </div>
-            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'6px',padding:'10px 12px',textAlign:'center'}}>
-              <div style={{color:'#bbb',fontSize:'11px',letterSpacing:'1.5px',marginBottom:'4px'}}>PRESTIGE EARNED</div>
-              <div style={{color:'#60a5fa',fontSize:'24px',fontWeight:'bold'}}>{s.prestige}✦</div>
+            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'4px',padding:'8px 10px',textAlign:'center'}}>
+              <div style={{color:'#bbb',fontSize:'9px',letterSpacing:'1px',marginBottom:'2px'}}>PRESTIGE EARNED</div>
+              <div style={{color:'#60a5fa',fontSize:'18px',fontWeight:'bold'}}>{s.prestige}✦</div>
             </div>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
-            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'6px',padding:'10px 12px',textAlign:'center'}}>
-              <div style={{color:'#bbb',fontSize:'11px',letterSpacing:'1.5px',marginBottom:'4px'}}>RUN TIME</div>
-              <div style={{color:'#38bdf8',fontSize:'18px',fontWeight:'bold'}}>{formatTime(currentRunTime*1000)}</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px'}}>
+            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'4px',padding:'8px 10px',textAlign:'center'}}>
+              <div style={{color:'#bbb',fontSize:'9px',letterSpacing:'1px',marginBottom:'2px'}}>RUN TIME</div>
+              <div style={{color:'#38bdf8',fontSize:'14px',fontWeight:'bold'}}>{formatTime(currentRunTime*1000)}</div>
             </div>
-            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'6px',padding:'10px 12px',textAlign:'center'}}>
-              <div style={{color:'#bbb',fontSize:'11px',letterSpacing:'1.5px',marginBottom:'4px'}}>TOTAL TIME</div>
-              <div style={{color:'#a78bfa',fontSize:'18px',fontWeight:'bold'}}>{formatTime(totalPlayMs)}</div>
+            <div style={{background:'#0a0a1a',border:'1px solid #1a1a3a',borderRadius:'4px',padding:'8px 10px',textAlign:'center'}}>
+              <div style={{color:'#bbb',fontSize:'9px',letterSpacing:'1px',marginBottom:'2px'}}>TOTAL TIME</div>
+              <div style={{color:'#a78bfa',fontSize:'14px',fontWeight:'bold'}}>{formatTime(totalPlayMs)}</div>
             </div>
           </div>
         </div>
 
         {/* Lifetime stats */}
-        <div style={{marginBottom:'20px',paddingBottom:'20px',borderBottom:'1px solid #1e1e1e'}}>
-          <div style={{fontSize:'13px',color:'#666',letterSpacing:'2px',marginBottom:'10px',fontFamily:"'PT Mono', monospace",display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div style={{marginBottom:'12px',paddingBottom:'12px',borderBottom:'1px solid #1e1e1e'}}>
+          <div style={{fontSize:'11px',color:'#666',letterSpacing:'1.5px',marginBottom:'6px',fontFamily:"'PT Mono', monospace",display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             LIFETIME STATS
-            <span style={{fontSize:'11px',color:'#555'}}>total enemies defeated: {totalEnemiesDefeated}</span>
+            <span style={{fontSize:'9px',color:'#555'}}>enemies: {totalEnemiesDefeated}</span>
           </div>
-          <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:'3px'}}>
             {ENEMIES.map((en,i)=>(
               <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',
-                background:'#0d0d0d',border:'1px solid #222',borderRadius:'4px',padding:'8px 10px',fontSize:'13px'}}>
+                background:'#0d0d0d',border:'1px solid #222',borderRadius:'3px',padding:'5px 8px',fontSize:'11px'}}>
                 <span style={{color:'#eee'}}>
                   <span style={{color:'#e55',fontWeight:'bold'}}>E{i}</span>
-                  <span style={{color:'#bbb',marginLeft:'6px'}}>{fmtHp(en.maxHp)}HP</span>
-                  <span style={{color:'#999',marginLeft:'4px'}}>·</span>
-                  <span style={{color:'#bbb',marginLeft:'4px'}}>def {en.def}</span>
+                  <span style={{color:'#bbb',marginLeft:'4px'}}>{fmtHp(en.maxHp)}HP</span>
+                  <span style={{color:'#999',marginLeft:'2px'}}>·</span>
+                  <span style={{color:'#bbb',marginLeft:'2px'}}>D{en.def}</span>
                 </span>
-                <span style={{color:'#fbbf24',fontWeight:'bold',fontSize:'14px'}}>×{s.beaten[i]?s.beatCount[i]:0}</span>
+                <span style={{color:'#fbbf24',fontWeight:'bold',fontSize:'12px'}}>×{s.beaten[i]?s.beatCount[i]:0}</span>
               </div>
             ))}
           </div>
@@ -2729,8 +2870,12 @@ function OptionsModal({currentState,d,onClose}){
 
   const handleExport=()=>{
     saveState(currentState);
-    const raw=localStorage.getItem(SAVE_KEY);
-    if(raw) setExportStr(b64Encode(raw));
+    // Build export directly from currentState so all fields are guaranteed present
+    // (avoids falling back to a stale localStorage value if saveState fails)
+    const snap={};
+    for(const k of Object.keys(currentState)) if(!TRANSIENT.has(k)) snap[k]=currentState[k];
+    const payload=JSON.stringify({v:SAVE_VERSION,s:snap,savedAt:Date.now()});
+    setExportStr(b64Encode(payload));
   };
 
   const handleCopy=()=>{
@@ -2859,7 +3004,7 @@ function OptionsModal({currentState,d,onClose}){
 }
 
 /* ─── OFFLINE MODAL ────────────────────────────────────────────────── */
-function OfflineModal({data,s,d,devSpeed,setAtkBarKey,onDone}){
+function OfflineModal({data,s,d,devSpeed,setAtkBarKey,setShouldAnimateAttk,onDone}){
   const{elapsed,total,preTot,preFightHp}=data;
   const doneRef=useRef(0);
   const[displayDone,setDisplayDone]=useState(0);
@@ -2875,7 +3020,7 @@ function OfflineModal({data,s,d,devSpeed,setAtkBarKey,onDone}){
     const iv=setInterval(()=>{
       if(skippedRef.current||doneRef.current>=total){clearInterval(iv);return;}
       const batch=Math.min(simMultRef.current, total-doneRef.current);
-      for(let i=0;i<batch;i++) {setAtkBarKey(k=>k+1); d({t:'ATK'});}  // juice on each attack
+      for(let i=0;i<batch;i++) {setAtkBarKey(k=>k+1); setShouldAnimateAttk(true); d({t:'ATK'});}  // juice on each attack
       doneRef.current+=batch;
       setDisplayDone(doneRef.current);
     },simInterval);
@@ -2887,7 +3032,7 @@ function OfflineModal({data,s,d,devSpeed,setAtkBarKey,onDone}){
     if(skippedRef.current) return;
     skippedRef.current=true;
     const remaining=total-doneRef.current;
-    for(let i=0;i<remaining;i++) {setAtkBarKey(k=>k+1); d({t:'ATK'});}
+    for(let i=0;i<remaining;i++) {setAtkBarKey(k=>k+1); setShouldAnimateAttk(true); d({t:'ATK'});}
     doneRef.current=total;
     setDisplayDone(total);
   };
@@ -2962,6 +3107,29 @@ function OfflineModal({data,s,d,devSpeed,setAtkBarKey,onDone}){
   );
 }
 
+/* ─── global pipe flash container ────────────────────────────────── */
+let _pipeRoot=null;
+function getPipeRoot(){
+  if(!_pipeRoot){
+    _pipeRoot=document.createElement('div');
+    _pipeRoot.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:visible;';
+    document.body.appendChild(_pipeRoot);
+  }
+  return _pipeRoot;
+}
+function spawnPipe(clientX, clientY, height, color){
+  const root=getPipeRoot();
+  const pipe=document.createElement('div');
+  pipe.className='res-pipe';
+  pipe.style.left=clientX+'px';
+  pipe.style.top=clientY+'px';
+  pipe.style.height=height+'px';
+  pipe.style.background=color;
+  pipe.style.boxShadow=`0 0 6px ${color},0 0 2px #000`;
+  root.appendChild(pipe);
+  setTimeout(()=>{if(pipe.parentNode)pipe.parentNode.removeChild(pipe);},1050);
+}
+
 /* ─── APP ──────────────────────────────────────────────────────────── */
 function App(){
   const [s,d]=useReducer(reduce,null,()=>{
@@ -3007,7 +3175,6 @@ function App(){
   const [devOpen,setDevOpen]=useState(false);
   const [devHpPct,setDevHpPct]=useState(100);
   const [devSpeed,setDevSpeed]=useState(1);
-  const [devModeEnabled,setDevModeEnabled]=useState(()=>!!getCookie(DEV_COOKIE));
   const [adminOpen,setAdminOpen]=useState(false);
   const [showTargets,setShowTargets]=useState(false);
   const [forgeOpen,setForgeOpen]=useState(false);
@@ -3029,6 +3196,7 @@ function App(){
   const [offlineSimData,setOfflineSimData]=useState(null);
   const [autoSaveLed,setAutoSaveLed]=useState(false);
   const [atkBarKey,setAtkBarKey]=useState(0);
+  const [shouldAnimateAttk,setShouldAnimateAttk]=useState(false);
   const isSimulatingRef=useRef(false);
   // Trigger an offline sim for a given elapsed ms (used by dev buttons)
   const triggerOfflineSim=elapsed=>{
@@ -3039,7 +3207,6 @@ function App(){
     setOfflineSimData({elapsed,total,preTot:{...s.tot},preFightHp:s.fightHp});
   };
   const concedeRef=useRef(null);
-  const devSeqRef=useRef(''); // Track typed sequence for "iamdevloper"
   useEffect(()=>{
     if(concedePhase!==2) return;
     const handler=(e)=>{ if(concedeRef.current&&!concedeRef.current.contains(e.target)) setConcedePhase(0); };
@@ -3105,38 +3272,6 @@ function App(){
     };
   },[]);
 
-  // Developer mode sequence detection: "iamdevloper"
-  useEffect(()=>{
-    const TARGET_SEQ='iamdevloper';
-    const handleInput=(e)=>{
-      // Track typed/pasted characters
-      if(e.type==='keydown'&&e.key.length===1) {
-        devSeqRef.current=(devSeqRef.current+e.key.toLowerCase()).slice(-TARGET_SEQ.length);
-      } else if(e.type==='paste') {
-        const pastedText=e.clipboardData?.getData('text')||'';
-        devSeqRef.current=(devSeqRef.current+pastedText.toLowerCase()).slice(-TARGET_SEQ.length);
-      }
-      // Check if sequence matches
-      if(devSeqRef.current===TARGET_SEQ){
-        setDevModeEnabled(true);
-        setAdminOpen(true);
-        setCookie(DEV_COOKIE,'1');
-        devSeqRef.current=''; // Reset for next round
-        // Play activation sound
-        SFX.ready('α');
-        SFX.ready('β');
-        // Log the activation
-        d({t:'LOG_DEV',msg:'You are now developer'});
-      }
-    };
-    document.addEventListener('keydown',handleInput);
-    document.addEventListener('paste',handleInput);
-    return()=>{
-      document.removeEventListener('keydown',handleInput);
-      document.removeEventListener('paste',handleInput);
-    };
-  },[]);
-
   // Main game tick loop
   useEffect(()=>{
     const tickInterval=250/devSpeed;
@@ -3175,6 +3310,7 @@ function App(){
       if(isSimulatingRef.current) return; // paused during offline sim
       lastAtkTime.current=Date.now();
       setAtkBarKey(k=>k+1);
+      setShouldAnimateAttk(true);
       d({t:'ATK'});
     },atkInterval);
     
@@ -3199,13 +3335,18 @@ function App(){
     };
   },[devSpeed,s.atkCdLvl]);
 
+  // Reset animation flag after animation completes
+  useEffect(()=>{
+    if(!shouldAnimateAttk) return;
+    const timer=setTimeout(()=>setShouldAnimateAttk(false),260); // atk-wiggle is longest at 240ms
+    return()=>clearTimeout(timer);
+  },[shouldAnimateAttk]);
+
   // autosave — debounced 5 s so rapid ticks don't hammer localStorage
   const saveTimer=useRef(null);
   const lastLogId=useRef(0);
   const resBtnRefs=useRef({});
-  const resJuiceRefs=useRef({});  // refs to baR containers for juice animation
   const lastResClick=useRef({});  // {k:{x,y,ts}} — manual click positions
-  const heldKeysRef=useRef({}); // track which resource keys are held down
   const hpBarRef=useRef(null);
   const saveBtnRef=useRef(null);
   const slotBadgeRefs=useRef({});
@@ -3220,57 +3361,24 @@ function App(){
   },[s]);
 
   useEffect(()=>{
-    const keyMap={a:'α',s:'β',d:'γ',f:'δ'};
-    const triggerKey=k=>{
-      if(s.cd[k]>0||!ul(k)) return; // skip if on cooldown or locked
-      // juice the bar
-      const barEl=resJuiceRefs.current[k];
-      if(barEl){
-        barEl.classList.remove('juice');
-        void barEl.offsetWidth; // force reflow for animation reset
-        barEl.classList.add('juice');
-      }
-      d({t:'CLICK',k});
-    };
-    
-    const handleKeyDown=e=>{
+    const fn=e=>{
       if(e.key==='#') setDevOpen(v=>!v);
-      if(e.key==='.'&&devModeEnabled) setAdminOpen(v=>!v);
+      if(e.key==='.') setAdminOpen(v=>!v);
+      const keyMap={a:'α',s:'β',d:'γ',f:'δ'};
       const k=keyMap[e.key.toLowerCase()];
-      if(k&&!heldKeysRef.current[k]){
-        heldKeysRef.current[k]=true;
-        triggerKey(k);
-      }
-    };
-    
-    const handleKeyUp=e=>{
-      const k=keyMap[e.key.toLowerCase()];
-      if(k) heldKeysRef.current[k]=false;
-    };
-    
-    // Repeat interval for held keys — triggers every 150ms while holding
-    const repInterval=setInterval(()=>{
-      for(const[key,held] of Object.entries(heldKeysRef.current)){
-        if(held){
-          const k=keyMap[key];
-          // Auto-release if resource went on cooldown
-          if(s.cd[k]>0||!ul(k)){ 
-            heldKeysRef.current[key]=false;
-          } else {
-            triggerKey(k);
-          }
+      if(k){
+        // juice the button
+        const el=resBtnRefs.current[k];
+        if(el){
+          el.classList.add('juice');
+          setTimeout(()=>el.classList.remove('juice'),200);
         }
+        d({t:'CLICK',k});
       }
-    },150);
-    
-    window.addEventListener('keydown',handleKeyDown);
-    window.addEventListener('keyup',handleKeyUp);
-    return()=>{
-      window.removeEventListener('keydown',handleKeyDown);
-      window.removeEventListener('keyup',handleKeyUp);
-      clearInterval(repInterval);
     };
-  },[devModeEnabled,s.cd,s]);
+    window.addEventListener('keydown',fn);
+    return()=>window.removeEventListener('keydown',fn);
+  },[]);
 
   useEffect(()=>{
     if(!s.lastTriggers.length) return;
@@ -3424,6 +3532,13 @@ function App(){
             });
           }
         }
+        // spawn pipe at roll-quality x position, spanning height of button
+        const btnEl=resBtnRefs.current[rk];
+        if(btnEl){
+          const br=btnEl.getBoundingClientRect();
+          const px=br.left+br.width*q;
+          spawnPipe(px, br.top, br.height, COL[rk]);
+        }
       }
     }
   },[s.log]);
@@ -3456,7 +3571,7 @@ function App(){
       {optionsOpen&&<OptionsModal currentState={s} d={d} onClose={()=>setOptionsOpen(false)}/>}
       {helpOpen&&<HelpModal tab={helpTab} onTabChange={setHelpTab} onClose={()=>{localStorage.setItem('goododds.seen','1');setHelpOpen(false);}}/>}
       {statsOpen&&<StatsModal s={s} onClose={()=>setStatsOpen(false)}/>}
-      {offlineSimData&&<OfflineModal data={offlineSimData} s={s} d={d} devSpeed={devSpeed} setAtkBarKey={setAtkBarKey} onDone={()=>{d({t:'OFFLINE_DONE',elapsed:offlineSimData.elapsed});isSimulatingRef.current=false;setOfflineSimData(null);lastAtkTime.current=Date.now();}}/>}
+      {offlineSimData&&<OfflineModal data={offlineSimData} s={s} d={d} devSpeed={devSpeed} setAtkBarKey={setAtkBarKey} setShouldAnimateAttk={setShouldAnimateAttk} onDone={()=>{d({t:'OFFLINE_DONE',elapsed:offlineSimData.elapsed});isSimulatingRef.current=false;setOfflineSimData(null);lastAtkTime.current=Date.now();}}/>}
 
 
 
@@ -3473,7 +3588,7 @@ function App(){
             <span style={{color:'#ddd',fontSize:'13px'}}>
               def:<span style={{color:'#eee'}}>{en.def}</span>
               {s.armorPen>0&&<span style={{color:'#bbb'}}> -{s.armorPen}</span>}
-              &nbsp;·&nbsp;<span style={{color:'#fbbf24'}}>✦{s.prestige}</span>
+              {s.prestige>0&&<span>&nbsp;·&nbsp;<span style={{color:'#fbbf24'}}>✦{s.prestige}</span></span>}
             </span>
             <button ref={concedeRef}
               onClick={()=>{
@@ -3538,23 +3653,20 @@ function App(){
                   ))}
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'2px'}}>
                     <span style={{color:COL[k],fontSize:'16px'}}>{k}</span>
-                    <span style={{color:'#ccc',fontSize:'13px'}}>
-                      {locked?`need ${NEED[k]}${PREV[k]}`:`${s.rMin[k]+rMinB}–${s.rMax[k]+rMaxB}`}
-                    </span>
+                    {locked&&<span style={{color:'#ccc',fontSize:'13px'}}>{`need ${NEED[k]}${PREV[k]}`}</span>}
                     <span style={{color:'#fff',fontSize:'15px',minWidth:'32px',textAlign:'right'}}>{s.res[k]}</span>
                   </div>
-                  <div ref={el=>resJuiceRefs.current[k]=el} style={{position:'relative',height:'36px',overflow:'hidden',borderRadius:'4px',background:'#1a1a1a'}}>
+                  <div style={{position:'relative',height:'36px',overflow:'hidden',borderRadius:'4px',background:'#1a1a1a'}}>
                     <div style={{position:'absolute',top:0,left:0,height:'100%',
                       width:`${locked?unlockPct*100:Math.max((1-cdPct)*100,0)}%`,
                       background:barCol,
                       transition:'width .25s linear',pointerEvents:'none'}}/>
+                    {!locked&&<span style={{position:'absolute',left:'6px',top:'50%',transform:'translateY(-50%)',color:COL[k],fontSize:'11px',fontFamily:'monospace',opacity:.7,pointerEvents:'none',zIndex:1}}>{s.rMin[k]+rMinB}</span>}
+                    {!locked&&<span style={{position:'absolute',right:'6px',top:'50%',transform:'translateY(-50%)',color:COL[k],fontSize:'11px',fontFamily:'monospace',opacity:.7,pointerEvents:'none',zIndex:1}}>{s.rMax[k]+rMaxB}</span>}
                     <button onClick={e=>{
                         if(!locked){
-                          const barEl=resJuiceRefs.current[k];
-                          if(barEl){
-                            barEl.classList.add('juice');
-                            setTimeout(()=>barEl.classList.remove('juice'),200);
-                          }
+                          e.currentTarget.classList.add('juice');
+                          setTimeout(()=>e.currentTarget.classList.remove('juice'),200);
                           d({t:'CLICK',k});
                         }
                       }}
@@ -3572,14 +3684,14 @@ function App(){
 
           {/* combat log */}
           <div style={{...pnl(),flex:isMobile?undefined:1,overflow:'hidden',display:'flex',flexDirection:'column',maxHeight:isMobile?'200px':undefined}}>
-            <div style={{...HDR,display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'12px'}}>
+            <div style={{...HDR,display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px'}}>
               <span>EVENT LOG</span>
-              <ToggleRow showLabels={true} items={[{k:'Z',col:'#9ca3af',label:'0'},{k:'B',col:'#f87171'},{k:'R',col:'#60a5fa'},{k:'U',col:'#6b7280'},{k:'F',col:'#4ade80'}].map(({k,col,label})=>({label,
+              <ToggleRow showLabels={true} size={22} items={[{k:'Z',col:'#9ca3af',label:'0'},{k:'B',col:'#f87171',label:'C'},{k:'R',col:'#60a5fa',label:'R'},{k:'U',col:'#6b7280',label:'U'},{k:'F',col:'#4ade80',label:'M'}].map(({k,col,label})=>({label,
                 k,col,label,on:()=>logFilter[k],toggle:()=>setLogFilter(p=>({...p,[k]:!p[k]}))
               }))}/>
             </div>
             <div style={{overflowY:'auto',borderTop:'1px solid #1e1e1e',paddingTop:'4px',flex:1,display:'flex',flexDirection:'column',gap:'2px'}}>
-              {s.log.filter(e=>(!e.cat||logFilter[e.cat])&&!(e.zero&&logFilter.Z)).map(e=>{
+              {s.log.filter(e=>(!e.cat||logFilter[e.cat])&&!(e.zero&&!logFilter.Z)).map(e=>{
                 const isDmg=e.col==='#f87171';
                 const arrowIdx=isDmg?e.msg.lastIndexOf('→'):-1;
                 const prefix=arrowIdx>=0?e.msg.slice(0,arrowIdx+1):e.msg;
@@ -3624,31 +3736,31 @@ function App(){
             const effCritChance=s.critChance+mb.st.critChance;
             const effCritDmg=parseFloat((s.critDmg+mb.st.critDmg).toFixed(2));
             return(
-              <div key={atkBarKey} className={atkBarKey>0?(isZeroDmg?'atk-wiggle':'atk-slide'):''} style={{position:'relative',overflow:'hidden',background:'#161616',
+              <div key={atkBarKey} className={shouldAnimateAttk?(isZeroDmg?'atk-wiggle':'atk-slide'):''} style={{position:'relative',overflow:'hidden',background:'#161616',
                 border:'1px solid #2e2e2e',borderRadius:'6px',padding:'12px 16px',
                 flexShrink:0}}>
                 <div style={{position:'absolute',top:0,left:0,height:'100%',
                   width:`${atkPct}%`,background:'#222',
                   transition:'width .25s linear',pointerEvents:'none'}}/>
                 <div style={{position:'relative',display:'flex',alignItems:'center',gap:'8px',overflow:'hidden'}}>
-                  <span style={{color:'#999',fontSize:'13px',fontFamily:'monospace',whiteSpace:'pre',overflow:'hidden',minWidth:0,flexShrink:1,flex:1}}>
+                  <span style={{color:'#999',fontSize:'11px',fontFamily:'monospace',whiteSpace:'pre',overflow:'hidden',minWidth:0,flexShrink:1,flex:1}}>
                     {'base ['}<span style={{color:'#eee'}}>{effDMin}</span>
                     <span style={{color:'#2a2a2a'}}>{' '.repeat(bL)}</span>
-                    <span style={{color:pipeCol}}>{'|'}</span>
+                    <span style={{color:pipeCol,fontSize:'15px',fontWeight:'bold',lineHeight:1}}>{'|'}</span>
                     <span style={{color:'#2a2a2a'}}>{' '.repeat(bR)}</span>
                     <span style={{color:'#eee'}}>{effDMax}</span>{'] × mult ['}
                     <span style={{color:'#eee'}}>{effMMin.toFixed(2)}</span>
                     <span style={{color:'#2a2a2a'}}>{' '.repeat(mL)}</span>
-                    <span style={{color:pipeCol}}>{'|'}</span>
+                    <span style={{color:pipeCol,fontSize:'15px',fontWeight:'bold',lineHeight:1}}>{'|'}</span>
                     <span style={{color:'#2a2a2a'}}>{' '.repeat(mR)}</span>
-                    <span style={{color:'#bbb'}}>{effMMax.toFixed(2)}</span>{']  '}
-                    {s.armorPen>0&&<span style={{color:'#666'}}>{'pen:'}{s.armorPen}{'  '}</span>}
+                    <span style={{color:'#bbb'}}>{effMMax.toFixed(2)}</span>{']  '}
+                    {s.armorPen>0&&<span style={{color:'#666'}}>{'pen:'}{s.armorPen}{'  '}</span>}
                     {!la&&<span style={{color:'#888'}}>{'~'}{avgDmg}</span>}
                   </span>
                   {la&&(
-                    <span style={{flexShrink:0,color:'#f87171',fontSize:'13px',fontFamily:'monospace',whiteSpace:'nowrap'}}>
+                    <span style={{flexShrink:0,color:'#f87171',fontSize:'11px',fontFamily:'monospace',whiteSpace:'nowrap'}}>
                       {la.effDef>0&&<span style={{color:'#666'}}>{'-'}{la.effDef}{'def '}</span>}
-                      <span style={{color:'#fca5a5'}}>{'→ '}<span style={{fontSize:'17px',fontWeight:'bold'}}>{la.dmg}</span></span>
+                      <span style={{color:'#fca5a5'}}>{'→ '}<span style={{fontSize:'15px',fontWeight:'bold'}}>{la.dmg}</span></span>
                     </span>
                   )}
                 </div>
@@ -3889,7 +4001,7 @@ function App(){
               <span>MOD SLOTS ({s.slotCount}/8)</span>
               <span style={{display:'flex',alignItems:'baseline',gap:'5px'}}>
                 <span style={{color:'#fbbf24',fontSize:'16px'}}>✦{s.prestige}</span>
-                <span style={{color:'#fbbf2488',fontSize:'13px'}}>+✦{en.pp}</span>
+                <span style={{color:'#fbbf2488',fontSize:'13px'}}>+✦{Math.floor(en.pp*(s.ppMulti+mb.st.ppMulti))}</span>
               </span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'5px'}}>
