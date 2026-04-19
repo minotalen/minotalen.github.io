@@ -2711,15 +2711,15 @@ function RunInterstitial({result,s,d,onClose}){
           {/* combat upgrades group */}
           {ul('α')&&(
             <>
-              {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Raise your base damage floor and ceiling. Min cannot exceed max.',sKey:'damage'})}
+              {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Each attack picks a random base damage between min and max. Min cannot exceed max.',sKey:'damage'})}
               <PairRow label="dmg" kMin="dm" kMax="dx"/>
-              <SingleRow k="acd" label="attack speed"/>
+              <SingleRow k="acd" label="attack speed /1.05"/>
             </>
           )}
           
           {ul('β')&&(
             <>
-              {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pierce ${s.armorPierce}`,desc:'Scale all hits by a random multiplier in range. Armor pierce ignores enemy defense.',sKey:'mult'})}
+              {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pierce ${s.armorPierce}`,desc:'Each attack picks a random multiplier between min and max and multiplies base damage by it. Armor pierce subtracts directly from enemy defense before damage.',sKey:'mult'})}
               <PairRow label="mult" kMin="mm" kMax="mx"/>
               <SingleRow k="pen" label={UPG.pen.label}/>
             </>
@@ -2730,7 +2730,7 @@ function RunInterstitial({result,s,d,onClose}){
             if(!ul(r)) return null;
             return(
               <div key={r}>
-                {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Raise yield range and reduce cooldown for ${r} resource collection.`,sKey:`res_${r}`})}
+                {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Each click yields a random amount of ${r} between min and max. Cooldown -5% reduces the time between clicks.`,sKey:`res_${r}`})}
                 <PairRow label="min/max" kMin={`${r}m`} kMax={`${r}x`}/>
                 <SingleRow k={`${r}cd`} label="cooldown -5%"/>
               </div>
@@ -2740,7 +2740,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* crit upgrades */}
           {ul('γ')&&(
             <>
-              {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Chance to land a critical hit — amplifies the final damage output.',sKey:'crit'})}
+              {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Each attack has a % chance to crit. On a crit, final damage is multiplied by (1 + crit value).',sKey:'crit'})}
               <SingleRow k="γcrit" label="chance %"/>
               <SingleRow k="γcritdmg" label="damage x"/>
             </>
@@ -2749,7 +2749,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* damage exponent upgrades */}
           {ul('δ')&&(
             <>
-              {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)}`,desc:'Damage is raised to a random exponent in this range. Higher exponents amplify strong rolls.',sKey:'exp'})}
+              {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)}`,desc:'Base damage is raised to a random exponent between min and max before multiplying. Larger exponents amplify high base rolls more.',sKey:'exp'})}
               <SingleRow k="δdmgexpMin" label="exp min"/>
               <SingleRow k="δdmgexpMax" label="exp max"/>
             </>
@@ -2758,7 +2758,7 @@ function RunInterstitial({result,s,d,onClose}){
           {/* prestige upgrades */}
           {(
             <>
-              {secHdr('prestige',{stats:`×${s.ppMulti.toFixed(1)}`,desc:'Each purchase multiplies prestige points earned per kill by ×1.5.',sKey:'prestige'})}
+              {secHdr('prestige',{stats:`×${s.ppMulti.toFixed(1)}`,desc:'Each purchase multiplies prestige points earned at the end of a run by x1.5. Stacks multiplicatively.',sKey:'prestige'})}
 
               {/* prestige multiplier */}
               {s.beaten[3]
@@ -2766,7 +2766,7 @@ function RunInterstitial({result,s,d,onClose}){
                 :showLocked('δppx')&&<LockedSingleRow k="δppx"/>}
 
               {/* atk trigger */}
-              {secHdr('atk trigger',{desc:'Spending a resource has a % chance to fire an extra auto-attack immediately.',sKey:'atktrig'})}
+              {secHdr('atk trigger',{desc:'Spending a resource has a % chance to immediately fire an extra auto-attack.',sKey:'atktrig'})}
               {RES.map(r=>{
                 const k=`${r}atk`;
                 const val=(s.atkTrig&&s.atkTrig[r])||0;
@@ -2776,7 +2776,7 @@ function RunInterstitial({result,s,d,onClose}){
               })}
 
               {/* resource prestige */}
-              {secHdr('res prestige',{desc:'Permanent per-resource bonuses: reduce resource costs, chance for free resources, or chance to instantly recharge.',sKey:'resprestige'})}
+              {secHdr('res prestige',{desc:'Persistent bonuses that survive between runs. Cost reduction lowers how much you spend per click. Free chance skips the spend entirely. Lucky chance instantly resets the cooldown.',sKey:'resprestige'})}
               {RES.map(r=>{
                 const crK=`${r}cr`,fcK=`${r}fc`,lcK=`${r}lc`;
                 const crOn=s.beaten[UPG[crK].unlock],fcOn=s.beaten[UPG[fcK].unlock],lcOn=s.beaten[UPG[lcK].unlock];
@@ -2796,7 +2796,7 @@ function RunInterstitial({result,s,d,onClose}){
               })}
 
               {/* mod slots — purchasable after beating corresponding enemy */}
-              {secHdr('mod slots',{stats:`${s.slotCount}/8`,desc:'Buy additional gear slots to equip more mods, and expand your inventory bag.',sKey:'slots'})}
+              {secHdr('mod slots',{stats:`${s.slotCount}/8`,desc:'Each slot lets you equip one more mod. Bag upgrades expand your inventory by 2 slots.',sKey:'slots'})}
               {s.slotsDone.map((done,i)=>{
                 const slotN=4+i;
                 const enemyReq=i+1;
@@ -4508,7 +4508,7 @@ function App(){
           {/* upgrades content */}
           {!forgeOpen&&<div style={{...pnl(),flex:1,overflowY:'auto'}}>
             {/* ── COMBAT UPGRADES ── */}
-            {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Raise your base damage floor and ceiling. Min cannot exceed max.',sKey:'damage'})}
+            {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Each attack picks a random base damage between min and max. Min cannot exceed max.',sKey:'damage'})}
             {(()=>{
               if(!ul('α')) return null;
               const mkPair=(label,kMin,kMax)=>{
@@ -4545,7 +4545,7 @@ function App(){
                 <>
                   {mkPair('dmg','dm','dx')}
                   <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'7px'}}>
-                    <span style={{color:'#eee',fontSize:'15px',flex:1}}>attack speed</span>
+                    <span style={{color:'#eee',fontSize:'15px',flex:1}}>attack speed /1.05</span>
                     <span style={{color:'#aaa',fontSize:'13px'}}>lv{acdLvl}</span>
                     <button onClick={()=>d({t:'BUY_N',k:'acd',n:buyAmt})} disabled={biAcd.disabled}
                       style={mkBtn(biAcd.on,COL[acdDef.res],{whiteSpace:'nowrap',fontSize:'14px',padding:'5px 11px'})}>
@@ -4555,7 +4555,7 @@ function App(){
 
                   {ul('β')&&(
                     <>
-                      {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pierce ${s.armorPierce}`,desc:'Scale all hits by a random multiplier in range. Armor pierce ignores enemy defense.',sKey:'mult'})}
+                      {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pierce ${s.armorPierce}`,desc:'Each attack picks a random multiplier between min and max and multiplies base damage by it. Armor pierce subtracts directly from enemy defense before damage.',sKey:'mult'})}
                       {mkPair('mult','mm','mx')}
                     </>
                   )}
@@ -4580,7 +4580,7 @@ function App(){
               const biCritDmg=buyInfo('γcritdmg',s.ulvl['γcritdmg'],s.res['γ']);
               return(
                 <div>
-                  {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Chance to land a critical hit — amplifies the final damage output.',sKey:'crit'})}
+                  {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Each attack has a % chance to crit. On a crit, final damage is multiplied by (1 + crit value).',sKey:'crit'})}
                   <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'7px'}}>
                     <span style={{color:'#eee',fontSize:'15px',flex:1}}>chance %</span>
                     <span style={{color:'#aaa',fontSize:'13px'}}>lv{s.ulvl['γcrit']}</span>
@@ -4608,7 +4608,7 @@ function App(){
               const biPpx=buyInfo('δppx',s.ulvl['δppx'],s.res['δ']);
               return(
                 <div>
-                  {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)} prestige ×${s.ppMulti.toFixed(1)}`,desc:'Damage is raised to a random exponent in this range. Higher exponents amplify strong rolls.',sKey:'exp'})}
+                  {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)} prestige ×${s.ppMulti.toFixed(1)}`,desc:'Base damage is raised to a random exponent between min and max before multiplying. Larger exponents amplify high base rolls more.',sKey:'exp'})}
                   <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'7px'}}>
                     <span style={{color:'#eee',fontSize:'15px',flex:1}}>exponent</span>
                     <span style={{color:'#bbb',fontSize:'13px'}}>min</span>
@@ -4643,7 +4643,7 @@ function App(){
               const cdMs=(TMR[r]/1000).toFixed(1);
               return(
                 <div key={r}>
-                  {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Raise yield range and reduce cooldown for ${r} resource collection.`,sKey:`res_${r}`})}
+                  {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Each click yields a random amount of ${r} between min and max. Cooldown -5% reduces the time between clicks.`,sKey:`res_${r}`})}
                   {(()=>{
                     const km=`${r}m`,kx=`${r}x`,kcd=`${r}cd`;
                     const dm=UPG[km],dx=UPG[kx],dcd=UPG[kcd];
