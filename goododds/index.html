@@ -81,12 +81,17 @@
   input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:6px;background:#f87171;cursor:pointer;box-shadow:0 0 4px rgba(248,113,113,0.5)}
   input[type="range"]::-moz-range-track{background:#666;height:4px;border-radius:2px;border:0}
   input[type="range"]::-moz-range-thumb{width:12px;height:12px;border-radius:6px;background:#f87171;cursor:pointer;border:0;box-shadow:0 0 4px rgba(248,113,113,0.5)}
-  @keyframes autoSaveLed{
-    0%  {opacity:0;box-shadow:0 0 0 rgba(74,222,128,0)}
-    25% {opacity:0.6;box-shadow:0 0 4px rgba(74,222,128,0.6)}
+  @keyframes autoSaveLedFlash{
+    0%  {opacity:1;box-shadow:0 0 10px 3px rgba(74,222,128,0.9)}
+    60% {opacity:0.8;box-shadow:0 0 6px 2px rgba(74,222,128,0.6)}
     100%{opacity:0;box-shadow:0 0 0 rgba(74,222,128,0)}
   }
-  .autosave-led{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:#4ade80;animation:autoSaveLed 400ms ease-in-out forwards;pointerEvents:none;lineHeight:1;zIndex:10;transform:translate(-50%,-50%)}
+  .autosave-led{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:autoSaveLedFlash 700ms ease-out forwards;pointer-events:none;display:block}
+  @keyframes savePendingPulse{
+    0%,100%{opacity:0.35;box-shadow:0 0 3px rgba(74,222,128,0.3)}
+    50%    {opacity:0.9;box-shadow:0 0 8px 2px rgba(74,222,128,0.7)}
+  }
+  .save-pending{width:10px;height:10px;border-radius:50%;background:#4ade80;animation:savePendingPulse 1.5s ease-in-out infinite;pointer-events:none;display:block}
   @keyframes logSlideIn{
     0%  {opacity:0;transform:translateX(-8px)}
     100%{opacity:1;transform:translateX(0)}
@@ -154,6 +159,19 @@
     100% {background:#1e1e1e;transform:scaleY(1) scaleX(1)}
   }
   .hp-juice{animation:hpJuice 200ms cubic-bezier(0.34,1.56,0.64,1);transform-origin:center}
+  @keyframes hpHitFlash{
+    0%  {opacity:0.65}
+    100%{opacity:0}
+  }
+  .hp-hit-flash{position:absolute;top:0;left:0;right:0;height:14px;border-radius:4px;background:#f87171;pointer-events:none;animation:hpHitFlash 220ms ease-out forwards;z-index:5}
+  @keyframes hpDmgPop{
+    0%  {opacity:0;transform:translate(-50%,-50%) scale(0.12)}
+    15% {opacity:1;transform:translate(-50%,-50%) scale(1.22)}
+    28% {transform:translate(-50%,-50%) scale(1)}
+    68% {opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(0.85)}
+  }
+  .hp-dmg-pop{position:absolute;top:7px;left:50%;pointer-events:none;animation:hpDmgPop 1.8s ease-out forwards;z-index:6;white-space:nowrap;font-family:'Hyperlegible Mono',monospace;font-weight:600;color:#fff;text-shadow:0 0 6px #f87171,0 1px 3px #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
   @media(max-width:640px){
     input[type="range"]::-webkit-slider-runnable-track{height:6px;border-radius:3px}
     input[type="range"]::-webkit-slider-thumb{width:22px;height:22px;border-radius:11px}
@@ -303,9 +321,27 @@ const Particles=(()=>{
 const SFX=(()=>{
   let ctx=null,master=null,warm=null,verb=null,verbWet=null,verbDry=null,shaper=null;
   let vol=0.5,muted=false,suppressed=false;
+  let offlineMode=false,offlineVolScale=1.0;
+  const offlineLastMs={};  // channel → last played timestamp
+  const OFFLINE_GATE={hit:100,kill:800,res:130,mod:200,upgrade:500,forge:1000,prestige:1500,ready:500};
   const CH={res:true,hit:true,upgrade:true,mod:true,forge:true,prestige:true,ready:true};
-  function ch(k){return !muted&&!suppressed&&CH[k];}
+  function ch(k){
+    if(muted||suppressed||!CH[k]) return false;
+    if(offlineMode){
+      const gate=OFFLINE_GATE[k]||200;
+      const now=performance.now();
+      if(now-(offlineLastMs[k]||0)<gate) return false;
+      offlineLastMs[k]=now;
+    }
+    return true;
+  }
   function suppress(s){suppressed=!!s;}
+  function setOfflineMode(on){
+    offlineMode=!!on;
+    offlineVolScale=on?0.6:1.0;
+    if(ctx&&master) master.gain.setValueAtTime(vol*offlineVolScale,ctx.currentTime);
+    if(!on) for(const k of Object.keys(offlineLastMs)) delete offlineLastMs[k];
+  }
 
   const TONES={α:247,β:311,γ:370,δ:466};  // B3 Eb4 F#4 Bb4 (warmer voicing)
   const QTONE=[415,494,622,740,932];        // Ab4 B4 Eb5 F#5 Bb5
@@ -447,8 +483,8 @@ const SFX=(()=>{
       if(big) osc('sine',base*1.5*0.5,t+0.02,pdur*0.7,0.04);
     }
     if(isChain){
-      osc('sine',base*1.25,t+0.06,0.14,0.1);
-      osc('sine',base*1.25,t+0.18,0.1,0.06);
+      osc('sine',base*1.5,t+0.06,0.16,0.14);
+      osc('sine',base*1.25,t+0.18,0.12,0.12);
     }
     if(isHarvest){
       const tones=[247,311,370,466];
@@ -773,7 +809,7 @@ const SFX=(()=>{
   // ── volume control ─────────────────────────────────────────────────
   function setVol(v){
     vol=Math.max(0,Math.min(1,v));
-    if(master) master.gain.setValueAtTime(vol,ctx.currentTime);
+    if(master) master.gain.setValueAtTime(vol*offlineVolScale,ctx.currentTime);
     try{localStorage.setItem('sfx.vol',vol);}catch(e){}
   }
   function getVol(){return vol;}
@@ -798,7 +834,7 @@ const SFX=(()=>{
     }
   }catch(e){}
 
-  return{ready,res,hit,kill,block,upgrade,mod,forge,prestige,setVol,getVol,setMute,isMuted,getCh,setCh,getChannels,init,suppress};
+  return{ready,res,hit,kill,block,upgrade,mod,forge,prestige,setVol,getVol,setMute,isMuted,getCh,setCh,getChannels,init,suppress,setOfflineMode};
 })();
 
 /* ─── FORGE CORE LOGIC ───────────────────────────────────────────── */
@@ -2157,7 +2193,7 @@ function SlotBadge({item,slotIdx,d,setTip,flashKey,forgeOpen,forgeSelId,setForge
 }
 
 /* ─── TOGGLE ROW (reusable colored square toggles) ────────────────── */
-function ToggleRow({items,size=14,gap=5,showLabels=false}){
+function ToggleRow({items,size=14,gap=5,showLabels=false,labelsOutside=false,spreadFull=false}){
   const [,rerender]=useState(0);
   const darkenHex=(hex)=>{
     const rgb=parseInt(hex.slice(1),16);
@@ -2165,28 +2201,35 @@ function ToggleRow({items,size=14,gap=5,showLabels=false}){
     return`rgb(${Math.floor(r*0.25)},${Math.floor(g*0.25)},${Math.floor(b*0.25)})`;
   };
   return(
-    <div style={{display:'flex',gap:gap+'px',alignItems:'center'}}>
-      {items.map(({k,col,on,toggle,label})=>(
-        <div key={k} style={{display:'flex',alignItems:'center',gap:'3px'}}>
-          <button onClick={()=>{toggle();rerender(n=>n+1);}}
-            style={{width:size+'px',height:size+'px',borderRadius:'3px',border:'none',cursor:'pointer',padding:0,
-              background:on()?col:col+'33',
-              outline:on()?`2px solid ${col}88`:undefined,
-              transition:'all .1s',
-              display:'flex',
-              alignItems:'center',
-              justifyContent:'center',
-              fontSize:Math.round(size*0.7)+'px',
-              lineHeight:1,
-              color:showLabels&&label?darkenHex(col):'inherit',
-              fontFamily:"'PT Mono', monospace",
-              fontWeight:on()?'900':'700',
-              userSelect:'none',
-              textShadow:on()?'0 0 8px rgba(0,0,0,0.6)':'0 0 4px rgba(0,0,0,0.4)',
-              letterSpacing:'0'}}
-          >{showLabels&&label?(k==='Z'&&!on()?'':label):''}</button>
-        </div>
-      ))}
+    <div style={{display:'flex',gap:spreadFull?'12px':gap+'px',alignItems:'center',justifyContent:spreadFull?'space-between':'flex-start',width:spreadFull?'100%':'auto',flexWrap:spreadFull?'wrap':'nowrap'}}>
+      {items.map(({k,col,on,toggle,label})=>{
+        const doToggle=()=>{toggle();rerender(n=>n+1);};
+        return(
+          <div key={k}
+            onClick={labelsOutside?doToggle:undefined}
+            style={{display:'flex',flexDirection:'row',alignItems:'center',gap:labelsOutside?'4px':'0',flex:'0 0 auto',cursor:labelsOutside?'pointer':undefined}}>
+            <button onClick={!labelsOutside?doToggle:undefined}
+              style={{width:size+'px',height:size+'px',borderRadius:'3px',border:'none',cursor:'pointer',padding:0,
+                background:on()?col:col+'33',
+                outline:on()?`1px solid ${col}88`:undefined,
+                transition:'all .1s',
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'center',
+                fontSize:Math.round(size*0.9)+'px',
+                lineHeight:1,
+                color:showLabels&&label&&!labelsOutside?darkenHex(col):'inherit',
+                fontFamily:"'PT Mono', monospace",
+                fontWeight:on()?'900':'700',
+                userSelect:'none',
+                textShadow:on()?'0 0 8px rgba(0,0,0,0.6)':'0 0 4px rgba(0,0,0,0.4)',
+                letterSpacing:'0',
+                pointerEvents:labelsOutside?'none':'auto'}}
+            >{showLabels&&label&&!labelsOutside?label:''}</button>
+            {labelsOutside&&label&&<span style={{fontSize:'11px',color:'#666',fontFamily:"'PT Mono', monospace",lineHeight:1,whiteSpace:'nowrap'}}>{label}</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -2221,11 +2264,11 @@ function ItemBadge({item,d,setTip,slots,slotCount,forgeOpen,forgeSelId,setForgeS
           return;
         }
         if(isOnCooldown) return; // Can't equip item on cooldown
-        if(isForgeTarget){setForgeSelId(null);setTip(null);return;}
+        if(forgeOpen&&isForgeTarget){setForgeSelId(null);setTip(null);return;}
         if(forgeOpen&&item.upgradeLevel<9&&setForgeSelId){setForgeSelId(item.id);setTip(null);return;}
         const slot=slots.findIndex((x,si)=>x===null&&si<slotCount);
         if(slot>=0){d({t:'EQUIP',s:slot,i:item._invIdx});setTip(null);}
-        else if(item.upgradeLevel<9&&setForgeSelId){setForgeSelId(item.id);setTip(null);}
+        else if(forgeOpen&&item.upgradeLevel<9&&setForgeSelId){setForgeSelId(item.id);setTip(null);}
       }}
       onContextMenu={e=>{
         e.preventDefault();
@@ -2303,6 +2346,14 @@ function ForgePanel({s,d,setTip,forgeSelId,setForgeSelId,forgeCons,setForgeCons,
     d({t:'FORGE',itemId:selId,consIds:cons.filter(Boolean),protectQ,luckBonus,forgeMode,hasStatForce,hasFull,hasReroll,roll});
     setCons([null,null]);
   };
+
+  // Clear roll display when selected item changes
+  useEffect(()=>{
+    setFadingRoll(null);
+    clearTimeout(fadingRollRef.current);
+    lastForgeChanceRef.current=null;
+    d({t:'CLEAR_FORGE_ROLL'});
+  },[selId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear lastForgeRoll from state after a few seconds
   useEffect(()=>{
@@ -2401,7 +2452,7 @@ function ForgePanel({s,d,setTip,forgeSelId,setForgeSelId,forgeCons,setForgeCons,
         </div>
 
         {/* odds bar + roll feedback */}
-        {(target||s.lastForgeRoll!=null)&&(()=>{
+        {target&&(()=>{
           const barChance=lastForgeChanceRef.current!=null?lastForgeChanceRef.current:finalChance;
           return(
           <div style={{position:'relative',padding:'4px 0'}}>
@@ -2608,9 +2659,9 @@ function RunInterstitial({result,s,d,onClose}){
           <span style={{flex:1}}>── {lbl}{stats&&<span style={{color:'#777'}}> {stats}</span>}</span>
           {desc&&sKey&&<span
             onClick={()=>setXDesc(open?null:sKey)}
-            style={{color:open?'#ddd':'#555',fontSize:'11px',cursor:'pointer',
-              padding:'1px 5px',border:`1px solid ${open?'#555':'#333'}`,borderRadius:'3px',
-              lineHeight:'1.4',transition:'color .1s,border-color .1s',flexShrink:0}}>[?]</span>}
+            style={{color:open?'#c8f5d8':'#666',fontSize:'11px',cursor:'pointer',
+              padding:'1px 6px',border:`1px solid ${open?'#4ade80':'#333'}`,borderRadius:'3px',
+              lineHeight:'1.4',transition:'color .1s,border-color .1s',flexShrink:0}}>?</span>}
         </div>
         {desc&&sKey&&<div style={{maxHeight:open?'100px':'0',overflow:'hidden',
           transition:'max-height 0.25s ease',color:'#888',fontSize:'12px',lineHeight:'1.5',
@@ -2662,7 +2713,7 @@ function RunInterstitial({result,s,d,onClose}){
             <>
               {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Raise your base damage floor and ceiling. Min cannot exceed max.',sKey:'damage'})}
               <PairRow label="dmg" kMin="dm" kMax="dx"/>
-              <SingleRow k="acd" label={UPG.acd.label}/>
+              <SingleRow k="acd" label="attack speed"/>
             </>
           )}
           
@@ -2681,7 +2732,7 @@ function RunInterstitial({result,s,d,onClose}){
               <div key={r}>
                 {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Raise yield range and reduce cooldown for ${r} resource collection.`,sKey:`res_${r}`})}
                 <PairRow label="min/max" kMin={`${r}m`} kMax={`${r}x`}/>
-                <SingleRow k={`${r}cd`} label={UPG[`${r}cd`].label}/>
+                <SingleRow k={`${r}cd`} label="cooldown -5%"/>
               </div>
             );
           })}
@@ -3220,18 +3271,16 @@ function OptionsModal({currentState,d,onClose}){
             <span style={{fontSize:'11px',color:'#555',minWidth:'28px',textAlign:'right'}}>{Math.round(SFX.getVol()*100)}%</span>
           </div>
           <div style={{fontSize:'11px',color:'#555',marginBottom:'6px'}}>toggle individual sounds</div>
-          <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
-            <ToggleRow items={[
-              {k:'res',col:'#60a5fa',label:'res'},
-              {k:'hit',col:'#f87171',label:'hit'},
-              {k:'upgrade',col:'#6b7280',label:'upg'},
-              {k:'mod',col:'#a78bfa',label:'mod'},
-              {k:'forge',col:'#4ade80',label:'forge'},
-              {k:'prestige',col:'#fbbf24',label:'kill'},
-              {k:'ready',col:'#38bdf8',label:'ready'},
-            ].map(({k,col,label})=>({k,col,on:()=>SFX.getCh(k),toggle:()=>SFX.setCh(k,!SFX.getCh(k)),label}))}
-              size={14} gap={12} showLabels/>
-          </div>
+          <ToggleRow items={[
+            {k:'res',col:'#60a5fa',label:'res'},
+            {k:'hit',col:'#f87171',label:'hit'},
+            {k:'upgrade',col:'#6b7280',label:'upg'},
+            {k:'mod',col:'#a78bfa',label:'mod'},
+            {k:'forge',col:'#4ade80',label:'forge'},
+            {k:'prestige',col:'#fbbf24',label:'kill'},
+            {k:'ready',col:'#38bdf8',label:'ready'},
+          ].map(({k,col,label})=>({k,col,on:()=>SFX.getCh(k),toggle:()=>SFX.setCh(k,!SFX.getCh(k)),label}))}
+            size={18} gap={12} labelsOutside spreadFull/>
         </div>
 
         {/* ── sell confirm threshold ── */}
@@ -3675,6 +3724,8 @@ function App(){
   const [cooldownRefresh,setCooldownRefresh]=useState(0);
   const [floatNums,setFloatNums]=useState([]);
   const [resFloatNums,setResFloatNums]=useState([]);
+  const [hpFlashes,setHpFlashes]=useState([]);
+  const [hpBarHit,setHpBarHit]=useState(null);
   const [buyAmt,setBuyAmt]=useState(1);
   const [optionsOpen,setOptionsOpen]=useState(false);
   const [changelogOpen,setChangelogOpen]=useState(()=>{
@@ -3687,8 +3738,10 @@ function App(){
   const [statsOpen,setStatsOpen]=useState(false);
   const [concedePhase,setConcedePhase]=useState(0); // 0=idle 1=animating 2=confirm
   const [logFilter,setLogFilter]=useState({Z:true,B:true,R:true,U:true,F:true});
+  const [hoverFilter,setHoverFilter]=useState(null); // null | {type:'res',res:k} | {type:'dmg'}
   const [offlineSimData,setOfflineSimData]=useState(null);
   const [autoSaveLed,setAutoSaveLed]=useState(false);
+  const latestSRef=useRef(null);
   const [atkBarKey,setAtkBarKey]=useState(0);
   const [shouldAnimateAttk,setShouldAnimateAttk]=useState(false);
   const isSimulatingRef=useRef(false);
@@ -3718,6 +3771,7 @@ function App(){
   };
   const isMobile=useMobile();
   const [mobileTab,setMobileTab]=useState(0);
+  const [xDesc,setXDesc]=useState(null);
 
   // Track timing for background tab support
   const lastTickTime=useRef(Date.now());
@@ -3756,8 +3810,8 @@ function App(){
     }
   },[]);
 
-  // Suppress particles and SFX during offline sim
-  useEffect(()=>{ Particles.suppress(!!offlineSimData); SFX.suppress(!!offlineSimData); },[offlineSimData]);
+  // Suppress particles; put SFX into rate-gated offline mode (sounds play but throttled)
+  useEffect(()=>{ Particles.suppress(!!offlineSimData); SFX.setOfflineMode(!!offlineSimData); },[offlineSimData]);
 
   // Pre-warm SFX audio context to avoid delay on first sound
   useEffect(()=>{
@@ -3886,6 +3940,8 @@ function App(){
     return()=>clearInterval(timer);
   },[s.itemUnequipCooldowns]);
 
+  useEffect(()=>{latestSRef.current=s;});
+
   // autosave — debounced 5 s so rapid ticks don't hammer localStorage
   const saveTimer=useRef(null);
   const lastLogId=useRef(0);
@@ -3938,7 +3994,7 @@ function App(){
       saveState(s);
       trackPlayTime(s);
       setAutoSaveLed(true);
-      setTimeout(()=>setAutoSaveLed(false),400);
+      setTimeout(()=>setAutoSaveLed(false),700);
     },5000);
     return()=>clearTimeout(saveTimer.current);
   },[s]);
@@ -3962,6 +4018,15 @@ function App(){
       if(e.key==='#') setDevOpen(v=>!v);
       if(e.key==='.') setAdminOpen(v=>!v);
       if(e.repeat) return;
+      if(e.key.toLowerCase()==='r'&&!e.metaKey&&!e.ctrlKey){
+        clearTimeout(saveTimer.current);
+        const cur=latestSRef.current||s;
+        saveState(cur);
+        trackPlayTime(cur);
+        setAutoSaveLed(true);
+        setTimeout(()=>setAutoSaveLed(false),700);
+        return;
+      }
       const keyMap={a:'α',s:'β',d:'γ',f:'δ'};
       const k=keyMap[e.key.toLowerCase()];
       if(k){
@@ -4073,6 +4138,13 @@ function App(){
           const x=15+Math.random()*70;
           setFloatNums(p=>[...p,{id:fid,val,x,arc:'C'}]);
           setTimeout(()=>setFloatNums(p=>p.filter(n=>n.id!==fid)),3200);
+          if(val>0){
+            const hid=Date.now()+Math.random();
+            setHpFlashes(p=>[...p,hid]);
+            setTimeout(()=>setHpFlashes(p=>p.filter(i=>i!==hid)),250);
+            setHpBarHit({id:hid,val});
+            setTimeout(()=>setHpBarHit(h=>h&&h.id===hid?null:h),2000);
+          }
           // particles at same x% as floating number
           const cnt=Math.min(10+Math.round(Math.log2(val+1)*4.5),50);
           const isCritLine=e.msg.includes('CRIT');
@@ -4163,12 +4235,33 @@ function App(){
   const invConsumables=taggedInv.filter(i=>i.type==='consumable');
   const forgeUsedIds=new Set([forgeSelId,...forgeCons].filter(Boolean));
 
+  const secHdr=(lbl,opts={})=>{
+    const {stats,desc,sKey}=opts;
+    const open=!!(sKey&&xDesc===sKey);
+    return(
+      <div>
+        <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 5px',fontWeight:'bold',
+          display:'flex',alignItems:'center',gap:'6px',userSelect:'none'}}>
+          <span style={{flex:1}}>── {lbl}{stats&&<span style={{color:'#777'}}> {stats}</span>}</span>
+          {desc&&sKey&&<span
+            onClick={()=>setXDesc(open?null:sKey)}
+            style={{color:open?'#ddd':'#555',fontSize:'11px',cursor:'pointer',
+              padding:'1px 5px',border:`1px solid ${open?'#555':'#333'}`,borderRadius:'3px',
+              lineHeight:'1.4',transition:'color .1s,border-color .1s',flexShrink:0}}>[?]</span>}
+        </div>
+        {desc&&sKey&&<div style={{maxHeight:open?'100px':'0',overflow:'hidden',
+          transition:'max-height 0.25s ease',color:'#888',fontSize:'12px',lineHeight:'1.5',
+          paddingBottom:open?'6px':'0',width:'100%'}}>{desc}</div>}
+      </div>
+    );
+  };
+
   return(
     <div style={{background:'#0d0d0d',color:'#d0d0d0',fontFamily:'monospace',
       fontSize:'18px',height:'100vh',padding:isMobile?'8px 8px 52px':'12px',
       boxSizing:'border-box',overflow:'hidden',display:'flex',flexDirection:'column',gap:'10px',position:'relative'}}>
 
-      {autoSaveLed&&<span className="autosave-led" style={{position:'fixed',top:'12px',left:'12px'}}></span>}
+      {autoSaveLed&&<span className="autosave-led" style={{position:'fixed',top:'5px',left:'5px',zIndex:9999,display:'block'}}></span>}
       <Tooltip tip={tip}/>
       {s.runResult&&<RunInterstitial result={s.runResult} s={s} d={d} onClose={()=>d({t:'CLOSE_RUN'})}/>}
       {optionsOpen&&<OptionsModal currentState={s} d={d} onClose={()=>setOptionsOpen(false)}/>}
@@ -4181,7 +4274,9 @@ function App(){
 
       {/* ── boss bar ── */}
       <div style={pnl({padding:'10px 14px'})}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'10px',flexWrap:'wrap',gap:'6px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:'10px',flexWrap:'wrap',gap:'6px'}}
+          onMouseEnter={()=>setHoverFilter({type:'dmg'})}
+          onMouseLeave={()=>setHoverFilter(null)}>
           <span style={{color:'#e55',fontSize:'20px',fontWeight:'bold',letterSpacing:'1px'}}>
             E{s.fightId}{s.beaten[s.fightId]?' ✓':''}
           </span>
@@ -4218,6 +4313,8 @@ function App(){
             <div style={{background:hpCol(hpPct),height:'100%',width:`${hpPct*100}%`,
               transition:'width .15s,background .5s',boxShadow:`0 0 8px ${hpCol(hpPct)}88`}}/>
           </div>
+          {hpFlashes.map(id=><div key={id} className="hp-hit-flash"/>)}
+          {hpBarHit&&<div key={hpBarHit.id} className="hp-dmg-pop" style={{fontSize:hpBarHit.val>=100000?'11px':hpBarHit.val>=10000?'12px':'13px'}}>-{fmt(hpBarHit.val)}</div>}
           {floatNums.map(n=>(
             n.val===0?null:(
             <div key={n.id} className={`float-num float-num-arc${n.arc||'C'}`+(n.val>1e6?' float-num-crit':'')}
@@ -4247,8 +4344,11 @@ function App(){
               const unlocked=PREV[k]?s.tot[PREV[k]]:true;
               const unlockPct=PREV[k]?Math.min(1,s.tot[PREV[k]]/NEED[k]):1;
               const barCol=locked?(unlockPct<1?`rgba(255,255,255,${unlockPct*0.3})`:'#1e1e1e'):COL[k]+'55';
+              const isHovered=hoverFilter?.type==='res'&&hoverFilter.res===k;
               return(
-                <div key={k} style={{marginBottom:'6px',opacity:locked?.28:1,position:'relative'}}>
+                <div key={k} style={{marginBottom:'6px',opacity:locked?.28:1,position:'relative'}}
+                  onMouseEnter={()=>setHoverFilter({type:'res',res:k})}
+                  onMouseLeave={()=>setHoverFilter(null)}>
                   {resFloatNums.filter(n=>n.k===k).map(n=>(
                     <div key={n.id} className="float-num float-num-arcC"
                       style={{left:`${n.x}%`,bottom:'28px',color:COL[k],fontSize:'19px'}}>
@@ -4297,12 +4397,18 @@ function App(){
           <div style={{...pnl(),flex:isMobile?undefined:1,overflow:'hidden',display:'flex',flexDirection:'column',maxHeight:isMobile?'200px':undefined}}>
             <div style={{...HDR,display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px'}}>
               <span>EVENT LOG</span>
-              <ToggleRow showLabels={true} size={22} items={[{k:'Z',col:'#9ca3af',label:'0'},{k:'B',col:'#f87171',label:'C'},{k:'R',col:'#60a5fa',label:'R'},{k:'U',col:'#6b7280',label:'U'},{k:'F',col:'#4ade80',label:'M'}].map(({k,col,label})=>({label,
+              <ToggleRow showLabels={true} size={14} items={[{k:'Z',col:'#9ca3af',label:'0'},{k:'B',col:'#f87171',label:'C'},{k:'R',col:'#60a5fa',label:'R'},{k:'U',col:'#6b7280',label:'U'},{k:'F',col:'#4ade80',label:'M'}].map(({k,col,label})=>({label,
                 k,col,label,on:()=>logFilter[k],toggle:()=>setLogFilter(p=>({...p,[k]:!p[k]}))
-              }))}/>
+              }))} gap={6}/>
             </div>
             <div style={{overflowY:'auto',borderTop:'1px solid #1e1e1e',paddingTop:'4px',flex:1,display:'flex',flexDirection:'column',gap:'2px'}}>
-              {s.log.filter(e=>(!e.cat||logFilter[e.cat])&&!(e.zero&&!logFilter.Z)).map(e=>{
+              {s.log.filter(e=>{
+                const matchesToggle=(!e.cat||logFilter[e.cat])&&!(e.zero&&!logFilter.Z);
+                if(!hoverFilter) return matchesToggle;
+                if(hoverFilter.type==='dmg') return matchesToggle&&e.cat==='B';
+                if(hoverFilter.type==='res') return matchesToggle&&e.cat==='R'&&e.msg.includes(` ${hoverFilter.res}`);
+                return matchesToggle;
+              }).map(e=>{
                 const isDmg=e.col==='#f87171';
                 const arrowIdx=isDmg?e.msg.lastIndexOf('→'):-1;
                 const prefix=arrowIdx>=0?e.msg.slice(0,arrowIdx+1):e.msg;
@@ -4402,7 +4508,7 @@ function App(){
           {/* upgrades content */}
           {!forgeOpen&&<div style={{...pnl(),flex:1,overflowY:'auto'}}>
             {/* ── COMBAT UPGRADES ── */}
-            <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',marginBottom:'8px',fontWeight:'bold'}}>── damage <span style={{color:'#777'}}>[{s.dMin}–{s.dMax}]</span> atk <span style={{color:'#777'}}>{Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms</span></div>
+            {secHdr('damage',{stats:`[${s.dMin}–${s.dMax}] atk ${Math.floor(ATK_CD*Math.pow(1.05,-s.atkCdLvl))}ms`,desc:'Raise your base damage floor and ceiling. Min cannot exceed max.',sKey:'damage'})}
             {(()=>{
               if(!ul('α')) return null;
               const mkPair=(label,kMin,kMax)=>{
@@ -4439,7 +4545,7 @@ function App(){
                 <>
                   {mkPair('dmg','dm','dx')}
                   <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'7px'}}>
-                    <span style={{color:'#eee',fontSize:'15px',flex:1}}>{acdDef.label}</span>
+                    <span style={{color:'#eee',fontSize:'15px',flex:1}}>attack speed</span>
                     <span style={{color:'#aaa',fontSize:'13px'}}>lv{acdLvl}</span>
                     <button onClick={()=>d({t:'BUY_N',k:'acd',n:buyAmt})} disabled={biAcd.disabled}
                       style={mkBtn(biAcd.on,COL[acdDef.res],{whiteSpace:'nowrap',fontSize:'14px',padding:'5px 11px'})}>
@@ -4449,7 +4555,7 @@ function App(){
 
                   {ul('β')&&(
                     <>
-                      <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 8px',fontWeight:'bold'}}>── mult <span style={{color:'#777'}}>[{s.mMin.toFixed(2)}–{s.mMax.toFixed(2)}]</span> armor {s.armorPierce}</div>
+                      {secHdr('mult / armor',{stats:`[${s.mMin.toFixed(2)}–${s.mMax.toFixed(2)}] pierce ${s.armorPierce}`,desc:'Scale all hits by a random multiplier in range. Armor pierce ignores enemy defense.',sKey:'mult'})}
                       {mkPair('mult','mm','mx')}
                     </>
                   )}
@@ -4474,7 +4580,7 @@ function App(){
               const biCritDmg=buyInfo('γcritdmg',s.ulvl['γcritdmg'],s.res['γ']);
               return(
                 <div>
-                  <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 8px',fontWeight:'bold'}}>── γ {s.critChance}% crit ×{(1+s.critDmg).toFixed(1)}</div>
+                  {secHdr('crit',{stats:`${s.critChance}% ×${(1+s.critDmg).toFixed(1)}`,desc:'Chance to land a critical hit — amplifies the final damage output.',sKey:'crit'})}
                   <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'7px'}}>
                     <span style={{color:'#eee',fontSize:'15px',flex:1}}>chance %</span>
                     <span style={{color:'#aaa',fontSize:'13px'}}>lv{s.ulvl['γcrit']}</span>
@@ -4502,7 +4608,7 @@ function App(){
               const biPpx=buyInfo('δppx',s.ulvl['δppx'],s.res['δ']);
               return(
                 <div>
-                  <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 8px',fontWeight:'bold'}}>── δ dmg exp min {s.dmgExpMin.toFixed(2)} max {s.dmgExpMax.toFixed(2)} prestige ×{s.ppMulti.toFixed(1)}</div>
+                  {secHdr('exponent',{stats:`min ${s.dmgExpMin.toFixed(2)} max ${s.dmgExpMax.toFixed(2)} prestige ×${s.ppMulti.toFixed(1)}`,desc:'Damage is raised to a random exponent in this range. Higher exponents amplify strong rolls.',sKey:'exp'})}
                   <div style={{display:'flex',alignItems:'center',gap:'4px',marginBottom:'7px'}}>
                     <span style={{color:'#eee',fontSize:'15px',flex:1}}>exponent</span>
                     <span style={{color:'#bbb',fontSize:'13px'}}>min</span>
@@ -4537,7 +4643,7 @@ function App(){
               const cdMs=(TMR[r]/1000).toFixed(1);
               return(
                 <div key={r}>
-                  <div style={{color:'#aaa',fontSize:'15px',letterSpacing:'1px',margin:'14px 0 8px',fontWeight:'bold'}}>── {r} yield <span style={{color:'#777'}}>[{s.rMin[r]}–{s.rMax[r]}]</span> cd {cdMs}s</div>
+                  {secHdr(<span style={{color:COL[r]}}>{r}</span>,{stats:`[${s.rMin[r]}–${s.rMax[r]}]`,desc:`Raise yield range and reduce cooldown for ${r} resource collection.`,sKey:`res_${r}`})}
                   {(()=>{
                     const km=`${r}m`,kx=`${r}x`,kcd=`${r}cd`;
                     const dm=UPG[km],dx=UPG[kx],dcd=UPG[kcd];
@@ -4564,7 +4670,7 @@ function App(){
                           </button>
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:'5px',marginBottom:'7px'}}>
-                          <span style={{color:'#ccc',fontSize:'14px',flex:1}}>{dcd.label}</span>
+                          <span style={{color:'#ccc',fontSize:'14px',flex:1}}>cooldown -5%</span>
                           <span style={{color:'#777',fontSize:'13px'}}>lv{lcd}</span>
                           <button onClick={()=>d({t:'BUY_N',k:kcd,n:buyAmt})} disabled={bicd.disabled}
                             style={mkBtn(bicd.on,COL[dcd.res],{whiteSpace:'nowrap',fontSize:'14px',padding:'5px 11px'})}>
@@ -4749,8 +4855,8 @@ function App(){
           
           {/* offline sim */}
           <label style={{color:'#4ade80',fontSize:'12px',marginTop:'5px',fontWeight:'600'}}>offline</label>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'3px',marginBottom:'3px'}}>
-            {[['10m',10*60*1000],['1h',60*60*1000],['3h',3*60*60*1000],['8h',8*60*60*1000]].map(([lbl,ms])=>(
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'3px',marginBottom:'3px'}}>
+            {[['10s',10*1000],['30s',30*1000],['10m',10*60*1000],['1h',60*60*1000],['3h',3*60*60*1000],['8h',8*60*60*1000]].map(([lbl,ms])=>(
               <button key={lbl} onClick={()=>triggerOfflineSim(ms)}
                 style={{background:'#1a1a26',border:'1px solid #2a2a4a',color:'#a78bfa',
                   padding:'5px 4px',cursor:'pointer',fontFamily:"'PT Mono',monospace",fontSize:'11px',
