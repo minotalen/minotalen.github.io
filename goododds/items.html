@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>items — mod &amp; quality playground</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
+#topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#111;border-bottom:1px solid #222;position:sticky;top:0;z-index:100;height:41px;flex-wrap:nowrap}
+#topbar h1{font-size:13px;letter-spacing:2px;color:#aaa;font-weight:bold;white-space:nowrap}
+#topbar .spacer{flex:1}
+#save-btn{background:#1c1c1c;border:1px solid #4ade8044;color:#4ade80;padding:5px 14px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;transition:background .15s;white-space:nowrap}
+#save-btn:hover{background:#0a2a14}
+#save-btn.saved{border-color:#4ade8044;color:#4ade80;background:#0a2a14}
+.layout{display:grid;grid-template-columns:1fr 400px;gap:0;height:calc(100vh - 41px);background:#0d0d0d}
+.main{overflow-y:auto;overflow-x:auto;padding:0 18px 40px}
+.filter-bar{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}
+.filter-bar input{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:140px}
+.filter-bar input:focus{outline:none;border-color:#444}
+.filter-btn{background:#141414;border:1px solid #2a2a2a;color:#888;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap}
+.filter-btn.active{border-color:#4ade8044;color:#4ade80}
+.filter-sep{color:#333;margin:0 2px}
+.section-hdr{font-size:10px;letter-spacing:2px;color:#aaa;padding:14px 0 6px;user-select:none}
+/* Quality table */
+table.qtbl{border-collapse:collapse;font-size:12px;margin-bottom:4px;width:100%}
+table.qtbl th{color:#ccc;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:4px 8px;border-bottom:1px solid #222;text-align:center}
+table.qtbl th.qlhdr{text-align:left;width:72px}
+table.qtbl td{padding:3px 6px;border-bottom:1px solid #181818;vertical-align:middle}
+td.qlabel{font-size:10px;color:#999;letter-spacing:1px;white-space:nowrap;cursor:default}
+td.qcell{text-align:center;color:#bbb;white-space:nowrap}
+/* Consumables table */
+table.ctbl{border-collapse:collapse;font-size:12px;margin-bottom:4px;width:100%}
+table.ctbl th{color:#bbb;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:4px 6px;border-bottom:1px solid #222;text-align:left}
+table.ctbl td{padding:3px 6px;border-bottom:1px solid #181818;color:#aaa;font-size:12px}
+/* Mod table */
+table.mod-tbl{width:100%;border-collapse:collapse;margin-top:-1px}
+table.mod-tbl th{color:#bbb;font-weight:normal;font-size:11px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:-1px;background:#0d0d0d;z-index:50}
+table.mod-tbl th:hover{color:#aaa}
+table.mod-tbl th.sort-asc::after{content:' ↑';color:#4ade80}
+table.mod-tbl th.sort-desc::after{content:' ↓';color:#4ade80}
+table.mod-tbl td{padding:5px 8px;border-bottom:1px solid #161616;vertical-align:middle}
+table.mod-tbl tr:hover td{background:#111}
+table.mod-tbl tr.selected td{background:#0a1f0a}
+table.mod-tbl td:nth-child(3){min-width:220px;white-space:nowrap}
+.editable{background:transparent;border:none;color:#e5e5e5;font-family:inherit;font-size:13px;width:100%;min-width:34px}
+.editable::placeholder{color:#333}
+.editable:focus{outline:1px solid #4ade8055;background:#1a1a1a;border-radius:2px}
+.editable.modified{color:#fcd34d}
+.q-inp{min-width:28px;width:28px;text-align:center;font-size:11px}
+.q-inp.modified{color:#fcd34d}
+.tag-stat{color:#60a5fa;font-size:11px}.tag-proc{color:#f59e0b;font-size:11px}
+.qbadge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:11px;font-weight:600}
+/* Sidebar */
+#sidebar-area{display:grid;grid-template-rows:1fr auto;height:calc(100vh - 41px);overflow:hidden;border-left:1px solid #1e1e1e}
+.sidebar-section{padding:8px 14px;border-bottom:1px solid #1e1e1e}
+#val-pane{display:flex;flex-direction:column;overflow:hidden;border-bottom:1px solid #1e1e1e}
+#val-inner{overflow-y:auto;flex:1;padding:0 14px 14px}
+#chart-pane{display:flex;flex-direction:column;overflow:hidden}
+#chart-inner{padding:0 14px 14px}
+#no-sel{color:#999;font-size:12px;padding:14px;text-align:center}
+#sel-title{font-size:12px;color:#aaa;padding:8px 14px 4px;border-bottom:1px solid #1e1e1e}
+table.val-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+table.val-tbl th{color:#999;font-weight:normal;font-size:10px;letter-spacing:1px;padding:3px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d}
+table.val-tbl td{padding:3px 6px;border-bottom:1px solid #161616}
+table.val-tbl tr:hover td{background:#161616}
+.level-btn{background:#141414;border:1px solid #2a2a2a;color:#888;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;flex:1;transition:all .15s}
+.level-btn.active{border-color:#4ade8044;color:#4ade80;background:#0a1f0a}
+canvas#forge-chart{width:100%;height:360px}
+canvas#value-chart{width:100%;height:360px}
+#q-btns-wrap{transition:opacity .15s}
+#q-btns-wrap.hidden{opacity:.25;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <h1>ITEM PLAYGROUND</h1>
+  <div class="filter-bar">
+    <input id="search" placeholder="search…" oninput="applyFilters()">
+    <span class="filter-sep">|</span>
+    <button class="filter-btn active" data-type="" onclick="toggleType(this,'')">ALL</button>
+    <button class="filter-btn" data-type="stat" onclick="toggleType(this,'stat')" style="color:#60a5fa;border-color:#60a5fa44">STAT</button>
+    <button class="filter-btn" data-type="proc" onclick="toggleType(this,'proc')" style="color:#f59e0b;border-color:#f59e0b44">PROC</button>
+    <span class="filter-sep">|</span>
+    <button class="filter-btn active" data-res="" onclick="toggleRes(this,'')">ALL</button>
+    <button class="filter-btn" data-res="α" onclick="toggleRes(this,'α')" style="color:#60a5fa;border-color:#60a5fa44">α</button>
+    <button class="filter-btn" data-res="β" onclick="toggleRes(this,'β')" style="color:#4ade80;border-color:#4ade8044">β</button>
+    <button class="filter-btn" data-res="γ" onclick="toggleRes(this,'γ')" style="color:#fcd34d;border-color:#fcd34d44">γ</button>
+    <button class="filter-btn" data-res="δ" onclick="toggleRes(this,'δ')" style="color:#c084fc;border-color:#c084fc44">δ</button>
+    <span class="filter-sep">|</span>
+    <button class="filter-btn active" data-mq="" onclick="toggleMinQ(this,'')">ALL</button>
+    <button class="filter-btn" data-mq="1" onclick="toggleMinQ(this,'1')" style="color:#9ca3af;border-color:#9ca3af44">C</button>
+    <button class="filter-btn" data-mq="2" onclick="toggleMinQ(this,'2')" style="color:#4ade80;border-color:#4ade8044">U</button>
+    <button class="filter-btn" data-mq="3" onclick="toggleMinQ(this,'3')" style="color:#60a5fa;border-color:#60a5fa44">R</button>
+    <button class="filter-btn" data-mq="4" onclick="toggleMinQ(this,'4')" style="color:#c084fc;border-color:#c084fc44">E</button>
+    <button class="filter-btn" data-mq="5" onclick="toggleMinQ(this,'5')" style="color:#f59e0b;border-color:#f59e0b44">L</button>
+  </div>
+  <div class="spacer"></div>
+  <span id="change-count" style="color:#fcd34d;font-size:11px;display:none"></span>
+  <button id="save-btn" onclick="saveChanges()">patch items</button>
+</div>
+
+<div class="layout">
+  <div class="main">
+    <div class="section-hdr">QUALITY TABLES <span style="color:#666;font-size:10px;letter-spacing:0">— edit base roll ranges & forge scaling</span></div>
+    <table class="qtbl">
+      <thead><tr>
+        <th class="qlhdr"></th>
+        <th style="color:#9ca3af">C</th>
+        <th style="color:#4ade80">U</th>
+        <th style="color:#60a5fa">R</th>
+        <th style="color:#c084fc">E</th>
+        <th style="color:#f59e0b">L</th>
+      </tr></thead>
+      <tbody><tr><td class="qlabel" title="stat roll scale range per quality">BASE RNG</td><td class="qcell"><input class="editable q-inp" data-arr="QRANGE" data-idx="0" data-sub="0" value="0.8" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="QRANGE" data-idx="0" data-sub="1" value="1.2" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="QRANGE" data-idx="1" data-sub="0" value="1.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="QRANGE" data-idx="1" data-sub="1" value="2.4" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="QRANGE" data-idx="2" data-sub="0" value="2.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="QRANGE" data-idx="2" data-sub="1" value="3.9" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="QRANGE" data-idx="3" data-sub="0" value="4.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="QRANGE" data-idx="3" data-sub="1" value="5.9" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="QRANGE" data-idx="4" data-sub="0" value="7.0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="QRANGE" data-idx="4" data-sub="1" value="10.0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td></tr>
+<tr><td class="qlabel" title="forge gain multiplier per quality">STAT/LV</td><td class="qcell">×<input class="editable q-inp" data-arr="STAT_PLVL_MULT" data-idx="0" value="1.0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">×<input class="editable q-inp" data-arr="STAT_PLVL_MULT" data-idx="1" value="1.2" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">×<input class="editable q-inp" data-arr="STAT_PLVL_MULT" data-idx="2" value="1.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">×<input class="editable q-inp" data-arr="STAT_PLVL_MULT" data-idx="3" value="1.85" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">×<input class="editable q-inp" data-arr="STAT_PLVL_MULT" data-idx="4" value="2.35" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td></tr>
+<tr><td class="qlabel" title="proc base-chance bonus per quality">+PROC</td><td class="qcell">+<input class="editable q-inp" data-arr="QPROC" data-idx="0" value="0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="QPROC" data-idx="1" value="5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="QPROC" data-idx="2" value="10" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="QPROC" data-idx="3" value="15" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="QPROC" data-idx="4" value="20" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td></tr>
+<tr><td class="qlabel" title="proc mult roll range (R+)">MULT RNG</td><td class="qcell" style="color:#333">—</td><td class="qcell" style="color:#333">—</td><td class="qcell"><input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="2" data-sub="0" value="1.2" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="2" data-sub="1" value="1.8" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="3" data-sub="0" value="2.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="3" data-sub="1" value="4.5" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell"><input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="4" data-sub="0" value="4.0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px">–<input class="editable q-inp" data-arr="PROC_MULT_RANGE" data-idx="4" data-sub="1" value="6.0" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td></tr>
+<tr><td class="qlabel" title="proc mult gain per forge level">MULT/LV</td><td class="qcell" style="color:#333">—</td><td class="qcell" style="color:#333">—</td><td class="qcell">+<input class="editable q-inp" data-arr="MULT_PLVL_BY_Q" data-idx="2" value="0.1" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="MULT_PLVL_BY_Q" data-idx="3" value="0.2" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td><td class="qcell">+<input class="editable q-inp" data-arr="MULT_PLVL_BY_Q" data-idx="4" value="0.3" onchange="editQuality(this)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace;width:34px"></td></tr>
+<tr><td class="qlabel" title="multi-hit chances ×1·×2·×3·×4·×5">FORGE×</td><td class="qcell" style="font-size:10px;color:#555">100</td><td class="qcell" style="font-size:10px;color:#555">90·10</td><td class="qcell" style="font-size:10px;color:#555">70·20·10</td><td class="qcell" style="font-size:10px;color:#555">60·23·12·5</td><td class="qcell" style="font-size:10px;color:#555">50·26·14·7·3</td></tr>
+<tr><td class="qlabel" title="prestige points on sell">SELL ꖜ</td><td class="qcell" style="color:#555">1</td><td class="qcell" style="color:#555">3</td><td class="qcell" style="color:#555">8</td><td class="qcell" style="color:#555">20</td><td class="qcell" style="color:#555">60</td></tr></tbody>
+    </table>
+
+    <div class="section-hdr" style="margin-top:12px">CONSUMABLES <span style="color:#666;font-size:10px;letter-spacing:0">— drop reference (read-only)</span></div>
+    <table class="ctbl">
+      <thead><tr><th>SUBTYPE</th><th>CHANCE</th><th>MIN Q</th><th>DESCRIPTION</th></tr></thead>
+      <tbody>
+        <tr><td style="color:#a78bfa">protect</td><td>40%</td><td style="color:#60a5fa">R</td><td>block next hit (quality scales shield strength)</td></tr>
+        <tr><td style="color:#a78bfa">luck</td><td>30%</td><td style="color:#9ca3af">C</td><td>boost next drop quality (quality scales bonus)</td></tr>
+        <tr><td style="color:#a78bfa">stat</td><td>8%</td><td style="color:#9ca3af">C</td><td>temporary stat boost</td></tr>
+        <tr><td style="color:#a78bfa">reroll</td><td>7%</td><td style="color:#9ca3af">C</td><td>reroll item value</td></tr>
+        <tr><td style="color:#a78bfa">full</td><td>5%</td><td style="color:#9ca3af">C</td><td>fully restore HP</td></tr>
+        <tr><td style="color:#a78bfa">tierUp</td><td>7%</td><td style="color:#4ade80">U+</td><td>attempt to upgrade item rarity (quality = success %)</td></tr>
+        <tr><td style="color:#a78bfa">refund</td><td>3%</td><td style="color:#4ade80">U+</td><td>refund % of resource spent (pct &amp; chance scale with quality)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-hdr" style="margin-top:12px">MODS <span style="color:#666;font-size:10px;letter-spacing:0">— click row to chart · edit BASE / PER LVL</span></div>
+    <table class="mod-tbl" id="mod-table">
+      <thead><tr>
+        <th onclick="sortBy('key')">KEY</th>
+        <th onclick="sortBy('effectOrStat')">EFFECT / STAT</th>
+        <th onclick="sortBy('label')">LABEL</th>
+        <th onclick="sortBy('type')">TYPE</th>
+        <th onclick="sortBy('res')">RES</th>
+        <th onclick="sortBy('minQ')">MIN Q</th>
+        <th onclick="sortBy('minResIdx')">UNLK</th>
+        <th onclick="sortBy('base')">BASE</th>
+        <th onclick="sortBy('perLvl')">PER LVL</th>
+      </tr></thead>
+      <tbody id="mod-tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="sidebar-area">
+    <div id="val-pane">
+      <div id="no-sel">click a row to preview values &amp; forge cost</div>
+      <div id="sel-content" style="display:none">
+        <div id="sel-title"></div>
+        <div id="val-inner">
+          <table class="val-tbl" id="val-tbl">
+            <thead id="val-thead"></thead>
+            <tbody id="val-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="chart-pane">
+      <div class="sidebar-section">
+        <div style="display:flex;gap:5px;margin-bottom:8px">
+          <button onclick="setChartViewMode('forge')" data-vm="forge" class="level-btn active" style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a">COST</button>
+          <button onclick="setChartViewMode('value')" data-vm="value" class="level-btn">GROWTH</button>
+        </div>
+        <div id="q-btns-wrap">
+          <div style="display:flex;gap:5px;margin-bottom:6px" id="q-btns">
+            <button onclick="setChartQ(1)" data-cq="1" class="level-btn" style="color:#9ca3af;border-color:#9ca3af44">C</button>
+            <button onclick="setChartQ(2)" data-cq="2" class="level-btn" style="color:#4ade80;border-color:#4ade8044">U</button>
+            <button onclick="setChartQ(3)" data-cq="3" class="level-btn active" style="color:#60a5fa;border-color:#60a5fa44;background:#0d1a2a">R</button>
+            <button onclick="setChartQ(4)" data-cq="4" class="level-btn" style="color:#c084fc;border-color:#c084fc44">E</button>
+            <button onclick="setChartQ(5)" data-cq="5" class="level-btn" style="color:#f59e0b;border-color:#f59e0b44">L</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="stat-btns-wrap">
+          <button onclick="setStatToggle('p5')" data-stat="p5" class="level-btn active" style="color:#f87171;border-color:#f871714d;background:#2a1a1a;font-size:10px;padding:2px 6px">P5</button>
+          <button onclick="setStatToggle('p25')" data-stat="p25" class="level-btn" style="color:#fb923c;border-color:#fb923c4d;font-size:10px;padding:2px 6px">P25</button>
+          <button onclick="setStatToggle('p50')" data-stat="p50" class="level-btn active" style="color:#facc15;border-color:#facc154d;background:#2a2a1a;font-size:10px;padding:2px 6px">P50</button>
+          <button onclick="setStatToggle('p75')" data-stat="p75" class="level-btn" style="color:#4ade80;border-color:#4ade8044;font-size:10px;padding:2px 6px">P75</button>
+          <button onclick="setStatToggle('p95')" data-stat="p95" class="level-btn active" style="color:#60a5fa;border-color:#60a5fa44;background:#1a2a3a;font-size:10px;padding:2px 6px">P95</button>
+        </div>
+        <div id="no-chart" style="color:#555;font-size:12px;margin-top:6px">click a row to chart</div>
+      </div>
+      <div id="chart-inner" style="display:none">
+        <canvas id="forge-chart" width="372" height="180"></canvas>
+      </div>
+      <div id="chart-inner-v" style="display:none">
+        <canvas id="value-chart" width="372" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MODS = {"dMin": {"label": "dmg.min", "type": "stat", "stat": "dMin", "base": 2.0, "perLvl": 1.0}, "dMax": {"label": "dmg.max", "type": "stat", "stat": "dMax", "base": 3.0, "perLvl": 2.0}, "mMin": {"label": "mlt.min", "type": "stat", "stat": "mMin", "base": 0.1, "perLvl": 0.05}, "mMax": {"label": "mlt.max", "type": "stat", "stat": "mMax", "base": 0.15, "perLvl": 0.1}, "dmgMulti": {"label": "dmg.multi", "type": "proc", "effect": "dmgMulti", "minQ": 3.0, "base": 7.0, "perLvl": 0.5}, "apMulti": {"label": "⛨.pierce×", "type": "proc", "effect": "apMulti", "minQ": 2.0, "base": 15.0, "perLvl": 1.5}, "armorMulti": {"label": "⛨.multi", "type": "stat", "stat": "armorMulti", "base": 0.05, "perLvl": 0.025, "minResIdx": 1.0}, "αMin": {"label": "α.min", "type": "stat", "stat": "αMin", "base": 2.0, "perLvl": 1.0}, "αMax": {"label": "α.max", "type": "stat", "stat": "αMax", "base": 3.0, "perLvl": 2.0}, "βMin": {"label": "β.min", "type": "stat", "stat": "βMin", "base": 2.0, "perLvl": 1.0}, "βMax": {"label": "β.max", "type": "stat", "stat": "βMax", "base": 3.0, "perLvl": 2.0}, "γMin": {"label": "γ.min", "type": "stat", "stat": "γMin", "base": 2.0, "perLvl": 1.0}, "γMax": {"label": "γ.max", "type": "stat", "stat": "γMax", "base": 3.0, "perLvl": 2.0}, "δMin": {"label": "δ.min", "type": "stat", "stat": "δMin", "base": 2.0, "perLvl": 1.0}, "δMax": {"label": "δ.max", "type": "stat", "stat": "δMax", "base": 3.0, "perLvl": 2.0}, "αx": {"label": "α.multi", "type": "proc", "res": "α", "minQ": 3.0, "base": 4.0, "perLvl": 0.5}, "βx": {"label": "β.multi", "type": "proc", "res": "β", "minQ": 3.0, "base": 5.0, "perLvl": 0.5}, "γx": {"label": "γ.multi", "type": "proc", "res": "γ", "minQ": 3.0, "base": 6.5, "perLvl": 0.5}, "δx": {"label": "δ.multi", "type": "proc", "res": "δ", "minQ": 3.0, "base": 9.0, "perLvl": 0.5}, "γcrt": {"label": "crit%", "type": "stat", "stat": "critChance", "base": 2.0, "perLvl": 1.0}, "γcrd": {"label": "crit.multi", "type": "stat", "stat": "critDmg", "base": 0.15, "perLvl": 0.05}, "γscc": {"label": "scrit%", "type": "stat", "stat": "superCritChance", "base": 1.0, "perLvl": 0.5}, "γscd": {"label": "scrit.multi", "type": "stat", "stat": "superCritDmg", "base": 0.075, "perLvl": 0.025}, "δexm": {"label": "exp.min", "type": "stat", "stat": "dmgExpMin", "base": 0.02, "perLvl": 0.006}, "δexx": {"label": "exp.max", "type": "stat", "stat": "dmgExpMax", "base": 0.02, "perLvl": 0.006}, "δppx": {"label": "ꖜ.mult", "type": "stat", "stat": "ppMulti", "base": 0.2, "perLvl": 0.1}, "αchain": {"label": "α.chain", "type": "proc", "effect": "chain", "res": "α", "minResIdx": 0.0, "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "βchain": {"label": "β.chain", "type": "proc", "effect": "chain", "res": "β", "minResIdx": 1.0, "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "γchain": {"label": "γ.chain", "type": "proc", "effect": "chain", "res": "γ", "minResIdx": 2.0, "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "δchain": {"label": "δ.chain", "type": "proc", "effect": "chain", "res": "δ", "minResIdx": 3.0, "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "αecho": {"label": "α.echo", "type": "proc", "effect": "echo", "res": "α", "minResIdx": 0.0, "minQ": 3.0, "base": 15.0, "perLvl": 1.0}, "βecho": {"label": "β.echo", "type": "proc", "effect": "echo", "res": "β", "minResIdx": 1.0, "minQ": 3.0, "base": 15.0, "perLvl": 1.0}, "γecho": {"label": "γ.echo", "type": "proc", "effect": "echo", "res": "γ", "minResIdx": 2.0, "minQ": 3.0, "base": 15.0, "perLvl": 1.0}, "δecho": {"label": "δ.echo", "type": "proc", "effect": "echo", "res": "δ", "minResIdx": 3.0, "minQ": 3.0, "base": 15.0, "perLvl": 1.0}, "αbonk": {"label": "α.bonk", "type": "proc", "effect": "bonk", "res": "α", "minResIdx": 0.0, "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "βbonk": {"label": "β.bonk", "type": "proc", "effect": "bonk", "res": "β", "minResIdx": 1.0, "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "γbonk": {"label": "γ.bonk", "type": "proc", "effect": "bonk", "res": "γ", "minResIdx": 2.0, "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "δbonk": {"label": "δ.bonk", "type": "proc", "effect": "bonk", "res": "δ", "minResIdx": 3.0, "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "αharvest": {"label": "α.harvest", "type": "proc", "effect": "harvest", "res": "α", "minResIdx": 0.0, "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "βharvest": {"label": "β.harvest", "type": "proc", "effect": "harvest", "res": "β", "minResIdx": 1.0, "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "γharvest": {"label": "γ.harvest", "type": "proc", "effect": "harvest", "res": "γ", "minResIdx": 2.0, "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "δharvest": {"label": "δ.harvest", "type": "proc", "effect": "harvest", "res": "δ", "minResIdx": 3.0, "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "αrfnd": {"label": "α.refund", "type": "proc", "effect": "refund", "res": "α", "minResIdx": 0.0, "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0}, "βrfnd": {"label": "β.refund", "type": "proc", "effect": "refund", "res": "β", "minResIdx": 1.0, "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0}, "γrfnd": {"label": "γ.refund", "type": "proc", "effect": "refund", "res": "γ", "minResIdx": 2.0, "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0}, "δrfnd": {"label": "δ.refund", "type": "proc", "effect": "refund", "res": "δ", "minResIdx": 3.0, "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0}, "dmgCd": {"label": "dmg.cd", "type": "stat", "stat": "atkCdBonus", "base": 5.0, "perLvl": 1.2, "pct": true}, "αCd": {"label": "α.cd", "type": "stat", "stat": "αCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true}, "βCd": {"label": "β.cd", "type": "stat", "stat": "βCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true}, "γCd": {"label": "γ.cd", "type": "stat", "stat": "γCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true}, "δCd": {"label": "δ.cd", "type": "stat", "stat": "δCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true}, "pen": {"label": "⛨.pierce", "type": "stat", "stat": "armorPierce", "base": 1.0, "perLvl": 0.5, "minResIdx": 1.0}};
+const QRANGE = [[0.8, 1.2], [1.5, 2.4], [2.5, 3.9], [4.5, 5.9], [7.0, 10.0]];
+const QPROC = [0, 5, 10, 15, 20];
+const PROC_MULT_RANGE = [[], [], [1.2, 1.8], [2.5, 4.5], [4.0, 6.0]];
+const MULT_PLVL_BY_Q = [0, 0, 0.1, 0.2, 0.3];
+const STAT_PLVL_MULT = [1.0, 1.2, 1.5, 1.85, 2.35];
+const SELL_PP = [1, 3, 8, 20, 60];
+const FORGE_MULTI_CHANCES = [[100, 0, 0, 0, 0], [90, 10, 0, 0, 0], [70, 20, 10, 0, 0], [60, 23, 12, 5, 0], [50, 26, 14, 7, 3]]; // [p×1, p×2, …] per quality, pulled from constants.js
+const PLVL_BY_Q = [0, 0, 0.5, 0.75, 1.0]; // proc chance gain per forge level (items.js)
+
+const QCOL  = ['#9ca3af','#4ade80','#60a5fa','#c084fc','#f59e0b'];
+const QNAME = ['C','U','R','E','L'];
+const RES_COL = {α:'#60a5fa',β:'#4ade80',γ:'#fcd34d',δ:'#c084fc'};
+const MULT_MODS = new Set(['mMin','mMax','γcrd','δexm','δexx','δppx','armorMulti']);
+
+const QUALITY_DATA = {QRANGE,QPROC,PROC_MULT_RANGE,MULT_PLVL_BY_Q,STAT_PLVL_MULT};
+const modOverrides = {};
+const qualityOverrides = {};
+
+let sortCol = 'minQ', sortDir = 1;
+let filterType = '', filterRes = '', filterMinQ = '', searchStr = '';
+let selectedKey = null, chartQ = 3, chartLv = 9, chartViewMode = 'forge';
+const toggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
+
+function getCurrent(name) {
+  return qualityOverrides[name] || QUALITY_DATA[name] || window[name];
+}
+function modOf(k) {
+  return Object.assign({}, MODS[k], modOverrides[k] || {});
+}
+function fmt(n) {
+  return Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// ── Filters ──────────────────────────────────────────────────────────
+function applyFilters() {
+  searchStr = document.getElementById('search').value.toLowerCase();
+  render();
+}
+function toggleType(btn, v) {
+  document.querySelectorAll('[data-type]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterType = v;
+  render();
+}
+function toggleRes(btn, v) {
+  document.querySelectorAll('[data-res]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterRes = v;
+  render();
+}
+function toggleMinQ(btn, v) {
+  document.querySelectorAll('[data-mq]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMinQ = v;
+  render();
+}
+
+// ── Sort & render mod table ───────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('table.mod-tbl th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+  const cols = ['key','type','label','effectOrStat','res','minQ','minResIdx','base','perLvl'];
+  const idx = cols.indexOf(col);
+  const ths = document.querySelectorAll('table.mod-tbl th');
+  if (idx >= 0) ths[idx].classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  render();
+}
+
+function rows() {
+  return Object.keys(MODS).map(k => {
+    const m = modOf(k);
+    return {
+      key: k,
+      type: m.type || 'stat',
+      label: m.label || '',
+      effectOrStat: m.type === 'proc' ? (m.effect || 'mult') : (m.stat || ''),
+      res: m.res || '',
+      minQ: m.minQ || 1,
+      minResIdx: m.minResIdx !== undefined ? m.minResIdx : -1,
+      base: m.base !== undefined ? m.base : '',
+      perLvl: m.perLvl !== undefined ? m.perLvl : '',
+    };
+  });
+}
+
+function render() {
+  let data = rows();
+  if (filterType) data = data.filter(r => r.type === filterType);
+  if (filterRes)  data = data.filter(r => r.res === filterRes);
+  if (filterMinQ) data = data.filter(r => String(r.minQ) === filterMinQ);
+  if (searchStr)  data = data.filter(r =>
+    r.key.toLowerCase().includes(searchStr) ||
+    r.label.toLowerCase().includes(searchStr) ||
+    r.effectOrStat.toLowerCase().includes(searchStr)
+  );
+  data.sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === '' || av === undefined) av = sortDir > 0 ? Infinity : -Infinity;
+    if (bv === '' || bv === undefined) bv = sortDir > 0 ? Infinity : -Infinity;
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('mod-tbody');
+  tbody.innerHTML = '';
+  for (const r of data) {
+    const tr = document.createElement('tr');
+    if (r.key === selectedKey) tr.classList.add('selected');
+    tr.onclick = () => selectRow(r.key);
+
+    const qCol = QCOL[r.minQ - 1] || '#888';
+    const qNm  = QNAME[r.minQ - 1] || '?';
+    const resCol = RES_COL[r.res] || '#888';
+    const typeTag = r.type === 'stat'
+      ? `<span class="tag-stat">stat</span>`
+      : `<span class="tag-proc">proc</span>`;
+    const unlk = r.minResIdx >= 0
+      ? `<span style="color:${['#60a5fa','#4ade80','#fcd34d','#c084fc'][r.minResIdx] || '#888'}">${'αβγδ'[r.minResIdx] || '?'}</span>`
+      : '<span style="color:#333">—</span>';
+    const baseMod = modOverrides[r.key]?.base !== undefined;
+    const perMod  = modOverrides[r.key]?.perLvl !== undefined;
+    tr.innerHTML = `
+      <td style="color:#888;font-size:12px;font-weight:500">${r.key}</td>
+      <td style="color:#666;font-size:11px">${r.effectOrStat}</td>
+      <td style="color:#ddd">${r.label}</td>
+      <td>${typeTag}</td>
+      <td><span style="color:${resCol}">${r.res||'—'}</span></td>
+      <td><span class="qbadge" style="color:${qCol};border:1px solid ${qCol}44">${qNm}</span></td>
+      <td>${unlk}</td>
+      <td><input class="editable${baseMod?' modified':''}" data-key="${r.key}" data-field="base"
+           value="${r.base}" placeholder="${MODS[r.key]?.base ?? ''}"
+           onchange="editModField(this)" onkeydown="arrowNav(event)"
+           onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${perMod?' modified':''}" data-key="${r.key}" data-field="perLvl"
+           value="${r.perLvl}" placeholder="${MODS[r.key]?.perLvl ?? ''}"
+           onchange="editModField(this)" onkeydown="arrowNav(event)"
+           onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ── Row selection + sidebar ───────────────────────────────────────────
+function selectRow(k) {
+  selectedKey = k;
+  document.querySelectorAll('#mod-tbody tr').forEach(tr => tr.classList.remove('selected'));
+  for (const tr of document.querySelectorAll('#mod-tbody tr')) {
+    if (tr.children[0]?.textContent === k) tr.classList.add('selected');
+  }
+  document.getElementById('no-sel').style.display = 'none';
+  document.getElementById('sel-content').style.display = '';
+  renderValuePreview(k);
+  refreshCharts(k);
+}
+
+function renderValuePreview(k) {
+  const m = modOf(k);
+  const qrange  = getCurrent('QRANGE');
+  const splvl   = getCurrent('STAT_PLVL_MULT');
+  const qproc   = getCurrent('QPROC');
+  const pmrange = getCurrent('PROC_MULT_RANGE');
+  const mplvl   = getCurrent('MULT_PLVL_BY_Q');
+  const isProc  = m.type === 'proc';
+  const isMult  = MULT_MODS.has(k);
+  const isPct   = !!m.pct;
+  const base    = parseFloat(m.base) || 0;
+  const perLvl  = parseFloat(m.perLvl) || 0;
+  const suf     = isPct ? '%' : '';
+
+  document.getElementById('sel-title').textContent =
+    k + '  ' + (m.label || '') + '  [' + (m.type || '') + (isPct ? ' ·pct' : '') + ']';
+
+  const thead = document.getElementById('val-thead');
+  const tbody = document.getElementById('val-tbody');
+  if (isProc) {
+    thead.innerHTML = '<tr><th>Q</th><th>CHANCE</th><th>@10</th><th>MULT RNG</th><th>MULT/LV</th></tr>';
+  } else {
+    thead.innerHTML = '<tr><th>Q</th><th>RANGE</th><th>/LV</th><th>@10</th><th>@20</th></tr>';
+  }
+  tbody.innerHTML = '';
+  for (let qi = 0; qi < 5; qi++) {
+    const tr = document.createElement('tr');
+    const qcol = QCOL[qi];
+    const qnm  = QNAME[qi];
+    if (isProc) {
+      const baseChance = Math.min(90, Math.round(base + (qproc[qi] || 0)));
+      const at10 = Math.min(90, Math.round(baseChance + 10 * PLVL_BY_Q[qi]));
+      const pmr = pmrange[qi];
+      const multStr = (pmr && pmr.length >= 2) ? `${pmr[0]}–${pmr[1]}×` : '—';
+      const mplvStr = mplvl[qi] > 0 ? `+${mplvl[qi]}×` : '—';
+      tr.innerHTML = `<td style="color:${qcol};font-weight:600">${qnm}</td>
+        <td style="color:#aaa">${baseChance}%</td>
+        <td style="color:#9ca3af">${at10}%</td>
+        <td style="color:#888">${multStr}</td>
+        <td style="color:#666">${mplvStr}</td>`;
+    } else {
+      const [rMin, rMax] = qrange[qi];
+      const bMin = isMult||isPct ? (base*rMin).toFixed(2) : Math.max(base, Math.round(base*rMin));
+      const bMax = isMult||isPct ? (base*rMax).toFixed(2) : Math.round(base*rMax);
+      const plv  = isMult||isPct ? +(perLvl*splvl[qi]).toFixed(3) : +(perLvl*splvl[qi]).toFixed(2);
+      const mid  = (rMin+rMax)/2;
+      const midB = isMult||isPct ? +(base*mid).toFixed(2) : Math.round(base*mid);
+      const at10 = isMult||isPct ? +(midB+plv*10).toFixed(2) : Math.round(midB+plv*10);
+      const at20 = isMult||isPct ? +(midB+plv*20).toFixed(2) : Math.round(midB+plv*20);
+      tr.innerHTML = `<td style="color:${qcol};font-weight:600">${qnm}</td>
+        <td style="color:#aaa">${bMin}${suf}–${bMax}${suf}</td>
+        <td style="color:#aaa">+${plv}${suf}</td>
+        <td style="color:#9ca3af">${at10}${suf}</td>
+        <td style="color:#777">${at20}${suf}</td>`;
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+// ── Forge chart ───────────────────────────────────────────────────────
+function forgeCost(level, q) {
+  return Math.max(1, Math.floor(Math.pow(1.4, level) * q));
+}
+
+function setChartQ(q) {
+  chartQ = q;
+  document.querySelectorAll('#q-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.cq) === q;
+    b.classList.toggle('active', active);
+    b.style.background = active ? '#1a1a1a' : '';
+    b.style.color = active ? b.style.color : '';
+    b.style.borderColor = active ? b.style.borderColor : '';
+  });
+  if (selectedKey) refreshCharts(selectedKey);
+}
+
+function setStatToggle(stat) {
+  toggleStats[stat] = !toggleStats[stat];
+  const btn = document.querySelector(`[data-stat="${stat}"]`);
+  if (btn) {
+    btn.classList.toggle('active', toggleStats[stat]);
+    const bgMap = { p5: '#2a1a1a', p25: '', p50: '#2a2a1a', p75: '', p95: '#1a2a3a' };
+    btn.style.background = toggleStats[stat] ? bgMap[stat] : '';
+  }
+  if (selectedKey) refreshCharts(selectedKey);
+}
+
+function setChartViewMode(m) {
+  chartViewMode = m;
+  document.querySelectorAll('[data-vm]').forEach(b => {
+    const on = b.dataset.vm === m;
+    b.classList.toggle('active', on);
+    if (on) { b.style.color='#4ade80'; b.style.borderColor='#4ade8044'; b.style.background='#0a1f0a'; }
+    else    { b.style.color=''; b.style.borderColor=''; b.style.background=''; }
+  });
+  document.getElementById('q-btns-wrap').classList.remove('hidden');
+  if (selectedKey) refreshCharts(selectedKey);
+}
+
+function refreshCharts(k) {
+  document.getElementById('no-chart').style.display = 'none';
+  document.getElementById('chart-inner').style.display   = chartViewMode === 'forge' ? '' : 'none';
+  document.getElementById('chart-inner-v').style.display = chartViewMode === 'value' ? '' : 'none';
+  if (chartViewMode === 'forge') drawForgeChart(k);
+  else drawValueChart(k);
+}
+
+// ── P5/P95 growth bands via exact multi-hit convolution ─────────────
+function _pctile(pmf, offset, p) {
+  let cum = 0;
+  for (let j = 0; j < pmf.length; j++) {
+    cum += pmf[j];
+    if (cum >= p) return offset + j;
+  }
+  return offset + pmf.length - 1;
+}
+
+function computeGrowthBands(qi, N) {
+  const fmc    = FORGE_MULTI_CHANCES[qi];   // [p×100 for ×1..×5], from constants.js
+  const hProbs = fmc.map(p => p / 100);
+  let maxK = hProbs.length;
+  while (maxK > 1 && hProbs[maxK - 1] < 1e-9) maxK--;
+  // pmf[j] = P(cumulative_hits == offset + j)
+  // offset tracks minimum achievable cumulative hits (= n forges × ×1 each)
+  let pmf = [1.0], offset = 0;
+  const bands = [];
+
+  for (let i = 0; i < N; i++) {
+    const p05  = _pctile(pmf, offset, 0.05);
+    const p25  = _pctile(pmf, offset, 0.25);
+    const p50  = _pctile(pmf, offset, 0.50);
+    const p75  = _pctile(pmf, offset, 0.75);
+    const p95  = _pctile(pmf, offset, 0.95);
+    let mean = 0;
+    for (let j = 0; j < pmf.length; j++) mean += pmf[j] * (offset + j);
+    bands.push({ p05, p25, p50, mean, p75, p95 });
+
+    // Convolve: this forge applies ×k hits with probability hProbs[k-1]
+    const newLen = pmf.length + maxK - 1;
+    const newPmf = new Float64Array(newLen);
+    for (let j = 0; j < pmf.length; j++) {
+      if (pmf[j] < 1e-15) continue;
+      for (let k = 1; k <= maxK; k++) {
+        if (hProbs[k - 1] > 0) newPmf[j + k - 1] += pmf[j] * hProbs[k - 1];
+      }
+    }
+    offset += 1;
+    pmf = Array.from(newPmf);
+  }
+  return bands;
+}
+
+function drawValueChart(k) {
+  const m      = modOf(k);
+  const isProc = m.type === 'proc';
+  const isMult = MULT_MODS.has(k);
+  const isPct  = !!m.pct;
+  const base   = parseFloat(m.base) || 0;
+  const perLvl = parseFloat(m.perLvl) || 0;
+  const qrange = getCurrent('QRANGE');
+  const splvl  = getCurrent('STAT_PLVL_MULT');
+  const qproc  = getCurrent('QPROC');
+  const N      = chartLv;
+
+  // Map cumulative-hits bands → stat/chance value bands for each quality
+  const bands = Array.from({length:5}, (_, qi) => {
+    const cb = computeGrowthBands(qi, N);
+    return cb.map(b => {
+      if (isProc) {
+        const baseC = base + (qproc[qi] || 0);
+        const gain  = PLVL_BY_Q[qi];
+        return { p05: Math.min(90, baseC + b.p05  * gain),
+                  p25: Math.min(90, baseC + b.p25  * gain),
+                  p50: Math.min(90, baseC + b.p50  * gain),
+                  mean: Math.min(90, baseC + b.mean * gain),
+                  p75: Math.min(90, baseC + b.p75  * gain),
+                  p95: Math.min(90, baseC + b.p95  * gain) };
+      } else {
+        const [rMin,rMax] = qrange[qi];
+        const bv   = isMult||isPct ? base*(rMin+rMax)/2 : Math.round(base*(rMin+rMax)/2);
+        const gain = perLvl * splvl[qi];
+        return { p05: +(bv + b.p05  * gain).toFixed(2),
+                  p25: +(bv + b.p25  * gain).toFixed(2),
+                  p50: +(bv + b.p50  * gain).toFixed(2),
+                  mean: +(bv + b.mean * gain).toFixed(2),
+                  p75: +(bv + b.p75  * gain).toFixed(2),
+                  p95: +(bv + b.p95  * gain).toFixed(2) };
+      }
+    });
+  });
+
+  const sqi  = chartQ - 1;
+  const sCol = QCOL[sqi];
+  const sBand = bands[sqi];
+
+  const canvas = document.getElementById('value-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 372, H = 360;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {l:38,r:38,t:16,b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  // Scale: encompass all means + selected quality's percentile bounds
+  const allV = bands.flatMap(qb => qb.map(pt => pt.mean))
+    .concat(sBand.flatMap(pt => [pt.p05, pt.p25, pt.p50, pt.p75, pt.p95]));
+  const mn = Math.min(...allV), mxV = Math.max(...allV);
+  const span = Math.max(mxV - mn, 0.01);
+
+  const xOf = i => pad.l + (N > 1 ? (i/(N-1))*cw : cw/2);
+  const yOf = v => pad.t + ch - ((v-mn)/span)*ch;
+
+  // Grid lines
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + ch - (g/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    const lv  = mn + span*(g/4);
+    const lbl = isProc||isPct ? lv.toFixed(1)+'%' : isMult ? lv.toFixed(2) : Math.round(lv).toString();
+    ctx.fillStyle='#555'; ctx.font='10px monospace'; ctx.textAlign='right';
+    ctx.fillText(lbl, pad.l-4, y+3);
+  }
+
+  // Shaded band between extreme toggled percentiles
+  if (toggleStats.p5 && toggleStats.p95) {
+    ctx.beginPath();
+    sBand.forEach((pt,i) => i===0 ? ctx.moveTo(xOf(i),yOf(pt.p95)) : ctx.lineTo(xOf(i),yOf(pt.p95)));
+    for (let i = N-1; i >= 0; i--) ctx.lineTo(xOf(i), yOf(sBand[i].p05));
+    ctx.closePath();
+    ctx.fillStyle = sCol + '15';
+    ctx.fill();
+  }
+
+  // Percentile lines (solid, dotted, or solid depending on percentile)
+  const ptiles = [
+    { p: 'p5', col: '#f87171', dash: [3,3] },
+    { p: 'p25', col: '#fb923c', dash: [2,2] },
+    { p: 'p50', col: '#facc15', dash: [] },
+    { p: 'p75', col: '#4ade80', dash: [2,2] },
+    { p: 'p95', col: '#60a5fa', dash: [3,3] }
+  ];
+  for (const {p, col, dash} of ptiles) {
+    if (!toggleStats[p]) continue;
+    ctx.setLineDash(dash); ctx.lineWidth = p==='p50' ? 1.5 : 1; ctx.strokeStyle = col + (p==='p50'?'cc':'88');
+    ctx.beginPath();
+    sBand.forEach((pt,i) => {
+      const v = pt[p];
+      i===0 ? ctx.moveTo(xOf(i),yOf(v)) : ctx.lineTo(xOf(i),yOf(v));
+    });
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Mean lines for all 5 qualities
+  for (let qi = 0; qi < 5; qi++) {
+    ctx.strokeStyle = QCOL[qi] + (qi < 2 ? '88' : 'dd');
+    ctx.lineWidth   = qi >= 3 ? 2.5 : qi === 2 ? 2 : 1.5;
+    ctx.beginPath();
+    bands[qi].forEach((pt,i) => i===0 ? ctx.moveTo(xOf(i),yOf(pt.mean)) : ctx.lineTo(xOf(i),yOf(pt.mean)));
+    ctx.stroke();
+    ctx.fillStyle = QCOL[qi];
+    ctx.beginPath(); ctx.arc(xOf(N-1), yOf(bands[qi][N-1].mean), qi>=3?3:2, 0, 2*Math.PI); ctx.fill();
+  }
+
+  // Percentile endpoint annotations
+  const last = sBand[N-1];
+  ctx.font = '8px monospace'; ctx.textAlign = 'left';
+  let yPos = yOf(last.p95);
+  if (toggleStats.p95) { ctx.fillStyle = '#60a5fabb'; ctx.fillText('p95', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p75) { ctx.fillStyle = '#4ade80aa'; ctx.fillText('p75', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p50) { ctx.fillStyle = '#facc15aa'; ctx.fillText('p50', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p25) { ctx.fillStyle = '#fb923caa'; ctx.fillText('p25', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p5) { ctx.fillStyle = '#f87171aa'; ctx.fillText('p5', xOf(N-1)+5, yPos-2); }
+
+  // X-axis labels
+  ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='center';
+  const step = Math.max(1, Math.ceil(N/8));
+  for (let i=0; i<N; i+=step) ctx.fillText(i, xOf(i), H-4);
+
+  // Quality legend sorted by final mean
+  const order = [0,1,2,3,4].sort((a,b) => bands[b][N-1].mean-bands[a][N-1].mean);
+  ctx.font='bold 9px monospace'; ctx.textAlign='right';
+  order.forEach((qi, rank) => {
+    ctx.fillStyle = QCOL[qi];
+    ctx.fillText(QNAME[qi], pad.l+cw-2, pad.t + rank*11 + 9);
+  });
+
+  // Title
+  ctx.fillStyle='#555'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillText(isProc ? 'proc chance / forge lv' : 'stat value / forge lv', W/2, pad.t-4);
+}
+
+function drawForgeChart(k) {
+  const canvas = document.getElementById('forge-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 372, H = 360;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const costs = Array.from({length: chartLv}, (_, i) => forgeCost(i, chartQ));
+  const mx = Math.max(...costs, 1);
+  const barColor = (QCOL[chartQ - 1] || '#4ade80') + 'aa';
+
+  ctx.clearRect(0, 0, W, H);
+  const pad = {l:36,r:10,t:10,b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  // grid lines
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+
+  // bars
+  const bw = cw / (chartLv + 1);
+  for (let i = 0; i < chartLv; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (chartLv <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw*0.5)));
+      ctx.fillStyle = '#aaa'; ctx.font = `${fs}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText(fmt(costs[i]), x+bw*0.35, Math.max(pad.t+fs, y-2));
+    }
+  }
+
+  // x-axis labels
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const step = Math.ceil(chartLv/8);
+  for (let lbl = 0; lbl < chartLv; lbl += step) {
+    ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H-4);
+  }
+
+  // title
+  ctx.fillStyle = '#777'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`${QNAME[chartQ-1]} forge cost  (q=${chartQ})`, W/2, pad.t-1);
+
+  // cumulative total annotation
+  const total = costs.reduce((a,b)=>a+b,0);
+  ctx.fillStyle = '#444'; ctx.textAlign = 'right';
+  ctx.fillText(`Σ=${fmt(total)}`, W-pad.r, H-4);
+}
+
+// ── Editing ───────────────────────────────────────────────────────────
+function editModField(inp) {
+  const k = inp.dataset.key, f = inp.dataset.field;
+  if (!modOverrides[k]) modOverrides[k] = {};
+  const v = inp.value.trim();
+  if (v === '' || v === String(MODS[k]?.[f] ?? '')) {
+    delete modOverrides[k][f];
+    if (!Object.keys(modOverrides[k]).length) delete modOverrides[k];
+    inp.classList.remove('modified');
+  } else {
+    modOverrides[k][f] = isNaN(v) ? v : parseFloat(v);
+    inp.classList.add('modified');
+  }
+  updateChangeCount();
+  if (selectedKey === k) { renderValuePreview(k); refreshCharts(k); }
+}
+
+function editQuality(inp) {
+  const arr = inp.dataset.arr;
+  const idx = parseInt(inp.dataset.idx);
+  const sub = inp.dataset.sub !== undefined ? parseInt(inp.dataset.sub) : null;
+  const v = parseFloat(inp.value);
+  if (isNaN(v)) return;
+
+  if (!qualityOverrides[arr]) {
+    // deep-copy the original
+    qualityOverrides[arr] = JSON.parse(JSON.stringify(QUALITY_DATA[arr]));
+  }
+  if (sub !== null) {
+    qualityOverrides[arr][idx][sub] = v;
+  } else {
+    qualityOverrides[arr][idx] = v;
+  }
+  inp.classList.add('modified');
+  updateChangeCount();
+  if (selectedKey) renderValuePreview(selectedKey);
+}
+
+function arrowNav(e) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  const td = e.target.closest('td'), tr = td.closest('tr');
+  const col = Array.from(tr.cells).indexOf(td);
+  const trs = Array.from(tr.closest('tbody').rows);
+  const newRow = e.key === 'ArrowUp' ? trs[trs.indexOf(tr)-1] : trs[trs.indexOf(tr)+1];
+  if (newRow) newRow.cells[col]?.querySelector('input')?.focus();
+}
+
+function updateChangeCount() {
+  const mods = Object.keys(modOverrides).length;
+  const qual = Object.keys(qualityOverrides).length;
+  const n = mods + qual;
+  const el = document.getElementById('change-count');
+  if (n) {
+    el.style.display = '';
+    const parts = [];
+    if (mods) parts.push(mods + ' mod' + (mods>1?'s':''));
+    if (qual) parts.push(qual + ' q-table' + (qual>1?'s':''));
+    el.textContent = parts.join(', ') + ' changed';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+async function saveChanges() {
+  const hasMods = Object.keys(modOverrides).length > 0;
+  const hasQual = Object.keys(qualityOverrides).length > 0;
+  if (!hasMods && !hasQual) return;
+  const patch = {};
+  if (hasMods) patch.mods = modOverrides;
+  if (hasQual) patch.quality = qualityOverrides;
+  const btn = document.getElementById('save-btn');
+  const cmd = "python3 build.py --patch-items '" + JSON.stringify(patch) + "'";
+  try {
+    await navigator.clipboard.writeText(cmd);
+    btn.textContent = '✓ command copied';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'patch items'; btn.classList.remove('saved'); }, 2500);
+  } catch(e) {
+    alert('Paste in terminal (boss-incremental folder):\n\n' + cmd);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
