@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>constants — upgrade reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
+#topbar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#111;border-bottom:1px solid #222;position:sticky;top:0;z-index:100;margin:0;height:41px}
+#topbar h1{font-size:13px;letter-spacing:2px;color:#aaa;font-weight:bold}
+#topbar .spacer{flex:1}
+#save-btn{background:#1c1c1c;border:1px solid #E868F144;color:#E868F1;padding:5px 14px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;transition:background .15s}
+#save-btn:hover{background:#2d1040}
+#save-btn.saved{border-color:#4ade8044;color:#4ade80}
+.layout{display:grid;grid-template-columns:1fr 420px;gap:0;height:calc(100vh - 41px);background:#0d0d0d}
+.main{overflow-y:auto;overflow-x:auto;padding:0 18px 18px;margin-top:-1px}
+#sidebar-area{display:grid;grid-template-columns:1fr;grid-template-rows:1fr auto;height:calc(100vh - 41px);overflow:hidden}
+#sidebar-area.dual{grid-template-columns:1fr 1fr}
+#s1-table-pane{grid-row:1;display:flex;flex-direction:column;overflow:hidden;border-left:1px solid #1e1e1e}
+#s2-table-pane{grid-row:1;grid-column:2;display:none;flex-direction:column;overflow:hidden;border-left:1px solid #1e1e1e}
+#s1-chart-pane{grid-row:2;border-left:1px solid #1e1e1e;border-top:1px solid #1e1e1e}
+#s2-chart-pane{grid-row:2;grid-column:2;display:none;border-left:1px solid #1e1e1e;border-top:1px solid #1e1e1e}
+.sidebar-section{padding:14px 14px 8px;border-bottom:1px solid #1e1e1e}
+.sidebar-section h3{font-size:11px;letter-spacing:1.5px;color:#666;margin-bottom:10px}
+#cost-chart-wrap,#cost-chart-wrap2{padding:0 14px 14px}
+canvas#cost-chart,canvas#cost-chart2{width:100%;height:180px}
+.cost-table-wrap{overflow-y:auto;flex:1;padding:0 14px 14px}
+table.cost-tbl{width:100%;border-collapse:collapse;font-size:12px}
+table.cost-tbl th{color:#777;font-weight:normal;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d;cursor:pointer;user-select:none;white-space:nowrap;z-index:50}
+table.cost-tbl th:hover{color:#aaa}
+table.cost-tbl td{padding:3px 6px;border-bottom:1px solid #161616;color:#ccc}
+table.cost-tbl tr:hover td{background:#161616}
+table.cost-tbl tr.band td{background:#181818}
+.tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:11px;margin-right:2px}
+.filter-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.filter-bar input{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:160px}
+.filter-bar input:focus{outline:none;border-color:#444}
+.filter-btn{background:#141414;border:1px solid #2a2a2a;color:#888;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit}
+.filter-btn.active{border-color:#E868F1;color:#E868F1}
+.level-btn{background:#141414;border:1px solid #2a2a2a;color:#888;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;flex:1;transition:all .15s}
+.level-btn.active{border-color:#c084fc44;color:#c084fc;background:#1a0d2a}
+table.upg-tbl{width:100%;border-collapse:collapse;margin-top:-1px}
+table.upg-tbl th{color:#666;font-weight:normal;font-size:11px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:-1px;background:#0d0d0d;z-index:50}
+table.upg-tbl th:hover{color:#aaa}
+table.upg-tbl th.sort-asc::after{content:' ↑';color:#E868F1}
+table.upg-tbl th.sort-desc::after{content:' ↓';color:#E868F1}
+table.upg-tbl td{padding:5px 8px;border-bottom:1px solid #161616;vertical-align:middle}
+table.upg-tbl td:nth-child(3){min-width:220px;white-space:nowrap}
+table.upg-tbl tr:hover td{background:#111}
+table.upg-tbl tr.selected td{background:#1a0d2a}
+.editable{background:transparent;border:none;color:#e5e5e5;font-family:inherit;font-size:13px;width:100%;min-width:40px}
+.editable::placeholder{color:#444}
+.editable:focus{outline:1px solid #E868F155;background:#1a1a1a;border-radius:2px}
+.editable.modified{color:#fcd34d}
+.res-α{color:#60a5fa}.res-β{color:#4ade80}.res-γ{color:#fcd34d}.res-δ{color:#c084fc}
+.unlock-badge{font-size:11px;color:#f59e0b}
+.perm-yes{color:#a78bfa;font-size:11px}
+.perm-no{color:#333;font-size:11px}
+.hint{color:#555;font-size:11px;margin-left:4px}
+#sidebar-key{padding:10px 14px;font-size:12px;color:#888;background:#111}
+#sidebar-key span{display:inline-block;margin:2px 4px}
+table.upg-tbl tr.selected2 td{background:#0a1a0a}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <h1>UPGRADE REFERENCE</h1>
+  <div class="filter-bar" style="margin:0">
+    <input id="search" placeholder="search…" oninput="applyFilters()">
+    <button class="filter-btn active" data-res="" onclick="toggleRes(this)">ALL</button>
+    <button class="filter-btn" data-res="α" onclick="toggleRes(this)" style="color:#60a5fa;border-color:#60a5fa44">α</button>
+    <button class="filter-btn" data-res="β" onclick="toggleRes(this)" style="color:#4ade80;border-color:#4ade8044">β</button>
+    <button class="filter-btn" data-res="γ" onclick="toggleRes(this)" style="color:#fcd34d;border-color:#fcd34d44">γ</button>
+    <button class="filter-btn" data-res="δ" onclick="toggleRes(this)" style="color:#c084fc;border-color:#c084fc44">δ</button>
+    <span style="color:#333;margin:0 4px">|</span>
+    <button class="filter-btn active" data-st="" onclick="toggleSt(this,'')">ALL</button>
+    <button class="filter-btn" data-st="atk" onclick="toggleSt(this,'atk')" style="color:#f97316;border-color:#f9731644">ATK</button>
+    <button class="filter-btn" data-st="dmg" onclick="toggleSt(this,'dmg')" style="color:#f43f5e;border-color:#f43f5e44">DMG</button>
+  </div>
+  <div class="spacer"></div>
+  <span id="change-count" style="color:#fcd34d;font-size:11px;display:none"></span>
+  <button id="save-btn" onclick="saveChanges()">save patch</button>
+</div>
+
+<div class="layout">
+  <div class="main">
+    <table class="upg-tbl" id="upg-table">
+      <thead><tr>
+        <th onclick="sortBy('key')">KEY</th>
+        <th onclick="sortBy('st')">STAT</th>
+        <th onclick="sortBy('label')">LABEL</th>
+        <th onclick="sortBy('res')">RES</th>
+        <th onclick="sortBy('base')">BASE</th>
+        <th onclick="sortBy('scale')">SCALE</th>
+        <th onclick="sortBy('presBase')">PRES BASE</th>
+        <th onclick="sortBy('presScale')">PRES SCALE</th>
+        <th onclick="sortBy('permBase')">PERM BASE</th>
+        <th onclick="sortBy('permScale')">PERM SCALE</th>
+        <th onclick="sortBy('unlock')">UNLK</th>
+        <th onclick="sortBy('permUnlock')">PERM UNLK</th>
+      </tr></thead>
+      <tbody id="upg-tbody"></tbody>
+    </table>
+    <div style="font-size:11px;letter-spacing:2px;color:#555;padding:14px 0 4px;border-bottom:1px solid #1e1e1e;margin-bottom:8px">
+      ENEMIES <span style="letter-spacing:0;color:#444">— edit stats, clear a cell to delete that field</span>
+    </div>
+    <table class="upg-tbl" id="enemy-table">
+      <thead><tr>
+        <th>ID</th>
+        <th>MAX HP</th>
+        <th>def.min</th>
+        <th>def.max</th>
+        <th>L MIN</th>
+        <th>L MAX</th>
+        <th>PP</th>
+        <th>res.idx</th>
+        <th>rW</th>
+        <th>eW</th>
+        <th>lW</th>
+        <th>dcMax</th>
+      </tr></thead>
+      <tbody id="enemy-tbody"></tbody>
+    </table>
+  </div>
+  <div id="sidebar-area">
+    <div id="s1-table-pane">
+      <div class="sidebar-section" style="padding:8px 14px">
+        <div style="display:flex;gap:5px">
+          <button onclick="setChartMode('reg')" data-mode="reg" class="level-btn active" style="color:#60a5fa;border-color:#60a5fa44;background:#0d1a2a">REG</button>
+          <button onclick="setChartMode('pres')" data-mode="pres" class="level-btn">PRES</button>
+          <button onclick="setChartMode('perm')" data-mode="perm" class="level-btn">PERM</button>
+        </div>
+      </div>
+      <div class="cost-table-wrap" id="scroll-wrap1">
+        <table class="cost-tbl" id="cost-tbl">
+          <thead><tr>
+            <th onclick="sortCostTbl(0)">LVL</th>
+            <th id="cost-hd1" onclick="sortCostTbl(1)">COST</th>
+            <th onclick="sortCostTbl(2)">CUMUL.</th>
+          </tr></thead>
+          <tbody id="cost-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="s2-table-pane">
+      <div class="sidebar-section" style="padding:8px 14px">
+        <div style="display:flex;gap:5px;align-items:center">
+          <button onclick="hideSidebar2()" style="background:none;border:1px solid #333;color:#666;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:3px;font-family:inherit">×</button>
+          <button onclick="setChartMode2('reg')" data-mode2="reg" class="level-btn active" style="color:#60a5fa;border-color:#60a5fa44;background:#0d1a2a">REG</button>
+          <button onclick="setChartMode2('pres')" data-mode2="pres" class="level-btn">PRES</button>
+          <button onclick="setChartMode2('perm')" data-mode2="perm" class="level-btn">PERM</button>
+        </div>
+      </div>
+      <div class="cost-table-wrap" id="scroll-wrap2">
+        <table class="cost-tbl" id="cost-tbl2">
+          <thead><tr>
+            <th>LVL</th>
+            <th id="cost-hd1-2">COST</th>
+            <th>CUMUL.</th>
+          </tr></thead>
+          <tbody id="cost-tbody2"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="s1-chart-pane">
+      <div class="sidebar-section" style="padding:8px 14px">
+        <div style="display:flex;gap:4px;font-size:11px">
+          <button onclick="setChartLevels(5)" data-levels="5" class="level-btn active">5</button>
+          <button onclick="setChartLevels(10)" data-levels="10" class="level-btn">10</button>
+          <button onclick="setChartLevels(25)" data-levels="25" class="level-btn">25</button>
+          <button onclick="setChartLevels(50)" data-levels="50" class="level-btn">50</button>
+        </div>
+        <div id="no-sel" style="color:#555;font-size:12px;padding:4px 0">click a row to chart its cost curve</div>
+      </div>
+      <div id="cost-chart-wrap" style="display:none">
+        <canvas id="cost-chart" width="292" height="180"></canvas>
+      </div>
+    </div>
+    <div id="s2-chart-pane">
+      <div class="sidebar-section" style="padding:8px 14px">
+        <div style="display:flex;gap:4px;font-size:11px">
+          <button onclick="setChartLevels2(5)" data-levels2="5" class="level-btn active">5</button>
+          <button onclick="setChartLevels2(10)" data-levels2="10" class="level-btn">10</button>
+          <button onclick="setChartLevels2(25)" data-levels2="25" class="level-btn">25</button>
+          <button onclick="setChartLevels2(50)" data-levels2="50" class="level-btn">50</button>
+        </div>
+        <div id="no-sel2" style="color:#555;font-size:12px;padding:4px 0">right-click a row to compare</div>
+      </div>
+      <div id="cost-chart-wrap2" style="display:none">
+        <canvas id="cost-chart2" width="292" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const UPG = {"dm": {"label": "dmg.min +1", "st": "dMin", "res": "α", "base": 6.0}, "dx": {"label": "dmg.max +1", "st": "dMax", "res": "α", "base": 3.5, "scale": 1.25, "permScale": 1.32}, "acd": {"label": "atk.cd  /1.05", "st": "atkCd", "res": "α", "base": 10.8, "scale": 1.34}, "mm": {"label": "mult.min +.05", "st": "mMin", "res": "β", "base": 6.0}, "mx": {"label": "mult.max +.05", "st": "mMax", "res": "β", "base": 4.0, "scale": 1.27}, "pen": {"label": "⛨ pierce +1", "st": "armorPierce", "res": "β", "base": 9.0, "scale": 1.27}, "αm": {"label": "α.min +1", "st": "rMin", "r": "α", "res": "α", "base": 7.0}, "αx": {"label": "α.max +1", "st": "rMax", "r": "α", "res": "α", "base": 4.0, "scale": 1.27, "permScale": 1.32}, "αcd": {"label": "α.cd  -5%", "st": "resCd", "r": "α", "res": "α", "base": 10.0, "scale": 1.28}, "βm": {"label": "β.min +1", "st": "rMin", "r": "β", "res": "β", "base": 8.0}, "βx": {"label": "β.max +1", "st": "rMax", "r": "β", "res": "β", "base": 5.0, "scale": 1.25, "permScale": 1.32}, "βcd": {"label": "β.cd  -5%", "st": "resCd", "r": "β", "res": "β", "base": 13.0, "scale": 1.27}, "γm": {"label": "γ.min +1", "st": "rMin", "r": "γ", "res": "γ", "base": 9.0}, "γx": {"label": "γ.max +1", "st": "rMax", "r": "γ", "res": "γ", "base": 6.5, "scale": 1.24, "permScale": 1.32}, "γcd": {"label": "γ.cd  -5%", "st": "resCd", "r": "γ", "res": "γ", "base": 16.0, "scale": 1.26}, "γcrit": {"label": "crit chance +2%", "st": "critChance", "res": "γ", "base": 6.6, "scale": 1.3}, "γcritdmg": {"label": "crit dmg +.2x", "st": "critDmg", "res": "γ", "base": 12.5, "scale": 1.29}, "γsupercrit": {"label": "super crit +1%", "st": "superCritChance", "res": "γ", "base": 15.0, "scale": 1.35, "unlock": 4.0}, "γsupercritdmg": {"label": "super crit dmg +.1x", "st": "superCritDmg", "res": "γ", "base": 26.0, "scale": 1.32, "unlock": 4.0}, "δm": {"label": "δ.min +1", "st": "rMin", "r": "δ", "res": "δ", "base": 10.0}, "δx": {"label": "δ.max +1", "st": "rMax", "r": "δ", "res": "δ", "base": 9.0, "scale": 1.21, "permScale": 1.32}, "δcd": {"label": "δ.cd  -5%", "st": "resCd", "r": "δ", "res": "δ", "base": 20.0, "scale": 1.25}, "δdmgexpMin": {"label": "dmg exp min +.01", "st": "dmgExpMin", "res": "δ", "base": 6.2, "scale": 1.3}, "δdmgexpMax": {"label": "dmg exp max +.01", "st": "dmgExpMax", "res": "δ", "base": 6.0, "scale": 1.26}, "δppx": {"label": "prestige +.1", "st": "ppMulti", "res": "δ", "base": 14.0, "scale": 1.2, "unlock": 3.0}, "αatk": {"label": "α atk trig +1%", "st": "atkTrig", "r": "α", "res": "α", "base": 12.0, "scale": 1.25, "unlock": 0.0}, "βatk": {"label": "β atk trig +1%", "st": "atkTrig", "r": "β", "res": "β", "base": 16.0, "scale": 1.28, "unlock": 1.0}, "γatk": {"label": "γ atk trig +1%", "st": "atkTrig", "r": "γ", "res": "γ", "base": 25.0, "scale": 1.31, "unlock": 2.0}, "δatk": {"label": "δ atk trig +1%", "st": "atkTrig", "r": "δ", "res": "δ", "base": 32.0, "scale": 1.32, "unlock": 3.0}, "αcr": {"label": "α cost -1", "st": "costReduce", "r": "α", "base": 4.5, "scale": 1.35, "unlock": 0.0}, "βcr": {"label": "β cost -1", "st": "costReduce", "r": "β", "base": 5.5, "scale": 1.35, "unlock": 1.0}, "γcr": {"label": "γ cost -1", "st": "costReduce", "r": "γ", "base": 6.5, "scale": 1.35, "unlock": 3.0}, "δcr": {"label": "δ cost -1", "st": "costReduce", "r": "δ", "base": 7.5, "scale": 1.35, "unlock": 4.0}, "αfc": {"label": "α free +1%", "st": "freeChance", "r": "α", "base": 6.2, "scale": 1.35, "unlock": 1.0}, "βfc": {"label": "β free +1%", "st": "freeChance", "r": "β", "base": 8.5, "scale": 1.38, "unlock": 2.0}, "γfc": {"label": "γ free +1%", "st": "freeChance", "r": "γ", "base": 11.0, "scale": 1.4, "unlock": 4.0}, "δfc": {"label": "δ free +1%", "st": "freeChance", "r": "δ", "base": 14.0, "scale": 1.43, "unlock": 5.0}, "αlc": {"label": "α lucky cd", "st": "luckyResetChance", "r": "α", "base": 11.0, "scale": 1.31, "unlock": 2.0}, "βlc": {"label": "β lucky cd", "st": "luckyResetChance", "r": "β", "base": 14.0, "scale": 1.31, "unlock": 3.0}, "γlc": {"label": "γ lucky cd", "st": "luckyResetChance", "r": "γ", "base": 17.0, "scale": 1.23, "unlock": 5.0}, "δlc": {"label": "δ lucky cd", "st": "luckyResetChance", "r": "δ", "base": 21.0, "scale": 1.23, "unlock": 6.0}};
+const DEFAULT_SCALE = 1.3;
+const PERM_RES_UNLOCK = {"\u03b1": 4, "\u03b2": 5, "\u03b3": 6, "\u03b4": 7};
+const ENEMIES = [{"id": 0.0, "maxHp": 500.0, "defMin": 0.0, "defMax": 0.0, "lMin": 1.0, "lMax": 3.0, "pp": 10.0, "maxResIdx": 0.0}, {"id": 1.0, "maxHp": 1500.0, "defMin": 2.0, "defMax": 4.0, "lMin": 1.0, "lMax": 2.0, "pp": 5.0, "maxResIdx": 1.0, "rW": 0.05}, {"id": 2.0, "maxHp": 5000.0, "defMin": 6.0, "defMax": 9.0, "lMin": 1.0, "lMax": 2.0, "pp": 16.0, "maxResIdx": 1.0, "eW": 0.05, "rW": 0.1}, {"id": 3.0, "maxHp": 15000.0, "defMin": 12.0, "defMax": 28.0, "lMin": 1.0, "lMax": 3.0, "pp": 50.0, "maxResIdx": 2.0, "eW": 0.02}, {"id": 4.0, "maxHp": 45000.0, "defMin": 35.0, "defMax": 50.0, "lMin": 1.0, "lMax": 3.0, "pp": 120.0, "maxResIdx": 3.0, "lW": 0.001, "eW": 0.05}, {"id": 5.0, "maxHp": 150000.0, "defMin": 60.0, "defMax": 150.0, "lMin": 1.0, "lMax": 3.0, "pp": 350.0, "maxResIdx": 3.0, "lW": 0.005, "eW": 0.08}, {"id": 6.0, "maxHp": 500000.0, "defMin": 170.0, "defMax": 270.0, "lMin": 1.0, "lMax": 3.0, "pp": 1000.0, "maxResIdx": 3.0, "lW": 0.01, "eW": 0.08, "dcMax": 4.0}, {"id": 7.0, "maxHp": 2000000.0, "defMin": 400.0, "defMax": 700.0, "lMin": 1.0, "lMax": 3.0, "pp": 3333.0, "maxResIdx": 3.0, "lW": 0.03, "eW": 0.08, "dcMax": 4.0}];
+
+// Track modifications
+const overrides = {};      // upgKey -> {field -> newValue|null}
+const enemyOverrides = {};  // id    -> {field -> newValue|null}
+let sortCol = 'key', sortDir = 1;
+let filterRes = '', filterSt = '', searchStr = '';
+let selectedKey = null, selectedKey2 = null;
+let chartLevels = 5, chartLevels2 = 5;
+let chartMode = 'reg', chartMode2 = 'reg';  // 'reg'=in-run resource, 'pres'=prestige ✦, 'perm'=permanent ✦
+
+const RES_COL = {α:'#60a5fa',β:'#4ade80',γ:'#fcd34d',δ:'#c084fc'};
+
+// Format number with thousands separator (dot)
+function fmt(n) {
+  return Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function upgCost(k, lvl) {
+  const u = overrideOf(k);
+  const base = parseFloat(u.base ?? UPG[k].base ?? 5);
+  const scale = parseFloat(u.scale ?? UPG[k].scale ?? DEFAULT_SCALE);
+  return Math.max(1, Math.floor(base * Math.pow(scale, lvl)));
+}
+function permCostCalc(k, lvl) {
+  const u = overrideOf(k);
+  const base = parseFloat(u.permBase ?? UPG[k].permBase ?? u.base ?? UPG[k].base ?? 5);
+  const scale = parseFloat(u.permScale ?? UPG[k].permScale ?? ((parseFloat(u.scale ?? UPG[k].scale ?? DEFAULT_SCALE)) + 0.05));
+  return Math.floor(base * 7 * Math.pow(scale, lvl));
+}
+function upgPrestigeCostCalc(k, lvl) {
+  const u = overrideOf(k);
+  const base = parseFloat(u.presBase ?? UPG[k].presBase ?? u.base ?? UPG[k].base ?? 5);
+  const scale = parseFloat(u.presScale ?? UPG[k].presScale ?? u.scale ?? UPG[k].scale ?? DEFAULT_SCALE);
+  return Math.max(1, Math.floor(base * Math.pow(scale, lvl)));
+}
+// Inherited placeholder helpers — shown greyed out when the field is empty
+function inheritedPresBase(k) {
+  const u = overrideOf(k);
+  return u.base ?? UPG[k].base ?? 5;
+}
+function inheritedPresScale(k) {
+  const u = overrideOf(k);
+  return u.scale ?? UPG[k].scale ?? DEFAULT_SCALE;
+}
+function inheritedPermBase(k) {
+  const u = overrideOf(k);
+  const pb = parseFloat(u.presBase ?? UPG[k].presBase ?? u.base ?? UPG[k].base ?? 5);
+  return +(pb * 7).toFixed(1);
+}
+function inheritedPermScale(k) {
+  const u = overrideOf(k);
+  const ps = parseFloat(u.presScale ?? UPG[k].presScale ?? u.scale ?? UPG[k].scale ?? DEFAULT_SCALE);
+  return +((ps + 0.05).toFixed(2));
+}
+function overrideOf(k) {
+  return Object.assign({}, UPG[k], overrides[k] || {});
+}
+
+function rows() {
+  return Object.keys(UPG).map(k => {
+    const u = overrideOf(k);
+    const resUnlock = u.res ? (PERM_RES_UNLOCK[u.res] || null) : null;
+    const hasPerm = resUnlock !== null;
+    return {
+      key: k,
+      label: u.label || '',
+      res: u.res || '',
+      base: u.base || '',
+      scale: u.scale || DEFAULT_SCALE,
+      presBase: u.presBase || '',
+      presScale: u.presScale || '',
+      permBase: u.permBase || '',
+      permScale: u.permScale || '',
+      unlock: u.unlock !== undefined ? u.unlock : '',
+      permUnlock: hasPerm ? resUnlock : '',
+      st: u.st || '',
+    };
+  });
+}
+
+function applyFilters() {
+  searchStr = document.getElementById('search').value.toLowerCase();
+  render();
+}
+
+function toggleRes(btn) {
+  document.querySelectorAll('.filter-btn[data-res]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterRes = btn.dataset.res;
+  render();
+}
+
+function toggleSt(btn, category) {
+  document.querySelectorAll('.filter-btn[data-st]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterSt = category;
+  render();
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('table.upg-tbl th').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+  });
+  const ths = document.querySelectorAll('table.upg-tbl th');
+  const cols = ['key','st','label','res','base','scale','presBase','presScale','permBase','permScale','unlock','permUnlock'];
+  const idx = cols.indexOf(col);
+  if (idx >= 0) ths[idx].classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  render();
+}
+
+const ATK_STATS = ['atkTrig','atkCd'];
+const DMG_STATS = ['dMin','dMax','mMin','mMax','armorPierce','dmgExpMin','dmgExpMax','critChance','critDmg','ppMulti'];
+
+function render() {
+  let data = rows();
+  if (filterRes) data = data.filter(r => r.res === filterRes);
+  if (filterSt === 'atk') data = data.filter(r => ATK_STATS.some(s => (r.st+'').includes(s)));
+  else if (filterSt === 'dmg') data = data.filter(r => DMG_STATS.some(s => (r.st+'').includes(s)));
+  if (searchStr) data = data.filter(r =>
+    r.key.toLowerCase().includes(searchStr) ||
+    (r.label+'').toLowerCase().includes(searchStr) ||
+    (r.st+'').toLowerCase().includes(searchStr)
+  );
+  data.sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === '' || av === undefined) av = sortDir > 0 ? Infinity : -Infinity;
+    if (bv === '' || bv === undefined) bv = sortDir > 0 ? Infinity : -Infinity;
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('upg-tbody');
+  tbody.innerHTML = '';
+  for (const r of data) {
+    const tr = document.createElement('tr');
+    if (r.key === selectedKey) tr.classList.add('selected');
+    if (r.key === selectedKey2) tr.classList.add('selected2');
+    tr.onclick = () => selectRow(r.key);
+    tr.oncontextmenu = (e) => { e.preventDefault(); selectRowB(r.key); };
+
+    const resCol = RES_COL[r.res] || '#888';
+    const unlockTxt = r.unlock !== '' ? `E${r.unlock}` : '—';
+    const permUnlockTxt = r.permUnlock !== '' ? `E${r.permUnlock}` : '—';
+
+    tr.innerHTML = `
+      <td style="color:#888;font-size:12px;font-family:'IBM Plex Mono',monospace;font-weight:500">${r.key}</td>
+      <td style="color:#777;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:500">${r.st}</td>
+      <td style="color:#ddd">${r.label}</td>
+      <td><span class="res-${r.res}" style="color:${resCol}">${r.res||'—'}</span></td>
+      <td><input class="editable${(overrides[r.key]?.base!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="base" value="${r.base}" placeholder="${UPG[r.key]?.base || ''}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.scale!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="scale" value="${r.scale}" placeholder="${UPG[r.key]?.scale || DEFAULT_SCALE}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.presBase!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="presBase" value="${r.presBase}" placeholder="${inheritedPresBase(r.key)}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.presScale!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="presScale" value="${r.presScale}" placeholder="${inheritedPresScale(r.key)}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.permBase!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="permBase" value="${r.permBase}" placeholder="${r.permUnlock!==''?inheritedPermBase(r.key):'-'}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.permScale!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="permScale" value="${r.permScale}" placeholder="${r.permUnlock!==''?inheritedPermScale(r.key):'-'}" onchange="editField(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.unlock!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="unlock" value="${(r.unlock!=='')?('E'+r.unlock):''}" placeholder="—" onchange="editUnlock(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="max-width:35px;font-family:'IBM Plex Mono',monospace"></td>
+      <td><input class="editable${(overrides[r.key]?.permUnlock!==undefined)?(' modified'):''}" data-key="${r.key}" data-field="permUnlock" value="${(r.permUnlock!=='')?('E'+r.permUnlock):''}" placeholder="—" onchange="editUnlock(this)" onkeydown="arrowNav(event)" onclick="event.stopPropagation()" style="max-width:35px;font-family:'IBM Plex Mono',monospace"></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function editField(inp) {
+  const k = inp.dataset.key, f = inp.dataset.field;
+  const orig = UPG[k][f];
+  const v = inp.value.trim();
+  if (!overrides[k]) overrides[k] = {};
+  if (v === String(orig ?? '') || (v === '' && orig === undefined)) {
+    delete overrides[k][f];
+    if (!Object.keys(overrides[k]).length) delete overrides[k];
+    inp.classList.remove('modified');
+  } else if (v === '') {
+    // clear an existing field → mark for deletion
+    overrides[k][f] = null;
+    inp.classList.add('modified');
+  } else {
+    overrides[k][f] = isNaN(v) ? v : parseFloat(v);
+    inp.classList.add('modified');
+  }
+  updateChangeCount();
+  if (selectedKey === k) { drawChart(k); fillCostTable(k); }
+}
+
+function editUnlock(inp) {
+  const k = inp.dataset.key, f = inp.dataset.field;
+  const orig = UPG[k][f];
+  let v = inp.value.trim().toUpperCase();
+  if (v.startsWith('E')) v = v.slice(1);
+  if (!overrides[k]) overrides[k] = {};
+  if (v === String(orig ?? '') || (v === '' && orig === undefined)) {
+    delete overrides[k][f];
+    if (!Object.keys(overrides[k]).length) delete overrides[k];
+    inp.value = '';
+    inp.classList.remove('modified');
+  } else if (v === '') {
+    // clear an existing field → mark for deletion
+    overrides[k][f] = null;
+    inp.value = '';
+    inp.classList.add('modified');
+  } else {
+    overrides[k][f] = isNaN(v) ? v : parseInt(v, 10);
+    inp.value = (v !== '' && !isNaN(v)) ? 'E' + v : v;
+    inp.classList.add('modified');
+  }
+  updateChangeCount();
+  if (selectedKey === k) drawChart(k);
+}
+
+function arrowNav(e) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  const inp = e.target;
+  const td = inp.closest('td');
+  const tr = td.closest('tr');
+  const col = Array.from(tr.cells).indexOf(td);
+  const tbody = tr.closest('tbody');
+  const rows = Array.from(tbody.rows);
+  const rowIdx = rows.indexOf(tr);
+  let newRow = e.key === 'ArrowUp' ? rows[rowIdx - 1] : rows[rowIdx + 1];
+  if (newRow && newRow.cells[col]?.querySelector('input')) {
+    newRow.cells[col].querySelector('input').focus();
+  }
+}
+
+function updateChangeCount() {
+  const n = Object.keys(overrides).length + Object.keys(enemyOverrides).length;
+  const el = document.getElementById('change-count');
+  if (n) { el.style.display=''; el.textContent = n + ' unsaved change' + (n>1?'s':''); }
+  else { el.style.display='none'; }
+}
+
+function setChartMode(mode) {
+  chartMode = mode;
+  document.querySelectorAll('#s1-table-pane [data-mode]').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+    if (b.classList.contains('active')) {
+      if (b.dataset.mode === 'reg') { b.style.color = '#60a5fa'; b.style.borderColor = '#60a5fa44'; }
+      else if (b.dataset.mode === 'pres') { b.style.color = '#fbbf24'; b.style.borderColor = '#fbbf2444'; }
+      else { b.style.color = '#a78bfa'; b.style.borderColor = '#a78bfa44'; }
+      b.style.background = '#1a0d2a';
+    } else {
+      b.style.color = '';
+      b.style.borderColor = '';
+      b.style.background = '';
+    }
+  });
+  if (selectedKey) { drawChart(selectedKey); fillCostTable(selectedKey); }
+}
+
+function selectRow(k) {
+  selectedKey = k;
+  document.querySelectorAll('#upg-tbody tr').forEach(tr => tr.classList.remove('selected'));
+  const rows2 = document.querySelectorAll('#upg-tbody tr');
+  // find matching row by key cell
+  for (const tr of rows2) {
+    if (tr.children[0]?.textContent === k) tr.classList.add('selected');
+  }
+  drawChart(k);
+  fillCostTable(k);
+}
+
+function setChartLevels(n) {
+  chartLevels = n;
+  document.querySelectorAll('#s1-chart-pane .level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#s1-chart-pane [data-levels="${n}"]`)?.classList.add('active');
+  if (selectedKey) drawChart(selectedKey);
+}
+
+function drawChart(k) {
+  document.getElementById('no-sel').style.display = 'none';
+  document.getElementById('cost-chart-wrap').style.display = '';
+  const canvas = document.getElementById('cost-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 292, H = 180;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const u = overrideOf(k);
+  const mode = chartMode;
+  const hasPerm = u.permBase !== undefined || UPG[k].permBase !== undefined;
+
+  let costFn, barColor;
+  if (mode === 'perm') {
+    if (!hasPerm) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('no permanent upgrade', W/2, H/2);
+      return;
+    }
+    costFn = i => permCostCalc(k, i);
+    barColor = '#a78bfaaa';
+  } else if (mode === 'pres') {
+    costFn = i => upgPrestigeCostCalc(k, i);
+    barColor = '#fbbf24aa';
+  } else {
+    costFn = i => upgCost(k, i);
+    barColor = (RES_COL[UPG[k].res] || '#E868F1') + 'aa';
+  }
+
+  const costs = Array.from({length:chartLevels}, (_, i) => costFn(i));
+  const mx = Math.max(...costs);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {l:36,r:10,t:10,b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  // grid
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+
+  // bars + value labels
+  const bw = cw / (chartLevels + 1);
+  for (let i = 0; i < chartLevels; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (chartLevels <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw * 0.5)));
+      ctx.fillStyle = '#aaa';
+      ctx.font = `${fs}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(fmt(costs[i]), x + bw*0.35, Math.max(pad.t + fs, y - 2));
+    }
+  }
+
+  // x labels (dynamic based on chartLevels)
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const labelStep = Math.ceil(chartLevels / 5);
+  for (let lbl = 0; lbl < chartLevels; lbl += labelStep) {
+    const x = pad.l + lbl*bw + bw/2;
+    ctx.fillText(lbl, x, H - 4);
+  }
+  ctx.fillStyle='#888'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillText(k, W/2, pad.t - 1);
+}
+
+function fillCostTable(k) {
+  const tbody = document.getElementById('cost-tbody');
+  tbody.innerHTML = '';
+  const mode = chartMode;
+  const u = overrideOf(k);
+  const hasPerm = u.permBase !== undefined || UPG[k].permBase !== undefined;
+  const hd = document.getElementById('cost-hd1');
+
+  let costFn, color, sym;
+  if (mode === 'perm') {
+    if (hd) hd.textContent = 'COST ✦';
+    if (!hasPerm) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="3" style="color:#555;text-align:center;padding:10px 0">no permanent upgrade</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+    costFn = i => permCostCalc(k, i);
+    color = '#a78bfa'; sym = '✦';
+  } else if (mode === 'pres') {
+    if (hd) hd.textContent = 'COST ✦';
+    costFn = i => upgPrestigeCostCalc(k, i);
+    color = '#fbbf24'; sym = '✦';
+  } else {
+    const resSym = UPG[k].res || '?';
+    if (hd) hd.textContent = 'COST ' + resSym;
+    costFn = i => upgCost(k, i);
+    color = RES_COL[UPG[k].res] || '#E868F1';
+    sym = resSym;
+  }
+
+  let cum = 0;
+  for (let i = 0; i < 50; i++) {
+    const c = costFn(i);
+    cum += c;
+    const tr = document.createElement('tr');
+    if (Math.floor(i / 5) % 2 === 1) tr.classList.add('band');
+    tr.innerHTML = `<td style="text-align:right">${i}</td><td style="color:${color};text-align:right">${fmt(c)}${sym}</td><td style="color:#888;text-align:right">${fmt(cum)}${sym}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// cost table sort (simple click toggle)
+let costSortCol = 0, costSortDir = 1;
+function sortCostTbl(col) {
+  if (costSortCol === col) costSortDir *= -1;
+  else { costSortCol = col; costSortDir = 1; }
+  const tbody = document.getElementById('cost-tbody');
+  const trs = Array.from(tbody.querySelectorAll('tr'));
+  trs.sort((a, b) => {
+    const av = parseFloat(a.children[col].textContent) || 0;
+    const bv = parseFloat(b.children[col].textContent) || 0;
+    return (av - bv) * costSortDir;
+  });
+  trs.forEach(tr => tbody.appendChild(tr));
+}
+
+async function saveChanges() {
+  const hasUpg = Object.keys(overrides).length > 0;
+  const hasEn  = Object.keys(enemyOverrides).length > 0;
+  if (!hasUpg && !hasEn) return;
+  const btn = document.getElementById('save-btn');
+  const patch = Object.assign({}, overrides);
+  if (hasEn) patch.enemies = enemyOverrides;
+  const json = JSON.stringify(patch);
+  const cmd = "python3 build.py --patch '" + json + "'";
+  try {
+    await navigator.clipboard.writeText(cmd);
+    btn.textContent = '✓ command copied';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'save patch'; btn.classList.remove('saved'); }, 2500);
+  } catch(e) {
+    alert('Paste in terminal (boss-incremental folder):\n\n' + cmd);
+  }
+}
+
+function showSidebar2() {
+  document.getElementById('s2-table-pane').style.display = 'flex';
+  document.getElementById('s2-chart-pane').style.display = 'block';
+  document.getElementById('sidebar-area').classList.add('dual');
+  document.querySelector('.layout').style.gridTemplateColumns = '1fr 840px';
+}
+
+function hideSidebar2() {
+  document.getElementById('s2-table-pane').style.display = 'none';
+  document.getElementById('s2-chart-pane').style.display = 'none';
+  document.getElementById('sidebar-area').classList.remove('dual');
+  document.querySelector('.layout').style.gridTemplateColumns = '';
+  if (selectedKey2) {
+    selectedKey2 = null;
+    document.querySelectorAll('#upg-tbody tr').forEach(tr => tr.classList.remove('selected2'));
+  }
+}
+
+function selectRowB(k) {
+  if (selectedKey2 === k) {
+    hideSidebar2();
+    return;
+  }
+  selectedKey2 = k;
+  showSidebar2();
+  document.querySelectorAll('#upg-tbody tr').forEach(tr => tr.classList.remove('selected2'));
+  for (const tr of document.querySelectorAll('#upg-tbody tr')) {
+    if (tr.children[0]?.textContent === k) tr.classList.add('selected2');
+  }
+  drawChart2(k);
+  fillCostTable2(k);
+}
+
+function setChartMode2(mode) {
+  chartMode2 = mode;
+  document.querySelectorAll('#s2-table-pane [data-mode2]').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode2 === mode);
+    if (b.classList.contains('active')) {
+      if (b.dataset.mode2 === 'reg') { b.style.color = '#60a5fa'; b.style.borderColor = '#60a5fa44'; }
+      else if (b.dataset.mode2 === 'pres') { b.style.color = '#fbbf24'; b.style.borderColor = '#fbbf2444'; }
+      else { b.style.color = '#a78bfa'; b.style.borderColor = '#a78bfa44'; }
+      b.style.background = '#1a0d2a';
+    } else {
+      b.style.color = '';
+      b.style.borderColor = '';
+      b.style.background = '';
+    }
+  });
+  if (selectedKey2) { drawChart2(selectedKey2); fillCostTable2(selectedKey2); }
+}
+
+function setChartLevels2(n) {
+  chartLevels2 = n;
+  document.querySelectorAll('#s2-chart-pane .level-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#s2-chart-pane [data-levels2="${n}"]`)?.classList.add('active');
+  if (selectedKey2) drawChart2(selectedKey2);
+}
+
+function drawChart2(k) {
+  document.getElementById('no-sel2').style.display = 'none';
+  document.getElementById('cost-chart-wrap2').style.display = '';
+  const canvas = document.getElementById('cost-chart2');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 292, H = 180;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  const u = overrideOf(k);
+  const mode = chartMode2;
+  const hasPerm = u.permBase !== undefined || UPG[k].permBase !== undefined;
+
+  let costFn, barColor;
+  if (mode === 'perm') {
+    if (!hasPerm) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('no permanent upgrade', W/2, H/2);
+      return;
+    }
+    costFn = i => permCostCalc(k, i);
+    barColor = '#a78bfaaa';
+  } else if (mode === 'pres') {
+    costFn = i => upgPrestigeCostCalc(k, i);
+    barColor = '#fbbf24aa';
+  } else {
+    costFn = i => upgCost(k, i);
+    barColor = (RES_COL[UPG[k].res] || '#E868F1') + 'aa';
+  }
+
+  const costs = Array.from({length:chartLevels2}, (_, i) => costFn(i));
+  const mx = Math.max(...costs);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {l:36,r:10,t:10,b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+
+  const bw = cw / (chartLevels2 + 1);
+  for (let i = 0; i < chartLevels2; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (chartLevels2 <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw * 0.5)));
+      ctx.fillStyle = '#aaa';
+      ctx.font = `${fs}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(fmt(costs[i]), x + bw*0.35, Math.max(pad.t + fs, y - 2));
+    }
+  }
+
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const labelStep = Math.ceil(chartLevels2 / 5);
+  for (let lbl = 0; lbl < chartLevels2; lbl += labelStep) {
+    const x = pad.l + lbl*bw + bw/2;
+    ctx.fillText(lbl, x, H - 4);
+  }
+  ctx.fillStyle='#888'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillText(k, W/2, pad.t - 1);
+}
+
+function fillCostTable2(k) {
+  const tbody = document.getElementById('cost-tbody2');
+  tbody.innerHTML = '';
+  const mode = chartMode2;
+  const u = overrideOf(k);
+  const hasPerm = u.permBase !== undefined || UPG[k].permBase !== undefined;
+  const hd = document.getElementById('cost-hd1-2');
+
+  let costFn, color, sym;
+  if (mode === 'perm') {
+    if (hd) hd.textContent = 'COST ✦';
+    if (!hasPerm) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="3" style="color:#555;text-align:center;padding:10px 0">no permanent upgrade</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+    costFn = i => permCostCalc(k, i);
+    color = '#a78bfa'; sym = '✦';
+  } else if (mode === 'pres') {
+    if (hd) hd.textContent = 'COST ✦';
+    costFn = i => upgPrestigeCostCalc(k, i);
+    color = '#fbbf24'; sym = '✦';
+  } else {
+    const resSym = UPG[k].res || '?';
+    if (hd) hd.textContent = 'COST ' + resSym;
+    costFn = i => upgCost(k, i);
+    color = RES_COL[UPG[k].res] || '#E868F1';
+    sym = resSym;
+  }
+
+  let cum = 0;
+  for (let i = 0; i < 50; i++) {
+    const c = costFn(i);
+    cum += c;
+    const tr = document.createElement('tr');
+    if (Math.floor(i / 5) % 2 === 1) tr.classList.add('band');
+    tr.innerHTML = `<td style="text-align:right">${i}</td><td style="color:${color};text-align:right">${fmt(c)}${sym}</td><td style="color:#888;text-align:right">${fmt(cum)}${sym}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+const ENEMY_FIELDS = ['maxHp','defMin','defMax','lMin','lMax','pp','maxResIdx','rW','eW','lW','dcMax'];
+
+function editEnemyField(inp) {
+  const id  = parseInt(inp.dataset.eid);
+  const f   = inp.dataset.field;
+  const orig = ENEMIES[id]?.[f];
+  const v   = inp.value.trim();
+  if (!enemyOverrides[id]) enemyOverrides[id] = {};
+  if (v === String(orig ?? '') || (v === '' && orig === undefined)) {
+    delete enemyOverrides[id][f];
+    if (!Object.keys(enemyOverrides[id]).length) delete enemyOverrides[id];
+    inp.classList.remove('modified');
+  } else if (v === '') {
+    enemyOverrides[id][f] = null;
+    inp.classList.add('modified');
+  } else {
+    enemyOverrides[id][f] = isNaN(v) ? v : parseFloat(v);
+    inp.classList.add('modified');
+  }
+  updateChangeCount();
+}
+
+function renderEnemies() {
+  const tbody = document.getElementById('enemy-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  ENEMIES.forEach((e, idx) => {
+    const id  = idx;
+    const or  = enemyOverrides[id] || {};
+    const inp = (f) => {
+      const src = e[f];
+      const ov  = or[f];
+      const isMod = ov !== undefined;
+      const dispVal = ov === null ? '' : (ov !== undefined ? ov : (src !== undefined ? src : ''));
+      const ph  = src !== undefined ? src : '—';
+      const w   = f === 'maxHp' ? '72px' : '38px';
+      return `<input class="editable${isMod?' modified':''}" data-eid="${id}" data-field="${f}"
+                value="${dispVal}" placeholder="${ph}"
+                onchange="editEnemyField(this)" onclick="event.stopPropagation()"
+                style="font-family:'IBM Plex Mono',monospace;width:${w}">`;
+    };
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td style="color:#888;font-size:12px;font-weight:500">E${id}</td>` +
+      ENEMY_FIELDS.map(f => `<td>${inp(f)}</td>`).join('');
+    tbody.appendChild(tr);
+  });
+}
+
+render();
+renderEnemies();
+
+// Synchronized scrolling between the two cost tables
+let syncingScroll = false;
+const scrollWrap1 = document.getElementById('scroll-wrap1');
+const scrollWrap2 = document.getElementById('scroll-wrap2');
+scrollWrap1.addEventListener('scroll', function() {
+  if (syncingScroll) return;
+  syncingScroll = true;
+  scrollWrap2.scrollTop = this.scrollTop;
+  requestAnimationFrame(() => { syncingScroll = false; });
+});
+scrollWrap2.addEventListener('scroll', function() {
+  if (syncingScroll) return;
+  syncingScroll = true;
+  scrollWrap1.scrollTop = this.scrollTop;
+  requestAnimationFrame(() => { syncingScroll = false; });
+});
+</script>
+</body>
+</html>
