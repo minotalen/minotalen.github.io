@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goododds wiki</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
+#topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:6px;padding:0 18px;height:41px;background:#111;border-bottom:1px solid #222;flex-shrink:0}
+#topbar h1{font-size:11px;letter-spacing:2px;color:#888;font-weight:600;white-space:nowrap;margin-right:6px}
+.tab-btn{background:none;border:1px solid transparent;color:#666;padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;letter-spacing:1px;white-space:nowrap;transition:color .12s;flex-shrink:0}
+.tab-btn:hover{color:#aaa;background:#141414}
+.tab-btn.active{color:#e5e5e5;background:#1e1e1e;border-color:#2a2a2a}
+.tsep{width:1px;height:16px;background:#222;margin:0 3px;flex-shrink:0}
+.spacer{flex:1}
+#gsearch{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:150px}
+#gsearch:focus{outline:none;border-color:#444}
+.layout{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 41px)}
+.main{overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column}
+.sidebar{border-left:1px solid #1e1e1e;height:calc(100vh - 41px);display:flex;flex-direction:column;overflow:hidden}
+.fbr{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:7px 18px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.fbr input{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:130px}
+.fbr input:focus{outline:none;border-color:#444}
+.fbtn{background:#141414;border:1px solid #2a2a2a;color:#777;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;transition:all .1s}
+.fbtn.active{border-color:var(--ac,#E868F1);color:var(--ac,#E868F1)}
+.fsep{color:#444;font-size:12px;user-select:none}
+.sec-hd{font-size:10px;letter-spacing:2px;color:#777;padding:10px 18px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.tbl-wrap{padding:0 18px 24px;overflow-x:auto}
+table.wtbl{width:100%;border-collapse:collapse}
+table.wtbl th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;background:#0d0d0d}
+table.wtbl th:hover{color:#999}
+table.wtbl th.sa::after{content:' ↑';color:#E868F1}
+table.wtbl th.sd::after{content:' ↓';color:#E868F1}
+table.wtbl td{padding:5px 8px;border-bottom:1px solid #161616;vertical-align:middle;font-size:12px;white-space:nowrap}
+table.wtbl tr:hover td{background:#111}
+table.wtbl tr.sel td{background:#1a0d2a}
+.ra{color:#60a5fa}.rb{color:#4ade80}.rg{color:#fcd34d}.rd{color:#c084fc}
+.qc{color:#9ca3af}.qu{color:#4ade80}.qr{color:#60a5fa}.qe{color:#c084fc}.ql{color:#f59e0b}
+.ec0{color:#9ca3af}.ec1{color:#60a5fa}.ec2{color:#4ade80}.ec3{color:#fcd34d}.ec4{color:#f97316}.ec5{color:#f43f5e}.ec6{color:#c084fc}.ec7{color:#a78bfa}
+.tag-s{font-size:10px;letter-spacing:1px;color:#60a5fa}
+.tag-p{font-size:10px;letter-spacing:1px;color:#f59e0b}
+.dim{color:#4d4d4d}
+.muted{color:#777}
+#sb-title{padding:9px 14px;font-size:11px;letter-spacing:1px;color:#666;border-bottom:1px solid #1e1e1e;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sb-empty{padding:24px 14px;color:#666;font-size:12px;text-align:center;line-height:1.8;flex-shrink:0}
+#sb-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.sb-modes{display:flex;gap:5px;padding:7px 14px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.lvl-btn{background:#141414;border:1px solid #2a2a2a;color:#777;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;flex:1;transition:all .12s}
+.lvl-btn.active{color:#c084fc;border-color:#c084fc44;background:#1a0d2a}
+.level-btn{background:#141414;border:1px solid #2a2a2a;color:#888;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;flex:1;transition:all .15s}
+.level-btn.active{border-color:#4ade8044;color:#4ade80;background:#0a1f0a}
+.sb-info{padding:6px 14px;font-size:10px;color:#777;border-bottom:1px solid #1a1a1a;flex-shrink:0;line-height:1.6}
+.sb-scroll{overflow-y:auto;flex:1;padding:0 14px 0}
+table.ct{width:100%;border-collapse:collapse;font-size:12px}
+table.ct th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d}
+table.ct td{padding:3px 6px;border-bottom:1px solid #1a1a1a;color:#ccc}
+table.ct tr:hover td{background:#161616}
+table.ct tr.ev td{background:#181818}
+.sb-footer{padding:5px 14px;font-size:10px;color:#555;border-top:1px solid #1a1a1a;flex-shrink:0}
+table.mvt{width:100%;border-collapse:collapse;font-size:12px}
+table.mvt th{color:#777;font-weight:normal;font-size:10px;letter-spacing:1px;padding:3px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d;z-index:50}
+table.mvt td{padding:3px 6px;border-bottom:1px solid #161616}
+table.mvt tr:hover td{background:#161616}
+table.mvt tr.ev td{background:#181818}
+.sidebar-section{padding:8px 14px;border-top:1px solid #1a1a1a;flex-shrink:0}
+.q-section{padding:14px 18px 24px;overflow-x:auto}
+table.qtbl{border-collapse:collapse;font-size:12px;margin-bottom:20px;width:100%}
+table.qtbl th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:center}
+table.qtbl th.lh{text-align:left;color:#666}
+table.qtbl td{padding:5px 8px;border-bottom:1px solid #1a1a1a;text-align:center;color:#bbb;font-size:12px}
+table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;white-space:nowrap}
+.loot-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;min-width:70px}
+.ls{height:100%}
+.e-bar-row{margin:5px 0}
+.e-bar-track{height:4px;background:#1e1e1e;border-radius:2px;margin-top:2px}
+.e-bar-fill{height:100%;border-radius:2px}
+.sec-hint{color:#666;letter-spacing:0;font-size:10px}
+.sec-note{color:#555;font-size:11px}
+#mob-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:48px;background:#0d0d0d;border-top:1px solid #1e1e1e;z-index:150}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;border-top:2px solid transparent;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:#666;cursor:pointer;padding:6px 0;transition:all .1s}
+.mob-tab .mob-icon{font-size:16px;line-height:1}
+.mob-tab.active{background:#141414;color:#e5e5e5;font-weight:bold;border-top-color:#888}
+@media(max-width:767px){
+  #mob-bar{display:flex}
+  .layout{height:calc(100vh - 41px - 48px);grid-template-columns:1fr}
+  .sidebar{height:100%;width:100%}
+  #topbar{overflow-x:auto;-webkit-overflow-scrolling:touch;gap:3px;padding:0 8px}
+  #gsearch{width:100px}
+  .tab-btn{font-size:10px;padding:2px 6px}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>goododds wiki</h1>
+  <div class="tsep"></div>
+  <button class="tab-btn active" id="tab-upgrades" onclick="switchTab('upgrades')">UPGRADES</button>
+  <button class="tab-btn" id="tab-enemies" onclick="switchTab('enemies')">ENEMIES</button>
+  <button class="tab-btn" id="tab-mods" onclick="switchTab('mods')">MODS</button>
+  <button class="tab-btn" id="tab-quality" onclick="switchTab('quality')">QUALITY</button>
+  <button class="tab-btn" id="tab-loot" onclick="switchTab('loot')">LOOT</button>
+  <div class="spacer"></div>
+  <input id="gsearch" placeholder="search…" oninput="onSearch()">
+</div>
+
+<div class="layout">
+  <div class="main" id="main-content"></div>
+  <div class="sidebar" id="sidebar">
+    <div id="sb-title">SELECT A ROW</div>
+    <div id="sb-empty">click any row<br>for details</div>
+    <div id="sb-body"></div>
+  </div>
+</div>
+
+<div id="mob-bar">
+  <button class="mob-tab active" id="mobt-table" onclick="setMobView('table')">
+    <span class="mob-icon">≡</span><span>TABLE</span>
+  </button>
+  <button class="mob-tab" id="mobt-detail" onclick="setMobView('detail')">
+    <span class="mob-icon">◈</span><span>DETAIL</span>
+  </button>
+</div>
+
+<script>
+// ─── GAME DATA ────────────────────────────────────────────────
+
+const DEFAULT_SCALE = 1.3;
+const ATK_CD = 5000;
+const TMR  = {α:20000,β:60000,γ:120000,δ:360000};
+const TLBL = {α:'20s', β:'60s', γ:'2m', δ:'6m'};
+const RES  = ['α','β','γ','δ'];
+const RES_UNLOCK = {β:1, γ:2, δ:3};
+const PERM_RES_UNLOCK = {"α": 4, "β": 5, "γ": 6, "δ": 7};
+
+const SLOT_COSTS     = [25, 100, 300, 1000, 10000];
+const BAG_BASE_COST  = 12;
+const BAG_MAX        = 24;
+const BAG_START      = 10;
+const FORGE_BASE_COSTS  = [3, 4, 5, 9, 15];
+const FORGE_SCALE_BY_Q  = [1.6, 1.7, 1.8, 2.0, 2.3];
+
+const QNAME  = ['C','U','R','E','L'];
+const QFULL  = ['Common','Uncommon','Rare','Epic','Legendary'];
+const RES_COL = {α:'#60a5fa', β:'#4ade80', γ:'#fcd34d', δ:'#c084fc'};
+const QCOL   = ['#9ca3af','#4ade80','#60a5fa','#c084fc','#f59e0b'];
+const ECOL   = ['#9ca3af','#60a5fa','#4ade80','#fcd34d','#f97316','#f43f5e','#c084fc','#a78bfa','#e5e5e5'];
+const SELL_PP = [1, 3, 8, 20, 60];
+
+const QRANGE           = [[0.8, 1.2], [1.3, 2.2], [2.4, 3.5], [3.8, 5.5], [6, 9]];
+const QPROC            = [0, 5, 10, 15, 20];
+const PROC_MULT_RANGE  = [[], [], [1.2, 1.8], [2.5, 4.5], [4.0, 6.0]];
+const MULT_PLVL_BY_Q   = [0, 0, 0.1, 0.2, 0.3];
+const STAT_PLVL_MULT   = [1, 1.2, 1.5, 1.85, 2.2];
+const PLVL_BY_Q        = [0, 0, 0.5, 0.75, 1.0];
+const FORGE_MULTI_CHANCES = [[100, 0, 0, 0, 0], [90, 10, 0, 0, 0], [70, 20, 10, 0, 0], [60, 23, 12, 5, 0], [50, 26, 14, 7, 3]];
+const ARMOR_SHRED_RANGE = [[0.15,0.30],[0.20,0.40],[0.25,0.50],[0.35,0.65],[0.50,0.85]];
+
+const UPG = {"dm": {"label": "dmg.min +1", "st": "dMin", "res": "α", "base": 6.0}, "dx": {"label": "dmg.max +1", "st": "dMax", "res": "α", "base": 3.5, "scale": 1.25, "permScale": 1.32}, "acd": {"label": "atk.cd  /1.05", "st": "atkCd", "res": "α", "base": 10.8, "scale": 1.34}, "mm": {"label": "mult.min +.05", "st": "mMin", "res": "β", "base": 5.5}, "mx": {"label": "mult.max +.05", "st": "mMax", "res": "β", "base": 4.0, "scale": 1.27}, "pen": {"label": "⛨ pierce +1", "st": "armorPierce", "res": "β", "base": 9.0, "scale": 1.27}, "αm": {"label": "α.min +1", "st": "rMin", "r": "α", "res": "α", "base": 6.0}, "αx": {"label": "α.max +1", "st": "rMax", "r": "α", "res": "α", "base": 4.0, "scale": 1.27, "permScale": 1.32}, "αcd": {"label": "α.cd  -5%", "st": "resCd", "r": "α", "res": "α", "base": 10.0, "scale": 1.28}, "βm": {"label": "β.min +1", "st": "rMin", "r": "β", "res": "β", "base": 7.0}, "βx": {"label": "β.max +1", "st": "rMax", "r": "β", "res": "β", "base": 5.0, "scale": 1.25, "permScale": 1.32}, "βcd": {"label": "β.cd  -5%", "st": "resCd", "r": "β", "res": "β", "base": 13.0, "scale": 1.27}, "γm": {"label": "γ.min +1", "st": "rMin", "r": "γ", "res": "γ", "base": 8.0}, "γx": {"label": "γ.max +1", "st": "rMax", "r": "γ", "res": "γ", "base": 6.5, "scale": 1.24, "permScale": 1.32}, "γcd": {"label": "γ.cd  -5%", "st": "resCd", "r": "γ", "res": "γ", "base": 16.0, "scale": 1.26}, "γcrit": {"label": "crit chance +2%", "st": "critChance", "res": "γ", "base": 6.6, "scale": 1.3}, "γcritdmg": {"label": "crit dmg +.2x", "st": "critDmg", "res": "γ", "base": 12.5, "scale": 1.29}, "γsupercrit": {"label": "super crit +1%", "st": "superCritChance", "res": "γ", "base": 15.0, "scale": 1.34, "unlock": 4.0}, "γsupercritdmg": {"label": "super crit dmg +.1x", "st": "superCritDmg", "res": "γ", "base": 28.0, "scale": 1.33, "unlock": 4.0}, "δm": {"label": "δ.min +1", "st": "rMin", "r": "δ", "res": "δ", "base": 9.0}, "δx": {"label": "δ.max +1", "st": "rMax", "r": "δ", "res": "δ", "base": 9.0, "scale": 1.21, "permScale": 1.32}, "δcd": {"label": "δ.cd  -5%", "st": "resCd", "r": "δ", "res": "δ", "base": 20.0, "scale": 1.25}, "δdmgexpMin": {"label": "dmg exp min +.01", "st": "dmgExpMin", "res": "δ", "base": 8.0, "scale": 1.33, "presScale": 1.36, "permBase": 80.0, "permScale": 1.42, "presBase": 25.0}, "δdmgexpMax": {"label": "dmg exp max +.01", "st": "dmgExpMax", "res": "δ", "base": 6.0, "scale": 1.29, "presScale": 1.31, "permBase": 50.0, "permScale": 1.35, "presBase": 15.0}, "δppx": {"label": "prestige +.1", "st": "ppMulti", "res": "δ", "base": 14.0, "scale": 1.2, "unlock": 3.0}, "αatk": {"label": "α atk trig +1%", "st": "atkTrig", "r": "α", "res": "α", "base": 12.0, "scale": 1.25, "unlock": 0.0}, "βatk": {"label": "β atk trig +1%", "st": "atkTrig", "r": "β", "res": "β", "base": 16.0, "scale": 1.28, "unlock": 1.0}, "γatk": {"label": "γ atk trig +1%", "st": "atkTrig", "r": "γ", "res": "γ", "base": 25.0, "scale": 1.31, "unlock": 2.0}, "δatk": {"label": "δ atk trig +1%", "st": "atkTrig", "r": "δ", "res": "δ", "base": 32.0, "scale": 1.32, "unlock": 3.0}, "αcr": {"label": "α cost -1", "st": "costReduce", "r": "α", "base": 4.5, "scale": 1.35, "unlock": 0.0}, "βcr": {"label": "β cost -1", "st": "costReduce", "r": "β", "base": 5.5, "scale": 1.35, "unlock": 1.0}, "γcr": {"label": "γ cost -1", "st": "costReduce", "r": "γ", "base": 6.5, "scale": 1.35, "unlock": 3.0}, "δcr": {"label": "δ cost -1", "st": "costReduce", "r": "δ", "base": 7.5, "scale": 1.35, "unlock": 4.0}, "αfc": {"label": "α free +1%", "st": "freeChance", "r": "α", "base": 6.2, "scale": 1.35, "unlock": 1.0}, "βfc": {"label": "β free +1%", "st": "freeChance", "r": "β", "base": 8.5, "scale": 1.38, "unlock": 2.0}, "γfc": {"label": "γ free +1%", "st": "freeChance", "r": "γ", "base": 11.0, "scale": 1.4, "unlock": 4.0}, "δfc": {"label": "δ free +1%", "st": "freeChance", "r": "δ", "base": 14.0, "scale": 1.43, "unlock": 5.0}, "αlc": {"label": "α lucky cd", "st": "luckyResetChance", "r": "α", "base": 11.0, "scale": 1.31, "unlock": 2.0}, "βlc": {"label": "β lucky cd", "st": "luckyResetChance", "r": "β", "base": 14.0, "scale": 1.31, "unlock": 3.0}, "γlc": {"label": "γ lucky cd", "st": "luckyResetChance", "r": "γ", "base": 17.0, "scale": 1.23, "unlock": 5.0}, "δlc": {"label": "δ lucky cd", "st": "luckyResetChance", "r": "δ", "base": 21.0, "scale": 1.23, "unlock": 6.0}};
+const ENEMIES = [{"qW": [40.0, 40.0, 20.0, 0.0, 0.0], "id": 0.0, "maxHp": 500.0, "defMin": 0.0, "defMax": 0.0, "lMin": 1.0, "lMax": 3.0, "pp": 10.0, "maxResIdx": 0.0, "once": true}, {"qW": [55.0, 40.0, 5.0, 0.0, 0.0], "id": 1.0, "maxHp": 1500.0, "defMin": 2.0, "defMax": 5.0, "lMin": 1.0, "lMax": 2.0, "pp": 5.0, "maxResIdx": 1.0, "unlock": "forge"}, {"qW": [50.0, 39.0, 10.0, 1.0, 0.0], "id": 2.0, "maxHp": 5000.0, "defMin": 5.0, "defMax": 10.0, "lMin": 1.0, "lMax": 2.0, "pp": 20.0, "maxResIdx": 1.0}, {"qW": [46.0, 37.0, 15.0, 2.0, 0.0], "id": 3.0, "maxHp": 15000.0, "defMin": 10.0, "defMax": 30.0, "lMin": 1.0, "lMax": 3.0, "pp": 65.0, "maxResIdx": 2.0, "unlock": "perma"}, {"qW": [42.0, 33.0, 20.0, 4.9, 0.1], "id": 4.0, "maxHp": 45000.0, "defMin": 30.0, "defMax": 50.0, "lMin": 1.0, "lMax": 3.0, "pp": 200.0, "maxResIdx": 3.0}, {"qW": [40.0, 32.5, 20.0, 7.0, 0.5], "id": 5.0, "maxHp": 150000.0, "defMin": 50.0, "defMax": 150.0, "lMin": 1.0, "lMax": 3.0, "pp": 700.0, "maxResIdx": 3.0}, {"qW": [40.0, 30.0, 20.0, 9.0, 1.0], "id": 6.0, "maxHp": 500000.0, "defMin": 100.0, "defMax": 300.0, "lMin": 1.0, "lMax": 3.0, "pp": 2500.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [10.0, 47.0, 30.0, 10.0, 3.0], "id": 7.0, "maxHp": 2500000.0, "defMin": 200.0, "defMax": 800.0, "lMin": 2.0, "lMax": 3.0, "pp": 9000.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [100.0, 0.0, 0.0, 0.0, 0.0], "id": 8.0, "maxHp": 1.0, "defMin": 500.0, "defMax": 2500.0, "lMin": 1.0, "lMax": 1.0, "pp": 0.0, "maxResIdx": 3.0, "omega": true}];
+const MODS = {"dMin": {"label": "dmg.min", "type": "stat", "stat": "dMin", "base": 2.0, "perLvl": 1.0}, "dMax": {"label": "dmg.max", "type": "stat", "stat": "dMax", "base": 3.0, "perLvl": 2.0}, "mMin": {"label": "mlt.min", "type": "stat", "stat": "mMin", "base": 0.1, "perLvl": 0.05}, "mMax": {"label": "mlt.max", "type": "stat", "stat": "mMax", "base": 0.15, "perLvl": 0.1}, "dmgMulti": {"label": "d.multi", "type": "proc", "effect": "dmgMulti", "minQ": 3.0, "base": 7.0, "perLvl": 0.5}, "armorShrink": {"label": "⛨.ease", "type": "proc", "effect": "armShrink", "minQ": 2.0, "base": 15.0, "perLvl": 1.5, "multPerLvl": 0.02, "minEnemy": 1.0}, "armorMulti": {"label": "⛨.multi", "type": "proc", "effect": "armMulti", "minQ": 2.0, "base": 15.0, "perLvl": 1.5, "minEnemy": 1.0}, "αMin": {"label": "α.min", "type": "stat", "stat": "αMin", "base": 3.0, "perLvl": 1.0}, "αMax": {"label": "α.max", "type": "stat", "stat": "αMax", "base": 4.0, "perLvl": 2.0}, "βMin": {"label": "β.min", "type": "stat", "stat": "βMin", "base": 5.0, "perLvl": 1.3, "minEnemy": 1.0}, "βMax": {"label": "β.max", "type": "stat", "stat": "βMax", "base": 7.0, "perLvl": 2.8, "minEnemy": 1.0}, "γMin": {"label": "γ.min", "type": "stat", "stat": "γMin", "base": 7.0, "perLvl": 1.8, "minEnemy": 3.0}, "γMax": {"label": "γ.max", "type": "stat", "stat": "γMax", "base": 10.0, "perLvl": 3.3, "minEnemy": 3.0}, "δMin": {"label": "δ.min", "type": "stat", "stat": "δMin", "base": 10.0, "perLvl": 2.3, "minEnemy": 4.0}, "δMax": {"label": "δ.max", "type": "stat", "stat": "δMax", "base": 13.0, "perLvl": 4.1, "minEnemy": 4.0}, "αx": {"label": "α.multi", "type": "proc", "res": "α", "minQ": 3.0, "base": 4.0, "perLvl": 0.5}, "βx": {"label": "β.multi", "type": "proc", "res": "β", "minQ": 3.0, "base": 5.0, "perLvl": 0.5, "minEnemy": 1.0}, "γx": {"label": "γ.multi", "type": "proc", "res": "γ", "minQ": 3.0, "base": 6.5, "perLvl": 0.5, "minEnemy": 3.0}, "δx": {"label": "δ.multi", "type": "proc", "res": "δ", "minQ": 3.0, "base": 9.0, "perLvl": 0.5, "minEnemy": 4.0}, "γcrt": {"label": "crit%", "type": "stat", "stat": "critChance", "base": 2.0, "perLvl": 1.0, "minEnemy": 3.0}, "γcrd": {"label": "crit.multi", "type": "stat", "stat": "critDmg", "base": 0.15, "perLvl": 0.05, "minEnemy": 3.0}, "γscc": {"label": "scrit%", "type": "stat", "stat": "superCritChance", "base": 1.0, "perLvl": 0.5, "minEnemy": 3.0}, "γscd": {"label": "scrit.multi", "type": "stat", "stat": "superCritDmg", "base": 0.075, "perLvl": 0.025, "minEnemy": 3.0}, "δexm": {"label": "exp.min", "type": "stat", "stat": "dmgExpMin", "base": 0.012, "perLvl": 0.006, "minEnemy": 4.0}, "δexx": {"label": "exp.max", "type": "stat", "stat": "dmgExpMax", "base": 0.01, "perLvl": 0.005, "minEnemy": 4.0}, "δppx": {"label": "ꖜ.mult", "type": "stat", "stat": "ppMulti", "base": 0.2, "perLvl": 0.1, "minEnemy": 4.0}, "αchain": {"label": "α.chain", "type": "proc", "effect": "chain", "res": "α", "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "βchain": {"label": "β.chain", "type": "proc", "effect": "chain", "res": "β", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 1.0}, "γchain": {"label": "γ.chain", "type": "proc", "effect": "chain", "res": "γ", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 3.0}, "δchain": {"label": "δ.chain", "type": "proc", "effect": "chain", "res": "δ", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 4.0}, "αecho": {"label": "α.echo", "type": "proc", "effect": "echo", "res": "α", "minQ": 3.0, "base": 15.0, "perLvl": 1.0}, "βecho": {"label": "β.echo", "type": "proc", "effect": "echo", "res": "β", "minQ": 3.0, "base": 15.0, "perLvl": 1.0, "minEnemy": 1.0}, "γecho": {"label": "γ.echo", "type": "proc", "effect": "echo", "res": "γ", "minQ": 3.0, "base": 15.0, "perLvl": 1.0, "minEnemy": 3.0}, "δecho": {"label": "δ.echo", "type": "proc", "effect": "echo", "res": "δ", "minQ": 3.0, "base": 15.0, "perLvl": 1.0, "minEnemy": 4.0}, "αbonk": {"label": "α.bonk", "type": "proc", "effect": "bonk", "res": "α", "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "βbonk": {"label": "β.bonk", "type": "proc", "effect": "bonk", "res": "β", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 1.0}, "γbonk": {"label": "γ.bonk", "type": "proc", "effect": "bonk", "res": "γ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 3.0}, "δbonk": {"label": "δ.bonk", "type": "proc", "effect": "bonk", "res": "δ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 4.0}, "αharvest": {"label": "α.harvest", "type": "proc", "effect": "harvest", "res": "α", "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "βharvest": {"label": "β.harvest", "type": "proc", "effect": "harvest", "res": "β", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 1.0}, "γharvest": {"label": "γ.harvest", "type": "proc", "effect": "harvest", "res": "γ", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 3.0}, "δharvest": {"label": "δ.harvest", "type": "proc", "effect": "harvest", "res": "δ", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 4.0}, "αrfnd": {"label": "α.refund", "type": "proc", "effect": "refund", "res": "α", "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0}, "βrfnd": {"label": "β.refund", "type": "proc", "effect": "refund", "res": "β", "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0, "minEnemy": 1.0}, "γrfnd": {"label": "γ.refund", "type": "proc", "effect": "refund", "res": "γ", "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0, "minEnemy": 3.0}, "δrfnd": {"label": "δ.refund", "type": "proc", "effect": "refund", "res": "δ", "minQ": 2.0, "base": 10.0, "basePct": 5.0, "perLvl": 2.0, "minEnemy": 4.0}, "dmgCd": {"label": "dmg.cd", "type": "stat", "stat": "atkCdBonus", "base": 5.0, "perLvl": 1.2, "pct": true}, "αCd": {"label": "α.cd", "type": "stat", "stat": "αCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true}, "βCd": {"label": "β.cd", "type": "stat", "stat": "βCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true, "minEnemy": 1.0}, "γCd": {"label": "γ.cd", "type": "stat", "stat": "γCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true, "minEnemy": 3.0}, "δCd": {"label": "δ.cd", "type": "stat", "stat": "δCdBonus", "base": 4.0, "perLvl": 1.2, "pct": true, "minEnemy": 4.0}};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────────────
+
+function fmtN(n) {
+  n = Math.floor(n);
+  if (n < 1000) return String(n);
+  if (n < 1000000) return (n/1000).toFixed(1).replace(/\.0$/,'')+'k';
+  if (n < 1000000000) return (n/1000000).toFixed(2)+'M';
+  return (n/1000000000).toFixed(2)+'B';
+}
+function upgCost(k, lv)   { const u=UPG[k]; return Math.max(1,Math.floor(u.base*Math.pow(u.scale||DEFAULT_SCALE,lv))); }
+function presCost(k, lv)  { const u=UPG[k]; return Math.max(1,Math.floor((u.presBase||u.base)*Math.pow(u.presScale||u.scale||DEFAULT_SCALE,lv))); }
+function permCostFn(k,lv) { const u=UPG[k]; return Math.floor((u.permBase||u.base)*4*Math.pow(u.permScale||(u.scale||DEFAULT_SCALE)+0.05,lv)); }
+function forgeCostFn(lv,q){ return Math.max(1,Math.floor(FORGE_BASE_COSTS[q-1]*Math.pow(FORGE_SCALE_BY_Q[q-1],lv))); }
+function bagCostFn(lv)    { return Math.floor(BAG_BASE_COST*Math.pow(2,lv)); }
+function hasPerm(k)       { return 'res' in UPG[k] && !!PERM_RES_UNLOCK[UPG[k].res]; }
+
+// ─── STATE ────────────────────────────────────────────────────────────────────────────────
+
+let activeTab = 'upgrades';
+let selKey = null;
+let selTab = null;
+
+function pushHash() {
+  const parts = [activeTab];
+  if (selKey !== null) parts.push(selKey);
+  const h = '#' + parts.join('/');
+  if (location.hash !== h) history.replaceState(null, '', h);
+}
+
+function applyHash() {
+  const raw = location.hash.replace(/^#/, '');
+  if (!raw) return;
+  const [tab, key] = raw.split('/');
+  const validTabs = ['upgrades','enemies','mods','quality','loot'];
+  if (!validTabs.includes(tab)) return;
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (key !== undefined) {
+    const parsed = (tab === 'enemies' || tab === 'loot') ? Number(key) : key;
+    selKey = parsed;
+    selTab = tab;
+  }
+}
+let gSearch = '';
+
+const ST = {
+  upgrades: { sc:'res', sd:1, fr:'', fs:'', sel:null, search:'', sbMode:'reg' },
+  enemies:  { sel:null, search:'' },
+  mods:     { sc:'minEnemy', sd:1, ft:'', fr:'', fq:'', fe:'', sel:null, search:'', chartQ:3, chartLv:9 },
+  quality:  { sel:null, search:'' },
+  loot:     { sel:null, search:'' },
+};
+let sbMode = 'reg';
+
+// ─── TAB ───────────────────────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  // Save current tab state
+  const cur = ST[activeTab];
+  if (cur) { cur.sel = selKey; cur.search = gSearch; }
+
+  activeTab = tab;
+
+  // Restore new tab state
+  const ns = ST[tab] || {};
+  selKey = ns.sel !== undefined ? ns.sel : null;
+  selTab = selKey !== null ? tab : null;
+  gSearch = ns.search || '';
+  document.getElementById('gsearch').value = gSearch;
+  if (tab === 'upgrades' && ns.sbMode) sbMode = ns.sbMode;
+  if (tab === 'mods') { wikiChartQ = ns.chartQ || 3; wikiChartLv = ns.chartLv || 9; }
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  pushHash();
+  renderMain(); renderSB();
+}
+function onSearch() {
+  gSearch = document.getElementById('gsearch').value.toLowerCase();
+  if (ST[activeTab]) ST[activeTab].search = gSearch;
+  renderMain();
+}
+function renderMain() {
+  const mc = document.getElementById('main-content');
+  if      (activeTab==='upgrades') mc.innerHTML = buildUpgradesHTML();
+  else if (activeTab==='enemies')  mc.innerHTML = buildEnemiesHTML();
+  else if (activeTab==='mods')     mc.innerHTML = buildModsHTML();
+  else if (activeTab==='quality')  mc.innerHTML = buildQualityHTML();
+  else if (activeTab==='loot')     mc.innerHTML = buildLootHTML();
+}
+
+// ─── UPGRADES ────────────────────────────────────────────────────────────────────────
+
+const ATK_STATS = ['atkTrig','atkCd'];
+const DMG_STATS = ['dMin','dMax','mMin','mMax','armorPierce','dmgExpMin','dmgExpMax','critChance','critDmg','ppMulti'];
+
+function buildUpgradesHTML() {
+  const s = ST.upgrades;
+  let data = Object.keys(UPG).map(k => {
+    const u = UPG[k];
+    const pu = hasPerm(k) ? PERM_RES_UNLOCK[u.res] : '';
+    return { key:k, st:u.st||'', label:u.label||'', res:u.res||'',
+      base:u.base||0, scale:u.scale||DEFAULT_SCALE,
+      presBase:u.presBase||'', presScale:u.presScale||'',
+      permBase:u.permBase||'', permScale:u.permScale||'',
+      unlock: u.unlock!==undefined ? u.unlock : '',
+      permUnlock: pu };
+  });
+  if (s.fr) data = data.filter(r => r.res===s.fr);
+  if (s.fs==='atk') data = data.filter(r => ATK_STATS.some(x => r.st.includes(x)));
+  else if (s.fs==='dmg') data = data.filter(r => DMG_STATS.some(x => r.st.includes(x)));
+  if (gSearch) data = data.filter(r =>
+    r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch));
+  data.sort((a,b)=>{
+    let av=a[s.sc],bv=b[s.sc];
+    if(av===''||av===undefined) av=s.sd>0?Infinity:-Infinity;
+    if(bv===''||bv===undefined) bv=s.sd>0?Infinity:-Infinity;
+    if(typeof av==='string') return av.localeCompare(bv)*s.sd;
+    return (av-bv)*s.sd;
+  });
+
+  const rows = data.map(r => {
+    const col = RES_COL[r.res]||'#888';
+    const u = UPG[r.key];
+    const presB = r.presBase !== '' ? r.presBase : `<span class="dim">${r.base}</span>`;
+    const presS = r.presScale !== '' ? r.presScale : `<span class="dim">${r.scale}</span>`;
+    const permB = r.permBase !== '' ? r.permBase
+      : (r.permUnlock !== '' ? `<span class="dim">${+(r.base*4).toFixed(1)}</span>` : '<span class="dim">—</span>');
+    const permS = r.permScale !== '' ? r.permScale
+      : (r.permUnlock !== '' ? `<span class="dim">${+((r.scale||DEFAULT_SCALE)+0.05).toFixed(2)}</span>` : '<span class="dim">—</span>');
+    const unlk = r.unlock !== '' ? `<span class="muted" style="font-size:11px">E${r.unlock}</span>` : '<span class="dim">—</span>';
+    const pumk = r.permUnlock !== '' ? `<span style="color:#a78bfa;font-size:11px">E${r.permUnlock}</span>` : '<span class="dim">—</span>';
+    const sel  = (selTab==='upgrades'&&selKey===r.key)?' sel':'';
+    return `<tr class="${sel}" onclick="selUpg('${r.key}')">
+      <td style="color:#ccc">${r.label}</td>
+      <td><span style="color:${col}">${r.res||'—'}</span></td>
+      <td style="color:#aaa">${r.base}</td>
+      <td style="color:#777">${r.scale}</td>
+      <td>${presB}</td><td>${presS}</td>
+      <td>${permB}</td><td>${permS}</td>
+      <td>${unlk}</td><td>${pumk}</td>
+    </tr>`;
+  }).join('');
+
+  const resBtns = ['','α','β','γ','δ'].map(r => {
+    const ac = s.fr===r?' active':''; const col = r?(RES_COL[r]):'#888'; const bc = r?(RES_COL[r]+'44'):'#383838';
+    return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setUF('fr','${r}')">${r||'ALL'}</button>`;
+  }).join('');
+  const stBtns = [['','ALL','#888','#383838'],['atk','ATK','#f97316','#f9731644'],['dmg','DMG','#f43f5e','#f43f5e44']].map(([v,t,c,b])=>{
+    const ac = s.fs===v?' active':'';
+    return `<button class="fbtn${ac}" style="color:${c};border-color:${b};--ac:${c}" onclick="setUF('fs','${v}')">${t}</button>`;
+  }).join('');
+
+  return `<div class="sec-hd">UPGRADES <span class="sec-hint">— click row to see cost curve</span></div>
+<div class="fbr">
+  <input placeholder="search…" oninput="onSearch()" value="${gSearch}">
+  <span class="fsep">|</span>${resBtns}
+  <span class="fsep">|</span>${stBtns}
+</div>
+<div class="tbl-wrap">
+<table class="wtbl" id="upg-tbl">
+<thead><tr>
+  <th onclick="sortU('label')">LABEL</th>
+  <th onclick="sortU('res')">RES</th>
+  <th onclick="sortU('base')" title="base cost at level 0">BASE</th>
+  <th onclick="sortU('scale')" title="exponential cost multiplier per level">SCALE</th>
+  <th onclick="sortU('presBase')" title="prestige ❖ base cost">PRES BASE</th>
+  <th onclick="sortU('presScale')" title="prestige ❖ scale">PRES SCALE</th>
+  <th onclick="sortU('permBase')" title="permanent ❖ base cost">PERM BASE</th>
+  <th onclick="sortU('permScale')" title="permanent ❖ scale">PERM SCALE</th>
+  <th onclick="sortU('unlock')" title="enemy id required">UNLOCK</th>
+  <th onclick="sortU('permUnlock')" title="enemy id for permanent">PERM UNLK</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</div>`;
+}
+function sortU(col) { const s=ST.upgrades; if(s.sc===col) s.sd*=-1; else{s.sc=col;s.sd=1;} renderMain(); }
+function setUF(f,v) { ST.upgrades[f]=v; renderMain(); }
+function selUpg(k) { selKey=k; selTab='upgrades'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
+
+// ─── ENEMIES ──────────────────────────────────────────────────────────────────────────
+
+function buildEnemiesHTML() {
+  const resLabels = ['α only','α+β','α–γ','α–δ'];
+  const rows = ENEMIES.map(e => {
+    const eId   = e.omega ? 'EΩ' : `E${e.id}`;
+    const col   = ECOL[e.id]||'#aaa';
+    const flags = [];
+    if (e.once)           flags.push(`<span style="color:#f59e0b;font-size:10px">one-time</span>`);
+    if (e.omega)          flags.push(`<span style="color:#a78bfa;font-size:10px">training dummy</span>`);
+    if (e.unlock==='forge') flags.push(`<span style="color:#4ade80;font-size:10px">⊕ forge</span>`);
+    if (e.unlock==='perma') flags.push(`<span style="color:#60a5fa;font-size:10px">⊕ perma</span>`);
+    const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
+    const sel = (selTab==='enemies'&&selKey===e.id)?' sel':'';
+    return `<tr class="${sel}" onclick="selEnemy(${e.id})">
+      <td><b style="color:${col}">${eId}</b></td>
+      <td style="color:#aaa">${fmtN(e.maxHp)}</td>
+      <td style="color:#777">${e.defMin}–${e.defMax}</td>
+      <td style="color:#777">${e.lMin}–${e.lMax}</td>
+      <td style="color:${e.pp?'#fcd34d':'#555'}">${e.pp?'+'+fmtN(e.pp)+'ꛜ':'—'}</td>
+      <td style="color:#666;font-size:11px">${resLabels[e.maxResIdx]||'?'}</td>
+      <td style="color:#555">${e.dcMax||'<span class="dim">—</span>'}</td>
+      <td style="font-size:11px">${flags.join(' ')}</td>
+      <td style="min-width:72px"><div class="loot-bar">${bar}</div></td>
+    </tr>`;
+  }).join('');
+
+  const slotRows = SLOT_COSTS.map((c,i)=>`<tr><td style="color:#888">slot ${i+4}</td><td style="color:#fcd34d">${fmtN(c)} ꛜ</td></tr>`).join('');
+  const bagRows = Array.from({length:BAG_MAX-BAG_START+1},(_,i)=>{
+    const sz = BAG_START+i;
+    const cost = i===0?'<span class="dim">free</span>':`${fmtN(bagCostFn(i-1))} ꛜ`;
+    return `<tr><td style="color:#777">×${i===0?'base':('+'+i)}</td><td style="color:#888">${sz} slots</td><td style="color:${i===0?'#555':'#fcd34d'}">${cost}</td></tr>`;
+  }).join('');
+
+  return `<div class="sec-hd">ENEMIES <span class="sec-hint">— click row for detail</span></div>
+<div class="tbl-wrap" style="padding-top:10px">
+<table class="wtbl">
+<thead><tr>
+  <th>ID</th>
+  <th title="total health points">MAX HP</th>
+  <th title="armor reduction rolled per hit">DEF RANGE</th>
+  <th title="item level range on drops">DROP LVL</th>
+  <th title="prestige points on defeat">REWARD</th>
+  <th title="highest resource tier available">MAX RES</th>
+  <th title="death counter limit">DC MAX</th>
+  <th>FLAGS</th>
+  <th title="quality distribution of item drops">DROP QUALITY</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-top:24px;border-top:1px solid #303030;margin-top:16px">
+  <div>
+    <div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px">MOD SLOT COSTS <span style="color:#636363;letter-spacing:0">— ꛜ to unlock (base: 3 slots)</span></div>
+    <table class="wtbl" style="max-width:220px"><thead><tr><th>SLOT</th><th>ꛜ COST</th></tr></thead><tbody>${slotRows}</tbody></table>
+  </div>
+  <div>
+    <div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px">BAG CAPACITY <span style="color:#636363;letter-spacing:0">— ꛜ to expand (starts at ${BAG_START})</span></div>
+    <table class="wtbl" style="max-width:240px"><thead><tr><th>UPGRADE</th><th>SIZE</th><th>ꛜ COST</th></tr></thead><tbody>${bagRows}</tbody></table>
+  </div>
+</div>
+</div>`;
+}
+function selEnemy(id) { selKey=id; selTab='enemies'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
+
+// ─── MODS ────────────────────────────────────────────────────────────────────────────────────
+
+function buildModsHTML() {
+  const s = ST.mods;
+  let data = Object.keys(MODS).map(k => {
+    const m = MODS[k];
+    return { key:k, label:m.label||k, type:m.type||'stat',
+      es: m.stat||m.effect||'', res:m.res||'',
+      minQ:m.minQ||1, minEnemy:m.minEnemy||0,
+      base:m.base, perLvl:m.perLvl };
+  });
+  if (s.ft) data = data.filter(r=>r.type===s.ft);
+  if (s.fr) data = data.filter(r=>r.res===s.fr);
+  if (s.fq) data = data.filter(r=>r.minQ >= parseInt(s.fq));
+  if (s.fe) data = data.filter(r=>r.minEnemy >= parseInt(s.fe));
+  if (gSearch) data = data.filter(r=>
+    r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.es.toLowerCase().includes(gSearch));
+  data.sort((a,b)=>{
+    let av=a[s.sc],bv=b[s.sc];
+    if(av===''||av===undefined) av=s.sd>0?Infinity:-Infinity;
+    if(bv===''||bv===undefined) bv=s.sd>0?Infinity:-Infinity;
+    if(typeof av==='string') return av.localeCompare(bv)*s.sd;
+    return (av-bv)*s.sd;
+  });
+
+  const rows = data.map(r => {
+    const typeTag = r.type==='stat'?'<span class="tag-s">STAT</span>':'<span class="tag-p">PROC</span>';
+    const resCol  = RES_COL[r.res];
+    const resTxt  = r.res?`<span style="color:${resCol}">${r.res}</span>`:'<span class="dim">—</span>';
+    const minQTxt = `<span style="color:${QCOL[r.minQ-1]}">${QNAME[r.minQ-1]}</span>`;
+    const minETxt = r.minEnemy>0?`<span style="color:${ECOL[r.minEnemy]}">E${r.minEnemy}+</span>`:'<span class="dim">any</span>';
+    const sel = (selTab==='mods'&&selKey===r.key)?' sel':'';
+    return `<tr class="${sel}" onclick="selMod('${r.key}')">
+      <td style="color:#ccc">${r.label}</td>
+      <td>${typeTag}</td>
+      <td>${resTxt}</td>
+      <td>${minQTxt}</td>
+      <td>${minETxt}</td>
+      <td style="color:#aaa">${r.base}</td>
+      <td style="color:#777">${r.perLvl}</td>
+    </tr>`;
+  }).join('');
+
+  const typeBtns=[['','ALL','#777','#2a2a2a'],['stat','STAT','#60a5fa','#60a5fa44'],['proc','PROC','#f59e0b','#f59e0b44']].map(([v,t,c,b])=>{
+    const ac=s.ft===v?' active':'';
+    return `<button class="fbtn${ac}" style="color:${c};border-color:${b};--ac:${c}" onclick="setMF('ft','${v}')">${t}</button>`;
+  }).join('');
+  const resBtns2=[''  ,'α','β','γ','δ'].map(r=>{
+    const ac=s.fr===r?' active':''; const col=r?RES_COL[r]:'#888'; const bc=r?col+'44':'#383838';
+    return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setMF('fr','${r}')">${r||'ALL'}</button>`;
+  }).join('');
+  const qBtns=['','1','2','3','4','5'].map((v,i)=>{
+    const ac=s.fq===v?' active':''; const col=v?QCOL[parseInt(v)-1]:'#888'; const bc=v?col+'44':'#383838';
+    const lbl=v?('≥'+QNAME[parseInt(v)-1]):'ALL Q';
+    return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setMF('fq','${v}')">${lbl}</button>`;
+  }).join('');
+  const eBtns=['','0','1','2','3','4'].map((v,i)=>{
+    const ac=s.fe===v?' active':''; const col=v?ECOL[parseInt(v)]:'#888'; const bc=v?col+'44':'#383838';
+    const lbl=v?'E'+v+'+':'ALL E';
+    return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setMF('fe','${v}')">${lbl}</button>`;
+  }).join('');
+
+  return `<div class="sec-hd">MODS <span class="sec-hint">— item modifications · click row for value preview</span></div>
+<div class="fbr">
+  <input placeholder="search…" oninput="onSearch()" value="${gSearch}">
+  <span class="fsep">|</span>${typeBtns}
+  <span class="fsep">|</span>${resBtns2}
+  <span class="fsep">|</span>${qBtns}
+  <span class="fsep">|</span>${eBtns}
+</div>
+<div class="tbl-wrap">
+<table class="wtbl" id="mod-tbl">
+<thead><tr>
+  <th onclick="sortM('label')">LABEL</th>
+  <th onclick="sortM('type')">TYPE</th>
+  <th onclick="sortM('res')">RES</th>
+  <th onclick="sortM('minQ')" title="minimum item quality">MIN Q</th>
+  <th onclick="sortM('minEnemy')" title="minimum enemy tier">MIN E</th>
+  <th onclick="sortM('base')" title="base value at forge level 0">BASE</th>
+  <th onclick="sortM('perLvl')" title="value increase per forge level">PER LVL</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</div>`;
+}
+function sortM(col) { const s=ST.mods; if(s.sc===col) s.sd*=-1; else{s.sc=col;s.sd=1;} renderMain(); }
+function setMF(f,v) { ST.mods[f]=v; renderMain(); }
+function selMod(k) { selKey=k; selTab='mods'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
+
+// ─── QUALITY ────────────────────────────────────────────────────────────────────────────
+
+function buildQualityHTML() {
+  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('');
+  const qHdrFull = QFULL.map((q,i)=>`<th style="color:${QCOL[i]};font-size:9px;letter-spacing:.5px">${q}</th>`).join('');
+
+  const rangeRow   = QRANGE.map(r=>`<td>${r[0]}–${r[1]}</td>`).join('');
+  const statPlvlR  = STAT_PLVL_MULT.map(v=>`<td>×${v}</td>`).join('');
+  const qProcR     = QPROC.map((v,i)=>`<td>${i===0?'<span class="dim">—</span>':'+'+v+'%'}</td>`).join('');
+  const procPlvlR  = PLVL_BY_Q.map((v,i)=>`<td>${v?'+'+v+'%':'<span class="dim">—</span>'}</td>`).join('');
+  const multRngR   = PROC_MULT_RANGE.map((r,i)=>r.length?`<td>${r[0]}–${r[1]}</td>`:`<td class="dim">—</td>`).join('');
+  const multPlvlR  = MULT_PLVL_BY_Q.map(v=>`<td>${v?'+'+v:'<span class="dim">—</span>'}</td>`).join('');
+  const sellR      = SELL_PP.map(v=>`<td style="color:#fcd34d">+${v} ꛜ</td>`).join('');
+  const forgeMultR = FORGE_MULTI_CHANCES.map(row=>{
+    const parts=row.filter(v=>v>0).map((v,i)=>`<span style="font-size:10px;color:#777">×${i+1}:${v}%</span>`).join(' ');
+    return `<td style="text-align:left;white-space:nowrap">${parts}</td>`;
+  }).join('');
+  const armorShredR= ARMOR_SHRED_RANGE.map(r=>`<td>${r[0]}–${r[1]}</td>`).join('');
+
+  const forgeRows = Array.from({length:14},(_,lv)=>{
+    const cells = FORGE_BASE_COSTS.map((_,qi)=>`<td style="color:${QCOL[qi]}">${fmtN(forgeCostFn(lv,qi+1))}</td>`).join('');
+    return `<tr><td style="color:#777">+${lv}</td>${cells}</tr>`;
+  }).join('');
+
+  return `<div class="sec-hd">QUALITY TIERS <span class="sec-hint">— item roll &amp; forge mechanics</span></div>
+<div class="q-section">
+<table class="qtbl">
+<thead>
+  <tr><th class="lh"></th>${qHdr}</tr>
+  <tr style="border-bottom:1px solid #303030"><th class="lh" style="color:#636363;font-size:9px">full name</th>${qHdrFull}</tr>
+</thead>
+<tbody>
+  <tr><td class="lc" title="stat roll range multiplier at drop time">BASE RANGE</td>${rangeRow}</tr>
+  <tr><td class="lc" title="forge stat gain multiplier per quality tier">STAT / LV</td>${statPlvlR}</tr>
+  <tr><td class="lc" title="proc base chance bonus added per quality tier">+PROC CHANCE</td>${qProcR}</tr>
+  <tr><td class="lc" title="proc chance gained per forge level">+PROC / LV</td>${procPlvlR}</tr>
+  <tr><td class="lc" title="proc multiplier roll range (Rare+ procs only)">MULT RANGE</td>${multRngR}</tr>
+  <tr><td class="lc" title="proc multiplier gain per forge level">MULT / LV</td>${multPlvlR}</tr>
+  <tr><td class="lc" title="prestige points received when selling">SELL ꛜ</td>${sellR}</tr>
+  <tr><td class="lc" title="multi-hit chances per quality">FORGE MULTI×</td>${forgeMultR}</tr>
+  <tr><td class="lc" title="armor shred fraction roll range">ARMOR SHRED</td>${armorShredR}</tr>
+</tbody>
+</table>
+<div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px;padding-top:4px;border-top:1px solid #303030">FORGE COSTS <span style="color:#636363;letter-spacing:0">— ꛜ per level</span></div>
+<table class="wtbl" style="max-width:380px;margin-bottom:24px">
+<thead><tr><th>LVL</th>${QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('')}</tr></thead>
+<tbody>${forgeRows}</tbody>
+</table>
+<div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px;padding-top:4px;border-top:1px solid #303030">RESOURCE TIMERS</div>
+<table class="wtbl" style="max-width:320px">
+<thead><tr><th>RES</th><th>CYCLE TIME</th><th>UNLOCKED BY</th></tr></thead>
+<tbody>
+${RES.map((r,i)=>{
+  const unl = RES_UNLOCK[r]!==undefined ? `defeat E${RES_UNLOCK[r]}` : 'available from start';
+  return `<tr><td><span style="color:${RES_COL[r]}">${r}</span></td><td style="color:#aaa">${TLBL[r]}</td><td style="color:#777;font-size:11px">${unl}</td></tr>`;
+}).join('')}
+</tbody>
+</table>
+</div>`;
+}
+
+// ─── LOOT ───────────────────────────────────────────────────────────────────────────────────────
+
+function buildLootHTML() {
+  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]};text-align:center">${q}</th>`).join('');
+  const rows = ENEMIES.filter(e=>!e.omega).map(e => {
+    const eId = e.omega?'EΩ':`E${e.id}`;
+    const col = ECOL[e.id]||'#aaa';
+    const qCells = e.qW.map((w,i)=>w>0
+      ?`<td style="color:${QCOL[i]};text-align:center">${w}</td>`
+      :`<td class="dim" style="text-align:center">—</td>`).join('');
+    const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
+    const sel = (selTab==='loot'&&selKey===e.id)?' sel':'';
+    return `<tr class="${sel}" onclick="selLoot(${e.id})">
+      <td><b style="color:${col}">${eId}</b></td>
+      <td style="color:#777;text-align:center">${e.lMin}–${e.lMax}</td>
+      ${qCells}
+      <td style="min-width:80px"><div class="loot-bar">${bar}</div></td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="sec-hd">LOOT TABLES <span class="sec-hint">— quality weights per enemy · click row for detail</span></div>
+<div class="tbl-wrap" style="padding-top:10px">
+<table class="wtbl" style="margin-bottom:24px">
+<thead><tr>
+  <th>ENEMY</th>
+  <th style="text-align:center" title="item drop level range">DROP LVL</th>
+  ${qHdr}
+  <th>DISTRIBUTION</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div style="font-size:10px;letter-spacing:2px;color:#555;margin-bottom:8px;border-top:1px solid #1a1a1a;padding-top:16px">CONSUMABLE SUBTYPES <span class="sec-hint">— rolled independently per kill</span></div>
+<table class="wtbl" style="margin-bottom:8px">
+<thead><tr>
+  <th>SUBTYPE</th><th>CHANCE</th><th>MIN Q</th>
+  <th style="color:${QCOL[0]};text-align:center">C</th>
+  <th style="color:${QCOL[1]};text-align:center">U</th>
+  <th style="color:${QCOL[2]};text-align:center">R</th>
+  <th style="color:${QCOL[3]};text-align:center">E</th>
+  <th style="color:${QCOL[4]};text-align:center">L</th>
+  <th>DESCRIPTION</th>
+</tr></thead>
+<tbody>
+  <tr>
+    <td style="color:#a78bfa">protect</td><td style="color:#888">40%</td><td style="color:${QCOL[2]}">R+</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">−1 lvl</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">75% safe</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">free</td>
+    <td style="color:#555;font-size:11px">forge fail: prevents item destruction · quality scales protection</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">luck</td><td style="color:#888">25%</td><td style="color:${QCOL[0]}">C</td>
+    <td style="color:${QCOL[0]};font-size:11px;text-align:center">+15%</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">+22%</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">+30%</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">+38%</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">+45%</td>
+    <td style="color:#555;font-size:11px">forge: boosts success chance · quality scales bonus</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">stat</td><td style="color:#888">9%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">forge: forces stat improvement (stat mods only)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">reroll</td><td style="color:#888">8%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">rerolls mod base stat within quality range (keeps level)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">full</td><td style="color:#888">6%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">forge: forces stat + proc improvement (stat mods only)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">tierUp</td><td style="color:#888">8%</td><td style="color:${QCOL[1]}">U+</td>
+    <td style="color:${QCOL[0]};font-size:11px;text-align:center">0%↑</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">25%↑</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">50%↑</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">75%↑</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">100%↑</td>
+    <td style="color:#555;font-size:11px">on forge success: chance to raise item quality by 1 tier</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">refund</td><td style="color:#888">4%</td><td style="color:${QCOL[1]}">U+</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">15%/20%</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">25%/30%</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">40%/45%</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">60%/60%</td>
+    <td style="color:#555;font-size:11px">on upgrade buy: chance to refund % of spent cost</td>
+  </tr>
+</tbody>
+</table>
+<p class="sec-note" style="margin-bottom:3px">note: tierUp &amp; refund fall back to <em>full</em> when enemy drop level max is 1 (E0)</p>
+<p class="sec-note">refund columns: trigger chance / refund amount</p>
+</div>`;
+}
+function selLoot(id) { selKey=id; selTab='loot'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
+
+// ─── SIDEBAR ───────────────────────────────────────────────────────────────────────────────────
+
+function renderSB() {
+  const title = document.getElementById('sb-title');
+  const empty = document.getElementById('sb-empty');
+  const body  = document.getElementById('sb-body');
+  if (selKey===null) {
+    title.textContent = 'SELECT A ROW';
+    empty.style.display = '';
+    body.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  if      (selTab==='upgrades') sbUpgrade(body, title);
+  else if (selTab==='mods')     sbMod(body, title);
+  else if (selTab==='enemies')  sbEnemy(body, title);
+  else if (selTab==='loot')     sbLoot(body, title);
+}
+
+// ── Upgrade sidebar ────────────────────────────────────────────────────────────────────────────
+
+function sbUpgrade(body, title) {
+  const k = selKey;
+  const u = UPG[k];
+  if (!u) return;
+  title.textContent = u.label;
+  const hp = hasPerm(k);
+  const modes = ['reg','pres', ...(hp?['perm']:[])];
+  const modeBtns = modes.map(m=>{
+    const ac = sbMode===m?' active':'';
+    const labels = {reg:'REG',pres:'PRES',perm:'PERM'};
+    return `<button class="lvl-btn${ac}" onclick="setSbMode('${m}')">${labels[m]}</button>`;
+  }).join('');
+  const N = 15;
+  let cumul = 0;
+  const rows = [];
+  for (let lv = 0; lv < N; lv++) {
+    let cost, costStr, cumulStr;
+    if (sbMode==='reg') {
+      cost = upgCost(k, lv);
+      const col = RES_COL[u.res]||'#888';
+      costStr  = `<span style="color:${col}">${fmtN(cost)}</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:${col};opacity:.5">${fmtN(cumul)}</span>`;
+    } else if (sbMode==='pres') {
+      cost = presCost(k, lv);
+      costStr  = `<span style="color:#fcd34d">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
+    } else {
+      if (!hp) break;
+      cost = permCostFn(k, lv);
+      costStr  = `<span style="color:#a78bfa">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
+    }
+    rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
+  }
+
+  const resLabel = sbMode==='reg' ? (RES_COL[u.res] ? u.res : '?') : (sbMode==='pres'?'ꛜ':'perm ꛜ');
+  const permStr = hp ? ` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>` : '';
+  const scaleVal = u.scale || DEFAULT_SCALE;
+  const lvlBtns = [5,10,25,50].map(n => {
+    const ac = n===wikiUpgLevels ? ' active' : '';
+    const s  = n===wikiUpgLevels ? 'color:#c084fc;border-color:#c084fc44;background:#1a0d2a' : '';
+    return `<button onclick="setWikiUpgLevels(${n})" data-levels="${n}" class="level-btn${ac}" style="${s}">${n}</button>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="sb-modes">${modeBtns}</div>
+    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span>${permStr}</div>
+    <div class="sb-scroll">
+      <table class="ct">
+        <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>
+    <div class="sidebar-section" style="padding:6px 14px 8px">
+      <div style="display:flex;gap:4px" id="wiki-upg-lvl-btns">${lvlBtns}</div>
+    </div>
+    <div style="padding:0 14px 14px;flex-shrink:0">
+      <canvas id="wiki-upg-chart" style="width:100%;height:180px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => drawWikiUpgChart());
+}
+
+function setSbMode(m) {
+  sbMode = m;
+  ST.upgrades.sbMode = m;
+  if (selTab==='upgrades') {
+    sbUpgrade(document.getElementById('sb-body'), document.getElementById('sb-title'));
+  }
+}
+
+let wikiUpgLevels = 5;
+function setWikiUpgLevels(n) {
+  wikiUpgLevels = n;
+  document.querySelectorAll('#wiki-upg-lvl-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.levels) === n;
+    b.classList.toggle('active', active);
+    if (active) { b.style.borderColor='#c084fc44'; b.style.color='#c084fc'; b.style.background='#1a0d2a'; }
+    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+  });
+  if (selKey && selTab==='upgrades') requestAnimationFrame(() => drawWikiUpgChart());
+}
+
+function drawWikiUpgChart() {
+  const canvas = document.getElementById('wiki-upg-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 340, H = canvas.offsetHeight || 180;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const k = selKey;
+  const u = UPG[k];
+  if (!u) return;
+  let costFn, barColor;
+  if (sbMode === 'perm') {
+    if (!hasPerm(k)) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('no permanent upgrade', W/2, H/2); return;
+    }
+    costFn = i => permCostFn(k, i); barColor = '#a78bfaaa';
+  } else if (sbMode === 'pres') {
+    costFn = i => presCost(k, i); barColor = '#fbbf24aa';
+  } else {
+    costFn = i => upgCost(k, i); barColor = (RES_COL[u.res] || '#888') + 'aa';
+  }
+  const costs = Array.from({length: wikiUpgLevels}, (_, i) => costFn(i));
+  const mx = Math.max(...costs, 1);
+  ctx.clearRect(0, 0, W, H);
+  const pad = {l:36, r:10, t:10, b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmtN(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+  const bw = cw / (wikiUpgLevels + 1);
+  for (let i = 0; i < wikiUpgLevels; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (wikiUpgLevels <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw*0.5)));
+      ctx.fillStyle = '#aaa'; ctx.font = `${fs}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText(fmtN(costs[i]), x+bw*0.35, Math.max(pad.t+fs, y-2));
+    }
+  }
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const step = Math.ceil(wikiUpgLevels / 5);
+  for (let lbl = 0; lbl < wikiUpgLevels; lbl += step) {
+    ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H - 4);
+  }
+}
+
+// ── Mod sidebar ───────────────────────────────────────────────────────────────────────────────
+
+const MULT_MODS = new Set(['mMin','mMax','γcrd','γscd','δexm','δexx','δppx']);
+
+let wikiChartQ = 3, wikiChartLv = 9;
+
+function setWikiChartQ(q) {
+  wikiChartQ = q;
+  ST.mods.chartQ = q;
+  document.querySelectorAll('#wiki-q-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.cq) === q;
+    b.classList.toggle('active', active);
+    if (active) { b.style.borderColor=QCOL[q-1]+'44'; b.style.color=QCOL[q-1]; b.style.background=''; }
+    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+  });
+  if (selKey && selTab==='mods') requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+}
+
+function setWikiChartLv(n) {
+  wikiChartLv = n;
+  ST.mods.chartLv = n;
+  document.querySelectorAll('#wiki-lv-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.lv) === n;
+    b.classList.toggle('active', active);
+    if (active) { b.style.borderColor='#4ade8044'; b.style.color='#4ade80'; b.style.background='#0a1f0a'; }
+    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+  });
+  if (selKey && selTab==='mods') requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+}
+
+function sbMod(body, title) {
+  const k = selKey;
+  const m = MODS[k];
+  if (!m) return;
+  title.textContent = m.label;
+
+  const isProc = m.type==='proc';
+  const isPct  = !!m.pct;
+  const isMult = MULT_MODS.has(k);
+  const hasNoMult = isProc && m.effect && !['dmgMulti','armMulti'].includes(m.effect);
+
+  const header = '<th class="muted">LVL</th>' +
+    QNAME.map((q,qi)=>`<th style="color:${QCOL[qi]}">${q}</th>`).join('');
+
+  const MAX_LVL = 12;
+  const rows = [];
+  for (let lv = 0; lv <= MAX_LVL; lv++) {
+    const cells = QNAME.map((_,qi) => {
+      const minQ = m.minQ || 1;
+      if (qi+1 < minQ) return `<td class="dim">—</td>`;
+      if (isProc) {
+        const baseChance = m.base + QPROC[qi];
+        const chance = Math.min(95, Math.round(baseChance + lv * (PLVL_BY_Q[qi]||0.5)));
+        if (hasNoMult) return `<td style="color:${QCOL[qi]};font-size:11px">${chance}%</td>`;
+        const pmr = PROC_MULT_RANGE[qi];
+        if (!pmr||!pmr.length) return `<td class="dim">—</td>`;
+        const mid = ((pmr[0]+pmr[1])/2 + lv*MULT_PLVL_BY_Q[qi]).toFixed(1);
+        return `<td style="font-size:10px;color:${QCOL[qi]}">${chance}% <span class="dim">×${mid}</span></td>`;
+      } else {
+        const plvlQ = m.perLvl * STAT_PLVL_MULT[qi];
+        const val   = m.base + lv * plvlQ;
+        let fs;
+        if (isPct)       fs = val.toFixed(1)+'%';
+        else if (isMult) fs = val.toFixed(3);
+        else if (val < 1)fs = val.toFixed(3);
+        else if (val < 10)fs = val.toFixed(2);
+        else             fs = val.toFixed(1);
+        return `<td style="color:${QCOL[qi]};font-size:11px">${fs}</td>`;
+      }
+    }).join('');
+    rows.push(`<tr class="${lv%2?'':'ev'}"><td class="muted">${lv}</td>${cells}</tr>`);
+  }
+
+  const typeTag = isProc?'<span class="tag-p">PROC</span>':'<span class="tag-s">STAT</span>';
+  const resStr  = m.res?`<span style="color:${RES_COL[m.res]}">${m.res}</span>`:'';
+  const minEStr = m.minEnemy?`E${m.minEnemy}+`:'E0+';
+  const effStr  = m.stat||m.effect||'';
+  const minQStr = m.minQ?`<span style="color:${QCOL[m.minQ-1]}">${QNAME[m.minQ-1]}+</span>`:'any Q';
+
+  // quality grade buttons with current wikiChartQ colors
+  const qBtnHtml = [[1,'C','#9ca3af'],[2,'U','#4ade80'],[3,'R','#60a5fa'],[4,'E','#c084fc'],[5,'L','#f59e0b']].map(([q,nm,col]) => {
+    const active = q === wikiChartQ;
+    const s = active ? `color:${col};border-color:${col}44` : `color:${col};border-color:${col}44`;
+    return `<button onclick="setWikiChartQ(${q})" data-cq="${q}" class="level-btn${active?' active':''}" style="${s}">${nm}</button>`;
+  }).join('');
+  const lvBtnHtml = [5,9,12,25].map(lv => {
+    const active = lv === wikiChartLv;
+    const s = active ? 'color:#4ade80;border-color:#4ade8044;background:#0a1f0a' : '';
+    return `<button onclick="setWikiChartLv(${lv})" data-lv="${lv}" class="level-btn${active?' active':''}" style="${s}">${lv}</button>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="sb-info" style="line-height:1.8">
+      ${typeTag} ${resStr} <span class="muted">${effStr}</span><br>
+      base: <span style="color:#aaa">${m.base}${isPct?'%':''}</span>
+      · per lv: <span style="color:#aaa">${m.perLvl}${isPct?'%':''}</span>
+      · min Q: ${minQStr}
+      · avail: <span class="muted">${minEStr}</span>
+    </div>
+    <div style="padding:3px 14px 2px;font-size:9px;letter-spacing:1px;color:#555">VALUE AT FORGE LEVEL × QUALITY (base roll midpoint)</div>
+    <div class="sb-scroll">
+      <table class="mvt">
+        <thead><tr>${header}</tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>
+    <div class="sidebar-section">
+      <div style="display:flex;gap:5px;margin-bottom:6px" id="wiki-q-btns">${qBtnHtml}</div>
+      <div style="display:flex;gap:4px" id="wiki-lv-btns">${lvBtnHtml}</div>
+    </div>
+    <div style="padding:0 14px 14px;flex-shrink:0">
+      <canvas id="wiki-forge-chart" style="width:100%;height:200px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+}
+
+// ── Forge chart component ───────────────────────────────────────────────────────────────────────
+function forgeCost(level, q) {
+  const base  = [3,4,5,9,15][q-1] || 1;
+  const scale = [1.6,1.7,1.8,2.0,2.3][q-1] || 1;
+  return Math.max(1, Math.floor(base * Math.pow(scale, level)));
+}
+function drawForgeCostBar(canvasId, q, lv, fmt) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 372, H = canvas.offsetHeight || 200;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const costs = Array.from({length: lv}, (_, i) => forgeCost(i, q));
+  const mx = Math.max(...costs, 1);
+  const barColor = (QCOL[q - 1] || '#4ade80') + 'aa';
+  ctx.clearRect(0, 0, W, H);
+  const pad = {l:36, r:10, t:10, b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+  const bw = cw / (lv + 1);
+  for (let i = 0; i < lv; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (lv <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw*0.5)));
+      ctx.fillStyle = '#aaa'; ctx.font = `${fs}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText(fmt(costs[i]), x+bw*0.35, Math.max(pad.t+fs, y-2));
+    }
+  }
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const step = Math.ceil(lv/8);
+  for (let lbl = 0; lbl < lv; lbl += step) ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H-4);
+  ctx.fillStyle = '#777'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(`${QNAME[q-1]} forge cost  (q=${q})`, W/2, pad.t-1);
+  const total = costs.reduce((a,b) => a+b, 0);
+  ctx.fillStyle = '#444'; ctx.textAlign = 'right';
+  ctx.fillText(`Σ=${fmt(total)}`, W-pad.r, H-4);
+}
+
+// ── Enemy sidebar ───────────────────────────────────────────────────────────────────────────────
+
+function sbEnemy(body, title) {
+  const id = selKey;
+  const e  = ENEMIES.find(x=>x.id===id);
+  if (!e) return;
+  const eId = e.omega?'EΩ':`E${id}`;
+  title.textContent = eId;
+
+  const resLabel = ['α','α+β','α–γ','α–δ'][e.maxResIdx]||'?';
+  const qBars = e.qW.map((w,i)=>`
+    <div class="e-bar-row">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:${QCOL[i]};font-size:12px">${QFULL[i]}</span>
+        <span style="color:#aaa;font-size:12px">${w}%</span>
+      </div>
+      <div class="e-bar-track">
+        <div class="e-bar-fill" style="width:${Math.min(100,w)}%;background:${QCOL[i]}"></div>
+      </div>
+    </div>`).join('');
+
+  const flags = [];
+  if (e.once)             flags.push('one-time (locked after first defeat)');
+  if (e.omega)            flags.push('training dummy (infinite respawn)');
+  if (e.unlock==='forge') flags.push('defeating this enemy unlocks the forge');
+  if (e.unlock==='perma') flags.push('defeating this enemy unlocks permanent upgrades');
+
+  body.innerHTML = `
+    <div style="padding:12px 14px;border-bottom:1px solid #1e1e1e">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr><td class="muted" style="padding:3px 0;width:46%">max hp</td><td style="color:#aaa">${fmtN(e.maxHp)}</td></tr>
+        <tr><td class="muted" style="padding:3px 0">defense range</td><td style="color:#aaa">${e.defMin}–${e.defMax}</td></tr>
+        <tr><td class="muted" style="padding:3px 0">drop item lvls</td><td style="color:#aaa">${e.lMin}–${e.lMax}</td></tr>
+        <tr><td class="muted" style="padding:3px 0">prestige reward</td><td style="color:#fcd34d">${e.pp?'+'+fmtN(e.pp)+' ꛜ':'—'}</td></tr>
+        <tr><td class="muted" style="padding:3px 0">max resource</td><td style="color:#aaa">${resLabel}</td></tr>
+        ${e.dcMax?`<tr><td class="muted" style="padding:3px 0">death counter max</td><td style="color:#aaa">${e.dcMax}</td></tr>`:''}
+      </table>
+      ${flags.map(f=>`<div style="margin-top:6px;color:#f59e0b;font-size:10px">⚑ ${f}</div>`).join('')}
+    </div>
+    <div style="padding:12px 14px;flex:1">
+      <div style="font-size:9px;letter-spacing:1px;color:#555;margin-bottom:8px">QUALITY DROP ODDS</div>
+      ${qBars}
+    </div>`;
+}
+
+// ── Loot sidebar ───────────────────────────────────────────────────────────────────────────────
+
+function sbLoot(body, title) {
+  const id = selKey;
+  const e  = ENEMIES.find(x=>x.id===id);
+  if (!e) return;
+  const eId = `E${id}`;
+  title.textContent = `${eId} — drop odds`;
+
+  const charts = QNAME.map((_,i)=>
+    `<canvas id="loot-qc-${i}" height="58" style="display:block;width:100%;margin-bottom:2px"></canvas>`
+  ).join('');
+
+  body.innerHTML = `
+    <div style="flex:1;overflow:hidden;padding:8px 14px 4px;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:9px;letter-spacing:1px;color:#999;flex-shrink:0;margin-bottom:2px">P(≥1) IN N DROPS — BY QUALITY</div>
+      ${charts}
+    </div>
+    <div class="sb-footer">drop count: ${e.lMin}–${e.lMax}${e.dcMax?' · dc max: '+e.dcMax:''} · reward: ${e.pp?fmtN(e.pp)+' ꛜ':'—'}</div>`;
+  requestAnimationFrame(()=>drawLootCharts(e));
+}
+
+function drawLootCharts(e) {
+  const maxDrops = e.dcMax || e.lMax || 1;
+  const lMin = e.lMin || 1;
+  const PAD = {l:30, r:62, t:8, b:18};
+
+  QNAME.forEach((qn, qi) => {
+    const canvas = document.getElementById('loot-qc-' + qi);
+    if (!canvas) return;
+    const W = canvas.offsetWidth || 310;
+    const H = Math.max(canvas.offsetHeight, 40) || 58;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const col = QCOL[qi];
+    const p   = (e.qW[qi] || 0) / 100;
+    const cW  = W - PAD.l - PAD.r;
+    const cH  = H - PAD.t - PAD.b;
+
+    [50, 100].forEach(pct => {
+      const y = PAD.t + cH * (1 - pct / 100);
+      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke();
+      ctx.fillStyle = '#2a2a2a'; ctx.font = '8px monospace';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(pct + '%', PAD.l - 2, y);
+    });
+
+    ctx.fillStyle = p > 0.001 ? col : '#333';
+    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(QFULL[qi], W - 2, PAD.t + cH / 2);
+
+    const totalW = cW * 0.72;
+    const barW   = totalW / maxDrops;
+    const startX = PAD.l + (cW - totalW) / 2;
+
+    for (let n = 1; n <= maxDrops; n++) {
+      const pAny = p > 0 ? 1 - Math.pow(1 - p, n) : 0;
+      const dimmed = n < lMin;
+      const alpha  = dimmed ? 0.18 : 0.45 + (n - lMin) / Math.max(1, maxDrops - lMin) * 0.55;
+      const bh = pAny * cH;
+      const bx = startX + (n - 1) * barW;
+      const by = PAD.t + cH - bh;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p > 0 ? col : '#555';
+      if (bh > 0) ctx.fillRect(bx, by, barW * 0.82, bh);
+      if (pAny > 0 && !dimmed) {
+        ctx.globalAlpha = 1; ctx.fillStyle = col;
+        ctx.fillRect(bx, by, barW * 0.82, 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    for (let n = 1; n <= maxDrops; n++) {
+      const bx = startX + (n - 1) * barW + (barW * 0.82) / 2;
+      ctx.fillStyle = n < lMin ? '#252525' : '#333';
+      ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('×' + n, bx, H - PAD.b + 3);
+    }
+
+    if (p > 0.0005) {
+      for (let n = 1; n <= maxDrops; n++) {
+        const pAny = 1 - Math.pow(1 - p, n);
+        const bx   = startX + (n - 1) * barW + (barW * 0.82) / 2;
+        const by   = PAD.t + cH * (1 - pAny);
+        const pct  = pAny * 100;
+        const lbl  = pct < 1 ? pct.toFixed(2)+'%' : pct.toFixed(1)+'%';
+        ctx.fillStyle = QCOL[qi]; ctx.font = '8px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(lbl, bx, Math.max(PAD.t + 9, by));
+      }
+    } else if (p === 0) {
+      ctx.fillStyle = '#2d2d2d'; ctx.font = '9px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('0%', PAD.l + cW / 2, PAD.t + cH / 2);
+    }
+  });
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────────────────────────
+
+let mobView = 'table';
+function setMobView(v) {
+  mobView = v;
+  const isMob = window.innerWidth < 768;
+  const main  = document.getElementById('main-content');
+  const sb    = document.getElementById('sidebar');
+  if (isMob) {
+    main.style.display = v === 'table' ? '' : 'none';
+    sb.style.display   = v === 'detail' ? 'flex' : 'none';
+  } else {
+    main.style.display = '';
+    sb.style.display   = '';
+  }
+  document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'));
+  const bt = document.getElementById('mobt-' + v);
+  if (bt) bt.classList.add('active');
+}
+window.addEventListener('resize', () => setMobView(mobView));
+
+applyHash();
+renderMain();
+renderSB();
+if (selKey !== null && window.innerWidth < 768) setMobView('detail');
+else setMobView('table');
+</script>
+</body>
+</html>
