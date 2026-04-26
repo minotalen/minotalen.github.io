@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
+body{background:#1b1b1b;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh}
 #topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:6px;padding:0 18px;height:41px;background:#111;border-bottom:1px solid #222;flex-shrink:0}
 #topbar h1{font-size:11px;letter-spacing:2px;color:#888;font-weight:600;white-space:nowrap;margin-right:6px}
 .tab-btn{background:none;border:1px solid transparent;color:#666;padding:3px 9px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;letter-spacing:1px;white-space:nowrap;transition:color .12s;flex-shrink:0}
@@ -17,10 +17,10 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font
 .spacer{flex:1}
 #gsearch{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:150px}
 #gsearch:focus{outline:none;border-color:#444}
-.layout{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 41px)}
-.main{overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column}
-.sidebar{border-left:1px solid #1e1e1e;height:calc(100vh - 41px);display:flex;flex-direction:column;overflow:hidden}
-.fbr{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:7px 18px;background:#0d0d0d;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.layout{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 41px);gap:8px;padding:8px;background:#1b1b1b}
+.main{overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column;background:#181818;border:2px solid #383838;border-radius:6px}
+.sidebar{background:#181818;border:2px solid #383838;border-radius:6px;height:100%;display:flex;flex-direction:column;overflow:hidden}
+.fbr{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:7px 18px;background:#181818;border-bottom:1px solid #2a2a2a;flex-shrink:0}
 .fbr input{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:130px}
 .fbr input:focus{outline:none;border-color:#444}
 .fbtn{background:#141414;border:1px solid #2a2a2a;color:#777;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;transition:all .1s}
@@ -29,8 +29,9 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font
 .sec-hd{font-size:10px;letter-spacing:2px;color:#777;padding:10px 18px 8px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
 .tbl-wrap{padding:0 18px 24px;overflow-x:auto}
 table.wtbl{width:100%;border-collapse:collapse}
-table.wtbl th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;background:#0d0d0d}
+table.wtbl th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1.5px;padding:5px 8px;border-bottom:1px solid #222;text-align:left;cursor:pointer;user-select:none;white-space:nowrap;background:#181818}
 table.wtbl th:hover{color:#999}
+table.wtbl th::after{content:' ↑';color:transparent}
 table.wtbl th.sa::after{content:' ↑';color:#E868F1}
 table.wtbl th.sd::after{content:' ↓';color:#E868F1}
 table.wtbl td{padding:5px 8px;border-bottom:1px solid #161616;vertical-align:middle;font-size:12px;white-space:nowrap}
@@ -54,13 +55,13 @@ table.wtbl tr.sel td{background:#1a0d2a}
 .sb-info{padding:6px 14px;font-size:10px;color:#777;border-bottom:1px solid #1a1a1a;flex-shrink:0;line-height:1.6}
 .sb-scroll{overflow-y:auto;flex:1;padding:0 14px 0}
 table.ct{width:100%;border-collapse:collapse;font-size:12px}
-table.ct th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d}
+table.ct th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1px;padding:4px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#181818}
 table.ct td{padding:3px 6px;border-bottom:1px solid #1a1a1a;color:#ccc}
 table.ct tr:hover td{background:#161616}
 table.ct tr.ev td{background:#181818}
 .sb-footer{padding:5px 14px;font-size:10px;color:#555;border-top:1px solid #1a1a1a;flex-shrink:0}
 table.mvt{width:100%;border-collapse:collapse;font-size:12px}
-table.mvt th{color:#777;font-weight:normal;font-size:10px;letter-spacing:1px;padding:3px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d0d;z-index:50}
+table.mvt th{color:#777;font-weight:normal;font-size:10px;letter-spacing:1px;padding:3px 6px;border-bottom:1px solid #222;position:sticky;top:0;background:#181818;z-index:50}
 table.mvt td{padding:3px 6px;border-bottom:1px solid #161616}
 table.mvt tr:hover td{background:#161616}
 table.mvt tr.ev td{background:#181818}
@@ -85,11 +86,29 @@ table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;wh
 @media(max-width:767px){
   #mob-bar{display:flex}
   .layout{height:calc(100vh - 41px - 48px);grid-template-columns:1fr}
+  .layout.has-cmp{grid-template-columns:1fr}
   .sidebar{height:100%;width:100%}
   #topbar{overflow-x:auto;-webkit-overflow-scrolling:touch;gap:3px;padding:0 8px}
   #gsearch{width:100px}
   .tab-btn{font-size:10px;padding:2px 6px}
 }
+tr.sdim td{opacity:0.18;transition:opacity .1s}
+.search{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:120px}
+.search:focus{outline:none;border-color:#444}
+.sec-hdr-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:7px 18px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.sec-hd-inline{font-size:10px;letter-spacing:2px;color:#777;margin-right:auto;white-space:nowrap}
+.sec-hdr-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.layout.has-cmp{grid-template-columns:1fr 370px 370px}
+#sidebar-cmp{display:none;background:#181818;border:2px solid #1e3838;border-radius:6px;height:100%;flex-direction:column;overflow:hidden}
+#cmp-title-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #1e1e1e;flex-shrink:0;gap:6px;min-width:0}
+#cmp-tag{font-size:9px;letter-spacing:1px;color:#2a9e9e;flex-shrink:0}
+#cmp-title{flex:1;font-size:11px;letter-spacing:1px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#cmp-close{background:none;border:none;color:#444;cursor:pointer;font-size:16px;padding:0 2px;font-family:inherit;line-height:1;flex-shrink:0;transition:color .1s}
+#cmp-close:hover{color:#aaa}
+#cmp-empty{padding:24px 14px;color:#555;font-size:12px;text-align:center;line-height:2;flex-shrink:0}
+#cmp-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+table.wtbl tr.cmp-sel td{background:#091f1f}
+@media(max-width:767px){.layout.has-cmp{grid-template-columns:1fr}#sidebar-cmp{height:100%;width:100%}}
 </style>
 </head>
 <body>
@@ -106,12 +125,21 @@ table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;wh
   <input id="gsearch" placeholder="search…" oninput="onSearch()">
 </div>
 
-<div class="layout">
+<div class="layout" id="layout">
   <div class="main" id="main-content"></div>
   <div class="sidebar" id="sidebar">
     <div id="sb-title">SELECT A ROW</div>
     <div id="sb-empty">click any row<br>for details</div>
     <div id="sb-body"></div>
+  </div>
+  <div id="sidebar-cmp">
+    <div id="cmp-title-row">
+      <span id="cmp-tag">CMP</span>
+      <div id="cmp-title">SELECT TO COMPARE</div>
+      <button id="cmp-close" onclick="closeCmp()" title="close compare">✕</button>
+    </div>
+    <div id="cmp-empty">right-click any row<br>to compare<br><span style="font-size:10px;color:#3a3a3a">long-press on mobile</span></div>
+    <div id="cmp-body"></div>
   </div>
 </div>
 
@@ -121,6 +149,9 @@ table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;wh
   </button>
   <button class="mob-tab" id="mobt-detail" onclick="setMobView('detail')">
     <span class="mob-icon">◈</span><span>DETAIL</span>
+  </button>
+  <button class="mob-tab" id="mobt-compare" onclick="setMobView('compare')" style="display:none">
+    <span class="mob-icon">⇌</span><span>COMPARE</span>
   </button>
 </div>
 
@@ -202,7 +233,8 @@ function applyHash() {
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (key !== undefined) {
-    const parsed = (tab === 'enemies' || tab === 'loot') ? Number(key) : key;
+    const decoded = decodeURIComponent(key);
+    const parsed = (tab === 'enemies' || tab === 'loot') ? Number(decoded) : decoded;
     selKey = parsed;
     selTab = tab;
   }
@@ -210,17 +242,21 @@ function applyHash() {
 let gSearch = '';
 
 const ST = {
-  upgrades: { sc:'res', sd:1, fr:'', fs:'', sel:null, search:'', sbMode:'reg' },
+  upgrades: { sc:'res', sd:1, fr:'', fs:'', sel:null, search:'', sbMode:'reg', localSearch:'' },
   enemies:  { sel:null, search:'' },
-  mods:     { sc:'minEnemy', sd:1, ft:'', fr:'', fq:'', fe:'', sel:null, search:'', chartQ:3, chartLv:9 },
+  mods:     { sc:'minEnemy', sd:1, ft:'', fr:'', fq:'', fe:'', sel:null, search:'', chartQ:3, localSearch:'' },
   quality:  { sel:null, search:'' },
   loot:     { sel:null, search:'' },
 };
 let sbMode = 'reg';
+let cmpKey = null;
+let cmpTab = null;
+let cmpSbMode = 'reg';
 
 // ─── TAB ───────────────────────────────────────────────────────────────────────────────────
 
 function switchTab(tab) {
+  if (tab !== activeTab && cmpKey !== null) closeCmp();
   // Save current tab state
   const cur = ST[activeTab];
   if (cur) { cur.sel = selKey; cur.search = gSearch; }
@@ -234,7 +270,7 @@ function switchTab(tab) {
   gSearch = ns.search || '';
   document.getElementById('gsearch').value = gSearch;
   if (tab === 'upgrades' && ns.sbMode) sbMode = ns.sbMode;
-  if (tab === 'mods') { wikiChartQ = ns.chartQ || 3; wikiChartLv = ns.chartLv || 9; }
+  if (tab === 'mods') { wikiChartQ = ns.chartQ || 3; }
 
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
@@ -246,6 +282,11 @@ function onSearch() {
   if (ST[activeTab]) ST[activeTab].search = gSearch;
   renderMain();
 }
+function onLocalSearch(el) {
+  const s = ST[activeTab];
+  if (s) s.localSearch = el.value.toLowerCase();
+  renderMain();
+}
 function renderMain() {
   const mc = document.getElementById('main-content');
   if      (activeTab==='upgrades') mc.innerHTML = buildUpgradesHTML();
@@ -255,6 +296,7 @@ function renderMain() {
   else if (activeTab==='loot')     mc.innerHTML = buildLootHTML();
 }
 
+
 // ─── UPGRADES ────────────────────────────────────────────────────────────────────────
 
 const ATK_STATS = ['atkTrig','atkCd'];
@@ -262,6 +304,7 @@ const DMG_STATS = ['dMin','dMax','mMin','mMax','armorPierce','dmgExpMin','dmgExp
 
 function buildUpgradesHTML() {
   const s = ST.upgrades;
+  const sc = col => s.sc===col ? (s.sd>0?' class="sa"':' class="sd"') : '';
   let data = Object.keys(UPG).map(k => {
     const u = UPG[k];
     const pu = hasPerm(k) ? PERM_RES_UNLOCK[u.res] : '';
@@ -275,12 +318,14 @@ function buildUpgradesHTML() {
   if (s.fr) data = data.filter(r => r.res===s.fr);
   if (s.fs==='atk') data = data.filter(r => ATK_STATS.some(x => r.st.includes(x)));
   else if (s.fs==='dmg') data = data.filter(r => DMG_STATS.some(x => r.st.includes(x)));
-  if (gSearch) data = data.filter(r =>
-    r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch));
+  const ls = (s.localSearch||'').toLowerCase();
+  if (ls) data = data.filter(r =>
+    r.key.toLowerCase().includes(ls)||r.label.toLowerCase().includes(ls)||r.st.toLowerCase().includes(ls));
   data.sort((a,b)=>{
+    if(s.sc===null) return 0;
     let av=a[s.sc],bv=b[s.sc];
-    if(av===''||av===undefined) av=s.sd>0?Infinity:-Infinity;
-    if(bv===''||bv===undefined) bv=s.sd>0?Infinity:-Infinity;
+    if(av===''||av===undefined) av=-Infinity;
+    if(bv===''||bv===undefined) bv=-Infinity;
     if(typeof av==='string') return av.localeCompare(bv)*s.sd;
     return (av-bv)*s.sd;
   });
@@ -297,7 +342,9 @@ function buildUpgradesHTML() {
     const unlk = r.unlock !== '' ? `<span class="muted" style="font-size:11px">E${r.unlock}</span>` : '<span class="dim">—</span>';
     const pumk = r.permUnlock !== '' ? `<span style="color:#a78bfa;font-size:11px">E${r.permUnlock}</span>` : '<span class="dim">—</span>';
     const sel  = (selTab==='upgrades'&&selKey===r.key)?' sel':'';
-    return `<tr class="${sel}" onclick="selUpg('${r.key}')">
+    const dim  = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch)) ? ' sdim' : '';
+    const cmpSel = (cmpTab==='upgrades'&&cmpKey===r.key)?' cmp-sel':'';
+    return `<tr class="${sel}${dim}${cmpSel}" onclick="selUpg('${r.key}')" data-cmpkey="${r.key}" data-cmptab="upgrades">
       <td style="color:#ccc">${r.label}</td>
       <td><span style="color:${col}">${r.res||'—'}</span></td>
       <td style="color:#aaa">${r.base}</td>
@@ -317,31 +364,29 @@ function buildUpgradesHTML() {
     return `<button class="fbtn${ac}" style="color:${c};border-color:${b};--ac:${c}" onclick="setUF('fs','${v}')">${t}</button>`;
   }).join('');
 
-  return `<div class="sec-hd">UPGRADES <span class="sec-hint">— click row to see cost curve</span></div>
-<div class="fbr">
-  <input placeholder="search…" oninput="onSearch()" value="${gSearch}">
-  <span class="fsep">|</span>${resBtns}
-  <span class="fsep">|</span>${stBtns}
+  return `<div class="sec-hdr-bar">
+  <span class="sec-hd-inline">UPGRADES <span class="sec-hint">— click row to see cost curve</span></span>
+  <div class="sec-hdr-right">${resBtns}<span class="fsep">|</span>${stBtns}<span class="fsep">|</span><input class="search" placeholder="filter…" oninput="onLocalSearch(this)" value="${s.localSearch||''}"></div>
 </div>
 <div class="tbl-wrap">
 <table class="wtbl" id="upg-tbl">
 <thead><tr>
-  <th onclick="sortU('label')">LABEL</th>
-  <th onclick="sortU('res')">RES</th>
-  <th onclick="sortU('base')" title="base cost at level 0">BASE</th>
-  <th onclick="sortU('scale')" title="exponential cost multiplier per level">SCALE</th>
-  <th onclick="sortU('presBase')" title="prestige ❖ base cost">PRES BASE</th>
-  <th onclick="sortU('presScale')" title="prestige ❖ scale">PRES SCALE</th>
-  <th onclick="sortU('permBase')" title="permanent ❖ base cost">PERM BASE</th>
-  <th onclick="sortU('permScale')" title="permanent ❖ scale">PERM SCALE</th>
-  <th onclick="sortU('unlock')" title="enemy id required">UNLOCK</th>
-  <th onclick="sortU('permUnlock')" title="enemy id for permanent">PERM UNLK</th>
+  <th onclick="sortU('label')"${sc('label')}>LABEL</th>
+  <th onclick="sortU('res')"${sc('res')}>RES</th>
+  <th onclick="sortU('base')"${sc('base')} title="base cost at level 0">BASE</th>
+  <th onclick="sortU('scale')"${sc('scale')} title="exponential cost multiplier per level">SCALE</th>
+  <th onclick="sortU('presBase')"${sc('presBase')} title="prestige ❖ base cost">PRES BASE</th>
+  <th onclick="sortU('presScale')"${sc('presScale')} title="prestige ❖ scale">PRES SCALE</th>
+  <th onclick="sortU('permBase')"${sc('permBase')} title="permanent ❖ base cost">PERM BASE</th>
+  <th onclick="sortU('permScale')"${sc('permScale')} title="permanent ❖ scale">PERM SCALE</th>
+  <th onclick="sortU('unlock')"${sc('unlock')} title="enemy id required">UNLOCK</th>
+  <th onclick="sortU('permUnlock')"${sc('permUnlock')} title="enemy id for permanent">PERM UNLK</th>
 </tr></thead>
 <tbody>${rows}</tbody>
 </table>
 </div>`;
 }
-function sortU(col) { const s=ST.upgrades; if(s.sc===col) s.sd*=-1; else{s.sc=col;s.sd=1;} renderMain(); }
+function sortU(col) { const s=ST.upgrades; if(s.sc===col){if(s.sd===1)s.sd=-1;else{s.sc=null;s.sd=1;}}else{s.sc=col;s.sd=1;} renderMain(); }
 function setUF(f,v) { ST.upgrades[f]=v; renderMain(); }
 function selUpg(k) { selKey=k; selTab='upgrades'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
 
@@ -359,7 +404,8 @@ function buildEnemiesHTML() {
     if (e.unlock==='perma') flags.push(`<span style="color:#60a5fa;font-size:10px">⊕ perma</span>`);
     const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
     const sel = (selTab==='enemies'&&selKey===e.id)?' sel':'';
-    return `<tr class="${sel}" onclick="selEnemy(${e.id})">
+    const cmpSel = (cmpTab==='enemies'&&cmpKey===e.id)?' cmp-sel':'';
+    return `<tr class="${sel}${cmpSel}" onclick="selEnemy(${e.id})" data-cmpkey="${e.id}" data-cmptab="enemies">
       <td><b style="color:${col}">${eId}</b></td>
       <td style="color:#aaa">${fmtN(e.maxHp)}</td>
       <td style="color:#777">${e.defMin}–${e.defMax}</td>
@@ -413,10 +459,12 @@ function selEnemy(id) { selKey=id; selTab='enemies'; pushHash(); renderMain(); r
 
 function buildModsHTML() {
   const s = ST.mods;
+  const sc = col => s.sc===col ? (s.sd>0?' class="sa"':' class="sd"') : '';
+  const RES_PREFIXES = ['α','β','γ','δ'];
   let data = Object.keys(MODS).map(k => {
     const m = MODS[k];
     return { key:k, label:m.label||k, type:m.type||'stat',
-      es: m.stat||m.effect||'', res:m.res||'',
+      es: m.stat||m.effect||'', res:m.res||(RES_PREFIXES.includes(k[0])?k[0]:''),
       minQ:m.minQ||1, minEnemy:m.minEnemy||0,
       base:m.base, perLvl:m.perLvl };
   });
@@ -424,12 +472,15 @@ function buildModsHTML() {
   if (s.fr) data = data.filter(r=>r.res===s.fr);
   if (s.fq) data = data.filter(r=>r.minQ >= parseInt(s.fq));
   if (s.fe) data = data.filter(r=>r.minEnemy >= parseInt(s.fe));
-  if (gSearch) data = data.filter(r=>
-    r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.es.toLowerCase().includes(gSearch));
+  const ls = (s.localSearch||'').toLowerCase();
+  if (ls) data = data.filter(r=>
+    r.key.toLowerCase().includes(ls)||r.label.toLowerCase().includes(ls)||r.es.toLowerCase().includes(ls));
   data.sort((a,b)=>{
+    if(s.sc===null) return 0;
     let av=a[s.sc],bv=b[s.sc];
-    if(av===''||av===undefined) av=s.sd>0?Infinity:-Infinity;
-    if(bv===''||bv===undefined) bv=s.sd>0?Infinity:-Infinity;
+    if(av===''||av===undefined) av=-Infinity;
+    if(bv===''||bv===undefined) bv=-Infinity;
+    if(s.sc==='minEnemy'){ if(av===0) av=Infinity; if(bv===0) bv=Infinity; }
     if(typeof av==='string') return av.localeCompare(bv)*s.sd;
     return (av-bv)*s.sd;
   });
@@ -441,7 +492,9 @@ function buildModsHTML() {
     const minQTxt = `<span style="color:${QCOL[r.minQ-1]}">${QNAME[r.minQ-1]}</span>`;
     const minETxt = r.minEnemy>0?`<span style="color:${ECOL[r.minEnemy]}">E${r.minEnemy}+</span>`:'<span class="dim">any</span>';
     const sel = (selTab==='mods'&&selKey===r.key)?' sel':'';
-    return `<tr class="${sel}" onclick="selMod('${r.key}')">
+    const dim = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.es.toLowerCase().includes(gSearch)) ? ' sdim' : '';
+    const cmpSel = (cmpTab==='mods'&&cmpKey===r.key)?' cmp-sel':'';
+    return `<tr class="${sel}${dim}${cmpSel}" onclick="selMod('${r.key}')" data-cmpkey="${r.key}" data-cmptab="mods">
       <td style="color:#ccc">${r.label}</td>
       <td>${typeTag}</td>
       <td>${resTxt}</td>
@@ -465,36 +518,32 @@ function buildModsHTML() {
     const lbl=v?('≥'+QNAME[parseInt(v)-1]):'ALL Q';
     return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setMF('fq','${v}')">${lbl}</button>`;
   }).join('');
-  const eBtns=['','0','1','2','3','4'].map((v,i)=>{
+  const eBtns=['','1','2','3','4'].map((v,i)=>{
     const ac=s.fe===v?' active':''; const col=v?ECOL[parseInt(v)]:'#888'; const bc=v?col+'44':'#383838';
     const lbl=v?'E'+v+'+':'ALL E';
     return `<button class="fbtn${ac}" style="color:${col};border-color:${bc};--ac:${col}" onclick="setMF('fe','${v}')">${lbl}</button>`;
   }).join('');
 
-  return `<div class="sec-hd">MODS <span class="sec-hint">— item modifications · click row for value preview</span></div>
-<div class="fbr">
-  <input placeholder="search…" oninput="onSearch()" value="${gSearch}">
-  <span class="fsep">|</span>${typeBtns}
-  <span class="fsep">|</span>${resBtns2}
-  <span class="fsep">|</span>${qBtns}
-  <span class="fsep">|</span>${eBtns}
+  return `<div class="sec-hdr-bar">
+  <span class="sec-hd-inline">MODS <span class="sec-hint">— item modifications · click row for value preview</span></span>
+  <div class="sec-hdr-right">${typeBtns}<span class="fsep">|</span>${resBtns2}<span class="fsep">|</span>${qBtns}<span class="fsep">|</span>${eBtns}<span class="fsep">|</span><input class="search" placeholder="filter…" oninput="onLocalSearch(this)" value="${s.localSearch||''}"></div>
 </div>
 <div class="tbl-wrap">
 <table class="wtbl" id="mod-tbl">
 <thead><tr>
-  <th onclick="sortM('label')">LABEL</th>
-  <th onclick="sortM('type')">TYPE</th>
-  <th onclick="sortM('res')">RES</th>
-  <th onclick="sortM('minQ')" title="minimum item quality">MIN Q</th>
-  <th onclick="sortM('minEnemy')" title="minimum enemy tier">MIN E</th>
-  <th onclick="sortM('base')" title="base value at forge level 0">BASE</th>
-  <th onclick="sortM('perLvl')" title="value increase per forge level">PER LVL</th>
+  <th onclick="sortM('label')"${sc('label')}>LABEL</th>
+  <th onclick="sortM('type')"${sc('type')}>TYPE</th>
+  <th onclick="sortM('res')"${sc('res')}>RES</th>
+  <th onclick="sortM('minQ')"${sc('minQ')} title="minimum item quality">MIN Q</th>
+  <th onclick="sortM('minEnemy')"${sc('minEnemy')} title="minimum enemy tier">MIN E</th>
+  <th onclick="sortM('base')"${sc('base')} title="base value at forge level 0">BASE</th>
+  <th onclick="sortM('perLvl')"${sc('perLvl')} title="value increase per forge level">PER LVL</th>
 </tr></thead>
 <tbody>${rows}</tbody>
 </table>
 </div>`;
 }
-function sortM(col) { const s=ST.mods; if(s.sc===col) s.sd*=-1; else{s.sc=col;s.sd=1;} renderMain(); }
+function sortM(col) { const s=ST.mods; if(s.sc===col){if(s.sd===1)s.sd=-1;else{s.sc=null;s.sd=1;}}else{s.sc=col;s.sd=1;} renderMain(); }
 function setMF(f,v) { ST.mods[f]=v; renderMain(); }
 function selMod(k) { selKey=k; selTab='mods'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
 
@@ -568,10 +617,11 @@ function buildLootHTML() {
     const col = ECOL[e.id]||'#aaa';
     const qCells = e.qW.map((w,i)=>w>0
       ?`<td style="color:${QCOL[i]};text-align:center">${w}</td>`
-      :`<td class="dim" style="text-align:center">—</td>`).join('');
+      :`<td style="color:#3a3a3a;text-align:center;font-size:11px">✗</td>`).join('');
     const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
     const sel = (selTab==='loot'&&selKey===e.id)?' sel':'';
-    return `<tr class="${sel}" onclick="selLoot(${e.id})">
+    const cmpSel = (cmpTab==='loot'&&cmpKey===e.id)?' cmp-sel':'';
+    return `<tr class="${sel}${cmpSel}" onclick="selLoot(${e.id})" data-cmpkey="${e.id}" data-cmptab="loot">
       <td><b style="color:${col}">${eId}</b></td>
       <td style="color:#777;text-align:center">${e.lMin}–${e.lMax}</td>
       ${qCells}
@@ -746,7 +796,7 @@ function sbUpgrade(body, title) {
       <div style="display:flex;gap:4px" id="wiki-upg-lvl-btns">${lvlBtns}</div>
     </div>
     <div style="padding:0 14px 14px;flex-shrink:0">
-      <canvas id="wiki-upg-chart" style="width:100%;height:180px;display:block"></canvas>
+      <canvas id="wiki-upg-chart" style="width:100%;height:360px;display:block"></canvas>
     </div>`;
   requestAnimationFrame(() => drawWikiUpgChart());
 }
@@ -772,22 +822,12 @@ function setWikiUpgLevels(n) {
 }
 
 function drawWikiUpgChart() {
-  const canvas = document.getElementById('wiki-upg-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 340, H = canvas.offsetHeight || 180;
-  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
   const k = selKey;
   const u = UPG[k];
   if (!u) return;
   let costFn, barColor;
   if (sbMode === 'perm') {
-    if (!hasPerm(k)) {
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
-      ctx.fillText('no permanent upgrade', W/2, H/2); return;
-    }
+    if (!hasPerm(k)) { drawCostBars('wiki-upg-chart', null, '', fmtN, k); return; }
     costFn = i => permCostFn(k, i); barColor = '#a78bfaaa';
   } else if (sbMode === 'pres') {
     costFn = i => presCost(k, i); barColor = '#fbbf24aa';
@@ -795,42 +835,16 @@ function drawWikiUpgChart() {
     costFn = i => upgCost(k, i); barColor = (RES_COL[u.res] || '#888') + 'aa';
   }
   const costs = Array.from({length: wikiUpgLevels}, (_, i) => costFn(i));
-  const mx = Math.max(...costs, 1);
-  ctx.clearRect(0, 0, W, H);
-  const pad = {l:36, r:10, t:10, b:22};
-  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
-  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + ch - (i/4)*ch;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
-    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
-    ctx.fillText(fmtN(Math.round(mx*(i/4))), pad.l-4, y+3);
-  }
-  const bw = cw / (wikiUpgLevels + 1);
-  for (let i = 0; i < wikiUpgLevels; i++) {
-    const bh = (costs[i]/mx)*ch;
-    const x = pad.l + i*bw + bw*0.15;
-    const y = pad.t + ch - bh;
-    ctx.fillStyle = barColor;
-    ctx.fillRect(x, y, bw*0.7, bh);
-    if (wikiUpgLevels <= 10 && bh >= 12) {
-      const fs = Math.max(6, Math.min(9, Math.floor(bw*0.5)));
-      ctx.fillStyle = '#aaa'; ctx.font = `${fs}px monospace`; ctx.textAlign = 'center';
-      ctx.fillText(fmtN(costs[i]), x+bw*0.35, Math.max(pad.t+fs, y-2));
-    }
-  }
-  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
-  const step = Math.ceil(wikiUpgLevels / 5);
-  for (let lbl = 0; lbl < wikiUpgLevels; lbl += step) {
-    ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H - 4);
-  }
+  drawCostBars('wiki-upg-chart', costs, barColor, fmtN, k);
 }
 
 // ── Mod sidebar ───────────────────────────────────────────────────────────────────────────────
 
 const MULT_MODS = new Set(['mMin','mMax','γcrd','γscd','δexm','δexx','δppx']);
 
-let wikiChartQ = 3, wikiChartLv = 9;
+let wikiChartQ = 3;
+let wikiChartViewMode = 'value';
+const wikiToggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
 
 function setWikiChartQ(q) {
   wikiChartQ = q;
@@ -838,22 +852,48 @@ function setWikiChartQ(q) {
   document.querySelectorAll('#wiki-q-btns .level-btn').forEach(b => {
     const active = parseInt(b.dataset.cq) === q;
     b.classList.toggle('active', active);
-    if (active) { b.style.borderColor=QCOL[q-1]+'44'; b.style.color=QCOL[q-1]; b.style.background=''; }
-    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+    const col = QCOL[q-1];
+    if (active) { b.style.color=col; b.style.borderColor=col+'44'; b.style.background=''; }
+    else { const c=QCOL[parseInt(b.dataset.cq)-1]; b.style.color=c; b.style.borderColor=c+'44'; b.style.background=''; }
   });
-  if (selKey && selTab==='mods') requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+  if (selKey && selTab==='mods') requestAnimationFrame(() => wikiRefreshCharts(selKey));
 }
 
-function setWikiChartLv(n) {
-  wikiChartLv = n;
-  ST.mods.chartLv = n;
-  document.querySelectorAll('#wiki-lv-btns .level-btn').forEach(b => {
-    const active = parseInt(b.dataset.lv) === n;
-    b.classList.toggle('active', active);
-    if (active) { b.style.borderColor='#4ade8044'; b.style.color='#4ade80'; b.style.background='#0a1f0a'; }
-    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+function setWikiChartViewMode(m) {
+  wikiChartViewMode = m;
+  document.querySelectorAll('[data-wvm]').forEach(b => {
+    const on = b.dataset.wvm === m;
+    b.classList.toggle('active', on);
+    if (on) { b.style.color='#4ade80'; b.style.borderColor='#4ade8044'; b.style.background='#0a1f0a'; }
+    else    { b.style.color=''; b.style.borderColor=''; b.style.background=''; }
   });
-  if (selKey && selTab==='mods') requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+  if (selKey && selTab==='mods') requestAnimationFrame(() => wikiRefreshCharts(selKey));
+}
+
+function setWikiStatToggle(stat) {
+  wikiToggleStats[stat] = !wikiToggleStats[stat];
+  const btn = document.querySelector(`[data-wstat="${stat}"]`);
+  if (btn) {
+    btn.classList.toggle('active', wikiToggleStats[stat]);
+    const bgMap = { p5: '#2a1a1a', p25: '#1a1000', p50: '#2a2a1a', p75: '#0a1f0a', p95: '#1a2a3a' };
+    btn.style.background = wikiToggleStats[stat] ? bgMap[stat] : '';
+  }
+  if (selKey && selTab==='mods') requestAnimationFrame(() => wikiRefreshCharts(selKey));
+}
+
+function wikiRefreshCharts(k) {
+  const fi = document.getElementById('wiki-chart-inner');
+  const vi = document.getElementById('wiki-chart-inner-v');
+  if (!fi || !vi) return;
+  fi.style.display = wikiChartViewMode === 'forge' ? '' : 'none';
+  vi.style.display = wikiChartViewMode === 'value' ? '' : 'none';
+  if (wikiChartViewMode === 'forge') drawForgeCostBar('wiki-forge-chart', wikiChartQ, 12, fmtN);
+  else drawWikiValueChart(k);
+}
+
+function drawWikiValueChart(k) {
+  drawModGrowthChart('wiki-value-chart', k, MODS[k], wikiChartQ, 12,
+    QRANGE, STAT_PLVL_MULT, QPROC, wikiToggleStats, MULT_MODS);
 }
 
 function sbMod(body, title) {
@@ -870,7 +910,7 @@ function sbMod(body, title) {
   const header = '<th class="muted">LVL</th>' +
     QNAME.map((q,qi)=>`<th style="color:${QCOL[qi]}">${q}</th>`).join('');
 
-  const MAX_LVL = 12;
+  const MAX_LVL = 9;
   const rows = [];
   for (let lv = 0; lv <= MAX_LVL; lv++) {
     const cells = QNAME.map((_,qi) => {
@@ -905,18 +945,14 @@ function sbMod(body, title) {
   const effStr  = m.stat||m.effect||'';
   const minQStr = m.minQ?`<span style="color:${QCOL[m.minQ-1]}">${QNAME[m.minQ-1]}+</span>`:'any Q';
 
-  // quality grade buttons with current wikiChartQ colors
   const qBtnHtml = [[1,'C','#9ca3af'],[2,'U','#4ade80'],[3,'R','#60a5fa'],[4,'E','#c084fc'],[5,'L','#f59e0b']].map(([q,nm,col]) => {
     const active = q === wikiChartQ;
-    const s = active ? `color:${col};border-color:${col}44` : `color:${col};border-color:${col}44`;
-    return `<button onclick="setWikiChartQ(${q})" data-cq="${q}" class="level-btn${active?' active':''}" style="${s}">${nm}</button>`;
-  }).join('');
-  const lvBtnHtml = [5,9,12,25].map(lv => {
-    const active = lv === wikiChartLv;
-    const s = active ? 'color:#4ade80;border-color:#4ade8044;background:#0a1f0a' : '';
-    return `<button onclick="setWikiChartLv(${lv})" data-lv="${lv}" class="level-btn${active?' active':''}" style="${s}">${lv}</button>`;
+    const bg = active ? [,'','','#0d1a2a','#100818','#1a1200'][q] : '';
+    return `<button onclick="setWikiChartQ(${q})" data-cq="${q}" class="level-btn${active?' active':''}" style="color:${col};border-color:${col}44;background:${bg}">${nm}</button>`;
   }).join('');
 
+  const vmF = wikiChartViewMode==='forge', vmV = wikiChartViewMode==='value';
+  const ts = wikiToggleStats;
   body.innerHTML = `
     <div class="sb-info" style="line-height:1.8">
       ${typeTag} ${resStr} <span class="muted">${effStr}</span><br>
@@ -933,16 +969,44 @@ function sbMod(body, title) {
       </table>
     </div>
     <div class="sidebar-section">
+      <div style="display:flex;gap:5px;margin-bottom:8px">
+        <button onclick="setWikiChartViewMode('forge')" data-wvm="forge"
+          class="level-btn${vmF?' active':''}"
+          ${vmF?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>COST</button>
+        <button onclick="setWikiChartViewMode('value')" data-wvm="value"
+          class="level-btn${vmV?' active':''}"
+          ${vmV?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>GROWTH</button>
+      </div>
       <div style="display:flex;gap:5px;margin-bottom:6px" id="wiki-q-btns">${qBtnHtml}</div>
-      <div style="display:flex;gap:4px" id="wiki-lv-btns">${lvBtnHtml}</div>
+      <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+        <button onclick="setWikiStatToggle('p5')" data-wstat="p5"
+          class="level-btn${ts.p5?' active':''}"
+          style="color:#f87171;border-color:#f871714d;${ts.p5?'background:#2a1a1a;':''}font-size:10px;padding:2px 6px">P5</button>
+        <button onclick="setWikiStatToggle('p25')" data-wstat="p25"
+          class="level-btn${ts.p25?' active':''}"
+          style="color:#fb923c;border-color:#fb923c4d;${ts.p25?'background:#1a1000;':''}font-size:10px;padding:2px 6px">P25</button>
+        <button onclick="setWikiStatToggle('p50')" data-wstat="p50"
+          class="level-btn${ts.p50?' active':''}"
+          style="color:#facc15;border-color:#facc154d;${ts.p50?'background:#2a2a1a;':''}font-size:10px;padding:2px 6px">P50</button>
+        <button onclick="setWikiStatToggle('p75')" data-wstat="p75"
+          class="level-btn${ts.p75?' active':''}"
+          style="color:#4ade80;border-color:#4ade8044;${ts.p75?'background:#0a1f0a;':''}font-size:10px;padding:2px 6px">P75</button>
+        <button onclick="setWikiStatToggle('p95')" data-wstat="p95"
+          class="level-btn${ts.p95?' active':''}"
+          style="color:#60a5fa;border-color:#60a5fa44;${ts.p95?'background:#1a2a3a;':''}font-size:10px;padding:2px 6px">P95</button>
+      </div>
     </div>
-    <div style="padding:0 14px 14px;flex-shrink:0">
-      <canvas id="wiki-forge-chart" style="width:100%;height:200px;display:block"></canvas>
+    <div id="wiki-chart-inner" style="display:none">
+      <canvas id="wiki-forge-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>
+    <div id="wiki-chart-inner-v" style="display:none">
+      <canvas id="wiki-value-chart" style="width:100%;height:360px;display:block"></canvas>
     </div>`;
-  requestAnimationFrame(() => drawForgeCostBar('wiki-forge-chart', wikiChartQ, wikiChartLv, fmtN));
+  requestAnimationFrame(() => wikiRefreshCharts(k));
 }
 
 // ── Forge chart component ───────────────────────────────────────────────────────────────────────
+// ── Forge cost bar (per quality) ─────────────────────────────────────
 function forgeCost(level, q) {
   const base  = [3,4,5,9,15][q-1] || 1;
   const scale = [1.6,1.7,1.8,2.0,2.3][q-1] || 1;
@@ -952,14 +1016,14 @@ function drawForgeCostBar(canvasId, q, lv, fmt) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 372, H = canvas.offsetHeight || 200;
+  const W = canvas.offsetWidth || 372, H = canvas.offsetHeight || 360;
   canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
   ctx.scale(devicePixelRatio, devicePixelRatio);
   const costs = Array.from({length: lv}, (_, i) => forgeCost(i, q));
   const mx = Math.max(...costs, 1);
   const barColor = (QCOL[q - 1] || '#4ade80') + 'aa';
   ctx.clearRect(0, 0, W, H);
-  const pad = {l:36, r:10, t:10, b:22};
+  const pad = {l:36, r:10, t:20, b:22};
   const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
   ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -985,10 +1049,238 @@ function drawForgeCostBar(canvasId, q, lv, fmt) {
   const step = Math.ceil(lv/8);
   for (let lbl = 0; lbl < lv; lbl += step) ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H-4);
   ctx.fillStyle = '#777'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
-  ctx.fillText(`${QNAME[q-1]} forge cost  (q=${q})`, W/2, pad.t-1);
+  ctx.fillText(`${QNAME[q-1]} forge cost  (q=${q})`, W/2, 13);
   const total = costs.reduce((a,b) => a+b, 0);
   ctx.fillStyle = '#444'; ctx.textAlign = 'right';
   ctx.fillText(`Σ=${fmt(total)}`, W-pad.r, H-4);
+}
+
+// ── Generic upgrade / cost bar chart ─────────────────────────────────
+// costs: pre-computed array; barColor: rgba string; fmt: number formatter
+// title: optional string shown at top; label 'no perm' shown if costs is null
+function drawCostBars(canvasId, costs, barColor, fmt, title) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 340, H = canvas.offsetHeight || 180;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  if (!costs) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('no permanent upgrade', W/2, H/2); return;
+  }
+  const n = costs.length;
+  const mx = Math.max(...costs, 1);
+  ctx.clearRect(0, 0, W, H);
+  const tPad = title ? 20 : 10;
+  const pad = {l:36, r:10, t:tPad, b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+cw, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(mx*(i/4))), pad.l-4, y+3);
+  }
+  const bw = cw / (n + 1);
+  for (let i = 0; i < n; i++) {
+    const bh = (costs[i]/mx)*ch;
+    const x = pad.l + i*bw + bw*0.15;
+    const y = pad.t + ch - bh;
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x, y, bw*0.7, bh);
+    if (n <= 10 && bh >= 12) {
+      const fs = Math.max(6, Math.min(9, Math.floor(bw*0.5)));
+      const labelY = y - 2;
+      const inside = labelY < pad.t + fs + 2;
+      ctx.fillStyle = inside ? '#111' : '#aaa';
+      ctx.font = `${fs}px monospace`; ctx.textAlign = 'center';
+      ctx.fillText(fmt(costs[i]), x+bw*0.35, inside ? pad.t + fs + 2 : labelY);
+    }
+  }
+  ctx.fillStyle = '#555'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  const step = Math.ceil(n/5);
+  for (let lbl = 0; lbl < n; lbl += step) ctx.fillText(lbl, pad.l + lbl*bw + bw/2, H - 4);
+  if (title) {
+    ctx.fillStyle = '#888'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(title, W/2, 13);
+  }
+}
+
+// ── Mod growth chart (percentile bands over forge levels) ─────────────
+function _pctile(pmf, offset, p) {
+  let cum = 0;
+  for (let j = 0; j < pmf.length; j++) {
+    cum += pmf[j];
+    if (cum >= p) return offset + j;
+  }
+  return offset + pmf.length - 1;
+}
+function computeGrowthBands(qi, N) {
+  const fmc    = FORGE_MULTI_CHANCES[qi];
+  const hProbs = fmc.map(p => p / 100);
+  let maxK = hProbs.length;
+  while (maxK > 1 && hProbs[maxK - 1] < 1e-9) maxK--;
+  let pmf = [1.0], offset = 0;
+  const bands = [];
+  for (let i = 0; i < N; i++) {
+    const p05  = _pctile(pmf, offset, 0.05);
+    const p25  = _pctile(pmf, offset, 0.25);
+    const p50  = _pctile(pmf, offset, 0.50);
+    const p75  = _pctile(pmf, offset, 0.75);
+    const p95  = _pctile(pmf, offset, 0.95);
+    let mean = 0;
+    for (let j = 0; j < pmf.length; j++) mean += pmf[j] * (offset + j);
+    bands.push({ p05, p25, p50, mean, p75, p95 });
+    const newLen = pmf.length + maxK - 1;
+    const newPmf = new Float64Array(newLen);
+    for (let j = 0; j < pmf.length; j++) {
+      if (pmf[j] < 1e-15) continue;
+      for (let k = 1; k <= maxK; k++) {
+        if (hProbs[k - 1] > 0) newPmf[j + k - 1] += pmf[j] * hProbs[k - 1];
+      }
+    }
+    offset += 1;
+    pmf = Array.from(newPmf);
+  }
+  return bands;
+}
+// drawModGrowthChart — shared growth chart for mod stat/proc vs forge level
+// mod: mod object {type, pct, base, perLvl, ...}
+// modKey: string key for MULT_MODS lookup
+// chartQ: 1-indexed quality (1-5)
+// N: number of forge levels to show
+// qrange, splvl, qproc: quality arrays (live or baked)
+// toggleStats: {p5,p25,p50,p75,p95} boolean flags
+// multMods: Set of mod keys that are multiplicative
+function drawModGrowthChart(canvasId, modKey, mod, chartQ, N, qrange, splvl, qproc, toggleStats, multMods) {
+  if (!mod) return;
+  const isProc = mod.type === 'proc';
+  const isMult = multMods instanceof Set ? multMods.has(modKey) : false;
+  const isPct  = !!mod.pct;
+  const base   = parseFloat(mod.base) || 0;
+  const perLvl = parseFloat(mod.perLvl) || 0;
+
+  const bands = Array.from({length:5}, (_, qi) => {
+    const cb = computeGrowthBands(qi, N);
+    return cb.map(b => {
+      if (isProc) {
+        const baseC = base + (qproc[qi] || 0);
+        const gain  = PLVL_BY_Q[qi];
+        return { p05: Math.min(90, baseC + b.p05  * gain),
+                 p25: Math.min(90, baseC + b.p25  * gain),
+                 p50: Math.min(90, baseC + b.p50  * gain),
+                 mean: Math.min(90, baseC + b.mean * gain),
+                 p75: Math.min(90, baseC + b.p75  * gain),
+                 p95: Math.min(90, baseC + b.p95  * gain) };
+      } else {
+        const [rMin,rMax] = qrange[qi];
+        const bv   = isMult||isPct ? base*(rMin+rMax)/2 : Math.round(base*(rMin+rMax)/2);
+        const gain = perLvl * splvl[qi];
+        return { p05: +(bv + b.p05  * gain).toFixed(2),
+                 p25: +(bv + b.p25  * gain).toFixed(2),
+                 p50: +(bv + b.p50  * gain).toFixed(2),
+                 mean: +(bv + b.mean * gain).toFixed(2),
+                 p75: +(bv + b.p75  * gain).toFixed(2),
+                 p95: +(bv + b.p95  * gain).toFixed(2) };
+      }
+    });
+  });
+
+  const sqi   = chartQ - 1;
+  const sCol  = QCOL[sqi];
+  const sBand = bands[sqi];
+
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 372, H = canvas.offsetHeight || 360;
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {l:38,r:38,t:16,b:22};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  const allV = bands.flatMap(qb => qb.map(pt => pt.mean))
+    .concat(sBand.flatMap(pt => [pt.p05, pt.p25, pt.p50, pt.p75, pt.p95]));
+  const mn = Math.min(...allV), mxV = Math.max(...allV);
+  const span = Math.max(mxV - mn, 0.01);
+
+  const xOf = i => pad.l + (N > 1 ? (i/(N-1))*cw : cw/2);
+  const yOf = v => pad.t + ch - ((v-mn)/span)*ch;
+
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + ch - (g/4)*ch;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    const lv  = mn + span*(g/4);
+    const lbl = isProc||isPct ? lv.toFixed(1)+'%' : isMult ? lv.toFixed(2) : Math.round(lv).toString();
+    ctx.fillStyle='#555'; ctx.font='10px monospace'; ctx.textAlign='right';
+    ctx.fillText(lbl, pad.l-4, y+3);
+  }
+
+  if (toggleStats.p5 && toggleStats.p95) {
+    ctx.beginPath();
+    sBand.forEach((pt,i) => i===0 ? ctx.moveTo(xOf(i),yOf(pt.p95)) : ctx.lineTo(xOf(i),yOf(pt.p95)));
+    for (let i = N-1; i >= 0; i--) ctx.lineTo(xOf(i), yOf(sBand[i].p05));
+    ctx.closePath();
+    ctx.fillStyle = sCol + '15';
+    ctx.fill();
+  }
+
+  const ptiles = [
+    { p: 'p5',  col: '#f87171', dash: [3,3] },
+    { p: 'p25', col: '#fb923c', dash: [2,2] },
+    { p: 'p50', col: '#facc15', dash: [] },
+    { p: 'p75', col: '#4ade80', dash: [2,2] },
+    { p: 'p95', col: '#60a5fa', dash: [3,3] }
+  ];
+  for (const {p, col, dash} of ptiles) {
+    if (!toggleStats[p]) continue;
+    ctx.setLineDash(dash); ctx.lineWidth = p==='p50' ? 1.5 : 1; ctx.strokeStyle = col + (p==='p50'?'cc':'88');
+    ctx.beginPath();
+    sBand.forEach((pt,i) => {
+      const v = pt[p];
+      i===0 ? ctx.moveTo(xOf(i),yOf(v)) : ctx.lineTo(xOf(i),yOf(v));
+    });
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  for (let qi = 0; qi < 5; qi++) {
+    ctx.strokeStyle = QCOL[qi] + (qi < 2 ? '88' : 'dd');
+    ctx.lineWidth   = qi >= 3 ? 2.5 : qi === 2 ? 2 : 1.5;
+    ctx.beginPath();
+    bands[qi].forEach((pt,i) => i===0 ? ctx.moveTo(xOf(i),yOf(pt.mean)) : ctx.lineTo(xOf(i),yOf(pt.mean)));
+    ctx.stroke();
+    ctx.fillStyle = QCOL[qi];
+    ctx.beginPath(); ctx.arc(xOf(N-1), yOf(bands[qi][N-1].mean), qi>=3?3:2, 0, 2*Math.PI); ctx.fill();
+  }
+
+  const last = sBand[N-1];
+  ctx.font = '8px monospace'; ctx.textAlign = 'left';
+  let yPos = yOf(last.p95);
+  if (toggleStats.p95) { ctx.fillStyle = '#60a5fabb'; ctx.fillText('p95', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p75) { ctx.fillStyle = '#4ade80aa'; ctx.fillText('p75', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p50) { ctx.fillStyle = '#facc15aa'; ctx.fillText('p50', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p25) { ctx.fillStyle = '#fb923caa'; ctx.fillText('p25', xOf(N-1)+5, yPos-2); yPos -= 10; }
+  if (toggleStats.p5)  { ctx.fillStyle = '#f87171aa'; ctx.fillText('p5',  xOf(N-1)+5, yPos-2); }
+
+  ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='center';
+  const step = Math.max(1, Math.ceil(N/8));
+  for (let i=0; i<N; i+=step) ctx.fillText(i, xOf(i), H-4);
+
+  const order = [0,1,2,3,4].sort((a,b) => bands[b][N-1].mean-bands[a][N-1].mean);
+  ctx.font='bold 9px monospace'; ctx.textAlign='right';
+  order.forEach((qi, rank) => {
+    ctx.fillStyle = QCOL[qi];
+    ctx.fillText(QNAME[qi], pad.l+cw-2, pad.t + rank*11 + 9);
+  });
+
+  ctx.fillStyle='#555'; ctx.font='10px monospace'; ctx.textAlign='center';
+  ctx.fillText(isProc ? 'proc chance / forge lv' : 'stat value / forge lv', W/2, pad.t-4);
 }
 
 // ── Enemy sidebar ───────────────────────────────────────────────────────────────────────────────
@@ -1046,7 +1338,7 @@ function sbLoot(body, title) {
   title.textContent = `${eId} — drop odds`;
 
   const charts = QNAME.map((_,i)=>
-    `<canvas id="loot-qc-${i}" height="58" style="display:block;width:100%;margin-bottom:2px"></canvas>`
+    `<div id="loot-qw-${i}" style="flex:1;min-height:0;position:relative"><canvas id="loot-qc-${i}" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas></div>`
   ).join('');
 
   body.innerHTML = `
@@ -1066,8 +1358,9 @@ function drawLootCharts(e) {
   QNAME.forEach((qn, qi) => {
     const canvas = document.getElementById('loot-qc-' + qi);
     if (!canvas) return;
-    const W = canvas.offsetWidth || 310;
-    const H = Math.max(canvas.offsetHeight, 40) || 58;
+    const wrap = document.getElementById('loot-qw-' + qi);
+    const W = (wrap ? wrap.offsetWidth : canvas.offsetWidth) || 310;
+    const H = Math.max(wrap ? wrap.offsetHeight : canvas.offsetHeight, 40);
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
@@ -1138,6 +1431,299 @@ function drawLootCharts(e) {
   });
 }
 
+// ─── COMPARE ─────────────────────────────────────────────────────────────────────────────────────
+
+function updateCmpMobTab() {
+  const btn = document.getElementById('mobt-compare');
+  if (btn) btn.style.display = cmpKey !== null ? '' : 'none';
+}
+
+function closeCmp() {
+  cmpKey = null; cmpTab = null;
+  document.getElementById('layout').classList.remove('has-cmp');
+  document.getElementById('sidebar-cmp').style.display = 'none';
+  document.getElementById('cmp-title').textContent = 'SELECT TO COMPARE';
+  document.getElementById('cmp-empty').style.display = '';
+  document.getElementById('cmp-body').innerHTML = '';
+  updateCmpMobTab();
+  if (mobView === 'compare') setMobView('table');
+  renderMain();
+}
+
+let wikiCmpUpgLevels = 5;
+let wikiCmpChartQ = 3;
+let wikiCmpChartViewMode = 'value';
+const wikiCmpToggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
+
+function setCmpSbMode(m) {
+  cmpSbMode = m;
+  if (cmpTab === 'upgrades') cmpRenderUpgrade(document.getElementById('cmp-body'), document.getElementById('cmp-title'));
+}
+
+function setCmpUpgLevels(n) {
+  wikiCmpUpgLevels = n;
+  document.querySelectorAll('#cmp-upg-lvl-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.levels) === n;
+    b.classList.toggle('active', active);
+    if (active) { b.style.borderColor='#c084fc44'; b.style.color='#c084fc'; b.style.background='#1a0d2a'; }
+    else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
+  });
+  if (cmpKey && cmpTab==='upgrades') requestAnimationFrame(() => drawCmpUpgChart());
+}
+
+function drawCmpUpgChart() {
+  const k = cmpKey; const u = UPG[k]; if (!u) return;
+  let costFn, barColor;
+  if (cmpSbMode === 'perm') {
+    if (!hasPerm(k)) { drawCostBars('cmp-upg-chart', null, '', fmtN, k); return; }
+    costFn = i => permCostFn(k, i); barColor = '#a78bfaaa';
+  } else if (cmpSbMode === 'pres') {
+    costFn = i => presCost(k, i); barColor = '#fbbf24aa';
+  } else {
+    costFn = i => upgCost(k, i); barColor = (RES_COL[u.res] || '#888') + 'aa';
+  }
+  const costs = Array.from({length: wikiCmpUpgLevels}, (_, i) => costFn(i));
+  drawCostBars('cmp-upg-chart', costs, barColor, fmtN, k);
+}
+
+function setCmpChartQ(q) {
+  wikiCmpChartQ = q;
+  document.querySelectorAll('#cmp-q-btns .level-btn').forEach(b => {
+    const active = parseInt(b.dataset.cq) === q;
+    b.classList.toggle('active', active);
+    const col = QCOL[q-1];
+    if (active) { b.style.color=col; b.style.borderColor=col+'44'; b.style.background=''; }
+    else { const c=QCOL[parseInt(b.dataset.cq)-1]; b.style.color=c; b.style.borderColor=c+'44'; b.style.background=''; }
+  });
+  if (cmpKey && cmpTab==='mods') requestAnimationFrame(() => cmpRefreshCharts(cmpKey));
+}
+
+function setCmpChartViewMode(m) {
+  wikiCmpChartViewMode = m;
+  document.querySelectorAll('[data-cwvm]').forEach(b => {
+    const on = b.dataset.cwvm === m;
+    b.classList.toggle('active', on);
+    if (on) { b.style.color='#4ade80'; b.style.borderColor='#4ade8044'; b.style.background='#0a1f0a'; }
+    else    { b.style.color=''; b.style.borderColor=''; b.style.background=''; }
+  });
+  if (cmpKey && cmpTab==='mods') requestAnimationFrame(() => cmpRefreshCharts(cmpKey));
+}
+
+function setCmpStatToggle(stat) {
+  wikiCmpToggleStats[stat] = !wikiCmpToggleStats[stat];
+  const btn = document.querySelector(`[data-cwstat="${stat}"]`);
+  if (btn) {
+    btn.classList.toggle('active', wikiCmpToggleStats[stat]);
+    const bgMap = { p5: '#2a1a1a', p25: '#1a1000', p50: '#2a2a1a', p75: '#0a1f0a', p95: '#1a2a3a' };
+    btn.style.background = wikiCmpToggleStats[stat] ? bgMap[stat] : '';
+  }
+  if (cmpKey && cmpTab==='mods') requestAnimationFrame(() => cmpRefreshCharts(cmpKey));
+}
+
+function cmpRefreshCharts(k) {
+  const fi = document.getElementById('cmp-chart-inner');
+  const vi = document.getElementById('cmp-chart-inner-v');
+  if (!fi || !vi) return;
+  fi.style.display = wikiCmpChartViewMode === 'forge' ? '' : 'none';
+  vi.style.display = wikiCmpChartViewMode === 'value' ? '' : 'none';
+  if (wikiCmpChartViewMode === 'forge') drawForgeCostBar('cmp-forge-chart', wikiCmpChartQ, 12, fmtN);
+  else drawModGrowthChart('cmp-value-chart', k, MODS[k], wikiCmpChartQ, 12,
+    QRANGE, STAT_PLVL_MULT, QPROC, wikiCmpToggleStats, MULT_MODS);
+}
+
+function renderCmp() {
+  const title  = document.getElementById('cmp-title');
+  const empty  = document.getElementById('cmp-empty');
+  const body   = document.getElementById('cmp-body');
+  const layout = document.getElementById('layout');
+  const sbCmp  = document.getElementById('sidebar-cmp');
+  if (cmpKey === null) {
+    title.textContent = 'SELECT TO COMPARE';
+    empty.style.display = '';
+    body.innerHTML = '';
+    layout.classList.remove('has-cmp');
+    sbCmp.style.display = 'none';
+    updateCmpMobTab();
+    return;
+  }
+  empty.style.display = 'none';
+  layout.classList.add('has-cmp');
+  sbCmp.style.display = 'flex';
+  updateCmpMobTab();
+  if      (cmpTab === 'upgrades') cmpRenderUpgrade(body, title);
+  else if (cmpTab === 'mods')     cmpRenderMod(body, title);
+  else if (cmpTab === 'enemies')  cmpRenderEnemy(body, title);
+  else if (cmpTab === 'loot')     cmpRenderLoot(body, title);
+}
+
+function cmpRenderUpgrade(body, title) {
+  const k = cmpKey; const u = UPG[k]; if (!u) return;
+  title.textContent = u.label;
+  const hp = hasPerm(k);
+  const modes = ['reg','pres',...(hp?['perm']:[])];
+  const modeBtns = modes.map(m=>{
+    const ac = cmpSbMode===m?' active':'';
+    return `<button class="lvl-btn${ac}" onclick="setCmpSbMode('${m}')">${{reg:'REG',pres:'PRES',perm:'PERM'}[m]}</button>`;
+  }).join('');
+  const N = 15; let cumul = 0; const rows = [];
+  for (let lv = 0; lv < N; lv++) {
+    let cost, costStr, cumulStr;
+    if (cmpSbMode==='reg') {
+      cost = upgCost(k, lv); const col = RES_COL[u.res]||'#888';
+      costStr = `<span style="color:${col}">${fmtN(cost)}</span>`;
+      cumul += cost; cumulStr = `<span style="color:${col};opacity:.5">${fmtN(cumul)}</span>`;
+    } else if (cmpSbMode==='pres') {
+      cost = presCost(k, lv);
+      costStr = `<span style="color:#fcd34d">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost; cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
+    } else {
+      if (!hp) break; cost = permCostFn(k, lv);
+      costStr = `<span style="color:#a78bfa">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost; cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
+    }
+    rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
+  }
+  const resLabel = cmpSbMode==='reg'?(RES_COL[u.res]?u.res:'?'):(cmpSbMode==='pres'?'ꛜ':'perm ꛜ');
+  const permStr  = hp?` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>`:'';
+  const lvlBtns = [5,10,25,50].map(n => {
+    const ac = n===wikiCmpUpgLevels ? ' active' : '';
+    const s  = n===wikiCmpUpgLevels ? 'color:#c084fc;border-color:#c084fc44;background:#1a0d2a' : '';
+    return `<button onclick="setCmpUpgLevels(${n})" data-levels="${n}" class="level-btn${ac}" style="${s}">${n}</button>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="sb-modes">${modeBtns}</div>
+    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${u.scale||DEFAULT_SCALE}</span>${permStr}</div>
+    <div class="sb-scroll"><table class="ct">
+      <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>
+    <div class="sidebar-section" style="padding:6px 14px 8px">
+      <div style="display:flex;gap:4px" id="cmp-upg-lvl-btns">${lvlBtns}</div>
+    </div>
+    <div style="padding:0 14px 14px;flex-shrink:0">
+      <canvas id="cmp-upg-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => drawCmpUpgChart());
+}
+
+function cmpRenderMod(body, title) {
+  const k = cmpKey; const m = MODS[k]; if (!m) return;
+  title.textContent = m.label;
+  const isProc = m.type==='proc', isPct=!!m.pct, isMult=MULT_MODS.has(k);
+  const hasNoMult = isProc && m.effect && !['dmgMulti','armMulti'].includes(m.effect);
+  const header = '<th class="muted">LVL</th>'+QNAME.map((q,qi)=>`<th style="color:${QCOL[qi]}">${q}</th>`).join('');
+  const rows = [];
+  for (let lv = 0; lv <= 9; lv++) {
+    const cells = QNAME.map((_,qi) => {
+      const minQ = m.minQ||1;
+      if (qi+1 < minQ) return `<td class="dim">—</td>`;
+      if (isProc) {
+        const baseChance = m.base + QPROC[qi];
+        const chance = Math.min(95, Math.round(baseChance + lv*(PLVL_BY_Q[qi]||0.5)));
+        if (hasNoMult) return `<td style="color:${QCOL[qi]};font-size:11px">${chance}%</td>`;
+        const pmr = PROC_MULT_RANGE[qi];
+        if (!pmr||!pmr.length) return `<td class="dim">—</td>`;
+        const mid = ((pmr[0]+pmr[1])/2 + lv*MULT_PLVL_BY_Q[qi]).toFixed(1);
+        return `<td style="font-size:10px;color:${QCOL[qi]}">${chance}% <span class="dim">×${mid}</span></td>`;
+      } else {
+        const val = m.base + lv*m.perLvl*STAT_PLVL_MULT[qi];
+        let fs;
+        if (isPct)       fs = val.toFixed(1)+'%';
+        else if (isMult) fs = val.toFixed(3);
+        else if (val<1)  fs = val.toFixed(3);
+        else if (val<10) fs = val.toFixed(2);
+        else             fs = val.toFixed(1);
+        return `<td style="color:${QCOL[qi]};font-size:11px">${fs}</td>`;
+      }
+    }).join('');
+    rows.push(`<tr class="${lv%2?'':'ev'}"><td class="muted">${lv}</td>${cells}</tr>`);
+  }
+  const typeTag = isProc?'<span class="tag-p">PROC</span>':'<span class="tag-s">STAT</span>';
+  const resStr  = m.res?`<span style="color:${RES_COL[m.res]}">${m.res}</span>`:'';
+  const minQStr = m.minQ?`<span style="color:${QCOL[m.minQ-1]}">${QNAME[m.minQ-1]}+</span>`:'any Q';
+  const vmF = wikiCmpChartViewMode==='forge', vmV = wikiCmpChartViewMode==='value';
+  const ts = wikiCmpToggleStats;
+  const qBtnHtml = [[1,'C','#9ca3af'],[2,'U','#4ade80'],[3,'R','#60a5fa'],[4,'E','#c084fc'],[5,'L','#f59e0b']].map(([q,nm,col]) => {
+    const active = q === wikiCmpChartQ;
+    const bg = active ? [,'','','#0d1a2a','#100818','#1a1200'][q] : '';
+    return `<button onclick="setCmpChartQ(${q})" data-cq="${q}" class="level-btn${active?' active':''}" style="color:${col};border-color:${col}44;background:${bg}">${nm}</button>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="sb-info" style="line-height:1.8">
+      ${typeTag} ${resStr} <span class="muted">${m.stat||m.effect||''}</span><br>
+      base: <span style="color:#aaa">${m.base}${isPct?'%':''}</span>
+      · per lv: <span style="color:#aaa">${m.perLvl}${isPct?'%':''}</span>
+      · min Q: ${minQStr}
+      · avail: <span class="muted">${m.minEnemy?'E'+m.minEnemy+'+':'E0+'}</span>
+    </div>
+    <div style="padding:3px 14px 2px;font-size:9px;letter-spacing:1px;color:#555">VALUE AT FORGE LEVEL × QUALITY</div>
+    <div class="sb-scroll"><table class="mvt">
+      <thead><tr>${header}</tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>
+    <div class="sidebar-section">
+      <div style="display:flex;gap:5px;margin-bottom:8px">
+        <button onclick="setCmpChartViewMode('forge')" data-cwvm="forge"
+          class="level-btn${vmF?' active':''}"
+          ${vmF?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>COST</button>
+        <button onclick="setCmpChartViewMode('value')" data-cwvm="value"
+          class="level-btn${vmV?' active':''}"
+          ${vmV?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>GROWTH</button>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:6px" id="cmp-q-btns">${qBtnHtml}</div>
+      <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+        <button onclick="setCmpStatToggle('p5')" data-cwstat="p5"
+          class="level-btn${ts.p5?' active':''}"
+          style="color:#f87171;border-color:#f871714d;${ts.p5?'background:#2a1a1a;':''}font-size:10px;padding:2px 6px">P5</button>
+        <button onclick="setCmpStatToggle('p25')" data-cwstat="p25"
+          class="level-btn${ts.p25?' active':''}"
+          style="color:#fb923c;border-color:#fb923c4d;${ts.p25?'background:#1a1000;':''}font-size:10px;padding:2px 6px">P25</button>
+        <button onclick="setCmpStatToggle('p50')" data-cwstat="p50"
+          class="level-btn${ts.p50?' active':''}"
+          style="color:#facc15;border-color:#facc154d;${ts.p50?'background:#2a2a1a;':''}font-size:10px;padding:2px 6px">P50</button>
+        <button onclick="setCmpStatToggle('p75')" data-cwstat="p75"
+          class="level-btn${ts.p75?' active':''}"
+          style="color:#4ade80;border-color:#4ade8044;${ts.p75?'background:#0a1f0a;':''}font-size:10px;padding:2px 6px">P75</button>
+        <button onclick="setCmpStatToggle('p95')" data-cwstat="p95"
+          class="level-btn${ts.p95?' active':''}"
+          style="color:#60a5fa;border-color:#60a5fa44;${ts.p95?'background:#1a2a3a;':''}font-size:10px;padding:2px 6px">P95</button>
+      </div>
+    </div>
+    <div id="cmp-chart-inner" style="display:none">
+      <canvas id="cmp-forge-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>
+    <div id="cmp-chart-inner-v" style="display:none">
+      <canvas id="cmp-value-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => cmpRefreshCharts(k));
+}
+
+function cmpRenderEnemy(body, title) {
+  const savedKey = selKey, savedTab = selTab;
+  selKey = cmpKey; selTab = 'enemies';
+  sbEnemy(body, title);
+  selKey = savedKey; selTab = savedTab;
+}
+
+function cmpRenderLoot(body, title) {
+  const id = cmpKey; const e = ENEMIES.find(x=>x.id===id); if (!e) return;
+  title.textContent = `E${id} — drop odds`;
+  const qBars = e.qW.map((w,i)=>`
+    <div class="e-bar-row">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:${QCOL[i]};font-size:12px">${QFULL[i]}</span>
+        <span style="color:#aaa;font-size:12px">${w}%</span>
+      </div>
+      <div class="e-bar-track"><div class="e-bar-fill" style="width:${Math.min(100,w)}%;background:${QCOL[i]}"></div></div>
+    </div>`).join('');
+  body.innerHTML = `
+    <div style="padding:12px 14px;flex:1;overflow-y:auto">
+      <div style="font-size:9px;letter-spacing:1px;color:#555;margin-bottom:8px">QUALITY DROP ODDS</div>
+      <div style="margin-bottom:10px;color:#777;font-size:12px">drop lvls: ${e.lMin}–${e.lMax}${e.dcMax?' · dc max: '+e.dcMax:''} · reward: ${e.pp?fmtN(e.pp)+' ꛜ':'—'}</div>
+      ${qBars}
+    </div>`;
+}
+
 // ─── INIT ───────────────────────────────────────────────────────────────────────────────────────
 
 let mobView = 'table';
@@ -1146,12 +1732,16 @@ function setMobView(v) {
   const isMob = window.innerWidth < 768;
   const main  = document.getElementById('main-content');
   const sb    = document.getElementById('sidebar');
+  const sbCmp = document.getElementById('sidebar-cmp');
   if (isMob) {
-    main.style.display = v === 'table' ? '' : 'none';
-    sb.style.display   = v === 'detail' ? 'flex' : 'none';
+    main.style.display  = v === 'table'   ? '' : 'none';
+    sb.style.display    = v === 'detail'  ? 'flex' : 'none';
+    sbCmp.style.display = (v === 'compare' && cmpKey !== null) ? 'flex' : 'none';
   } else {
-    main.style.display = '';
-    sb.style.display   = '';
+    main.style.display  = '';
+    sb.style.display    = '';
+    sbCmp.style.display = cmpKey !== null ? 'flex' : 'none';
+    document.getElementById('layout').classList.toggle('has-cmp', cmpKey !== null);
   }
   document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'));
   const bt = document.getElementById('mobt-' + v);
@@ -1162,6 +1752,45 @@ window.addEventListener('resize', () => setMobView(mobView));
 applyHash();
 renderMain();
 renderSB();
+
+// ─── CONTEXT MENU & LONG PRESS ─────────────────────────────────────────────────────
+(function() {
+  const mc = document.getElementById('main-content');
+  mc.addEventListener('contextmenu', function(ev) {
+    const tr = ev.target.closest('tr[data-cmpkey]');
+    if (!tr) return;
+    ev.preventDefault();
+    const raw = tr.dataset.cmpkey;
+    const tab = tr.dataset.cmptab;
+    const newKey = (tab === 'enemies' || tab === 'loot') ? Number(raw) : raw;
+    if (cmpKey === newKey && cmpTab === tab) { closeCmp(); return; }
+    cmpKey = newKey; cmpTab = tab; cmpSbMode = 'reg';
+    renderMain(); renderCmp();
+    if (window.innerWidth < 768) setMobView('compare');
+  });
+  let _lpTimer = null, _lpFired = false;
+  mc.addEventListener('touchstart', function(ev) {
+    const tr = ev.target.closest('tr[data-cmpkey]');
+    if (!tr) return;
+    _lpFired = false;
+    _lpTimer = setTimeout(function() {
+      _lpTimer = null; _lpFired = true;
+      const raw = tr.dataset.cmpkey, tab = tr.dataset.cmptab;
+      const newKey = (tab === 'enemies' || tab === 'loot') ? Number(raw) : raw;
+      if (cmpKey === newKey && cmpTab === tab) { closeCmp(); return; }
+      cmpKey = newKey; cmpTab = tab; cmpSbMode = 'reg';
+      renderMain(); renderCmp();
+      setMobView('compare');
+    }, 520);
+  }, {passive: true});
+  function cancelLp() { if (_lpTimer !== null) { clearTimeout(_lpTimer); _lpTimer = null; } }
+  mc.addEventListener('touchend', function(ev) {
+    if (_lpFired) { ev.preventDefault(); _lpFired = false; }
+    cancelLp();
+  }, {passive: false});
+  mc.addEventListener('touchmove', cancelLp, {passive: true});
+})();
+
 if (selKey !== null && window.innerWidth < 768) setMobView('detail');
 else setMobView('table');
 </script>
