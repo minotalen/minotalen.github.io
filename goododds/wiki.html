@@ -18,8 +18,19 @@ body{background:#1b1b1b;color:#e5e5e5;font-family:'IBM Plex Mono',monospace;font
 #gsearch{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:150px}
 #gsearch:focus{outline:none;border-color:#444}
 .layout{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 41px);gap:8px;padding:8px;background:#1b1b1b}
+.layout.has-cmp{grid-template-columns:1fr 370px 370px}
 .main{overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column;background:#181818;border:2px solid #383838;border-radius:6px}
 .sidebar{background:#181818;border:2px solid #383838;border-radius:6px;height:100%;display:flex;flex-direction:column;overflow:hidden}
+#sidebar-cmp{background:#181818;border:2px solid #383838;border-radius:6px;height:100%;display:none;flex-direction:column;overflow:hidden}
+.layout.has-cmp #sidebar-cmp{display:flex}
+#cmp-title-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #1e1e1e;flex-shrink:0;gap:6px}
+#cmp-tag{font-size:10px;letter-spacing:1px;color:#555;flex-shrink:0}
+#cmp-title{font-size:11px;letter-spacing:1px;color:#666;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cmp-close{background:none;border:none;color:#555;font-size:13px;cursor:pointer;padding:0 2px;flex-shrink:0;font-family:inherit}
+#cmp-close:hover{color:#aaa}
+#cmp-empty{padding:24px 14px;color:#666;font-size:12px;text-align:center;line-height:1.8;flex-shrink:0}
+#cmp-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+table.wtbl tr.cmp-sel td{background:#0d1a2a}
 .fbr{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:7px 18px;background:#181818;border-bottom:1px solid #2a2a2a;flex-shrink:0}
 .fbr input{background:#141414;border:1px solid #2a2a2a;color:#ddd;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:130px}
 .fbr input:focus{outline:none;border-color:#444}
@@ -72,6 +83,7 @@ table.qtbl th{color:#666;font-weight:normal;font-size:10px;letter-spacing:1.5px;
 table.qtbl th.lh{text-align:left;color:#666}
 table.qtbl td{padding:5px 8px;border-bottom:1px solid #1a1a1a;text-align:center;color:#bbb;font-size:12px}
 table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;white-space:nowrap}
+table.qtbl tr:hover td{background:#111}
 .loot-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;min-width:70px}
 .ls{height:100%}
 .e-bar-row{margin:5px 0}
@@ -88,6 +100,7 @@ table.qtbl td.lc{text-align:left;color:#666;font-size:10px;letter-spacing:1px;wh
   .layout{height:calc(100vh - 41px - 48px);grid-template-columns:1fr}
   .layout.has-cmp{grid-template-columns:1fr}
   .sidebar{height:100%;width:100%}
+  #sidebar-cmp{height:100%;width:100%}
   #topbar{overflow-x:auto;-webkit-overflow-scrolling:touch;gap:3px;padding:0 8px}
   #gsearch{width:100px}
   .tab-btn{font-size:10px;padding:2px 6px}
@@ -98,17 +111,16 @@ tr.sdim td{opacity:0.18;transition:opacity .1s}
 .sec-hdr-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:7px 18px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
 .sec-hd-inline{font-size:10px;letter-spacing:2px;color:#777;margin-right:auto;white-space:nowrap}
 .sec-hdr-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.layout.has-cmp{grid-template-columns:1fr 370px 370px}
-#sidebar-cmp{display:none;background:#181818;border:2px solid #1e3838;border-radius:6px;height:100%;flex-direction:column;overflow:hidden}
-#cmp-title-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #1e1e1e;flex-shrink:0;gap:6px;min-width:0}
-#cmp-tag{font-size:9px;letter-spacing:1px;color:#2a9e9e;flex-shrink:0}
-#cmp-title{flex:1;font-size:11px;letter-spacing:1px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#cmp-close{background:none;border:none;color:#444;cursor:pointer;font-size:16px;padding:0 2px;font-family:inherit;line-height:1;flex-shrink:0;transition:color .1s}
-#cmp-close:hover{color:#aaa}
-#cmp-empty{padding:24px 14px;color:#555;font-size:12px;text-align:center;line-height:2;flex-shrink:0}
-#cmp-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
-table.wtbl tr.cmp-sel td{background:#091f1f}
-@media(max-width:767px){.layout.has-cmp{grid-template-columns:1fr}#sidebar-cmp{height:100%;width:100%}}
+.misc-panels{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;flex:1;min-height:0}
+.misc-panel{background:#181818;border:2px solid #383838;border-radius:6px;overflow-y:auto;overflow-x:auto;min-width:0}
+.misc-panel-hd{font-size:10px;letter-spacing:2px;color:#999;padding:12px 16px 8px;border-bottom:1px solid #1a1a1a;white-space:nowrap}
+.misc-panel-body{padding:12px 16px 20px}
+.layout.misc-mode{grid-template-columns:1fr}
+.layout.misc-mode .sidebar{display:none!important}
+.layout.misc-mode .main{background:transparent;border:none;border-radius:0;padding:0}
+@media(max-width:900px){
+  .misc-panels{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -117,10 +129,9 @@ table.wtbl tr.cmp-sel td{background:#091f1f}
   <h1>goododds wiki</h1>
   <div class="tsep"></div>
   <button class="tab-btn active" id="tab-upgrades" onclick="switchTab('upgrades')">UPGRADES</button>
-  <button class="tab-btn" id="tab-enemies" onclick="switchTab('enemies')">ENEMIES</button>
   <button class="tab-btn" id="tab-mods" onclick="switchTab('mods')">MODS</button>
-  <button class="tab-btn" id="tab-quality" onclick="switchTab('quality')">QUALITY</button>
-  <button class="tab-btn" id="tab-loot" onclick="switchTab('loot')">LOOT</button>
+  <button class="tab-btn" id="tab-enemies" onclick="switchTab('enemies')">ENEMIES</button>
+  <button class="tab-btn" id="tab-misc" onclick="switchTab('misc')">MISC</button>
   <div class="spacer"></div>
   <input id="gsearch" placeholder="search…" oninput="onSearch()">
 </div>
@@ -135,10 +146,10 @@ table.wtbl tr.cmp-sel td{background:#091f1f}
   <div id="sidebar-cmp">
     <div id="cmp-title-row">
       <span id="cmp-tag">CMP</span>
-      <div id="cmp-title">SELECT TO COMPARE</div>
-      <button id="cmp-close" onclick="closeCmp()" title="close compare">✕</button>
+      <span id="cmp-title"></span>
+      <button id="cmp-close" onclick="closeCmp()">✕</button>
     </div>
-    <div id="cmp-empty">right-click any row<br>to compare<br><span style="font-size:10px;color:#3a3a3a">long-press on mobile</span></div>
+    <div id="cmp-empty">right-click a row<br>to compare</div>
     <div id="cmp-body"></div>
   </div>
 </div>
@@ -151,7 +162,7 @@ table.wtbl tr.cmp-sel td{background:#091f1f}
     <span class="mob-icon">◈</span><span>DETAIL</span>
   </button>
   <button class="mob-tab" id="mobt-compare" onclick="setMobView('compare')" style="display:none">
-    <span class="mob-icon">⇌</span><span>COMPARE</span>
+    <span class="mob-icon">⇄</span><span>CMP</span>
   </button>
 </div>
 
@@ -180,7 +191,7 @@ const QCOL   = ['#9ca3af','#4ade80','#60a5fa','#c084fc','#f59e0b'];
 const ECOL   = ['#9ca3af','#60a5fa','#4ade80','#fcd34d','#f97316','#f43f5e','#c084fc','#a78bfa','#e5e5e5'];
 const SELL_PP = [1, 3, 8, 20, 60];
 
-const QRANGE           = [[0.8, 1.2], [1.3, 2.2], [2.4, 3.5], [3.8, 5.5], [6, 9]];
+const QRANGE           = [[0.8, 1.2], [1.2, 2.0], [2.1, 3.1], [3.3, 4.7], [5, 7.2]];
 const QPROC            = [0, 5, 10, 15, 20];
 const PROC_MULT_RANGE  = [[], [], [1.2, 1.8], [2.5, 4.5], [4.0, 6.0]];
 const MULT_PLVL_BY_Q   = [0, 0, 0.1, 0.2, 0.3];
@@ -218,15 +229,17 @@ let selTab = null;
 function pushHash() {
   const parts = [activeTab];
   if (selKey !== null) parts.push(selKey);
-  const h = '#' + parts.join('/');
+  let h = '#' + parts.join('/');
+  if (cmpKey !== null) h += '~' + cmpTab + '/' + cmpKey;
   if (location.hash !== h) history.replaceState(null, '', h);
 }
 
 function applyHash() {
   const raw = location.hash.replace(/^#/, '');
   if (!raw) return;
-  const [tab, key] = raw.split('/');
-  const validTabs = ['upgrades','enemies','mods','quality','loot'];
+  const [mainPart, cmpPart] = raw.split('~');
+  const [tab, key] = mainPart.split('/');
+  const validTabs = ['upgrades','enemies','mods','misc'];
   if (!validTabs.includes(tab)) return;
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -234,9 +247,19 @@ function applyHash() {
   if (tabEl) tabEl.classList.add('active');
   if (key !== undefined) {
     const decoded = decodeURIComponent(key);
-    const parsed = (tab === 'enemies' || tab === 'loot') ? Number(decoded) : decoded;
+    const parsed = tab === 'enemies' ? Number(decoded) : decoded;
     selKey = parsed;
     selTab = tab;
+  }
+  if (tab === 'misc') document.querySelector('.layout').classList.add('misc-mode');
+  if (cmpPart) {
+    const [ct, ck] = cmpPart.split('/');
+    if (ct && ck !== undefined) {
+      cmpTab = ct;
+      cmpKey = ct === 'enemies' ? Number(decodeURIComponent(ck)) : decodeURIComponent(ck);
+      document.getElementById('layout').classList.add('has-cmp');
+      updateCmpMobTab();
+    }
   }
 }
 let gSearch = '';
@@ -245,18 +268,14 @@ const ST = {
   upgrades: { sc:'res', sd:1, fr:'', fs:'', sel:null, search:'', sbMode:'reg', localSearch:'' },
   enemies:  { sel:null, search:'' },
   mods:     { sc:'minEnemy', sd:1, ft:'', fr:'', fq:'', fe:'', sel:null, search:'', chartQ:3, localSearch:'' },
-  quality:  { sel:null, search:'' },
-  loot:     { sel:null, search:'' },
+  misc:     { sel:null, search:'' },
 };
 let sbMode = 'reg';
-let cmpKey = null;
-let cmpTab = null;
-let cmpSbMode = 'reg';
 
 // ─── TAB ───────────────────────────────────────────────────────────────────────────────────
 
 function switchTab(tab) {
-  if (tab !== activeTab && cmpKey !== null) closeCmp();
+  closeCmp();
   // Save current tab state
   const cur = ST[activeTab];
   if (cur) { cur.sel = selKey; cur.search = gSearch; }
@@ -274,6 +293,7 @@ function switchTab(tab) {
 
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector('.layout').classList.toggle('misc-mode', tab==='misc');
   pushHash();
   renderMain(); renderSB();
 }
@@ -292,8 +312,7 @@ function renderMain() {
   if      (activeTab==='upgrades') mc.innerHTML = buildUpgradesHTML();
   else if (activeTab==='enemies')  mc.innerHTML = buildEnemiesHTML();
   else if (activeTab==='mods')     mc.innerHTML = buildModsHTML();
-  else if (activeTab==='quality')  mc.innerHTML = buildQualityHTML();
-  else if (activeTab==='loot')     mc.innerHTML = buildLootHTML();
+  else if (activeTab==='misc')     mc.innerHTML = buildMiscHTML();
 }
 
 
@@ -342,9 +361,9 @@ function buildUpgradesHTML() {
     const unlk = r.unlock !== '' ? `<span class="muted" style="font-size:11px">E${r.unlock}</span>` : '<span class="dim">—</span>';
     const pumk = r.permUnlock !== '' ? `<span style="color:#a78bfa;font-size:11px">E${r.permUnlock}</span>` : '<span class="dim">—</span>';
     const sel  = (selTab==='upgrades'&&selKey===r.key)?' sel':'';
-    const dim  = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch)) ? ' sdim' : '';
     const cmpSel = (cmpTab==='upgrades'&&cmpKey===r.key)?' cmp-sel':'';
-    return `<tr class="${sel}${dim}${cmpSel}" onclick="selUpg('${r.key}')" data-cmpkey="${r.key}" data-cmptab="upgrades">
+    const dim  = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch)) ? ' sdim' : '';
+    return `<tr class="${sel}${cmpSel}${dim}" onclick="selUpg('${r.key}')" data-cmpkey="${r.key}" data-cmptab="upgrades">
       <td style="color:#ccc">${r.label}</td>
       <td><span style="color:${col}">${r.res||'—'}</span></td>
       <td style="color:#aaa">${r.base}</td>
@@ -393,7 +412,7 @@ function selUpg(k) { selKey=k; selTab='upgrades'; pushHash(); renderMain(); rend
 // ─── ENEMIES ──────────────────────────────────────────────────────────────────────────
 
 function buildEnemiesHTML() {
-  const resLabels = ['α only','α+β','α–γ','α–δ'];
+  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]};text-align:center" title="quality weight">${q}</th>`).join('');
   const rows = ENEMIES.map(e => {
     const eId   = e.omega ? 'EΩ' : `E${e.id}`;
     const col   = ECOL[e.id]||'#aaa';
@@ -402,6 +421,9 @@ function buildEnemiesHTML() {
     if (e.omega)          flags.push(`<span style="color:#a78bfa;font-size:10px">training dummy</span>`);
     if (e.unlock==='forge') flags.push(`<span style="color:#4ade80;font-size:10px">⊕ forge</span>`);
     if (e.unlock==='perma') flags.push(`<span style="color:#60a5fa;font-size:10px">⊕ perma</span>`);
+    const qCells = e.qW.map((w,i)=>w>0
+      ?`<td style="color:${QCOL[i]};text-align:center">${w}</td>`
+      :`<td style="color:#3a3a3a;text-align:center;font-size:11px">✗</td>`).join('');
     const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
     const sel = (selTab==='enemies'&&selKey===e.id)?' sel':'';
     const cmpSel = (cmpTab==='enemies'&&cmpKey===e.id)?' cmp-sel':'';
@@ -411,9 +433,9 @@ function buildEnemiesHTML() {
       <td style="color:#777">${e.defMin}–${e.defMax}</td>
       <td style="color:#777">${e.lMin}–${e.lMax}</td>
       <td style="color:${e.pp?'#fcd34d':'#555'}">${e.pp?'+'+fmtN(e.pp)+'ꛜ':'—'}</td>
-      <td style="color:#666;font-size:11px">${resLabels[e.maxResIdx]||'?'}</td>
       <td style="color:#555">${e.dcMax||'<span class="dim">—</span>'}</td>
       <td style="font-size:11px">${flags.join(' ')}</td>
+      ${qCells}
       <td style="min-width:72px"><div class="loot-bar">${bar}</div></td>
     </tr>`;
   }).join('');
@@ -434,14 +456,14 @@ function buildEnemiesHTML() {
   <th title="armor reduction rolled per hit">DEF RANGE</th>
   <th title="item level range on drops">DROP LVL</th>
   <th title="prestige points on defeat">REWARD</th>
-  <th title="highest resource tier available">MAX RES</th>
   <th title="death counter limit">DC MAX</th>
   <th>FLAGS</th>
-  <th title="quality distribution of item drops">DROP QUALITY</th>
+  ${qHdr}
+  <th title="quality distribution of item drops">DISTRIBUTION</th>
 </tr></thead>
 <tbody>${rows}</tbody>
 </table>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-top:24px;border-top:1px solid #303030;margin-top:16px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-top:24px;border-top:1px solid #303030;margin-top:0">
   <div>
     <div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px">MOD SLOT COSTS <span style="color:#636363;letter-spacing:0">— ꛜ to unlock (base: 3 slots)</span></div>
     <table class="wtbl" style="max-width:220px"><thead><tr><th>SLOT</th><th>ꛜ COST</th></tr></thead><tbody>${slotRows}</tbody></table>
@@ -492,9 +514,9 @@ function buildModsHTML() {
     const minQTxt = `<span style="color:${QCOL[r.minQ-1]}">${QNAME[r.minQ-1]}</span>`;
     const minETxt = r.minEnemy>0?`<span style="color:${ECOL[r.minEnemy]}">E${r.minEnemy}+</span>`:'<span class="dim">any</span>';
     const sel = (selTab==='mods'&&selKey===r.key)?' sel':'';
-    const dim = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.es.toLowerCase().includes(gSearch)) ? ' sdim' : '';
     const cmpSel = (cmpTab==='mods'&&cmpKey===r.key)?' cmp-sel':'';
-    return `<tr class="${sel}${dim}${cmpSel}" onclick="selMod('${r.key}')" data-cmpkey="${r.key}" data-cmptab="mods">
+    const dim = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.es.toLowerCase().includes(gSearch)) ? ' sdim' : '';
+    return `<tr class="${sel}${cmpSel}${dim}" onclick="selMod('${r.key}')" data-cmpkey="${r.key}" data-cmptab="mods">
       <td style="color:#ccc">${r.label}</td>
       <td>${typeTag}</td>
       <td>${resTxt}</td>
@@ -549,7 +571,7 @@ function selMod(k) { selKey=k; selTab='mods'; pushHash(); renderMain(); renderSB
 
 // ─── QUALITY ────────────────────────────────────────────────────────────────────────────
 
-function buildQualityHTML() {
+function buildMiscHTML() {
   const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('');
   const qHdrFull = QFULL.map((q,i)=>`<th style="color:${QCOL[i]};font-size:9px;letter-spacing:.5px">${q}</th>`).join('');
 
@@ -566,13 +588,16 @@ function buildQualityHTML() {
   }).join('');
   const armorShredR= ARMOR_SHRED_RANGE.map(r=>`<td>${r[0]}–${r[1]}</td>`).join('');
 
-  const forgeRows = Array.from({length:14},(_,lv)=>{
+  const forgeRows = Array.from({length:9},(_,lv)=>{
     const cells = FORGE_BASE_COSTS.map((_,qi)=>`<td style="color:${QCOL[qi]}">${fmtN(forgeCostFn(lv,qi+1))}</td>`).join('');
     return `<tr><td style="color:#777">+${lv}</td>${cells}</tr>`;
   }).join('');
 
-  return `<div class="sec-hd">QUALITY TIERS <span class="sec-hint">— item roll &amp; forge mechanics</span></div>
-<div class="q-section">
+  return `<div class="misc-panels">
+
+<div class="misc-panel">
+<div class="misc-panel-hd">QUALITY TIERS</div>
+<div class="misc-panel-body"><div style="overflow-x:auto">
 <table class="qtbl">
 <thead>
   <tr><th class="lh"></th>${qHdr}</tr>
@@ -586,25 +611,99 @@ function buildQualityHTML() {
   <tr><td class="lc" title="proc multiplier roll range (Rare+ procs only)">MULT RANGE</td>${multRngR}</tr>
   <tr><td class="lc" title="proc multiplier gain per forge level">MULT / LV</td>${multPlvlR}</tr>
   <tr><td class="lc" title="prestige points received when selling">SELL ꛜ</td>${sellR}</tr>
-  <tr><td class="lc" title="multi-hit chances per quality">FORGE MULTI×</td>${forgeMultR}</tr>
   <tr><td class="lc" title="armor shred fraction roll range">ARMOR SHRED</td>${armorShredR}</tr>
 </tbody>
 </table>
-<div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px;padding-top:4px;border-top:1px solid #303030">FORGE COSTS <span style="color:#636363;letter-spacing:0">— ꛜ per level</span></div>
-<table class="wtbl" style="max-width:380px;margin-bottom:24px">
+</div></div>
+</div>
+
+<div class="misc-panel">
+<div class="misc-panel-hd">FORGE COSTS <span style="color:#636363;letter-spacing:0">— ꛜ per level</span></div>
+<div class="misc-panel-body"><div style="overflow-x:auto">
+<table class="wtbl">
 <thead><tr><th>LVL</th>${QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('')}</tr></thead>
 <tbody>${forgeRows}</tbody>
 </table>
-<div style="font-size:10px;letter-spacing:2px;color:#999;margin-bottom:8px;padding-top:4px;border-top:1px solid #303030">RESOURCE TIMERS</div>
-<table class="wtbl" style="max-width:320px">
-<thead><tr><th>RES</th><th>CYCLE TIME</th><th>UNLOCKED BY</th></tr></thead>
+</div></div>
+</div>
+
+<div class="misc-panel" style="grid-column:1/-1">
+<div class="misc-panel-hd">CONSUMABLES <span class="sec-hint">— rolled independently per kill</span></div>
+<div class="misc-panel-body"><div style="overflow-x:auto">
+<table class="wtbl">
+<thead><tr>
+  <th>SUBTYPE</th><th>CHANCE</th><th>MIN Q</th>
+  <th style="color:${QCOL[0]};text-align:center">C</th>
+  <th style="color:${QCOL[1]};text-align:center">U</th>
+  <th style="color:${QCOL[2]};text-align:center">R</th>
+  <th style="color:${QCOL[3]};text-align:center">E</th>
+  <th style="color:${QCOL[4]};text-align:center">L</th>
+  <th>DESCRIPTION</th>
+</tr></thead>
 <tbody>
-${RES.map((r,i)=>{
-  const unl = RES_UNLOCK[r]!==undefined ? `defeat E${RES_UNLOCK[r]}` : 'available from start';
-  return `<tr><td><span style="color:${RES_COL[r]}">${r}</span></td><td style="color:#aaa">${TLBL[r]}</td><td style="color:#777;font-size:11px">${unl}</td></tr>`;
-}).join('')}
+  <tr>
+    <td style="color:#a78bfa">protect</td><td style="color:#888">40%</td><td style="color:${QCOL[2]}">R+</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">−1 lvl</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">75% safe</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">free</td>
+    <td style="color:#555;font-size:11px">forge fail: prevents item destruction · quality scales protection</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">luck</td><td style="color:#888">25%</td><td style="color:${QCOL[0]}">C</td>
+    <td style="color:${QCOL[0]};font-size:11px;text-align:center">+15%</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">+22%</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">+30%</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">+38%</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">+45%</td>
+    <td style="color:#555;font-size:11px">forge: boosts success chance · quality scales bonus</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">stat</td><td style="color:#888">9%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">forge: forces stat improvement (stat mods only)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">reroll</td><td style="color:#888">8%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">rerolls mod base stat within quality range (keeps level)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">full</td><td style="color:#888">6%</td><td style="color:${QCOL[0]}">C</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td><td class="dim" style="text-align:center">—</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:#555;font-size:11px">forge: forces stat + proc improvement (stat mods only)</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">tierUp</td><td style="color:#888">8%</td><td style="color:${QCOL[1]}">U+</td>
+    <td style="color:${QCOL[0]};font-size:11px;text-align:center">0%↑</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">25%↑</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">50%↑</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">75%↑</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">100%↑</td>
+    <td style="color:#555;font-size:11px">on forge success: chance to raise item quality by 1 tier</td>
+  </tr>
+  <tr>
+    <td style="color:#a78bfa">refund</td><td style="color:#888">4%</td><td style="color:${QCOL[1]}">U+</td>
+    <td class="dim" style="text-align:center">—</td>
+    <td style="color:${QCOL[1]};font-size:11px;text-align:center">15%/20%</td>
+    <td style="color:${QCOL[2]};font-size:11px;text-align:center">25%/30%</td>
+    <td style="color:${QCOL[3]};font-size:11px;text-align:center">40%/45%</td>
+    <td style="color:${QCOL[4]};font-size:11px;text-align:center">60%/60%</td>
+    <td style="color:#555;font-size:11px">on upgrade buy: chance to refund % of spent cost</td>
+  </tr>
 </tbody>
 </table>
+<p class="sec-note" style="margin-top:6px;margin-bottom:2px">note: tierUp &amp; refund fall back to <em>full</em> when enemy drop level max is 1 (E0)</p>
+<p class="sec-note">refund columns: trigger chance / refund amount</p>
+</div></div>
+</div>
+
 </div>`;
 }
 
@@ -620,8 +719,7 @@ function buildLootHTML() {
       :`<td style="color:#3a3a3a;text-align:center;font-size:11px">✗</td>`).join('');
     const bar = e.qW.map((w,i)=>w>0?`<div class="ls" style="background:${QCOL[i]};flex:${w}"></div>`:'').join('');
     const sel = (selTab==='loot'&&selKey===e.id)?' sel':'';
-    const cmpSel = (cmpTab==='loot'&&cmpKey===e.id)?' cmp-sel':'';
-    return `<tr class="${sel}${cmpSel}" onclick="selLoot(${e.id})" data-cmpkey="${e.id}" data-cmptab="loot">
+    return `<tr class="${sel}" onclick="selLoot(${e.id})">
       <td><b style="color:${col}">${eId}</b></td>
       <td style="color:#777;text-align:center">${e.lMin}–${e.lMax}</td>
       ${qCells}
@@ -714,7 +812,6 @@ function buildLootHTML() {
 <p class="sec-note">refund columns: trigger chance / refund amount</p>
 </div>`;
 }
-function selLoot(id) { selKey=id; selTab='loot'; pushHash(); renderMain(); renderSB(); if(window.innerWidth<768) setMobView('detail'); }
 
 // ─── SIDEBAR ───────────────────────────────────────────────────────────────────────────────────
 
@@ -732,7 +829,6 @@ function renderSB() {
   if      (selTab==='upgrades') sbUpgrade(body, title);
   else if (selTab==='mods')     sbMod(body, title);
   else if (selTab==='enemies')  sbEnemy(body, title);
-  else if (selTab==='loot')     sbLoot(body, title);
 }
 
 // ── Upgrade sidebar ────────────────────────────────────────────────────────────────────────────
@@ -749,7 +845,7 @@ function sbUpgrade(body, title) {
     const labels = {reg:'REG',pres:'PRES',perm:'PERM'};
     return `<button class="lvl-btn${ac}" onclick="setSbMode('${m}')">${labels[m]}</button>`;
   }).join('');
-  const N = 15;
+  const N = 99;
   let cumul = 0;
   const rows = [];
   for (let lv = 0; lv < N; lv++) {
@@ -796,7 +892,7 @@ function sbUpgrade(body, title) {
       <div style="display:flex;gap:4px" id="wiki-upg-lvl-btns">${lvlBtns}</div>
     </div>
     <div style="padding:0 14px 14px;flex-shrink:0">
-      <canvas id="wiki-upg-chart" style="width:100%;height:360px;display:block"></canvas>
+      <canvas id="wiki-upg-chart" style="width:100%;height:310px;display:block"></canvas>
     </div>`;
   requestAnimationFrame(() => drawWikiUpgChart());
 }
@@ -844,7 +940,7 @@ const MULT_MODS = new Set(['mMin','mMax','γcrd','γscd','δexm','δexx','δppx'
 
 let wikiChartQ = 3;
 let wikiChartViewMode = 'value';
-const wikiToggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
+const wikiToggleStats = { p5: true, p95: true };
 
 function setWikiChartQ(q) {
   wikiChartQ = q;
@@ -925,8 +1021,10 @@ function sbMod(body, title) {
         const mid = ((pmr[0]+pmr[1])/2 + lv*MULT_PLVL_BY_Q[qi]).toFixed(1);
         return `<td style="font-size:10px;color:${QCOL[qi]}">${chance}% <span class="dim">×${mid}</span></td>`;
       } else {
+        const [rMin, rMax] = QRANGE[qi];
+        const baseQ = isMult||isPct ? m.base*(rMin+rMax)/2 : Math.round(m.base*(rMin+rMax)/2);
         const plvlQ = m.perLvl * STAT_PLVL_MULT[qi];
-        const val   = m.base + lv * plvlQ;
+        const val   = baseQ + lv * plvlQ;
         let fs;
         if (isPct)       fs = val.toFixed(1)+'%';
         else if (isMult) fs = val.toFixed(3);
@@ -978,29 +1076,12 @@ function sbMod(body, title) {
           ${vmV?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>GROWTH</button>
       </div>
       <div style="display:flex;gap:5px;margin-bottom:6px" id="wiki-q-btns">${qBtnHtml}</div>
-      <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
-        <button onclick="setWikiStatToggle('p5')" data-wstat="p5"
-          class="level-btn${ts.p5?' active':''}"
-          style="color:#f87171;border-color:#f871714d;${ts.p5?'background:#2a1a1a;':''}font-size:10px;padding:2px 6px">P5</button>
-        <button onclick="setWikiStatToggle('p25')" data-wstat="p25"
-          class="level-btn${ts.p25?' active':''}"
-          style="color:#fb923c;border-color:#fb923c4d;${ts.p25?'background:#1a1000;':''}font-size:10px;padding:2px 6px">P25</button>
-        <button onclick="setWikiStatToggle('p50')" data-wstat="p50"
-          class="level-btn${ts.p50?' active':''}"
-          style="color:#facc15;border-color:#facc154d;${ts.p50?'background:#2a2a1a;':''}font-size:10px;padding:2px 6px">P50</button>
-        <button onclick="setWikiStatToggle('p75')" data-wstat="p75"
-          class="level-btn${ts.p75?' active':''}"
-          style="color:#4ade80;border-color:#4ade8044;${ts.p75?'background:#0a1f0a;':''}font-size:10px;padding:2px 6px">P75</button>
-        <button onclick="setWikiStatToggle('p95')" data-wstat="p95"
-          class="level-btn${ts.p95?' active':''}"
-          style="color:#60a5fa;border-color:#60a5fa44;${ts.p95?'background:#1a2a3a;':''}font-size:10px;padding:2px 6px">P95</button>
-      </div>
     </div>
     <div id="wiki-chart-inner" style="display:none">
-      <canvas id="wiki-forge-chart" style="width:100%;height:360px;display:block"></canvas>
+      <canvas id="wiki-forge-chart" style="width:100%;height:310px;display:block"></canvas>
     </div>
     <div id="wiki-chart-inner-v" style="display:none">
-      <canvas id="wiki-value-chart" style="width:100%;height:360px;display:block"></canvas>
+      <canvas id="wiki-value-chart" style="width:100%;height:310px;display:block"></canvas>
     </div>`;
   requestAnimationFrame(() => wikiRefreshCharts(k));
 }
@@ -1232,9 +1313,6 @@ function drawModGrowthChart(canvasId, modKey, mod, chartQ, N, qrange, splvl, qpr
 
   const ptiles = [
     { p: 'p5',  col: '#f87171', dash: [3,3] },
-    { p: 'p25', col: '#fb923c', dash: [2,2] },
-    { p: 'p50', col: '#facc15', dash: [] },
-    { p: 'p75', col: '#4ade80', dash: [2,2] },
     { p: 'p95', col: '#60a5fa', dash: [3,3] }
   ];
   for (const {p, col, dash} of ptiles) {
@@ -1259,15 +1337,6 @@ function drawModGrowthChart(canvasId, modKey, mod, chartQ, N, qrange, splvl, qpr
     ctx.beginPath(); ctx.arc(xOf(N-1), yOf(bands[qi][N-1].mean), qi>=3?3:2, 0, 2*Math.PI); ctx.fill();
   }
 
-  const last = sBand[N-1];
-  ctx.font = '8px monospace'; ctx.textAlign = 'left';
-  let yPos = yOf(last.p95);
-  if (toggleStats.p95) { ctx.fillStyle = '#60a5fabb'; ctx.fillText('p95', xOf(N-1)+5, yPos-2); yPos -= 10; }
-  if (toggleStats.p75) { ctx.fillStyle = '#4ade80aa'; ctx.fillText('p75', xOf(N-1)+5, yPos-2); yPos -= 10; }
-  if (toggleStats.p50) { ctx.fillStyle = '#facc15aa'; ctx.fillText('p50', xOf(N-1)+5, yPos-2); yPos -= 10; }
-  if (toggleStats.p25) { ctx.fillStyle = '#fb923caa'; ctx.fillText('p25', xOf(N-1)+5, yPos-2); yPos -= 10; }
-  if (toggleStats.p5)  { ctx.fillStyle = '#f87171aa'; ctx.fillText('p5',  xOf(N-1)+5, yPos-2); }
-
   ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.textAlign='center';
   const step = Math.max(1, Math.ceil(N/8));
   for (let i=0; i<N; i+=step) ctx.fillText(i, xOf(i), H-4);
@@ -1290,42 +1359,19 @@ function sbEnemy(body, title) {
   const e  = ENEMIES.find(x=>x.id===id);
   if (!e) return;
   const eId = e.omega?'EΩ':`E${id}`;
-  title.textContent = eId;
+  title.textContent = `${eId} — drop odds`;
 
-  const resLabel = ['α','α+β','α–γ','α–δ'][e.maxResIdx]||'?';
-  const qBars = e.qW.map((w,i)=>`
-    <div class="e-bar-row">
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:${QCOL[i]};font-size:12px">${QFULL[i]}</span>
-        <span style="color:#aaa;font-size:12px">${w}%</span>
-      </div>
-      <div class="e-bar-track">
-        <div class="e-bar-fill" style="width:${Math.min(100,w)}%;background:${QCOL[i]}"></div>
-      </div>
-    </div>`).join('');
-
-  const flags = [];
-  if (e.once)             flags.push('one-time (locked after first defeat)');
-  if (e.omega)            flags.push('training dummy (infinite respawn)');
-  if (e.unlock==='forge') flags.push('defeating this enemy unlocks the forge');
-  if (e.unlock==='perma') flags.push('defeating this enemy unlocks permanent upgrades');
+  const charts = QNAME.map((_,i)=>
+    `<div id="loot-qw-${i}" style="flex:1;min-height:0;position:relative"><canvas id="loot-qc-${i}" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas></div>`
+  ).join('');
 
   body.innerHTML = `
-    <div style="padding:12px 14px;border-bottom:1px solid #1e1e1e">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <tr><td class="muted" style="padding:3px 0;width:46%">max hp</td><td style="color:#aaa">${fmtN(e.maxHp)}</td></tr>
-        <tr><td class="muted" style="padding:3px 0">defense range</td><td style="color:#aaa">${e.defMin}–${e.defMax}</td></tr>
-        <tr><td class="muted" style="padding:3px 0">drop item lvls</td><td style="color:#aaa">${e.lMin}–${e.lMax}</td></tr>
-        <tr><td class="muted" style="padding:3px 0">prestige reward</td><td style="color:#fcd34d">${e.pp?'+'+fmtN(e.pp)+' ꛜ':'—'}</td></tr>
-        <tr><td class="muted" style="padding:3px 0">max resource</td><td style="color:#aaa">${resLabel}</td></tr>
-        ${e.dcMax?`<tr><td class="muted" style="padding:3px 0">death counter max</td><td style="color:#aaa">${e.dcMax}</td></tr>`:''}
-      </table>
-      ${flags.map(f=>`<div style="margin-top:6px;color:#f59e0b;font-size:10px">⚑ ${f}</div>`).join('')}
+    <div style="flex:1;overflow:hidden;padding:8px 14px 4px;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:9px;letter-spacing:1px;color:#999;flex-shrink:0;margin-bottom:2px">P(≥1) IN N DROPS — BY QUALITY</div>
+      ${charts}
     </div>
-    <div style="padding:12px 14px;flex:1">
-      <div style="font-size:9px;letter-spacing:1px;color:#555;margin-bottom:8px">QUALITY DROP ODDS</div>
-      ${qBars}
-    </div>`;
+    <div class="sb-footer">drop count: ${e.lMin}–${e.lMax}${e.dcMax?' · dc max: '+e.dcMax:''} · reward: ${e.pp?fmtN(e.pp)+' ꛜ':'—'}</div>`;
+  requestAnimationFrame(()=>drawLootCharts(e));
 }
 
 // ── Loot sidebar ───────────────────────────────────────────────────────────────────────────────
@@ -1432,6 +1478,14 @@ function drawLootCharts(e) {
 }
 
 // ─── COMPARE ─────────────────────────────────────────────────────────────────────────────────────
+// ── Compare sidebar ───────────────────────────────────────────────────────────
+let cmpKey = null;
+let cmpTab = null;
+let cmpSbMode = 'reg';
+let wikiCmpUpgLevels = 5;
+let wikiCmpChartQ = 3;
+let wikiCmpChartViewMode = 'value';
+const wikiCmpToggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
 
 function updateCmpMobTab() {
   const btn = document.getElementById('mobt-compare');
@@ -1441,29 +1495,112 @@ function updateCmpMobTab() {
 function closeCmp() {
   cmpKey = null; cmpTab = null;
   document.getElementById('layout').classList.remove('has-cmp');
-  document.getElementById('sidebar-cmp').style.display = 'none';
-  document.getElementById('cmp-title').textContent = 'SELECT TO COMPARE';
-  document.getElementById('cmp-empty').style.display = '';
   document.getElementById('cmp-body').innerHTML = '';
+  document.getElementById('cmp-empty').style.display = '';
+  document.getElementById('cmp-title').textContent = '';
+  document.getElementById('cmp-tag').textContent = 'CMP';
   updateCmpMobTab();
   if (mobView === 'compare') setMobView('table');
   renderMain();
+  pushHash();
 }
 
-let wikiCmpUpgLevels = 5;
-let wikiCmpChartQ = 3;
-let wikiCmpChartViewMode = 'value';
-const wikiCmpToggleStats = { p5: true, p25: false, p50: true, p75: false, p95: true };
+function setCmp(tab, key) {
+  if (cmpTab === tab && cmpKey === key) { closeCmp(); return; }
+  cmpKey = key; cmpTab = tab;
+  cmpSbMode = sbMode;
+  document.getElementById('layout').classList.add('has-cmp');
+  document.getElementById('cmp-empty').style.display = 'none';
+  updateCmpMobTab();
+  renderMain();
+  renderCmp();
+  pushHash();
+  if (window.innerWidth < 768) setMobView('compare');
+}
+
+function renderCmp() {
+  if (cmpKey === null) return;
+  const body  = document.getElementById('cmp-body');
+  const title = document.getElementById('cmp-title');
+  const tag   = document.getElementById('cmp-tag');
+  if (cmpTab === 'upgrades')     cmpRenderUpgrade(body, title, tag);
+  else if (cmpTab === 'mods')    cmpRenderMod(body, title, tag);
+  else if (cmpTab === 'enemies') cmpRenderEnemy(body, title, tag);
+}
 
 function setCmpSbMode(m) {
   cmpSbMode = m;
-  if (cmpTab === 'upgrades') cmpRenderUpgrade(document.getElementById('cmp-body'), document.getElementById('cmp-title'));
+  if (cmpTab === 'upgrades') renderCmp();
+}
+
+function cmpRenderUpgrade(body, title, tag) {
+  const k = cmpKey;
+  const u = UPG[k];
+  if (!u) return;
+  title.textContent = u.label;
+  tag.textContent = 'CMP';
+  const hp = hasPerm(k);
+  const modes = ['reg','pres', ...(hp?['perm']:[])];
+  const modeBtns = modes.map(m=>{
+    const ac = cmpSbMode===m?' active':'';
+    const labels = {reg:'REG',pres:'PRES',perm:'PERM'};
+    return `<button class="lvl-btn${ac}" onclick="setCmpSbMode('${m}')">${labels[m]}</button>`;
+  }).join('');
+  const N = 15;
+  let cumul = 0;
+  const rows = [];
+  for (let lv = 0; lv < N; lv++) {
+    let cost, costStr, cumulStr;
+    if (cmpSbMode==='reg') {
+      cost = upgCost(k, lv);
+      const col = RES_COL[u.res]||'#888';
+      costStr  = `<span style="color:${col}">${fmtN(cost)}</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:${col};opacity:.5">${fmtN(cumul)}</span>`;
+    } else if (cmpSbMode==='pres') {
+      cost = presCost(k, lv);
+      costStr  = `<span style="color:#fcd34d">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
+    } else {
+      if (!hp) break;
+      cost = permCostFn(k, lv);
+      costStr  = `<span style="color:#a78bfa">${fmtN(cost)} ꛜ</span>`;
+      cumul += cost;
+      cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
+    }
+    rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
+  }
+  const resLabel = cmpSbMode==='reg' ? (RES_COL[u.res] ? u.res : '?') : (cmpSbMode==='pres'?'ꛜ':'perm ꛜ');
+  const permStr = hp ? ` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>` : '';
+  const scaleVal = u.scale || DEFAULT_SCALE;
+  const lvlBtns = [5,10,25,50].map(n => {
+    const ac = n===wikiCmpUpgLevels ? ' active' : '';
+    const s  = n===wikiCmpUpgLevels ? 'color:#c084fc;border-color:#c084fc44;background:#1a0d2a' : '';
+    return `<button onclick="setCmpUpgLevels(${n})" data-cmp-levels="${n}" class="level-btn${ac}" style="${s}">${n}</button>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="sb-modes">${modeBtns}</div>
+    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span>${permStr}</div>
+    <div class="sb-scroll">
+      <table class="ct">
+        <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>
+    <div class="sidebar-section" style="padding:6px 14px 8px">
+      <div style="display:flex;gap:4px" id="cmp-upg-lvl-btns">${lvlBtns}</div>
+    </div>
+    <div style="padding:0 14px 14px;flex-shrink:0">
+      <canvas id="cmp-upg-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => drawCmpUpgChart());
 }
 
 function setCmpUpgLevels(n) {
   wikiCmpUpgLevels = n;
   document.querySelectorAll('#cmp-upg-lvl-btns .level-btn').forEach(b => {
-    const active = parseInt(b.dataset.levels) === n;
+    const active = parseInt(b.dataset.cmpLevels) === n;
     b.classList.toggle('active', active);
     if (active) { b.style.borderColor='#c084fc44'; b.style.color='#c084fc'; b.style.background='#1a0d2a'; }
     else { b.style.borderColor=''; b.style.color=''; b.style.background=''; }
@@ -1472,7 +1609,9 @@ function setCmpUpgLevels(n) {
 }
 
 function drawCmpUpgChart() {
-  const k = cmpKey; const u = UPG[k]; if (!u) return;
+  const k = cmpKey;
+  const u = UPG[k];
+  if (!u) return;
   let costFn, barColor;
   if (cmpSbMode === 'perm') {
     if (!hasPerm(k)) { drawCostBars('cmp-upg-chart', null, '', fmtN, k); return; }
@@ -1486,22 +1625,201 @@ function drawCmpUpgChart() {
   drawCostBars('cmp-upg-chart', costs, barColor, fmtN, k);
 }
 
+function cmpRenderMod(body, title, tag) {
+  const k = cmpKey;
+  const m = MODS[k];
+  if (!m) return;
+  title.textContent = m.label;
+  tag.textContent = 'CMP';
+  const isProc = m.type==='proc';
+  const isPct  = !!m.pct;
+  const isMult = MULT_MODS.has(k);
+  const hasNoMult = isProc && m.effect && !['dmgMulti','armMulti'].includes(m.effect);
+  const header = '<th class="muted">LVL</th>' +
+    QNAME.map((q,qi)=>`<th style="color:${QCOL[qi]}">${q}</th>`).join('');
+  const MAX_LVL = 9;
+  const rows = [];
+  for (let lv = 0; lv <= MAX_LVL; lv++) {
+    const cells = QNAME.map((_,qi) => {
+      const minQ = m.minQ || 1;
+      if (qi+1 < minQ) return `<td class="dim">—</td>`;
+      if (isProc) {
+        const baseChance = m.base + QPROC[qi];
+        const chance = Math.min(95, Math.round(baseChance + lv * (PLVL_BY_Q[qi]||0.5)));
+        if (hasNoMult) return `<td style="color:${QCOL[qi]};font-size:11px">${chance}%</td>`;
+        const pmr = PROC_MULT_RANGE[qi];
+        if (!pmr||!pmr.length) return `<td class="dim">—</td>`;
+        const mid = ((pmr[0]+pmr[1])/2 + lv*MULT_PLVL_BY_Q[qi]).toFixed(1);
+        return `<td style="font-size:10px;color:${QCOL[qi]}">${chance}% <span class="dim">×${mid}</span></td>`;
+      } else {
+        const [rMin, rMax] = QRANGE[qi];
+        const baseQ = isMult||isPct ? m.base*(rMin+rMax)/2 : Math.round(m.base*(rMin+rMax)/2);
+        const plvlQ = m.perLvl * STAT_PLVL_MULT[qi];
+        const val   = baseQ + lv * plvlQ;
+        let fs;
+        if (isPct)        fs = val.toFixed(1)+'%';
+        else if (isMult)  fs = val.toFixed(3);
+        else if (val < 1) fs = val.toFixed(3);
+        else if (val < 10)fs = val.toFixed(2);
+        else              fs = val.toFixed(1);
+        return `<td style="color:${QCOL[qi]};font-size:11px">${fs}</td>`;
+      }
+    }).join('');
+    rows.push(`<tr class="${lv%2?'':'ev'}"><td class="muted">${lv}</td>${cells}</tr>`);
+  }
+  const typeTag = isProc?'<span class="tag-p">PROC</span>':'<span class="tag-s">STAT</span>';
+  const resStr  = m.res?`<span style="color:${RES_COL[m.res]}">${m.res}</span>`:'';
+  const minEStr = m.minEnemy?`E${m.minEnemy}+`:'E0+';
+  const effStr  = m.stat||m.effect||'';
+  const minQStr = m.minQ?`<span style="color:${QCOL[m.minQ-1]}">${QNAME[m.minQ-1]}+</span>`:'any Q';
+  const qBtnHtml = [[1,'C','#9ca3af'],[2,'U','#4ade80'],[3,'R','#60a5fa'],[4,'E','#c084fc'],[5,'L','#f59e0b']].map(([q,nm,col]) => {
+    const active = q === wikiCmpChartQ;
+    const bg = active ? [,,'','#0d1a2a','#100818','#1a1200'][q] : '';
+    return `<button onclick="setCmpChartQ(${q})" data-cmp-cq="${q}" class="level-btn${active?' active':''}" style="color:${col};border-color:${col}44;background:${bg}">${nm}</button>`;
+  }).join('');
+  const vmF = wikiCmpChartViewMode==='forge', vmV = wikiCmpChartViewMode==='value';
+  body.innerHTML = `
+    <div class="sb-info" style="line-height:1.8">
+      ${typeTag} ${resStr} <span class="muted">${effStr}</span><br>
+      base: <span style="color:#aaa">${m.base}${isPct?'%':''}</span>
+      · per lv: <span style="color:#aaa">${m.perLvl}${isPct?'%':''}</span>
+      · min Q: ${minQStr}
+      · avail: <span class="muted">${minEStr}</span>
+    </div>
+    <div style="padding:3px 14px 2px;font-size:9px;letter-spacing:1px;color:#555">VALUE AT FORGE LEVEL × QUALITY (base roll midpoint)</div>
+    <div class="sb-scroll">
+      <table class="mvt">
+        <thead><tr>${header}</tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>
+    <div class="sidebar-section">
+      <div style="display:flex;gap:5px;margin-bottom:8px">
+        <button onclick="setCmpChartViewMode('forge')" data-cvm="forge"
+          class="level-btn${vmF?' active':''}"
+          ${vmF?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>COST</button>
+        <button onclick="setCmpChartViewMode('value')" data-cvm="value"
+          class="level-btn${vmV?' active':''}"
+          ${vmV?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>GROWTH</button>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:6px" id="cmp-q-btns">${qBtnHtml}</div>
+    </div>
+    <div id="cmp-chart-inner" style="display:none">
+      <canvas id="cmp-forge-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>
+    <div id="cmp-chart-inner-v" style="display:none">
+      <canvas id="cmp-value-chart" style="width:100%;height:360px;display:block"></canvas>
+    </div>`;
+  requestAnimationFrame(() => cmpRefreshCharts(k));
+}
+
+function cmpRenderEnemy(body, title, tag) {
+  const id = cmpKey;
+  const e  = ENEMIES.find(x=>x.id===id);
+  if (!e) return;
+  const eId = e.omega?'EΩ':`E${id}`;
+  title.textContent = `${eId} — drop odds`;
+  tag.textContent = 'CMP';
+  const charts = QNAME.map((_,i)=>
+    `<div id="cmp-qw-${i}" style="flex:1;min-height:0;position:relative"><canvas id="cmp-qc-${i}" style="position:absolute;top:0;left:0;width:100%;height:100%"></canvas></div>`
+  ).join('');
+  body.innerHTML = `
+    <div style="flex:1;overflow:hidden;padding:8px 14px 4px;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:9px;letter-spacing:1px;color:#999;flex-shrink:0;margin-bottom:2px">P(≥1) IN N DROPS — BY QUALITY</div>
+      ${charts}
+    </div>
+    <div class="sb-footer">drop count: ${e.lMin}–${e.lMax}${e.dcMax?' · dc max: '+e.dcMax:''} · reward: ${e.pp?fmtN(e.pp)+' ꛜ':'—'}</div>`;
+  requestAnimationFrame(()=>drawCmpLootCharts(e));
+}
+
+function drawCmpLootCharts(e) {
+  const maxDrops = e.dcMax || e.lMax || 1;
+  const lMin = e.lMin || 1;
+  const PAD = {l:30, r:62, t:8, b:18};
+  QNAME.forEach((qn, qi) => {
+    const canvas = document.getElementById('cmp-qc-' + qi);
+    if (!canvas) return;
+    const wrap = document.getElementById('cmp-qw-' + qi);
+    const W = (wrap ? wrap.offsetWidth : canvas.offsetWidth) || 310;
+    const H = Math.max(wrap ? wrap.offsetHeight : canvas.offsetHeight, 40);
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    const col = QCOL[qi];
+    const p   = (e.qW[qi] || 0) / 100;
+    const cW  = W - PAD.l - PAD.r;
+    const cH  = H - PAD.t - PAD.b;
+    [50, 100].forEach(pct => {
+      const y = PAD.t + cH * (1 - pct / 100);
+      ctx.strokeStyle = '#1d1d1d'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke();
+      ctx.fillStyle = '#2a2a2a'; ctx.font = '8px monospace';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(pct + '%', PAD.l - 2, y);
+    });
+    ctx.fillStyle = p > 0.001 ? col : '#333';
+    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(QFULL[qi], W - 2, PAD.t + cH / 2);
+    const totalW = cW * 0.72;
+    const barW   = totalW / maxDrops;
+    const startX = PAD.l + (cW - totalW) / 2;
+    for (let n = 1; n <= maxDrops; n++) {
+      const pAny = p > 0 ? 1 - Math.pow(1 - p, n) : 0;
+      const dimmed = n < lMin;
+      const alpha  = dimmed ? 0.18 : 0.45 + (n - lMin) / Math.max(1, maxDrops - lMin) * 0.55;
+      const bh = pAny * cH;
+      const bx = startX + (n - 1) * barW;
+      const by = PAD.t + cH - bh;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p > 0 ? col : '#555';
+      if (bh > 0) ctx.fillRect(bx, by, barW * 0.82, bh);
+      if (pAny > 0 && !dimmed) {
+        ctx.globalAlpha = 1; ctx.fillStyle = col;
+        ctx.fillRect(bx, by, barW * 0.82, 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+    for (let n = 1; n <= maxDrops; n++) {
+      const bx = startX + (n - 1) * barW + (barW * 0.82) / 2;
+      ctx.fillStyle = n < lMin ? '#252525' : '#333';
+      ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('×' + n, bx, H - PAD.b + 3);
+    }
+    if (p > 0.0005) {
+      for (let n = 1; n <= maxDrops; n++) {
+        const pAny = 1 - Math.pow(1 - p, n);
+        const bx   = startX + (n - 1) * barW + (barW * 0.82) / 2;
+        const by   = PAD.t + cH * (1 - pAny);
+        const pct  = pAny * 100;
+        const lbl  = pct < 1 ? pct.toFixed(2)+'%' : pct.toFixed(1)+'%';
+        ctx.fillStyle = QCOL[qi]; ctx.font = '8px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(lbl, bx, Math.max(PAD.t + 9, by));
+      }
+    } else if (p === 0) {
+      ctx.fillStyle = '#2d2d2d'; ctx.font = '9px monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('0%', PAD.l + cW / 2, PAD.t + cH / 2);
+    }
+  });
+}
+
 function setCmpChartQ(q) {
   wikiCmpChartQ = q;
   document.querySelectorAll('#cmp-q-btns .level-btn').forEach(b => {
-    const active = parseInt(b.dataset.cq) === q;
+    const active = parseInt(b.dataset.cmpCq) === q;
     b.classList.toggle('active', active);
     const col = QCOL[q-1];
     if (active) { b.style.color=col; b.style.borderColor=col+'44'; b.style.background=''; }
-    else { const c=QCOL[parseInt(b.dataset.cq)-1]; b.style.color=c; b.style.borderColor=c+'44'; b.style.background=''; }
+    else { const c=QCOL[parseInt(b.dataset.cmpCq)-1]; b.style.color=c; b.style.borderColor=c+'44'; b.style.background=''; }
   });
   if (cmpKey && cmpTab==='mods') requestAnimationFrame(() => cmpRefreshCharts(cmpKey));
 }
 
 function setCmpChartViewMode(m) {
   wikiCmpChartViewMode = m;
-  document.querySelectorAll('[data-cwvm]').forEach(b => {
-    const on = b.dataset.cwvm === m;
+  document.querySelectorAll('[data-cvm]').forEach(b => {
+    const on = b.dataset.cvm === m;
     b.classList.toggle('active', on);
     if (on) { b.style.color='#4ade80'; b.style.borderColor='#4ade8044'; b.style.background='#0a1f0a'; }
     else    { b.style.color=''; b.style.borderColor=''; b.style.background=''; }
@@ -1511,7 +1829,7 @@ function setCmpChartViewMode(m) {
 
 function setCmpStatToggle(stat) {
   wikiCmpToggleStats[stat] = !wikiCmpToggleStats[stat];
-  const btn = document.querySelector(`[data-cwstat="${stat}"]`);
+  const btn = document.querySelector(`[data-cstat="${stat}"]`);
   if (btn) {
     btn.classList.toggle('active', wikiCmpToggleStats[stat]);
     const bgMap = { p5: '#2a1a1a', p25: '#1a1000', p50: '#2a2a1a', p75: '#0a1f0a', p95: '#1a2a3a' };
@@ -1527,202 +1845,41 @@ function cmpRefreshCharts(k) {
   fi.style.display = wikiCmpChartViewMode === 'forge' ? '' : 'none';
   vi.style.display = wikiCmpChartViewMode === 'value' ? '' : 'none';
   if (wikiCmpChartViewMode === 'forge') drawForgeCostBar('cmp-forge-chart', wikiCmpChartQ, 12, fmtN);
-  else drawModGrowthChart('cmp-value-chart', k, MODS[k], wikiCmpChartQ, 12,
+  else drawCmpValueChart(k);
+}
+
+function drawCmpValueChart(k) {
+  drawModGrowthChart('cmp-value-chart', k, MODS[k], wikiCmpChartQ, 12,
     QRANGE, STAT_PLVL_MULT, QPROC, wikiCmpToggleStats, MULT_MODS);
 }
 
-function renderCmp() {
-  const title  = document.getElementById('cmp-title');
-  const empty  = document.getElementById('cmp-empty');
-  const body   = document.getElementById('cmp-body');
-  const layout = document.getElementById('layout');
-  const sbCmp  = document.getElementById('sidebar-cmp');
-  if (cmpKey === null) {
-    title.textContent = 'SELECT TO COMPARE';
-    empty.style.display = '';
-    body.innerHTML = '';
-    layout.classList.remove('has-cmp');
-    sbCmp.style.display = 'none';
-    updateCmpMobTab();
-    return;
-  }
-  empty.style.display = 'none';
-  layout.classList.add('has-cmp');
-  sbCmp.style.display = 'flex';
-  updateCmpMobTab();
-  if      (cmpTab === 'upgrades') cmpRenderUpgrade(body, title);
-  else if (cmpTab === 'mods')     cmpRenderMod(body, title);
-  else if (cmpTab === 'enemies')  cmpRenderEnemy(body, title);
-  else if (cmpTab === 'loot')     cmpRenderLoot(body, title);
-}
+// ── Context menu / long-press to compare ────────────────────────────────────
+document.addEventListener('contextmenu', e => {
+  const tr = e.target.closest('tr[data-cmptab]');
+  if (!tr) return;
+  e.preventDefault();
+  const tab = tr.dataset.cmptab;
+  const raw = tr.dataset.cmpkey;
+  const key = tab === 'enemies' ? Number(raw) : raw;
+  setCmp(tab, key);
+});
 
-function cmpRenderUpgrade(body, title) {
-  const k = cmpKey; const u = UPG[k]; if (!u) return;
-  title.textContent = u.label;
-  const hp = hasPerm(k);
-  const modes = ['reg','pres',...(hp?['perm']:[])];
-  const modeBtns = modes.map(m=>{
-    const ac = cmpSbMode===m?' active':'';
-    return `<button class="lvl-btn${ac}" onclick="setCmpSbMode('${m}')">${{reg:'REG',pres:'PRES',perm:'PERM'}[m]}</button>`;
-  }).join('');
-  const N = 15; let cumul = 0; const rows = [];
-  for (let lv = 0; lv < N; lv++) {
-    let cost, costStr, cumulStr;
-    if (cmpSbMode==='reg') {
-      cost = upgCost(k, lv); const col = RES_COL[u.res]||'#888';
-      costStr = `<span style="color:${col}">${fmtN(cost)}</span>`;
-      cumul += cost; cumulStr = `<span style="color:${col};opacity:.5">${fmtN(cumul)}</span>`;
-    } else if (cmpSbMode==='pres') {
-      cost = presCost(k, lv);
-      costStr = `<span style="color:#fcd34d">${fmtN(cost)} ꛜ</span>`;
-      cumul += cost; cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
-    } else {
-      if (!hp) break; cost = permCostFn(k, lv);
-      costStr = `<span style="color:#a78bfa">${fmtN(cost)} ꛜ</span>`;
-      cumul += cost; cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
-    }
-    rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
-  }
-  const resLabel = cmpSbMode==='reg'?(RES_COL[u.res]?u.res:'?'):(cmpSbMode==='pres'?'ꛜ':'perm ꛜ');
-  const permStr  = hp?` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>`:'';
-  const lvlBtns = [5,10,25,50].map(n => {
-    const ac = n===wikiCmpUpgLevels ? ' active' : '';
-    const s  = n===wikiCmpUpgLevels ? 'color:#c084fc;border-color:#c084fc44;background:#1a0d2a' : '';
-    return `<button onclick="setCmpUpgLevels(${n})" data-levels="${n}" class="level-btn${ac}" style="${s}">${n}</button>`;
-  }).join('');
-  body.innerHTML = `
-    <div class="sb-modes">${modeBtns}</div>
-    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${u.scale||DEFAULT_SCALE}</span>${permStr}</div>
-    <div class="sb-scroll"><table class="ct">
-      <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
-      <tbody>${rows.join('')}</tbody>
-    </table></div>
-    <div class="sidebar-section" style="padding:6px 14px 8px">
-      <div style="display:flex;gap:4px" id="cmp-upg-lvl-btns">${lvlBtns}</div>
-    </div>
-    <div style="padding:0 14px 14px;flex-shrink:0">
-      <canvas id="cmp-upg-chart" style="width:100%;height:360px;display:block"></canvas>
-    </div>`;
-  requestAnimationFrame(() => drawCmpUpgChart());
-}
-
-function cmpRenderMod(body, title) {
-  const k = cmpKey; const m = MODS[k]; if (!m) return;
-  title.textContent = m.label;
-  const isProc = m.type==='proc', isPct=!!m.pct, isMult=MULT_MODS.has(k);
-  const hasNoMult = isProc && m.effect && !['dmgMulti','armMulti'].includes(m.effect);
-  const header = '<th class="muted">LVL</th>'+QNAME.map((q,qi)=>`<th style="color:${QCOL[qi]}">${q}</th>`).join('');
-  const rows = [];
-  for (let lv = 0; lv <= 9; lv++) {
-    const cells = QNAME.map((_,qi) => {
-      const minQ = m.minQ||1;
-      if (qi+1 < minQ) return `<td class="dim">—</td>`;
-      if (isProc) {
-        const baseChance = m.base + QPROC[qi];
-        const chance = Math.min(95, Math.round(baseChance + lv*(PLVL_BY_Q[qi]||0.5)));
-        if (hasNoMult) return `<td style="color:${QCOL[qi]};font-size:11px">${chance}%</td>`;
-        const pmr = PROC_MULT_RANGE[qi];
-        if (!pmr||!pmr.length) return `<td class="dim">—</td>`;
-        const mid = ((pmr[0]+pmr[1])/2 + lv*MULT_PLVL_BY_Q[qi]).toFixed(1);
-        return `<td style="font-size:10px;color:${QCOL[qi]}">${chance}% <span class="dim">×${mid}</span></td>`;
-      } else {
-        const val = m.base + lv*m.perLvl*STAT_PLVL_MULT[qi];
-        let fs;
-        if (isPct)       fs = val.toFixed(1)+'%';
-        else if (isMult) fs = val.toFixed(3);
-        else if (val<1)  fs = val.toFixed(3);
-        else if (val<10) fs = val.toFixed(2);
-        else             fs = val.toFixed(1);
-        return `<td style="color:${QCOL[qi]};font-size:11px">${fs}</td>`;
-      }
-    }).join('');
-    rows.push(`<tr class="${lv%2?'':'ev'}"><td class="muted">${lv}</td>${cells}</tr>`);
-  }
-  const typeTag = isProc?'<span class="tag-p">PROC</span>':'<span class="tag-s">STAT</span>';
-  const resStr  = m.res?`<span style="color:${RES_COL[m.res]}">${m.res}</span>`:'';
-  const minQStr = m.minQ?`<span style="color:${QCOL[m.minQ-1]}">${QNAME[m.minQ-1]}+</span>`:'any Q';
-  const vmF = wikiCmpChartViewMode==='forge', vmV = wikiCmpChartViewMode==='value';
-  const ts = wikiCmpToggleStats;
-  const qBtnHtml = [[1,'C','#9ca3af'],[2,'U','#4ade80'],[3,'R','#60a5fa'],[4,'E','#c084fc'],[5,'L','#f59e0b']].map(([q,nm,col]) => {
-    const active = q === wikiCmpChartQ;
-    const bg = active ? [,'','','#0d1a2a','#100818','#1a1200'][q] : '';
-    return `<button onclick="setCmpChartQ(${q})" data-cq="${q}" class="level-btn${active?' active':''}" style="color:${col};border-color:${col}44;background:${bg}">${nm}</button>`;
-  }).join('');
-  body.innerHTML = `
-    <div class="sb-info" style="line-height:1.8">
-      ${typeTag} ${resStr} <span class="muted">${m.stat||m.effect||''}</span><br>
-      base: <span style="color:#aaa">${m.base}${isPct?'%':''}</span>
-      · per lv: <span style="color:#aaa">${m.perLvl}${isPct?'%':''}</span>
-      · min Q: ${minQStr}
-      · avail: <span class="muted">${m.minEnemy?'E'+m.minEnemy+'+':'E0+'}</span>
-    </div>
-    <div style="padding:3px 14px 2px;font-size:9px;letter-spacing:1px;color:#555">VALUE AT FORGE LEVEL × QUALITY</div>
-    <div class="sb-scroll"><table class="mvt">
-      <thead><tr>${header}</tr></thead>
-      <tbody>${rows.join('')}</tbody>
-    </table></div>
-    <div class="sidebar-section">
-      <div style="display:flex;gap:5px;margin-bottom:8px">
-        <button onclick="setCmpChartViewMode('forge')" data-cwvm="forge"
-          class="level-btn${vmF?' active':''}"
-          ${vmF?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>COST</button>
-        <button onclick="setCmpChartViewMode('value')" data-cwvm="value"
-          class="level-btn${vmV?' active':''}"
-          ${vmV?'style="color:#4ade80;border-color:#4ade8044;background:#0a1f0a"':''}>GROWTH</button>
-      </div>
-      <div style="display:flex;gap:5px;margin-bottom:6px" id="cmp-q-btns">${qBtnHtml}</div>
-      <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
-        <button onclick="setCmpStatToggle('p5')" data-cwstat="p5"
-          class="level-btn${ts.p5?' active':''}"
-          style="color:#f87171;border-color:#f871714d;${ts.p5?'background:#2a1a1a;':''}font-size:10px;padding:2px 6px">P5</button>
-        <button onclick="setCmpStatToggle('p25')" data-cwstat="p25"
-          class="level-btn${ts.p25?' active':''}"
-          style="color:#fb923c;border-color:#fb923c4d;${ts.p25?'background:#1a1000;':''}font-size:10px;padding:2px 6px">P25</button>
-        <button onclick="setCmpStatToggle('p50')" data-cwstat="p50"
-          class="level-btn${ts.p50?' active':''}"
-          style="color:#facc15;border-color:#facc154d;${ts.p50?'background:#2a2a1a;':''}font-size:10px;padding:2px 6px">P50</button>
-        <button onclick="setCmpStatToggle('p75')" data-cwstat="p75"
-          class="level-btn${ts.p75?' active':''}"
-          style="color:#4ade80;border-color:#4ade8044;${ts.p75?'background:#0a1f0a;':''}font-size:10px;padding:2px 6px">P75</button>
-        <button onclick="setCmpStatToggle('p95')" data-cwstat="p95"
-          class="level-btn${ts.p95?' active':''}"
-          style="color:#60a5fa;border-color:#60a5fa44;${ts.p95?'background:#1a2a3a;':''}font-size:10px;padding:2px 6px">P95</button>
-      </div>
-    </div>
-    <div id="cmp-chart-inner" style="display:none">
-      <canvas id="cmp-forge-chart" style="width:100%;height:360px;display:block"></canvas>
-    </div>
-    <div id="cmp-chart-inner-v" style="display:none">
-      <canvas id="cmp-value-chart" style="width:100%;height:360px;display:block"></canvas>
-    </div>`;
-  requestAnimationFrame(() => cmpRefreshCharts(k));
-}
-
-function cmpRenderEnemy(body, title) {
-  const savedKey = selKey, savedTab = selTab;
-  selKey = cmpKey; selTab = 'enemies';
-  sbEnemy(body, title);
-  selKey = savedKey; selTab = savedTab;
-}
-
-function cmpRenderLoot(body, title) {
-  const id = cmpKey; const e = ENEMIES.find(x=>x.id===id); if (!e) return;
-  title.textContent = `E${id} — drop odds`;
-  const qBars = e.qW.map((w,i)=>`
-    <div class="e-bar-row">
-      <div style="display:flex;justify-content:space-between">
-        <span style="color:${QCOL[i]};font-size:12px">${QFULL[i]}</span>
-        <span style="color:#aaa;font-size:12px">${w}%</span>
-      </div>
-      <div class="e-bar-track"><div class="e-bar-fill" style="width:${Math.min(100,w)}%;background:${QCOL[i]}"></div></div>
-    </div>`).join('');
-  body.innerHTML = `
-    <div style="padding:12px 14px;flex:1;overflow-y:auto">
-      <div style="font-size:9px;letter-spacing:1px;color:#555;margin-bottom:8px">QUALITY DROP ODDS</div>
-      <div style="margin-bottom:10px;color:#777;font-size:12px">drop lvls: ${e.lMin}–${e.lMax}${e.dcMax?' · dc max: '+e.dcMax:''} · reward: ${e.pp?fmtN(e.pp)+' ꛜ':'—'}</div>
-      ${qBars}
-    </div>`;
-}
+let _lpTimer = null, _lpTr = null;
+document.addEventListener('touchstart', e => {
+  const tr = e.target.closest('tr[data-cmptab]');
+  if (!tr) return;
+  _lpTr = tr;
+  _lpTimer = setTimeout(() => {
+    if (!_lpTr) return;
+    const tab = _lpTr.dataset.cmptab;
+    const raw = _lpTr.dataset.cmpkey;
+    const key = tab === 'enemies' ? Number(raw) : raw;
+    setCmp(tab, key);
+    _lpTr = null;
+  }, 520);
+}, { passive: true });
+document.addEventListener('touchend',  () => { clearTimeout(_lpTimer); _lpTr = null; });
+document.addEventListener('touchmove', () => { clearTimeout(_lpTimer); _lpTr = null; });
 
 // ─── INIT ───────────────────────────────────────────────────────────────────────────────────────
 
@@ -1732,16 +1889,15 @@ function setMobView(v) {
   const isMob = window.innerWidth < 768;
   const main  = document.getElementById('main-content');
   const sb    = document.getElementById('sidebar');
-  const sbCmp = document.getElementById('sidebar-cmp');
+  const scmp  = document.getElementById('sidebar-cmp');
   if (isMob) {
-    main.style.display  = v === 'table'   ? '' : 'none';
-    sb.style.display    = v === 'detail'  ? 'flex' : 'none';
-    sbCmp.style.display = (v === 'compare' && cmpKey !== null) ? 'flex' : 'none';
+    main.style.display = v === 'table' ? '' : 'none';
+    sb.style.display   = (v === 'detail' && activeTab !== 'misc') ? 'flex' : 'none';
+    if (scmp) scmp.style.display = (v === 'compare' && cmpKey !== null) ? 'flex' : 'none';
   } else {
-    main.style.display  = '';
-    sb.style.display    = '';
-    sbCmp.style.display = cmpKey !== null ? 'flex' : 'none';
-    document.getElementById('layout').classList.toggle('has-cmp', cmpKey !== null);
+    main.style.display = '';
+    sb.style.display   = activeTab === 'misc' ? 'none' : '';
+    if (scmp) scmp.style.display = '';  // controlled by has-cmp class
   }
   document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'));
   const bt = document.getElementById('mobt-' + v);
@@ -1752,45 +1908,7 @@ window.addEventListener('resize', () => setMobView(mobView));
 applyHash();
 renderMain();
 renderSB();
-
-// ─── CONTEXT MENU & LONG PRESS ─────────────────────────────────────────────────────
-(function() {
-  const mc = document.getElementById('main-content');
-  mc.addEventListener('contextmenu', function(ev) {
-    const tr = ev.target.closest('tr[data-cmpkey]');
-    if (!tr) return;
-    ev.preventDefault();
-    const raw = tr.dataset.cmpkey;
-    const tab = tr.dataset.cmptab;
-    const newKey = (tab === 'enemies' || tab === 'loot') ? Number(raw) : raw;
-    if (cmpKey === newKey && cmpTab === tab) { closeCmp(); return; }
-    cmpKey = newKey; cmpTab = tab; cmpSbMode = 'reg';
-    renderMain(); renderCmp();
-    if (window.innerWidth < 768) setMobView('compare');
-  });
-  let _lpTimer = null, _lpFired = false;
-  mc.addEventListener('touchstart', function(ev) {
-    const tr = ev.target.closest('tr[data-cmpkey]');
-    if (!tr) return;
-    _lpFired = false;
-    _lpTimer = setTimeout(function() {
-      _lpTimer = null; _lpFired = true;
-      const raw = tr.dataset.cmpkey, tab = tr.dataset.cmptab;
-      const newKey = (tab === 'enemies' || tab === 'loot') ? Number(raw) : raw;
-      if (cmpKey === newKey && cmpTab === tab) { closeCmp(); return; }
-      cmpKey = newKey; cmpTab = tab; cmpSbMode = 'reg';
-      renderMain(); renderCmp();
-      setMobView('compare');
-    }, 520);
-  }, {passive: true});
-  function cancelLp() { if (_lpTimer !== null) { clearTimeout(_lpTimer); _lpTimer = null; } }
-  mc.addEventListener('touchend', function(ev) {
-    if (_lpFired) { ev.preventDefault(); _lpFired = false; }
-    cancelLp();
-  }, {passive: false});
-  mc.addEventListener('touchmove', cancelLp, {passive: true});
-})();
-
+if (cmpKey !== null) renderCmp();
 if (selKey !== null && window.innerWidth < 768) setMobView('detail');
 else setMobView('table');
 </script>
