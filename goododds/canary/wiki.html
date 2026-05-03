@@ -133,6 +133,7 @@ tr.sdim td{opacity:0.18;transition:opacity .1s}
   <button class="tab-btn" id="tab-enemies" onclick="switchTab('enemies')">ENEMIES</button>
   <button class="tab-btn" id="tab-misc" onclick="switchTab('misc')">MISC</button>
   <div class="spacer"></div>
+  <span id="mythic-indicator" style="font-size:10px;letter-spacing:1px;color:#666;cursor:help;padding:0 8px;border-left:1px solid #222;white-space:nowrap;user-select:none" title="press M to toggle">✧ mythic hidden</span>
   <input id="gsearch" placeholder="search…" oninput="onSearch()">
 </div>
 
@@ -219,6 +220,41 @@ function permCostFn(k,lv) { const u=UPG[k]; return Math.floor((u.permBase||u.bas
 function forgeCostFn(lv,q){ return Math.max(1,Math.floor(FORGE_BASE_COSTS[q-1]*Math.pow(FORGE_SCALE_BY_Q[q-1],lv))); }
 function bagCostFn(lv)    { return Math.floor(BAG_BASE_COST*Math.pow(1.5,lv)); }
 function hasPerm(k)       { return 'res' in UPG[k] && !UPG[k].noPerm && !!PERM_RES_UNLOCK[UPG[k].res]; }
+
+// ─── MYTHIC SECRET TOGGLE ────────────────────────────────────
+
+let showMythic = false;
+function toggleMythicVisibility() {
+  showMythic = !showMythic;
+  localStorage.setItem('wikiShowMythic', showMythic);
+  renderMain();
+  renderSB();
+  updateMythicIndicator();
+}
+function getQNames()       { return showMythic ? QNAME : QNAME.slice(0,5); }
+function getQFull()        { return showMythic ? QFULL : QFULL.slice(0,5); }
+function getQCol()         { return showMythic ? QCOL : QCOL.slice(0,5); }
+function getQRange()       { return showMythic ? QRANGE : QRANGE.slice(0,5); }
+function getStatPlvlMult() { return showMythic ? STAT_PLVL_MULT : STAT_PLVL_MULT.slice(0,5); }
+function getQProc()        { return showMythic ? QPROC : QPROC.slice(0,5); }
+function getPlvlByQ()      { return showMythic ? PLVL_BY_Q : PLVL_BY_Q.slice(0,5); }
+function getProcMultRange(){ return showMythic ? PROC_MULT_RANGE : PROC_MULT_RANGE.slice(0,5); }
+function getMultPlvlByQ()  { return showMythic ? MULT_PLVL_BY_Q : MULT_PLVL_BY_Q.slice(0,5); }
+function getSellPP()       { return showMythic ? SELL_PP : SELL_PP.slice(0,5); }
+function getArmorShred()   { return showMythic ? ARMOR_SHRED_RANGE : ARMOR_SHRED_RANGE.slice(0,5); }
+function getForgeCosts()   { return showMythic ? FORGE_BASE_COSTS : FORGE_BASE_COSTS.slice(0,5); }
+function getForgeMult()    { return showMythic ? FORGE_MULTI_CHANCES : FORGE_MULTI_CHANCES.slice(0,5); }
+function getForgeScale()   { return showMythic ? FORGE_SCALE_BY_Q : FORGE_SCALE_BY_Q.slice(0,5); }
+function getMythicColHTML(mythicContent) {
+  return showMythic ? `<td style="color:${QCOL[5]};font-size:11px;text-align:center">${mythicContent}</td>` : '';
+}
+function updateMythicIndicator() {
+  const indicator = document.getElementById('mythic-indicator');
+  if (indicator) indicator.textContent = showMythic ? '★ MYTHIC VISIBLE' : '✧ mythic hidden';
+  if (indicator) indicator.style.color = showMythic ? '#ef4444' : '#666';
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────────────────
 
 // ─── STATE ────────────────────────────────────────────────────────────────────────────────
 
@@ -424,7 +460,7 @@ function selUpg(k) { selKey=k; selTab='upgrades'; pushHash(); renderMain(); rend
 // ─── ENEMIES ──────────────────────────────────────────────────────────────────────────
 
 function buildEnemiesHTML() {
-  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]};text-align:center" title="quality weight">${q}</th>`).join('');
+  const qHdr = getQNames().map((q,i)=>`<th style="color:${getQCol()[i]};text-align:center" title="quality weight">${q}</th>`).join('');
   const rows = ENEMIES.map(e => {
     const eId   = e.omega ? 'EΩ' : `E${e.id}`;
     const col   = ECOL[e.id]||'#aaa';
@@ -593,8 +629,8 @@ function selMod(k) { selKey=k; selTab='mods'; pushHash(); renderMain(); renderSB
 // ─── QUALITY ────────────────────────────────────────────────────────────────────────────
 
 function buildMiscHTML() {
-  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('');
-  const qHdrFull = QFULL.map((q,i)=>`<th style="color:${QCOL[i]};font-size:9px;letter-spacing:.5px">${q}</th>`).join('');
+  const qHdr = getQNames().map((q,i)=>`<th style="color:${getQCol()[i]}">${q}</th>`).join('');
+  const qHdrFull = getQFull().map((q,i)=>`<th style="color:${getQCol()[i]};font-size:9px;letter-spacing:.5px">${q}</th>`).join('');
 
   const rangeRow   = QRANGE.map(r=>`<td>${r[0]}–${r[1]}</td>`).join('');
   const statPlvlR  = STAT_PLVL_MULT.map(v=>`<td>×${v}</td>`).join('');
@@ -609,7 +645,7 @@ function buildMiscHTML() {
   }).join('');
   const armorShredR= ARMOR_SHRED_RANGE.map(r=>`<td>${r[0]}–${r[1]}</td>`).join('');
 
-  const forgeRows = Array.from({length:9},(_,lv)=>{
+  const forgeRows = Array.from({length:10},(_,lv)=>{  
     const cells = FORGE_BASE_COSTS.map((_,qi)=>`<td style="color:${QCOL[qi]}">${fmtN(forgeCostFn(lv,qi+1))}</td>`).join('');
     return `<tr><td style="color:#777">+${lv}</td>${cells}</tr>`;
   }).join('');
@@ -642,7 +678,7 @@ function buildMiscHTML() {
 <div class="misc-panel-hd">FORGE COSTS <span style="color:#636363;letter-spacing:0">— ꛜ per level</span></div>
 <div class="misc-panel-body"><div style="overflow-x:auto">
 <table class="wtbl">
-<thead><tr><th>LVL</th>${QNAME.map((q,i)=>`<th style="color:${QCOL[i]}">${q}</th>`).join('')}</tr></thead>
+<thead><tr><th>LVL</th>${getQNames().map((q,i)=>`<th style="color:${getQCol()[i]}">${q}</th>`).join('')}</tr></thead>
 <tbody>${forgeRows}</tbody>
 </table>
 </div></div>
@@ -736,7 +772,7 @@ function buildMiscHTML() {
 // ─── LOOT ───────────────────────────────────────────────────────────────────────────────────────
 
 function buildLootHTML() {
-  const qHdr = QNAME.map((q,i)=>`<th style="color:${QCOL[i]};text-align:center">${q}</th>`).join('');
+  const qHdr = getQNames().map((q,i)=>`<th style="color:${getQCol()[i]};text-align:center">${q}</th>`).join('');
   const rows = ENEMIES.filter(e=>!e.omega).map(e => {
     const eId = e.omega?'EΩ':`E${e.id}`;
     const col = ECOL[e.id]||'#aaa';
@@ -1951,6 +1987,18 @@ function setMobView(v) {
   if (bt) bt.classList.add('active');
 }
 window.addEventListener('resize', () => setMobView(mobView));
+
+// Load Mythic visibility from storage
+showMythic = localStorage.getItem('wikiShowMythic') === 'true';
+updateMythicIndicator();
+
+// Keyboard handler for M to toggle Mythic
+document.addEventListener('keydown', e => {
+  if (e.key === 'M' || e.key === 'm') {
+    e.preventDefault();
+    toggleMythicVisibility();
+  }
+});
 
 applyHash();
 renderMain();
