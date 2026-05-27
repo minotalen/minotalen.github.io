@@ -699,8 +699,18 @@ c.addEventListener('click', e => {
 
 // ── Main loop ────────────────────────────────────────────
 let aiFrame = 0;
+const TICK_MS = 1000 / 60;  // cap game logic at 60 fps regardless of monitor refresh rate
+let accumulator = 0, lastDrawTs = null;
 function draw(ts) {
   requestAnimationFrame(draw);
+
+  // frame-rate-independent tick: run game logic at 60 fps on any monitor
+  if (lastDrawTs === null) lastDrawTs = ts;
+  const delta = Math.min(ts - lastDrawTs, 100);
+  lastDrawTs = ts;
+  accumulator += delta;
+  const doTick = accumulator >= TICK_MS;
+  if (doTick) accumulator -= TICK_MS;
 
   // clear full canvas in background colour
   ctx.fillStyle='#07102a';
@@ -713,6 +723,7 @@ function draw(ts) {
 
   if (state==='playing') {
     elapsed = ts - startTime;
+    if (doTick) {
     t++;
     trailT++;
 
@@ -839,9 +850,10 @@ function draw(ts) {
     if (Math.abs(dydt)>0.1) lastDy=dydt;
     breathScale += (1.0+dydt*0.18-breathScale)*0.1;
     breathScale = Math.max(0.7,Math.min(1.4,breathScale));
+    } // end doTick
   }
 
-  updateParticles();
+  if (doTick) updateParticles();
 
   const now2 = ts; // rAF timestamp is the same clock — saves a native call
 
@@ -885,6 +897,7 @@ function draw(ts) {
 
   if (state==='playing') {
     const ax=angelX, ay=angelY();
+    if (doTick) {
     // subsample: record every other frame — halves lineTo count with no visible difference
     if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT});
     while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 900) angelTrail.shift();
@@ -913,6 +926,7 @@ function draw(ts) {
         }
       }
     }
+    } // end doTick
     nearFlashes = nearFlashes.filter(f => now2 - f.ts < 550);
     nearFlashes.forEach(f => {
       const age = (now2 - f.ts) / 550;
