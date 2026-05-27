@@ -60,13 +60,16 @@ function resetTransform() { ctx.setTransform(1,0,0,1,0,0); }
 
 // ── Audio ───────────────────────────────────────────────
 let audioCtx = null;
+let audioUnlocked = false;  // muted until first real user input (keypress / click)
 function getAudio() {
+  if (!audioUnlocked) return null;
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
 function playBreath(isInhale) {
   try {
     const ac = getAudio();
+    if (!ac) return;
     const t0 = ac.currentTime;
     const dur = isInhale ? 1.8 : 2.2;
     const sr  = ac.sampleRate;
@@ -123,6 +126,7 @@ function playBreath(isInhale) {
 function playDeath() {
   try {
     const ac = getAudio();
+    if (!ac) return;
     const osc=ac.createOscillator(), g=ac.createGain();
     osc.type='sine';
     osc.frequency.setValueAtTime(180,ac.currentTime);
@@ -142,6 +146,7 @@ function playDeath() {
 function playStart() {
   try {
     const ac = getAudio();
+    if (!ac) return;
     [330,440,550].forEach((freq,i)=>{
       const osc=ac.createOscillator(), g=ac.createGain();
       osc.type='sine'; osc.frequency.value=freq;
@@ -657,6 +662,7 @@ function takeoverFromAI() {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { showInfo = !showInfo; return; }
+  audioUnlocked = true;  // first real user input unlocks audio
   if ((e.key === 'x' || e.key === 'X') && !showInfo) { botSmooth = !botSmooth; botSmoothChangedAt = performance.now(); return; }
   const isMove = ['ArrowLeft','ArrowRight','a','A','d','D'].includes(e.key);
   if (isMove) {
@@ -680,6 +686,7 @@ document.addEventListener('keyup', e => {
   if (wasLeft || wasRight) lastMoveInputTs = performance.now();
 });
 c.addEventListener('click', e => {
+  audioUnlocked = true;  // click also unlocks audio
   const ox = (window.innerWidth  - LW * scale) / 2;
   const oy = (window.innerHeight - LH * scale) / 2;
   const lx = (e.clientX - ox) / scale;
