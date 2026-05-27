@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>an angel dances in the sparks of a bonfire</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
+  canvas { display: block; }
+  #creditLink {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffc864;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 16px;
+    display: none;
+    z-index: 1000;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #creditLink:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">play OG angel game here</a>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d', { alpha: false }); // skip per-pixel alpha compositing
+const creditLink = document.getElementById('creditLink');
+
+// ── Logical canvas: 960×540, scaled to fill screen ─────
+const LW = 1920, LH = 1080;
+let scale = 1;
+function resize() {
+  const sw = window.innerWidth / LW;
+  const sh = window.innerHeight / LH;
+  scale = Math.min(sw, sh);
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+  // offset so logical canvas is centered
+  c.style.position = 'absolute';
+  c.style.left = '0'; c.style.top = '0';
+}
+resize();
+window.addEventListener('resize', () => { resize(); buildStars(); });
+
+// Transform: logical → screen
+function applyLogical() {
+  const ox = (window.innerWidth  - LW * scale) / 2;
+  const oy = (window.innerHeight - LH * scale) / 2;
+  ctx.setTransform(scale, 0, 0, scale, ox, oy);
+}
+function resetTransform() { ctx.setTransform(1,0,0,1,0,0); }
+
+// ── Audio ───────────────────────────────────────────────
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBreath(isInhale) {
+  try {
+    const ac = getAudio();
+    const t0 = ac.currentTime;
+    const dur = isInhale ? 1.8 : 2.2;
+    const sr  = ac.sampleRate;
+
+    // pink noise (softer, more organic than white)
+    const buf = ac.createBuffer(1, sr * dur, sr);
+    const d   = buf.getChannelData(0);
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0;
+    for (let i = 0; i < d.length; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886*b0 + w*0.0555179;
+      b1 = 0.99332*b1 + w*0.0750759;
+      b2 = 0.96900*b2 + w*0.1538520;
+      b3 = 0.86650*b3 + w*0.3104856;
+      b4 = 0.55000*b4 + w*0.5329522;
+      b5 = -0.7616*b5 + w*0.0168981;
+      d[i] = (b0+b1+b2+b3+b4+b5) * 0.11;
+    }
+
+    const src = ac.createBufferSource(); src.buffer = buf;
+
+    // shaping filter
+    const filt = ac.createBiquadFilter();
+    if (isInhale) {
+      // inhale: nasal, rising hiss
+      filt.type = 'bandpass'; filt.Q.value = 4;
+      filt.frequency.setValueAtTime(1600, t0);
+      filt.frequency.linearRampToValueAtTime(3200, t0 + dur * 0.8);
+    } else {
+      // exhale: chesty, falling warmth
+      filt.type = 'bandpass'; filt.Q.value = 3;
+      filt.frequency.setValueAtTime(1200, t0);
+      filt.frequency.exponentialRampToValueAtTime(400, t0 + dur);
+    }
+
+    // master envelope — very gradual onset, no click/drum at all
+    const gain = ac.createGain();
+    if (isInhale) {
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.0, t0 + 0.05); // silent start
+      gain.gain.linearRampToValueAtTime(0.13, t0 + dur * 0.65);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+    } else {
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.13, t0 + 0.18); // 180ms ramp-in
+      gain.gain.linearRampToValueAtTime(0.10, t0 + dur * 0.5);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+    }
+
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t0);
+  } catch(e) {}
+}
+function playDeath() {
+  try {
+    const ac = getAudio();
+    const osc=ac.createOscillator(), g=ac.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(180,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40,ac.currentTime+0.6);
+    g.gain.setValueAtTime(0.25,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.7);
+    osc.connect(g);g.connect(ac.destination);
+    osc.start();osc.stop(ac.currentTime+0.7);
+    const buf=ac.createBuffer(1,ac.sampleRate*0.4,ac.sampleRate);
+    const dd=buf.getChannelData(0);
+    for(let i=0;i<dd.length;i++) dd[i]=(Math.random()*2-1)*Math.pow(1-i/dd.length,0.5)*0.4;
+    const ns=ac.createBufferSource(); ns.buffer=buf;
+    const ng=ac.createGain(); ng.gain.value=0.15;
+    ns.connect(ng);ng.connect(ac.destination);ns.start();
+  } catch(e){}
+}
+function playStart() {
+  try {
+    const ac = getAudio();
+    [330,440,550].forEach((freq,i)=>{
+      const osc=ac.createOscillator(), g=ac.createGain();
+      osc.type='sine'; osc.frequency.value=freq;
+      g.gain.setValueAtTime(0,ac.currentTime+i*0.07);
+      g.gain.linearRampToValueAtTime(0.045,ac.currentTime+i*0.07+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+i*0.07+0.22);
+      osc.connect(g);g.connect(ac.destination);
+      osc.start(ac.currentTime+i*0.07);
+      osc.stop(ac.currentTime+i*0.07+0.25);
+    });
+  } catch(e){}
+}
+
+// ── Stars ───────────────────────────────────────────────
+let stars = [], starCanvas = null;
+function buildStars() {
+  stars = [];
+  const n = Math.floor(LW * LH / 11000);
+  for (let i=0;i<n;i++) stars.push({
+    x: Math.random()*LW, y: Math.random()*LH,
+    r: Math.random()<0.07?1.4:Math.random()<0.25?0.9:0.45,
+    a: 0.12+Math.random()*0.5
+  });
+  // pre-render once; blit each frame instead of ~190 arc calls
+  starCanvas = document.createElement('canvas');
+  starCanvas.width = LW; starCanvas.height = LH;
+  const sCtx = starCanvas.getContext('2d');
+  sCtx.fillStyle = '#07102a';        // bake background so draw() needs no logical fillRect
+  sCtx.fillRect(0, 0, LW, LH);
+  stars.forEach(s=>{
+    sCtx.beginPath(); sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sCtx.fillStyle=`rgba(200,215,255,${s.a})`; sCtx.fill();
+  });
+}
+buildStars();
+function drawStars() {
+  ctx.drawImage(starCanvas, 0, 0);
+}
+
+// ── Palette ─────────────────────────────────────────────
+const COLORS=['#ff0000','#e50000','#cc0000','#ff3300','#ff4400','#ff5500',
+              '#ff6600','#ff7700','#ff8800','#ff9900','#ffaa00','#ffbb00',
+              '#ffcc00','#ffdd00','#ffee00'];
+function fireColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+
+// ── Constants (logical pixels, screen-independent) ──────
+const ANGEL_R   = 20;  // visual / near-miss ring radius
+const HIT_R     = 6;   // actual collision hitbox (center only)
+const SIM_R     = 16;  // AI simulation hitbox — generous margin over HIT_R=6 to absorb sub-frame motion of fast sparks (up to ~23 px/frame)
+const SPAWN_ZONE = 280;  // left band where new sparks can appear with little reaction time — bot treats this as soft-deadly
+const MAX_SPEED = 20;
+const ACC       = MAX_SPEED / 35;
+// pre-computed font strings — LH is a fixed constant, no Math.round per frame
+const FONT_HIT    = `${Math.round(LH*0.22)}px monospace`;
+const FONT_BASE   = `${Math.round(LH*0.022)}px monospace`;
+const FONT_INFO_H = `${Math.round(LH*0.038)}px monospace`;
+const FONT_INFO_S = `${Math.round(LH*0.024)}px monospace`;
+const FONT_INFO_XS= `${Math.round(LH*0.019)}px monospace`;
+const FONT_INFO_TN= `${Math.round(LH*0.018)}px monospace`;
+
+// ── Game state ───────────────────────────────────────────
+let state = 'idle';      // idle | playing | dead | screensaver
+let screensaver = false;
+let t = 0, startTime = 0, elapsed = 0;
+let sparks = [], spawnAccum = 0, spawnPause = 0;
+let particles = [];
+let keys = {};
+let angelX = LW/2, angelSpeed = 0;
+let angelTrail = [];  // [{x,y}] up to ~450 frames (every other frame, 900 tick window)
+let breathScale = 1.0, lastAy = LH*0.5, lastDy = 0, breathCooldown = 0;
+let aiVelocity = 0, aiDesiredVel = 0;
+let aiInputDir = 0;         // -1/0/1 direction chosen by input-mode bot
+let botSmooth = Math.random() < 0.5;  // false = ACC key-input mode, true = smooth inertia
+let botSmoothChangedAt = -Infinity; // performance.now() timestamp of last toggle, for label fade
+let deathTimer = null;
+let attractTimer = null;
+let hitFlashes = [];
+let bestTime = 0;
+let trailT = 0;  // monotonic, never resets — trail timestamps stay valid
+let aiStylePhase = 0;      // sinusoidal drift phase for stylish AI movement
+let keyHintTs = -Infinity; // timestamp of last non-movement keypress
+let lastMoveInputTs = -Infinity; // timestamp of last move key event (not reset on death)
+let hadInputSinceDeath = false;  // true once player presses a key after dying
+let showInfo = false;      // info overlay active
+let nearFlashes = [];      // near-miss golden ring effects
+let nearMissCd  = 0;       // cooldown frames to avoid repeat triggers
+let lastDir     = 0;       // -1 left / 1 right — newest key wins
+let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
+let _futureAys = new Float32Array(202);  // precomputed futureAy[0..200]; [0]=current frame, refilled each frame
+let _futureAyT = -1;                      // t-value when _futureAys was last filled
+let _liveSparks = [];                     // non-fading sparks snapshot for simulation
+
+let _ayCache = LH * 0.5, _ayFrame = -1;
+function angelY() {
+  // cache per frame tick — avoids repeated Math.sin during collision checks
+  if (_ayFrame !== t) { _ayCache = LH*0.5 + Math.sin(t*0.0567)*LH*0.35; _ayFrame = t; }
+  return _ayCache;
+}
+
+// ── Sparks ───────────────────────────────────────────────
+function spawnSpark(ramp) {
+  const lo = (2.5 + ramp * 2.0) * 2 * 0.6;
+  const hi = (5.5 + ramp * 6.0) * 2 * 0.6;
+  const w = 44 + Math.random() * 64;
+  return {
+    x: -w,
+    y: Math.random()*LH*0.8+LH*0.1,
+    w, h: 32+Math.random()*40,
+    vx: lo + Math.random()*(hi-lo),
+    vy: (Math.random()-0.5) * 0.25,
+    ay: (Math.random()-0.5) * 0.004,
+    color: fireColor()
+  };
+}
+
+function hitAt(ax, ay, s) {
+  return ax+ANGEL_R > s.x && ax-ANGEL_R < s.x+s.w &&
+         ay+ANGEL_R > s.y && ay-ANGEL_R < s.y+s.h;
+}
+function hit(s) {
+  const ax=angelX, ay=angelY();
+  return ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
+         ay+HIT_R > s.y && ay-HIT_R < s.y+s.h;
+}
+
+// ── AI: velocity-based planner ───────────────────────────
+// Scores a desired-velocity choice by simulating the actual path it
+// produces (same inertia model as real movement), so gap-threading
+// and timing are captured exactly. Style bonuses for smoothness
+// (low angular change → elliptical arcs) and horizontal motion.
+let aiCommitFrames = 0;
+
+// ── AI: smooth-mode 2-level lookahead ─────────────────────────────────────
+// Simulate vel for BRANCH_AT frames, then branch to 5 candidate target velocities.
+// Earlier branch point + denser continuations = the bot can find escape routes
+// that require a direction reversal mid-flight (the main source of preventable
+// deaths). Phase-1 left-wall hugs are also rejected outright.
+function scoreVelocityDeep(vel) {
+  if (_liveSparks.length === 0) return 200;
+  const BRANCH_AT = 12;
+  let simX = angelX, simVel = aiVelocity;
+  let wallTime = 0;  // consecutive frames against either wall
+  for (let dt = 1; dt <= BRANCH_AT; dt++) {
+    simVel = simVel * 0.4 + vel * 0.6;
+    simX += simVel;
+    if (simX <= 41 || simX >= LW - 41) {
+      simX = Math.max(40, Math.min(LW - 40, simX));
+      // Left wall = spawn zone; never let a plan commit to hugging it.
+      if (++wallTime > 6 && simX <= 41) return dt;
+    } else {
+      wallTime = 0;
+    }
+    const fay = _futureAys[dt - 1];
+    const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+    const simHi = simX + SIM_R, simLo = simX - SIM_R;
+    for (const s of _liveSparks) {
+      const fx = s.x + s.vx * (dt - 1);
+      if (simHi <= fx || simLo >= fx + s.w) continue;
+      const fy = s._futY[dt - 1];
+      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
+    }
+  }
+  let bestCont = 0;
+  for (const contVel of [-MAX_SPEED, -MAX_SPEED * 0.5, 0, MAX_SPEED * 0.5, MAX_SPEED]) {
+    let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
+    for (let i = 1; i <= 200 - BRANCH_AT; i++) {
+      const dt = BRANCH_AT + i;
+      cV = cV * 0.4 + contVel * 0.6;
+      cX += cV;
+      cX = Math.max(40, Math.min(LW - 40, cX));
+      if (cX <= 41 || cX >= LW - 41) {
+        // Left wall trap triggers much sooner than right (sparks spawn there).
+        if (++cWallTime > (cX <= 41 ? 20 : 60)) { cont = (cX <= 41 ? 60 : 130) - BRANCH_AT; break; }
+      } else {
+        cWallTime = 0;
+      }
+      const fay = _futureAys[dt - 1];
+      const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+      const cHi = cX + SIM_R, cLo = cX - SIM_R;
+      let hit = false;
+      for (const s of _liveSparks) {
+        const fx = s.x + s.vx * (dt - 1);
+        if (cHi <= fx || cLo >= fx + s.w) continue;
+        const fy = s._futY[dt - 1];
+        if (fayHi > fy && fayLo < fy + s.h) { hit = true; break; }
+      }
+      if (hit) break;
+      cont = i;
+    }
+    bestCont = Math.max(bestCont, cont);
+    if (bestCont >= 200 - BRANCH_AT) break;
+  }
+  return BRANCH_AT + bestCont;
+}
+
+function scoreVelocity(vel) {
+  if (_liveSparks.length === 0) return 200;  // no threats — skip simulation entirely
+  let simX = angelX, simVel = aiVelocity;
+  const deadband = ACC * 1.5;
+  let wallStart = -1, wallTrap = false;
+  for (let dt = 1; dt <= 200; dt++) {
+    if (botSmooth) {
+      simVel = simVel * 0.4 + vel * 0.6;  // strong blend: fast, fluid, clearly distinct from ACC
+    } else {
+      const dir = vel > simVel + deadband ? 1 : vel < simVel - deadband ? -1 : 0;
+      if      (dir === -1) simVel = Math.max(-MAX_SPEED, simVel - ACC);
+      else if (dir ===  1) simVel = Math.min( MAX_SPEED, simVel + ACC);
+      else                 simVel *= 0.85;
+    }
+    simX  += simVel;
+    if (simX <= 41 || simX >= LW - 41) {
+      simX = Math.max(40, Math.min(LW - 40, simX));
+      if (wallStart < 0) wallStart = dt;
+      else if (dt - wallStart > 30) {
+        wallTrap = true;
+        if (dt - wallStart > 90) return 160; // checked enough; wall-trap confirmed
+      }
+    } else {
+      wallStart = -1;
+    }
+    const fay = _futureAys[dt];            // no Math.sin — precomputed once per frame
+    const fayHi = fay + ANGEL_R, fayLo = fay - ANGEL_R;
+    const simHi = simX + ANGEL_R, simLo = simX - ANGEL_R;
+    for (const s of _liveSparks) {
+      const fx = s.x + s.vx * dt;
+      if (simHi <= fx || simLo >= fx + s.w) continue; // X bounds check
+      const fy = s.y + s.vy * dt;
+      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
+    }
+  }
+  return wallTrap ? 160 : 200;
+}
+
+function aiChooseVelocity() {
+  const SAMPLES = 24;
+  let bestVel = aiDesiredVel, bestScore = -Infinity;
+  const maxZi  = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+  const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
+  const zDir   = zTargX - angelX;
+  for (let vi = 0; vi < SAMPLES; vi++) {
+    const vel = -MAX_SPEED + (vi / (SAMPLES - 1)) * 2 * MAX_SPEED;
+    const survive = scoreVelocityDeep(vel);
+    const projX  = Math.max(40, Math.min(LW - 40, angelX + vel * 30));
+    const center  = -(Math.abs(projX - LW / 2) / (LW / 2)) * 12;
+    // Left spawn zone is uniquely dangerous: new sparks appear at x=-w and reach
+    // the angel in as few as 4 frames — well below the AI's plan cadence.
+    // Penalty must dominate style bonuses so the bot never hugs the left wall.
+    const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
+    const leftPen   = leftEdge * leftEdge * 100;
+    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
+    // Survive thresholds raised: only reward style when the plan is robustly safe.
+    const styleMult = survive >= 190 ? 1.0 : survive >= 150 ? (survive - 150) / 40 : 0;
+    const motion  = Math.min(Math.abs(vel) / MAX_SPEED, 1.0) * (6 + styleMult * 10);
+    const smooth  = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
+    const arc = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 0.7)) * 14 * styleMult;
+    const zAlign = Math.max(0, Math.sign(zDir) * vel) / MAX_SPEED;
+    const zone   = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
+    // Survive is the dominant term — 2× weight so a 20-frame longer life always
+    // beats any combination of style bonuses.
+    const score = survive * 2 + center + motion + smooth + arc + zone - leftPen - rightEdge;
+    if (score > bestScore) { bestScore = score; bestVel = vel; }
+  }
+  return bestVel;
+}
+
+// ── AI: input-mode planner (exact human key physics) ────
+// Scores a held direction (−1/0/+1) using the same snap-to-half +
+// instant-stop mechanics that the human input path uses.
+function scoreInput(dir) {
+  if (_liveSparks.length === 0) return 200;
+  let simX = angelX, simVel = aiVelocity;
+  let wallStart = -1, wallTrap = false;
+  const leftWall = simX < LW / 2;   // track which wall we may trap against
+  for (let dt = 1; dt <= 200; dt++) {
+    if (dir === -1) {
+      if (simVel > -MAX_SPEED / 2) simVel = -MAX_SPEED / 2;
+      simVel = Math.max(-MAX_SPEED, simVel - ACC);
+    } else if (dir === 1) {
+      if (simVel < MAX_SPEED / 2) simVel = MAX_SPEED / 2;
+      simVel = Math.min(MAX_SPEED, simVel + ACC);
+    } else {
+      simVel = 0;
+    }
+    simX += simVel;
+    if (simX <= 41 || simX >= LW - 41) {
+      simX = Math.max(40, Math.min(LW - 40, simX));
+      if (wallStart < 0) wallStart = dt;
+      else if (dt - wallStart > 90)
+        return simX <= 41 ? 100 : 150;  // left wall more dangerous (sparks enter there)
+    } else {
+      wallStart = -1;
+    }
+    const fay = _futureAys[dt];
+    const fayHi = fay + ANGEL_R, fayLo = fay - ANGEL_R;
+    const simHi = simX + ANGEL_R, simLo = simX - ANGEL_R;
+    for (const s of _liveSparks) {
+      const fx = s.x + s.vx * dt;
+      if (simHi <= fx || simLo >= fx + s.w) continue;
+      const fy = s.y + s.vy * dt;
+      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
+    }
+  }
+  return wallStart >= 0 ? (simX <= 41 ? 100 : 150) : 200;
+}
+
+// ── AI: input-mode 2-level lookahead ──────────────────────────────────────
+// Simulate dir for BRANCH_AT frames, then branch to all 3 continuations.
+// The bot can now see escape routes that require a direction change mid-flight.
+function scoreInputDeep(dir) {
+  if (_liveSparks.length === 0) return 200;
+  const BRANCH_AT = 12;
+  let simX = angelX, simVel = aiVelocity;
+  let wallTime = 0;  // consecutive frames against either wall
+  for (let dt = 1; dt <= BRANCH_AT; dt++) {
+    if (dir === -1) {
+      if (simVel > -MAX_SPEED / 2) simVel = -MAX_SPEED / 2;
+      simVel = Math.max(-MAX_SPEED, simVel - ACC);
+    } else if (dir === 1) {
+      if (simVel < MAX_SPEED / 2) simVel = MAX_SPEED / 2;
+      simVel = Math.min(MAX_SPEED, simVel + ACC);
+    } else {
+      simVel = 0;
+    }
+    simX += simVel;
+    if (simX <= 41 || simX >= LW - 41) {
+      simX = Math.max(40, Math.min(LW - 40, simX));
+      // Left wall = spawn zone; never let phase 1 commit to hugging it.
+      if (++wallTime > 6 && simX <= 41) return dt;
+    } else {
+      wallTime = 0;
+    }
+    const fay = _futureAys[dt - 1];
+    const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+    const simHi = simX + SIM_R, simLo = simX - SIM_R;
+    for (const s of _liveSparks) {
+      const fx = s.x + s.vx * (dt - 1);
+      if (simHi <= fx || simLo >= fx + s.w) continue;
+      const fy = s._futY[dt - 1];
+      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
+    }
+  }
+  // Branch: try all 3 continuations from intermediate state, take the best.
+  // Wall time is inherited so traps that span both phases are correctly penalised.
+  let bestCont = 0;
+  for (const contDir of [-1, 0, 1]) {
+    let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
+    for (let i = 1; i <= 200 - BRANCH_AT; i++) {
+      const dt = BRANCH_AT + i;
+      if (contDir === -1) {
+        if (cV > -MAX_SPEED / 2) cV = -MAX_SPEED / 2;
+        cV = Math.max(-MAX_SPEED, cV - ACC);
+      } else if (contDir === 1) {
+        if (cV < MAX_SPEED / 2) cV = MAX_SPEED / 2;
+        cV = Math.min(MAX_SPEED, cV + ACC);
+      } else {
+        cV = 0;
+      }
+      cX += cV;
+      cX = Math.max(40, Math.min(LW - 40, cX));
+      if (cX <= 41 || cX >= LW - 41) {
+        // Left wall trap triggers much sooner than right (sparks spawn there).
+        if (++cWallTime > (cX <= 41 ? 20 : 60)) {
+          cont = (cX <= 41 ? 60 : 130) - BRANCH_AT;
+          break;
+        }
+      } else {
+        cWallTime = 0;
+      }
+      const fay = _futureAys[dt - 1];
+      const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+      const cHi = cX + SIM_R, cLo = cX - SIM_R;
+      let hit = false;
+      for (const s of _liveSparks) {
+        const fx = s.x + s.vx * (dt - 1);
+        if (cHi <= fx || cLo >= fx + s.w) continue;
+        const fy = s._futY[dt - 1];
+        if (fayHi > fy && fayLo < fy + s.h) { hit = true; break; }
+      }
+      if (hit) break;
+      cont = i;
+    }
+    bestCont = Math.max(bestCont, cont);
+    if (bestCont >= 200 - BRANCH_AT) break;
+  }
+  return BRANCH_AT + bestCont;
+}
+
+function aiChooseDirection() {
+  const maxZi  = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+  const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
+  const zDir   = zTargX - angelX;
+  let bestDir = 0, bestScore = -Infinity;
+  for (const dir of [-1, 0, 1]) {
+    const survive = scoreInputDeep(dir);
+    // Project position 30 frames out with exact human physics for bonuses
+    let projX = angelX, projV = aiVelocity;
+    for (let dt = 0; dt < 30; dt++) {
+      if (dir === -1) {
+        if (projV > -MAX_SPEED / 2) projV = -MAX_SPEED / 2;
+        projV = Math.max(-MAX_SPEED, projV - ACC);
+      } else if (dir === 1) {
+        if (projV < MAX_SPEED / 2) projV = MAX_SPEED / 2;
+        projV = Math.min(MAX_SPEED, projV + ACC);
+      } else {
+        projV = 0;
+      }
+      projX = Math.max(40, Math.min(LW - 40, projX + projV));
+    }
+    const center    = -(Math.abs(projX - LW / 2) / (LW / 2)) * 12;
+    const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
+    const leftPen   = leftEdge * leftEdge * 100;  // quadratic — dominates style bonuses
+    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
+    const styleMult = survive >= 190 ? 1.0 : survive >= 150 ? (survive - 150) / 40 : 0;
+    const motion    = dir !== 0 ? (6 + styleMult * 10) : 0;
+    const smooth    = Math.exp(-Math.abs(dir * MAX_SPEED - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
+    const zAlign    = Math.max(0, Math.sign(zDir) * dir);
+    const zone      = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
+    // Survive dominates: 2× weight + scaled penalties.
+    const score = survive * 2 + center + motion + smooth + zone - leftPen - rightEdge;
+    if (score > bestScore) { bestScore = score; bestDir = dir; }
+  }
+  return bestDir;
+}
+function explode(x, y) {
+  for (let i=0;i<55;i++){
+    const angle=Math.random()*Math.PI*2, speed=1.5+Math.random()*7;
+    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+      life:1,decay:0.014+Math.random()*0.022,size:2+Math.random()*5,
+      color:Math.random()<0.3?'#fff':COLORS[Math.floor(Math.random()*COLORS.length)]});
+  }
+  playDeath();
+}
+function updateParticles() {
+  if (particles.length === 0) return; // skip alloc when nothing is live
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.09;p.life-=p.decay;});
+}
+function drawParticles() {
+  if (particles.length === 0) return;
+  particles.forEach(p=>{
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ── Angel ────────────────────────────────────────────────
+function drawAngel(ax,ay) {
+  const bs=breathScale;
+  ctx.save(); ctx.translate(ax,ay); ctx.scale(1.4,1.4);
+  // wings
+  for (const side of [-1,1]) {
+    ctx.save(); ctx.scale(side,1);
+    ctx.beginPath();
+    ctx.moveTo(0,-3);
+    ctx.bezierCurveTo(-5,-11,-16,-9,-19,-1);
+    ctx.bezierCurveTo(-16,4,-7,3,0,3);
+    ctx.closePath();
+    ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=1.1; ctx.stroke();
+    ctx.restore();
+  }
+  // robe
+  ctx.beginPath();
+  ctx.moveTo(-5*bs,-8);ctx.bezierCurveTo(-7*bs,0,-9*bs,8,-6*bs,18);
+  ctx.lineTo(6*bs,18);ctx.bezierCurveTo(9*bs,8,7*bs,0,5*bs,-8);ctx.closePath();
+  ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fill();
+  ctx.beginPath();ctx.moveTo(-1*bs,-6);ctx.bezierCurveTo(-2*bs,4,-3*bs,10,-2*bs,18);
+  ctx.strokeStyle='rgba(180,180,220,0.3)';ctx.lineWidth=0.7;ctx.stroke();
+  // head
+  ctx.beginPath();ctx.arc(0,-13,5.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fill();
+  ctx.restore();
+}
+
+// ── On hit: no game over, just reset ─────────────────────
+function onHit() {
+  if (!screensaver && elapsed > bestTime) bestTime = elapsed;
+  const who = screensaver ? 'BOT' : 'PLAYER';
+  console.log(`[${who} DEATH] survived ${(elapsed / 1000).toFixed(3)}s`);
+  hitFlashes.push({ ts: performance.now(), elapsed });
+  sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); });
+  angelTrail = [];
+  elapsed = 0;
+  startTime = performance.now();
+  // t NOT reset — sine wave continues from exact position/direction
+  spawnAccum = 0;
+  explode(angelX, angelY());
+  if (!screensaver) hadInputSinceDeath = false;
+}
+
+
+function start(isAI) {
+  clearTimeout(attractTimer); attractTimer = null; clearTimeout(deathTimer); deathTimer = null;
+  sparks=[];particles=[];t=0;spawnAccum=0;spawnPause=0;
+  elapsed=0;startTime=performance.now();
+  angelX=LW/2;angelSpeed=0;angelTrail=[];breathScale=1;
+  lastAy=LH*0.5;lastDy=0;breathCooldown=0;aiVelocity=0;aiDesiredVel=0;aiInputDir=0;aiCommitFrames=0;aiStylePhase=0;
+  hitFlashes=[];nearFlashes=[];nearMissCd=0;lastDir=0;zoneBonuses=[0,0,0,0,0];
+  _futureAyT=-1;_liveSparks=[];
+  screensaver=isAI;
+  state='playing';
+  if (!isAI) playStart();
+}
+
+// ── Input ────────────────────────────────────────────────
+function takeoverFromAI() {
+  angelSpeed = 0;  // don't inherit bot's momentum on takeover
+  onHit();
+  screensaver = false;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { showInfo = !showInfo; return; }
+  if ((e.key === 'x' || e.key === 'X') && !showInfo) { botSmooth = !botSmooth; botSmoothChangedAt = performance.now(); return; }
+  const isMove = ['ArrowLeft','ArrowRight','a','A','d','D'].includes(e.key);
+  if (isMove) {
+    if (screensaver && state === 'playing') takeoverFromAI();
+    keys[e.key] = true;
+    // newest key wins: track last pressed direction
+    if (e.key==='ArrowLeft'||e.key==='a'||e.key==='A')  lastDir = -1;
+    if (e.key==='ArrowRight'||e.key==='d'||e.key==='D') lastDir =  1;
+    lastMoveInputTs = performance.now();
+    hadInputSinceDeath = true;
+  } else if (state === 'playing' && !showInfo) {
+    keyHintTs = performance.now();
+  }
+});
+document.addEventListener('keyup', e => {
+  keys[e.key] = false;
+  const wasLeft  = e.key==='ArrowLeft'||e.key==='a'||e.key==='A';
+  const wasRight = e.key==='ArrowRight'||e.key==='d'||e.key==='D';
+  if (wasLeft  && lastDir === -1) lastDir = (keys['ArrowRight']||keys['d']||keys['D']) ?  1 : 0;
+  if (wasRight && lastDir ===  1) lastDir = (keys['ArrowLeft'] ||keys['a']||keys['A']) ? -1 : 0;
+  if (wasLeft || wasRight) lastMoveInputTs = performance.now();
+});
+c.addEventListener('click', e => {
+  const ox = (window.innerWidth  - LW * scale) / 2;
+  const oy = (window.innerHeight - LH * scale) / 2;
+  const lx = (e.clientX - ox) / scale;
+  const ly = (e.clientY - oy) / scale;
+  if (showInfo) { showInfo = false; return; }
+  if (state === 'playing' && lx >= 20 && lx <= 220 && ly >= 20 && ly <= 62) {
+    showInfo = true;
+  }
+});
+
+// ── Main loop ────────────────────────────────────────────
+let aiFrame = 0;
+function draw(ts) {
+  requestAnimationFrame(draw);
+
+  // clear full canvas in background colour
+  ctx.fillStyle='#07102a';
+  ctx.fillRect(0,0,c.width,c.height);
+
+  // all game drawing in logical space
+  applyLogical();
+
+  drawStars(); // star canvas already includes #07102a background
+
+  if (state==='playing') {
+    elapsed = ts - startTime;
+    t++;
+    trailT++;
+
+    // ── 1. spawn + advance sparks FIRST so AI sees current state ──
+    const ramp = Math.min(elapsed/45000,1);
+    const spawnChance = 0.20 + Math.min(elapsed/600000, 1) * 0.20;
+    if (spawnPause > 0) {
+      spawnPause--;
+    } else {
+      spawnAccum += (1.8+ramp*6.2)*3/60;
+      if (spawnAccum >= 1) {
+        spawnAccum = 0;
+        if (Math.random() < spawnChance) {
+          sparks.push(spawnSpark(ramp));
+          aiCommitFrames = 0; // new spark → recompute immediately
+          spawnPause = 1;
+        }
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; ) {
+      if (sparks[i].x >= LW + 20) { sparks[i] = sparks[sparks.length-1]; sparks.pop(); if (i >= sparks.length) i--; }
+      else i--;
+    }
+    sparks.forEach(s=>{
+      s.x += s.vx;
+      s.vy += s.ay;
+      s.vy = Math.max(-2.5, Math.min(2.5, s.vy));
+      s.y += s.vy;
+      s.y = Math.max(-s.h, Math.min(LH, s.y)); // keep on screen
+    });
+
+    // ── 2. AI / player movement ──
+    if (screensaver) {
+      aiCommitFrames--;
+      // Precompute future angel Y and accurate per-spark Y paths once per frame.
+      // All scoring calls share _futureAys + s._futY — computed once, not per-call.
+      if (_futureAyT !== t) {
+        _futureAys[0] = LH * 0.5 + Math.sin(t * 0.0567) * LH * 0.35;  // index 0 = current frame
+        for (let dt = 1; dt <= 200; dt++)
+          _futureAys[dt] = LH * 0.5 + Math.sin((t + dt) * 0.0567) * LH * 0.35;
+        _futureAyT = t;
+        _liveSparks.length = 0;                                 // reuse array — no allocation
+        for (const s of sparks) {
+          if (!s.fading) {
+            // Precompute accurate spark Y path with acceleration + screen clamping.
+            // Linear extrapolation (s.y + s.vy*dt) drifts by up to 10px at dt=100.
+            if (!s._futY) s._futY = new Float32Array(201);
+            s._futY[0] = s.y;  // index 0 = current position (used by dt-1 offset correction)
+            let sy = s.y, svy = s.vy;
+            for (let dt = 1; dt <= 200; dt++) {
+              svy = Math.max(-2.5, Math.min(2.5, svy + s.ay));
+              sy  = Math.max(-s.h, Math.min(LH, sy + svy));
+              s._futY[dt] = sy;
+            }
+            _liveSparks.push(s);
+          }
+        }
+      }
+      // Re-plan when stale or current plan is becoming unsafe.
+      // Threshold raised to 160: anything that dies inside ~2.7s is suspicious enough
+      // to warrant a re-evaluation rather than riding it out.
+      if (botSmooth) {
+        const currentSurvive = scoreVelocityDeep(aiDesiredVel);
+        const actualSurvive  = currentSurvive < 160 ? scoreVelocityDeep(aiVelocity) : currentSurvive;
+        if (aiCommitFrames <= 0 || currentSurvive < 160 || actualSurvive < 140) {
+          aiDesiredVel   = aiChooseVelocity();
+          aiCommitFrames = currentSurvive >= 195 ? 3 : currentSurvive >= 170 ? 1 : 0;
+        }
+        // Smooth inertia mode: strong direct blend — agile, ship-like, clearly distinct from ACC.
+        angelSpeed = angelSpeed * 0.4 + aiDesiredVel * 0.6;
+      } else {
+        // Input mode: plan & execute exact human key physics
+        const currentSurvive = scoreInputDeep(aiInputDir);
+        if (aiCommitFrames <= 0 || currentSurvive < 160) {
+          aiInputDir     = aiChooseDirection();
+          aiCommitFrames = currentSurvive >= 195 ? 3 : currentSurvive >= 170 ? 1 : 0;
+        }
+        if (aiInputDir === -1) {
+          if (angelSpeed > -MAX_SPEED / 2) angelSpeed = -MAX_SPEED / 2;
+          angelSpeed = Math.max(-MAX_SPEED, angelSpeed - ACC);
+        } else if (aiInputDir === 1) {
+          if (angelSpeed < MAX_SPEED / 2) angelSpeed = MAX_SPEED / 2;
+          angelSpeed = Math.min(MAX_SPEED, angelSpeed + ACC);
+        } else {
+          angelSpeed = 0;
+        }
+      }
+      angelX += angelSpeed;
+      aiVelocity = angelSpeed;  // keep planner seed in sync
+    } else {
+      if (lastDir === -1) {
+        if (angelSpeed > -MAX_SPEED / 2) angelSpeed = -MAX_SPEED / 2;
+        angelSpeed = Math.max(-MAX_SPEED, angelSpeed - ACC);
+      } else if (lastDir === 1) {
+        if (angelSpeed < MAX_SPEED / 2) angelSpeed = MAX_SPEED / 2;
+        angelSpeed = Math.min(MAX_SPEED, angelSpeed + ACC);
+      } else {
+        angelSpeed = 0;
+      }
+      angelX += angelSpeed;
+    }
+    angelX = Math.max(40, Math.min(LW - 40, angelX));
+
+    // idle → bot handoff: only if no input since last death, and 3 s idle
+    if (!screensaver && !hadInputSinceDeath && performance.now() - lastMoveInputTs >= 3000) {
+      screensaver = true;
+      aiVelocity = angelSpeed;
+      aiDesiredVel = angelSpeed;
+      aiCommitFrames = 0;
+    }
+
+    // ── zone exploration: grow unvisited zones, clear current ──
+    const curZone = Math.min(4, Math.max(0, Math.floor((angelX - 40) / ((LW - 80) / 5))));
+    for (let z = 0; z < 5; z++) { if (zoneBonuses[z] < 120) zoneBonuses[z] += 0.15; }
+    zoneBonuses[curZone] *= 0.95;  // harvest 5% per frame in zone, decays gradually instead of instant clear
+
+    // ── 3. breath ──
+    const ay = angelY();
+    const dydt = ay - lastAy; lastAy = ay;
+    breathCooldown--;
+    if (lastDy!==0 && Math.sign(dydt)!==Math.sign(lastDy) && breathCooldown<0) {
+      playBreath(dydt<0); breathCooldown=40;
+    }
+    if (Math.abs(dydt)>0.1) lastDy=dydt;
+    breathScale += (1.0+dydt*0.18-breathScale)*0.1;
+    breathScale = Math.max(0.7,Math.min(1.4,breathScale));
+  }
+
+  updateParticles();
+
+  const now2 = ts; // rAF timestamp is the same clock — saves a native call
+
+  // ── draw trail FIRST (under everything) ──
+  if (angelTrail.length > 2) {
+    const raw = angelTrail, len = raw.length;
+    const LAYERS = 10;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#ffffff';
+    // Each layer starts further along the trail and ends at head.
+    // Tail gets 1 layer (dim), head gets all layers (bright). No moving boundaries.
+    // 10 layers × 0.04α = 0.40 peak; more steps = smoother fade over longer trail.
+    for (let b = 0; b < LAYERS; b++) {
+      const startI = Math.floor((b / LAYERS) * (len - 1));
+      ctx.globalAlpha = 0.04;
+      ctx.beginPath();
+      ctx.moveTo(raw[startI].x, raw[startI].y);
+      for (let i = startI + 1; i < len; i++) ctx.lineTo(raw[i].x, raw[i].y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // draw sparks with fade support
+  sparks.forEach(s => {
+    const alpha = s.fading ? Math.max(0, 1 - (now2 - s.fadeStart) / 800) : 1;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = s.color;
+    ctx.fillRect(s.x, s.y, s.w, s.h);
+  });
+  ctx.globalAlpha = 1;
+  for (let i = sparks.length - 1; i >= 0; ) {
+    const s = sparks[i];
+    if (s.fading && now2 - s.fadeStart >= 800) { sparks[i] = sparks[sparks.length-1]; sparks.pop(); if (i >= sparks.length) i--; }
+    else i--;
+  }
+
+  drawParticles();
+
+  if (state==='playing') {
+    const ax=angelX, ay=angelY();
+    // subsample: record every other frame — halves lineTo count with no visible difference
+    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT});
+    while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 900) angelTrail.shift();
+
+    // collision — reuse ax/ay already computed above (avoids N×angelY() calls)
+    for (const s of sparks) {
+      if (!s.fading && ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
+          ay+HIT_R > s.y && ay-HIT_R < s.y+s.h) { onHit(); break; }
+    }
+
+    // near-miss: golden ring only when threading a gap < 80 px between two spark edges
+    if (nearMissCd > 0) nearMissCd--;
+    if (nearMissCd === 0) {
+      // collect sparks overlapping the angel's X column
+      const col = sparks.filter(s => !s.fading && s.x <= ax + 60 && s.x + s.w >= ax - 60);
+      col.sort((a, b) => a.y - b.y);
+      for (let i = 0; i < col.length - 1; i++) {
+        const upper = col[i], lower = col[i + 1];
+        const gapTop = upper.y + upper.h;
+        const gapBot = lower.y;
+        const gap = gapBot - gapTop;
+        if (gap > 0 && gap < 80 && ay > gapTop - 8 && ay < gapBot + 8) {
+          nearFlashes.push({ ts: now2, x: ax, y: ay });
+          nearMissCd = 20;
+          break;
+        }
+      }
+    }
+    nearFlashes = nearFlashes.filter(f => now2 - f.ts < 550);
+    nearFlashes.forEach(f => {
+      const age = (now2 - f.ts) / 550;
+      ctx.save();
+      ctx.globalAlpha = Math.pow(1 - age, 1.8) * 0.8;
+      ctx.strokeStyle = '#ffe566';
+      ctx.lineWidth = 5 * (1 - age * 0.6);
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, age * 80, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    drawAngel(ax,ay);
+
+    // hit flash: large time at center, fades over 1.5s
+    hitFlashes = hitFlashes.filter(f => now2 - f.ts < 1500);
+    hitFlashes.forEach(f => {
+      const age=(now2-f.ts)/1500;
+      ctx.globalAlpha=Math.pow(1-age,1.5)*0.6;
+      ctx.textAlign='center';
+      ctx.fillStyle='#ffffff';
+      ctx.font=FONT_HIT;
+      ctx.fillText((f.elapsed/1000).toFixed(1),LW/2,LH*0.55);
+      ctx.globalAlpha=1;
+    });
+
+    // best time top-right (player mode only)
+    if (!screensaver && bestTime>0){
+      ctx.textAlign='right';
+      ctx.fillStyle='rgba(255,255,255,0.22)';
+      ctx.font=FONT_BASE;
+      ctx.fillText(`best  ${(bestTime/1000).toFixed(1)}`,LW-40,44);
+    }
+
+    // key hint: fades over 2.2 s after a non-movement key
+    const hintAge = (now2 - keyHintTs) / 2200;
+    if (hintAge < 1) {
+      ctx.globalAlpha = Math.pow(1 - hintAge, 1.8) * 0.72;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = FONT_BASE;
+      ctx.fillText('\u2190 \u2192  or  A / D  to move', LW/2, LH*0.82);
+      ctx.globalAlpha = 1;
+    }
+
+    // (a) info button — top-left
+    ctx.textAlign = 'left';
+    ctx.fillStyle = screensaver ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.22)';
+    ctx.font = FONT_BASE;
+    ctx.fillText('(aaditsoab)', 40, 44);
+
+    // bot mode label — fades out 1 s after toggle
+    const _modeAge = (performance.now() - botSmoothChangedAt) / 1000;
+    if (_modeAge < 1.5) {
+      const _modeAlpha = _modeAge < 1.0 ? 1.0 : 1.0 - (_modeAge - 1.0) / 0.5;
+      ctx.save();
+      ctx.globalAlpha = _modeAlpha * 0.7;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = botSmooth ? '#96c8ff' : '#ffc864';
+      ctx.font = FONT_BASE;
+      ctx.fillText(botSmooth ? 'smooth' : 'input', LW - 40, 44);
+      ctx.restore();
+    }
+  }
+
+  // info overlay (inside logical transform, on top of everything)
+  if (showInfo) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(7,16,42,0.9)';
+    ctx.fillRect(0, 0, LW, LH);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = FONT_INFO_H;
+    ctx.fillText('an angel dances in the sparks', LW/2, LH*0.36);
+    ctx.fillText('of a bonfire', LW/2, LH*0.43);
+    ctx.fillStyle = 'rgba(255,255,255,0.52)';
+    ctx.font = FONT_INFO_S;
+    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.53);
+    ctx.fillText('bot takes over if you let go', LW/2, LH*0.59);
+    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.font = FONT_INFO_XS;
+    ctx.fillText('X \u2014 bot mode: ' + (botSmooth ? 'smooth' : 'input'), LW/2, LH*0.66);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillText('click or Esc to close', LW/2, LH*0.72);
+    ctx.fillStyle = 'rgba(255,200,100,0.6)';
+    ctx.font = FONT_INFO_TN;
+    ctx.fillText('original game by brlka', LW/2, LH*0.82);
+    ctx.restore();
+  }
+
+  resetTransform();
+  creditLink.style.display = showInfo ? 'block' : 'none';
+}
+
+// autostart as AI immediately
+start(true);
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
