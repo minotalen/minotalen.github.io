@@ -36,14 +36,17 @@ const creditLink = document.getElementById('creditLink');
 
 // ── Logical canvas: 960×540, scaled to fill screen ─────
 const LW = 1920, LH = 1080;
-let scale = 1;
+const HORIZON = 140;  // bot lookahead frames (~2.3s) — was 200, costs scale linearly
+let scale = 1, dpr = 1;
 function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);  // cap at 2× to keep cost reasonable
   const sw = window.innerWidth / LW;
   const sh = window.innerHeight / LH;
   scale = Math.min(sw, sh);
-  c.width  = window.innerWidth;
-  c.height = window.innerHeight;
-  // offset so logical canvas is centered
+  c.width  = Math.round(window.innerWidth  * dpr);
+  c.height = Math.round(window.innerHeight * dpr);
+  c.style.width  = window.innerWidth  + 'px';
+  c.style.height = window.innerHeight + 'px';
   c.style.position = 'absolute';
   c.style.left = '0'; c.style.top = '0';
 }
@@ -52,9 +55,11 @@ window.addEventListener('resize', () => { resize(); buildStars(); });
 
 // Transform: logical → screen
 function applyLogical() {
-  const ox = (window.innerWidth  - LW * scale) / 2;
-  const oy = (window.innerHeight - LH * scale) / 2;
-  ctx.setTransform(scale, 0, 0, scale, ox, oy);
+  // recompute every frame so a stale `scale` from a bad initial resize() never causes misalignment
+  const s = Math.min(window.innerWidth / LW, window.innerHeight / LH) * dpr;
+  const ox = (c.width  - LW * s) / 2;
+  const oy = (c.height - LH * s) / 2;
+  ctx.setTransform(s, 0, 0, s, ox, oy);
 }
 function resetTransform() { ctx.setTransform(1,0,0,1,0,0); }
 
@@ -235,9 +240,11 @@ let nearFlashes = [];      // near-miss golden ring effects
 let nearMissCd  = 0;       // cooldown frames to avoid repeat triggers
 let lastDir     = 0;       // -1 left / 1 right — newest key wins
 let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
-let _futureAys = new Float32Array(202);  // precomputed futureAy[0..200]; [0]=current frame, refilled each frame
+let targetZoneIdx = 2, zoneArrivalFrames = 0; // stable zone targeting — updated with hysteresis
+let _futureAys = new Float32Array(HORIZON + 2);  // precomputed futureAy[0..HORIZON]; refilled each frame
 let _futureAyT = -1;                      // t-value when _futureAys was last filled
 let _liveSparks = [];                     // non-fading sparks snapshot for simulation
+let _gapTargets = [];                     // narrow Y gaps between spark pairs, precomputed each tick
 
 let _ayCache = LH * 0.5, _ayFrame = -1;
 function angelY() {
@@ -285,7 +292,7 @@ let aiCommitFrames = 0;
 // that require a direction reversal mid-flight (the main source of preventable
 // deaths). Phase-1 left-wall hugs are also rejected outright.
 function scoreVelocityDeep(vel) {
-  if (_liveSparks.length === 0) return 200;
+  if (_liveSparks.length === 0) return HORIZON;
   const BRANCH_AT = 12;
   let simX = angelX, simVel = aiVelocity;
   let wallTime = 0;  // consecutive frames against either wall
@@ -312,7 +319,7 @@ function scoreVelocityDeep(vel) {
   let bestCont = 0;
   for (const contVel of [-MAX_SPEED, -MAX_SPEED * 0.5, 0, MAX_SPEED * 0.5, MAX_SPEED]) {
     let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
-    for (let i = 1; i <= 200 - BRANCH_AT; i++) {
+    for (let i = 1; i <= HORIZON - BRANCH_AT; i++) {
       const dt = BRANCH_AT + i;
       cV = cV * 0.4 + contVel * 0.6;
       cX += cV;
@@ -337,7 +344,7 @@ function scoreVelocityDeep(vel) {
       cont = i;
     }
     bestCont = Math.max(bestCont, cont);
-    if (bestCont >= 200 - BRANCH_AT) break;
+    if (bestCont >= HORIZON - BRANCH_AT) break;
   }
   return BRANCH_AT + bestCont;
 }
@@ -380,10 +387,27 @@ function scoreVelocity(vel) {
   return wallTrap ? 160 : 200;
 }
 
+// Reward projecting through a narrow vertical gap between two approaching sparks.
+// Tighter gaps score higher; angel Y must align with the gap at ~20 frames out.
+function gapThreadBonus(projX) {
+  if (_gapTargets.length === 0) return 0;
+  const ay = _futureAys[20];
+  let best = 0;
+  for (const g of _gapTargets) {
+    if (ay < g.gapTop - 30 || ay > g.gapBot + 30) continue;
+    const xCenter = (g.xLo + g.xHi) / 2;
+    const halfW = (g.xHi - g.xLo) / 2 + 80;
+    const dist = Math.max(0, Math.abs(projX - xCenter) - halfW);
+    if (dist > 160) continue;
+    best = Math.max(best, g.tightness * (1 - dist / 160) * 35);
+  }
+  return best;
+}
+
 function aiChooseVelocity() {
-  const SAMPLES = 24;
+  const SAMPLES = 14;
   let bestVel = aiDesiredVel, bestScore = -Infinity;
-  const maxZi  = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+  const maxZi  = targetZoneIdx;
   const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
   const zDir   = zTargX - angelX;
   for (let vi = 0; vi < SAMPLES; vi++) {
@@ -398,7 +422,7 @@ function aiChooseVelocity() {
     const leftPen   = leftEdge * leftEdge * 100;
     const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
     // Survive thresholds raised: only reward style when the plan is robustly safe.
-    const styleMult = survive >= 190 ? 1.0 : survive >= 150 ? (survive - 150) / 40 : 0;
+    const styleMult = survive >= 133 ? 1.0 : survive >= 105 ? (survive - 105) / 28 : 0;
     const motion  = Math.min(Math.abs(vel) / MAX_SPEED, 1.0) * (6 + styleMult * 10);
     const smooth  = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
     const arc = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 0.7)) * 14 * styleMult;
@@ -406,7 +430,8 @@ function aiChooseVelocity() {
     const zone   = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
     // Survive is the dominant term — 2× weight so a 20-frame longer life always
     // beats any combination of style bonuses.
-    const score = survive * 2 + center + motion + smooth + arc + zone - leftPen - rightEdge;
+    const gapBonus = gapThreadBonus(projX) * styleMult;
+    const score = survive * 2 + center + motion + smooth + arc + zone + gapBonus - leftPen - rightEdge;
     if (score > bestScore) { bestScore = score; bestVel = vel; }
   }
   return bestVel;
@@ -456,7 +481,7 @@ function scoreInput(dir) {
 // Simulate dir for BRANCH_AT frames, then branch to all 3 continuations.
 // The bot can now see escape routes that require a direction change mid-flight.
 function scoreInputDeep(dir) {
-  if (_liveSparks.length === 0) return 200;
+  if (_liveSparks.length === 0) return HORIZON;
   const BRANCH_AT = 12;
   let simX = angelX, simVel = aiVelocity;
   let wallTime = 0;  // consecutive frames against either wall
@@ -493,7 +518,7 @@ function scoreInputDeep(dir) {
   let bestCont = 0;
   for (const contDir of [-1, 0, 1]) {
     let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
-    for (let i = 1; i <= 200 - BRANCH_AT; i++) {
+    for (let i = 1; i <= HORIZON - BRANCH_AT; i++) {
       const dt = BRANCH_AT + i;
       if (contDir === -1) {
         if (cV > -MAX_SPEED / 2) cV = -MAX_SPEED / 2;
@@ -529,13 +554,13 @@ function scoreInputDeep(dir) {
       cont = i;
     }
     bestCont = Math.max(bestCont, cont);
-    if (bestCont >= 200 - BRANCH_AT) break;
+    if (bestCont >= HORIZON - BRANCH_AT) break;
   }
   return BRANCH_AT + bestCont;
 }
 
 function aiChooseDirection() {
-  const maxZi  = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+  const maxZi  = targetZoneIdx;
   const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
   const zDir   = zTargX - angelX;
   let bestDir = 0, bestScore = -Infinity;
@@ -559,13 +584,14 @@ function aiChooseDirection() {
     const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
     const leftPen   = leftEdge * leftEdge * 100;  // quadratic — dominates style bonuses
     const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
-    const styleMult = survive >= 190 ? 1.0 : survive >= 150 ? (survive - 150) / 40 : 0;
+    const styleMult = survive >= 133 ? 1.0 : survive >= 105 ? (survive - 105) / 28 : 0;
     const motion    = dir !== 0 ? (6 + styleMult * 10) : 0;
     const smooth    = Math.exp(-Math.abs(dir * MAX_SPEED - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
     const zAlign    = Math.max(0, Math.sign(zDir) * dir);
     const zone      = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
     // Survive dominates: 2× weight + scaled penalties.
-    const score = survive * 2 + center + motion + smooth + zone - leftPen - rightEdge;
+    const gapBonus = gapThreadBonus(projX) * styleMult;
+    const score = survive * 2 + center + motion + smooth + zone + gapBonus - leftPen - rightEdge;
     if (score > bestScore) { bestScore = score; bestDir = dir; }
   }
   return bestDir;
@@ -646,8 +672,8 @@ function start(isAI) {
   elapsed=0;startTime=performance.now();
   angelX=LW/2;angelSpeed=0;angelTrail=[];breathScale=1;
   lastAy=LH*0.5;lastDy=0;breathCooldown=0;aiVelocity=0;aiDesiredVel=0;aiInputDir=0;aiCommitFrames=0;aiStylePhase=0;
-  hitFlashes=[];nearFlashes=[];nearMissCd=0;lastDir=0;zoneBonuses=[0,0,0,0,0];
-  _futureAyT=-1;_liveSparks=[];
+  hitFlashes=[];nearFlashes=[];nearMissCd=0;lastDir=0;zoneBonuses=[0,0,0,0,0];targetZoneIdx=2;zoneArrivalFrames=0;
+  _futureAyT=-1;_liveSparks=[];_gapTargets=[];
   screensaver=isAI;
   state='playing';
   if (!isAI) playStart();
@@ -712,9 +738,16 @@ function draw(ts) {
   const doTick = accumulator >= TICK_MS;
   if (doTick) accumulator -= TICK_MS;
 
+  // re-sync canvas pixel size if window dimensions changed (or were wrong at startup)
+  if (c.width !== Math.round(window.innerWidth * dpr) || c.height !== Math.round(window.innerHeight * dpr)) {
+    resize();
+    buildStars();
+  }
+
   // clear full canvas in background colour
   ctx.fillStyle='#07102a';
-  ctx.fillRect(0,0,c.width,c.height);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillRect(0, 0, c.width, c.height);
 
   // all game drawing in logical space
   applyLogical();
@@ -743,9 +776,8 @@ function draw(ts) {
         }
       }
     }
-    for (let i = sparks.length - 1; i >= 0; ) {
-      if (sparks[i].x >= LW + 20) { sparks[i] = sparks[sparks.length-1]; sparks.pop(); if (i >= sparks.length) i--; }
-      else i--;
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      if (sparks[i].x - sparks[i].w >= LW) sparks.splice(i, 1);
     }
     sparks.forEach(s=>{
       s.x += s.vx;
@@ -762,44 +794,59 @@ function draw(ts) {
       // All scoring calls share _futureAys + s._futY — computed once, not per-call.
       if (_futureAyT !== t) {
         _futureAys[0] = LH * 0.5 + Math.sin(t * 0.0567) * LH * 0.35;  // index 0 = current frame
-        for (let dt = 1; dt <= 200; dt++)
+        for (let dt = 1; dt <= HORIZON; dt++)
           _futureAys[dt] = LH * 0.5 + Math.sin((t + dt) * 0.0567) * LH * 0.35;
         _futureAyT = t;
         _liveSparks.length = 0;                                 // reuse array — no allocation
         for (const s of sparks) {
-          if (!s.fading) {
-            // Precompute accurate spark Y path with acceleration + screen clamping.
-            // Linear extrapolation (s.y + s.vy*dt) drifts by up to 10px at dt=100.
-            if (!s._futY) s._futY = new Float32Array(201);
-            s._futY[0] = s.y;  // index 0 = current position (used by dt-1 offset correction)
-            let sy = s.y, svy = s.vy;
-            for (let dt = 1; dt <= 200; dt++) {
-              svy = Math.max(-2.5, Math.min(2.5, svy + s.ay));
-              sy  = Math.max(-s.h, Math.min(LH, sy + svy));
-              s._futY[dt] = sy;
-            }
-            _liveSparks.push(s);
+          if (s.fading) continue;
+          // Cull sparks that can never reach the angel's X column within HORIZON:
+          // their right edge at t+HORIZON is still left of angel - SIM_R margin.
+          if (s.x + s.w + s.vx * HORIZON < angelX - SIM_R - 40) continue;
+          // Precompute accurate spark Y path with acceleration + screen clamping.
+          if (!s._futY) s._futY = new Float32Array(HORIZON + 1);
+          s._futY[0] = s.y;
+          let sy = s.y, svy = s.vy;
+          for (let dt = 1; dt <= HORIZON; dt++) {
+            svy = Math.max(-2.5, Math.min(2.5, svy + s.ay));
+            sy  = Math.max(-s.h, Math.min(LH, sy + svy));
+            s._futY[dt] = sy;
+          }
+          _liveSparks.push(s);
+        }
+        // Precompute narrow Y gaps for gap-threading bonus
+        _gapTargets.length = 0;
+        const nl = _liveSparks.length;
+        for (let gi = 0; gi < nl; gi++) {
+          for (let gj = gi + 1; gj < nl; gj++) {
+            const a = _liveSparks[gi], b = _liveSparks[gj];
+            const xLo = Math.max(a.x, b.x), xHi = Math.min(a.x + a.w, b.x + b.w);
+            if (xHi <= xLo) continue;
+            const [upper, lower] = a.y + a.h / 2 < b.y + b.h / 2 ? [a, b] : [b, a];
+            const gapTop = upper.y + upper.h, gapBot = lower.y;
+            const gap = gapBot - gapTop;
+            if (gap < 15 || gap > 95) continue;
+            _gapTargets.push({ xLo, xHi, gapTop, gapBot, tightness: 1 - gap / 95 });
           }
         }
       }
       // Re-plan when stale or current plan is becoming unsafe.
-      // Threshold raised to 160: anything that dies inside ~2.7s is suspicious enough
-      // to warrant a re-evaluation rather than riding it out.
+      // Thresholds scaled to HORIZON=140: ~80% safe / ~70% caution / ~60% urgent.
       if (botSmooth) {
         const currentSurvive = scoreVelocityDeep(aiDesiredVel);
-        const actualSurvive  = currentSurvive < 160 ? scoreVelocityDeep(aiVelocity) : currentSurvive;
-        if (aiCommitFrames <= 0 || currentSurvive < 160 || actualSurvive < 140) {
+        const actualSurvive  = currentSurvive < 112 ? scoreVelocityDeep(aiVelocity) : currentSurvive;
+        if (aiCommitFrames <= 0 || currentSurvive < 112 || actualSurvive < 98) {
           aiDesiredVel   = aiChooseVelocity();
-          aiCommitFrames = currentSurvive >= 195 ? 3 : currentSurvive >= 170 ? 1 : 0;
+          aiCommitFrames = currentSurvive >= 137 ? 2 : currentSurvive >= 120 ? 1 : 0;
         }
         // Smooth inertia mode: strong direct blend — agile, ship-like, clearly distinct from ACC.
         angelSpeed = angelSpeed * 0.4 + aiDesiredVel * 0.6;
       } else {
         // Input mode: plan & execute exact human key physics
         const currentSurvive = scoreInputDeep(aiInputDir);
-        if (aiCommitFrames <= 0 || currentSurvive < 160) {
+        if (aiCommitFrames <= 0 || currentSurvive < 112) {
           aiInputDir     = aiChooseDirection();
-          aiCommitFrames = currentSurvive >= 195 ? 3 : currentSurvive >= 170 ? 1 : 0;
+          aiCommitFrames = currentSurvive >= 137 ? 2 : currentSurvive >= 120 ? 1 : 0;
         }
         if (aiInputDir === -1) {
           if (angelSpeed > -MAX_SPEED / 2) angelSpeed = -MAX_SPEED / 2;
@@ -838,7 +885,13 @@ function draw(ts) {
     // ── zone exploration: grow unvisited zones, clear current ──
     const curZone = Math.min(4, Math.max(0, Math.floor((angelX - 40) / ((LW - 80) / 5))));
     for (let z = 0; z < 5; z++) { if (zoneBonuses[z] < 120) zoneBonuses[z] += 0.15; }
-    zoneBonuses[curZone] *= 0.95;  // harvest 5% per frame in zone, decays gradually instead of instant clear
+    zoneBonuses[curZone] *= 0.95;  // harvest 5% per frame in zone
+    // Stable zone target: only switch after dwelling in the target zone long enough
+    if (curZone === targetZoneIdx) zoneArrivalFrames++; else zoneArrivalFrames = 0;
+    if (zoneArrivalFrames >= 50 || zoneBonuses[targetZoneIdx] < 12) {
+      const best = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+      if (best !== targetZoneIdx) { targetZoneIdx = best; zoneArrivalFrames = 0; }
+    }
 
     // ── 3. breath ──
     const ay = angelY();
@@ -887,10 +940,8 @@ function draw(ts) {
     ctx.fillRect(s.x, s.y, s.w, s.h);
   });
   ctx.globalAlpha = 1;
-  for (let i = sparks.length - 1; i >= 0; ) {
-    const s = sparks[i];
-    if (s.fading && now2 - s.fadeStart >= 800) { sparks[i] = sparks[sparks.length-1]; sparks.pop(); if (i >= sparks.length) i--; }
-    else i--;
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    if (sparks[i].fading && now2 - sparks[i].fadeStart >= 800) sparks.splice(i, 1);
   }
 
   drawParticles();
@@ -996,25 +1047,28 @@ function draw(ts) {
   // info overlay (inside logical transform, on top of everything)
   if (showInfo) {
     ctx.save();
-    ctx.fillStyle = 'rgba(7,16,42,0.9)';
-    ctx.fillRect(0, 0, LW, LH);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);  // screen coords for full coverage
+    ctx.fillStyle = 'rgba(7,16,42,0.94)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    applyLogical();  // logical coords for text
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = FONT_INFO_H;
-    ctx.fillText('an angel dances in the sparks', LW/2, LH*0.36);
-    ctx.fillText('of a bonfire', LW/2, LH*0.43);
+    ctx.fillText('an angel dances', LW/2, LH*0.30);
+    ctx.fillText('in the sparks', LW/2, LH*0.38);
+    ctx.fillText('of a bonfire', LW/2, LH*0.46);
     ctx.fillStyle = 'rgba(255,255,255,0.52)';
     ctx.font = FONT_INFO_S;
-    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.53);
-    ctx.fillText('bot takes over if you let go', LW/2, LH*0.59);
+    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.57);
+    ctx.fillText('bot takes over if you let go', LW/2, LH*0.63);
     ctx.fillStyle = 'rgba(255,255,255,0.30)';
     ctx.font = FONT_INFO_XS;
-    ctx.fillText('X \u2014 bot mode: ' + (botSmooth ? 'smooth' : 'input'), LW/2, LH*0.66);
+    ctx.fillText('X \u2014 bot mode: ' + (botSmooth ? 'smooth' : 'input'), LW/2, LH*0.70);
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.fillText('click or Esc to close', LW/2, LH*0.72);
+    ctx.fillText('click or Esc to close', LW/2, LH*0.76);
     ctx.fillStyle = 'rgba(255,200,100,0.6)';
     ctx.font = FONT_INFO_TN;
-    ctx.fillText('original game by brlka', LW/2, LH*0.82);
+    ctx.fillText('original game by brlka', LW/2, LH*0.86);
     ctx.restore();
   }
 
