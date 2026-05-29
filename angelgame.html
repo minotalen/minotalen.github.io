@@ -626,8 +626,8 @@ function plan3() {
 // ── Beam-search planner ──────────────────────────────────
 // K candidates × ROUNDS × SEG-frame steps using precomputed deadly intervals.
 // Diversity bucket prevents collapse onto a single trajectory.
-const BEAM_K = 20, BEAM_SEG = 8, BEAM_ROUNDS = 8;
-const BEAM_CENTER_W = 0.1, BEAM_WALLTIME_W = 0.5;
+const BEAM_K = 30, BEAM_SEG = 8, BEAM_ROUNDS = 12;
+const BEAM_CENTER_W = 0.1, BEAM_WALLTIME_W = 1.5;
 const BEAM_LEFT_DEATH = 4, BEAM_RIGHT_DEATH = 4;
 const _beam = {
   X: new Float32Array(64), V: new Float32Array(64),
@@ -1209,10 +1209,10 @@ function draw(ts) {
   applyLogical();
 
   if (state==='playing') {
-    elapsed = ts - startTime;
     if (doTick) {
     t++;
     trailT++;
+    elapsed = t * TICK_MS;
 
     // ── 1. spawn + advance sparks FIRST so AI sees current state ──
     const ramp = Math.min(elapsed / 180000, 1);  // full difficulty reached at 3 min instead of 90 s
@@ -1747,9 +1747,13 @@ function draw(ts) {
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = FONT_INFO_H;
-    ctx.fillText('an angel dances', LW/2, LH*0.18);
-    ctx.fillText('in the sparks', LW/2, LH*0.26);
-    ctx.fillText('of a bonfire', LW/2, LH*0.34);
+    // Prime-number sine waves for each line: ±50px horizontal motion
+    const off1 = Math.sin(ts / 2000) * 50;      // prime 2
+    const off2 = Math.sin(ts / 3000) * 50;      // prime 3
+    const off3 = Math.sin(ts / 5000) * 50;      // prime 5
+    ctx.fillText('an angel dances', LW/2 + off1, LH*0.18);
+    ctx.fillText('in the sparks', LW/2 + off2, LH*0.26);
+    ctx.fillText('of a bonfire', LW/2 + off3, LH*0.34);
     ctx.fillStyle = 'rgba(255,255,255,0.52)';
     ctx.font = FONT_INFO_S;
     ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.50);
