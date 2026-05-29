@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>an angel dances in the sparks of a bonfire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,7 +18,7 @@
     transform: translateX(-50%);
     color: rgba(255,200,100,0.62);
     text-decoration: none;
-    font-family: monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 14px;
     display: none;
     z-index: 1000;
@@ -252,12 +255,12 @@ const AY_SW = Math.sin(AY_W), AY_CW = Math.cos(AY_W);
 const LEFT_KEYS  = new Set(['ArrowLeft',  'a', 'A']);
 const RIGHT_KEYS = new Set(['ArrowRight', 'd', 'D']);
 // pre-computed font strings — LH is a fixed constant, no Math.round per frame
-const FONT_HIT    = `${Math.round(LH*0.22)}px monospace`;
-const FONT_BASE   = `${Math.round(LH*0.022)}px monospace`;
-const FONT_INFO_H = `${Math.round(LH*0.038)}px monospace`;
-const FONT_INFO_S = `${Math.round(LH*0.024)}px monospace`;
-const FONT_INFO_XS= `${Math.round(LH*0.019)}px monospace`;
-const FONT_INFO_TN= `${Math.round(LH*0.018)}px monospace`;
+const FONT_HIT    = `${Math.round(LH*0.22)}px 'IBM Plex Mono', monospace`;
+const FONT_BASE   = `${Math.round(LH*0.022)}px 'IBM Plex Mono', monospace`;
+const FONT_INFO_H = `${Math.round(LH*0.038)}px 'IBM Plex Mono', monospace`;
+const FONT_INFO_S = `${Math.round(LH*0.024)}px 'IBM Plex Mono', monospace`;
+const FONT_INFO_XS= `${Math.round(LH*0.019)}px 'IBM Plex Mono', monospace`;
+const FONT_INFO_TN= `${Math.round(LH*0.018)}px 'IBM Plex Mono', monospace`;
 
 // ── Game state ───────────────────────────────────────────
 let state = 'idle';      // idle | playing | dead | screensaver
@@ -1073,8 +1076,9 @@ document.addEventListener('keydown', e => {
     if (!firstInteraction) { firstInteraction = true; showUI = true; }
     return;
   }
-  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.05); trailTinted = true; return; }
-  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.05); trailTinted = true; return; }
+  if (e.key === 'u' || e.key === 'U') { trailTinted = false; trailHue = 0; trailHueSpeed = 0; return; }
+  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.5); trailTinted = true; return; }
+  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.5); trailTinted = true; return; }
   if (e.key === 'z' || e.key === 'Z') {
     harvestMode = !harvestMode;
     _btnFlash.Z = performance.now();
@@ -1385,8 +1389,8 @@ function draw(ts) {
     breathScale = Math.max(0.7,Math.min(1.4,breathScale));
 
     if (trailTinted) {
-      if (keys.ArrowUp)   trailHue += 0.5;
-      if (keys.ArrowDown) trailHue -= 0.5;
+      if (keys.ArrowUp)   trailHue += 3;
+      if (keys.ArrowDown) trailHue -= 3;
       trailHue += trailHueSpeed;
       trailHue = ((trailHue % 360) + 360) % 360;
     }
@@ -1427,10 +1431,11 @@ function draw(ts) {
       return [Math.round(hue2rgb(h + 1/3) * 255), Math.round(hue2rgb(h) * 255), Math.round(hue2rgb(h - 1/3) * 255)];
     }
     // Blend rgb toward BG by (1-alpha) and return a '#rrggbb' string.
-    // PEAK_A is the opacity at the newest tip; it stays small so the trail is subtle.
+    // PEAK_A is the opacity at the newest tip; PEAK_A_TINT is higher so hue changes are visible.
     const PEAK_A = 0.20;
-    function _blendColor(rgb, alpha) {
-      const t = alpha * PEAK_A;
+    const PEAK_A_TINT = 0.60;
+    function _blendColor(rgb, alpha, pa) {
+      const t = alpha * pa;
       const r = Math.round(rgb[0] * t + TR * (1 - t));
       const g = Math.round(rgb[1] * t + TG * (1 - t));
       const b = Math.round(rgb[2] * t + TB * (1 - t));
@@ -1450,7 +1455,8 @@ function draw(ts) {
       for (let i = 0; i < len - 1; i++) {
         const alpha = (i / (len - 1)) * globalFade;
         const rgb = overrideRGB || _parseRGB(raw[i].color || '#ffffff');
-        const blended = _blendColor(rgb, alpha);
+        const pa = overrideRGB ? PEAK_A : (raw[i].color ? PEAK_A_TINT : PEAK_A);
+        const blended = _blendColor(rgb, alpha, pa);
         if (blended !== prevBlended) {
           if (inPath) ctx.stroke();
           ctx.strokeStyle = blended;
@@ -1510,7 +1516,7 @@ function draw(ts) {
     const ax=angelX, ay=angelY();
     if (doTick) {
     // live trail: always push, window 1800
-    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: trailTinted ? `hsl(${trailHue|0},52%,86%)` : null});
+    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: trailTinted ? `hsl(${trailHue|0},50%,78%)` : null});
     while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 1800) angelTrail.shift();
     // death trail: snapshot — never trimmed, fades visually and is cleared on reset
 
@@ -1791,7 +1797,7 @@ function draw(ts) {
       _profMax = sub[_profCount - 1] || 0;
     }
     const med = _profMed, p95 = _profP95, max = _profMax;
-    ctx.font = '12px monospace';
+    ctx.font = "12px 'IBM Plex Mono', monospace";
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(8, 8, 220, 70);
