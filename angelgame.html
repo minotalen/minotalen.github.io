@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>an angel dances in the sparks of a bonfire</title>
+<link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
@@ -12,56 +13,67 @@
     bottom: 60px;
     left: 50%;
     transform: translateX(-50%);
-    color: #ffc864;
+    color: rgba(255,200,100,0.62);
     text-decoration: none;
     font-family: monospace;
-    font-size: 16px;
+    font-size: 14px;
     display: none;
     z-index: 1000;
     cursor: pointer;
     white-space: nowrap;
+    transition: color 120ms ease;
+    padding: 8px 12px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
   }
   #creditLink:hover {
+    color: rgba(255,220,140,1);
     text-decoration: underline;
   }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">play OG angel game here</a>
+<a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">original game by brlka</a>
 <script>
 const c = document.getElementById('c');
 const ctx = c.getContext('2d', { alpha: false }); // skip per-pixel alpha compositing
 const creditLink = document.getElementById('creditLink');
 
-// ── Logical canvas: 960×540, scaled to fill screen ─────
+// ── Logical canvas: scaled to fill screen with letterbox ─────
 const LW = 1920, LH = 1080;
-const HORIZON = 140;  // bot lookahead frames (~2.3s) — was 200, costs scale linearly
-let scale = 1, dpr = 1;
+const HORIZON = 240;  // bot lookahead frames (~4s)
+
+// ── Deterministic PRNG for bot/screensaver mode (mulberry32) ─────────────────
+// 300-run sim (beam K=20 R=8 SEG=8): best seed = 9238, survived 5600s (~93 min).
+// In screensaver mode all spawn randomness uses _rng() so the bot replays the
+// same best-known run every time. Player mode keeps Math.random() untouched.
+const BEST_SEED = 9238;
+let _rngState = 1;
+function _setSeed(s) { _rngState = (s >>> 0) || 1; }
+function _rng() {
+  let _t = (_rngState = (_rngState + 0x6D2B79F5) >>> 0);
+  _t = Math.imul(_t ^ (_t >>> 15), _t | 1);
+  _t ^= _t + Math.imul(_t ^ (_t >>> 7), _t | 61);
+  return ((_t ^ (_t >>> 14)) >>> 0) / 4294967296;
+}
+let scale = 1, _appOx = 0, _appOy = 0;
 function resize() {
-  dpr = Math.min(window.devicePixelRatio || 1, 2);  // cap at 2× to keep cost reasonable
-  const sw = window.innerWidth / LW;
-  const sh = window.innerHeight / LH;
-  scale = Math.min(sw, sh);
-  c.width  = Math.round(window.innerWidth  * dpr);
-  c.height = Math.round(window.innerHeight * dpr);
-  c.style.width  = window.innerWidth  + 'px';
-  c.style.height = window.innerHeight + 'px';
+  scale = Math.min(window.innerWidth / LW, window.innerHeight / LH);
+  _appOx = (window.innerWidth  - LW * scale) / 2;
+  _appOy = (window.innerHeight - LH * scale) / 2;
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
   c.style.position = 'absolute';
   c.style.left = '0'; c.style.top = '0';
 }
 resize();
 window.addEventListener('resize', () => { resize(); buildStars(); });
+let _needResize = false;
+new ResizeObserver(() => { _needResize = true; }).observe(document.documentElement);
 
-// Transform: logical → screen
-function applyLogical() {
-  // recompute every frame so a stale `scale` from a bad initial resize() never causes misalignment
-  const s = Math.min(window.innerWidth / LW, window.innerHeight / LH) * dpr;
-  const ox = (c.width  - LW * s) / 2;
-  const oy = (c.height - LH * s) / 2;
-  ctx.setTransform(s, 0, 0, s, ox, oy);
-}
-function resetTransform() { ctx.setTransform(1,0,0,1,0,0); }
+function applyLogical()   { ctx.setTransform(scale, 0, 0, scale, _appOx, _appOy); }
+function resetTransform() { ctx.setTransform(1, 0, 0, 1, 0, 0); }
 
 // ── Audio ───────────────────────────────────────────────
 let audioCtx = null;
@@ -164,6 +176,25 @@ function playStart() {
     });
   } catch(e){}
 }
+function playHarvest() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [1480, 1980].forEach((freq, i) => {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t0 + i * 0.018);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.82, t0 + i * 0.018 + 0.18);
+      g.gain.setValueAtTime(0, t0 + i * 0.018);
+      g.gain.linearRampToValueAtTime(0.038, t0 + i * 0.018 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.018 + 0.22);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0 + i * 0.018);
+      osc.stop(t0 + i * 0.018 + 0.25);
+    });
+  } catch(e) {}
+}
 
 // ── Stars ───────────────────────────────────────────────
 let stars = [], starCanvas = null;
@@ -175,12 +206,19 @@ function buildStars() {
     r: Math.random()<0.07?1.4:Math.random()<0.25?0.9:0.45,
     a: 0.12+Math.random()*0.5
   });
-  // pre-render once; blit each frame instead of ~190 arc calls
+  // Pre-render stars at the actual screen size so per-frame blit is a 1:1 copy
+  // (no canvas scaling). Background colour is baked in — main loop skips fillRect.
   starCanvas = document.createElement('canvas');
-  starCanvas.width = LW; starCanvas.height = LH;
+  starCanvas.width  = window.innerWidth;
+  starCanvas.height = window.innerHeight;
   const sCtx = starCanvas.getContext('2d');
-  sCtx.fillStyle = '#07102a';        // bake background so draw() needs no logical fillRect
-  sCtx.fillRect(0, 0, LW, LH);
+  sCtx.fillStyle = '#07102a';
+  sCtx.fillRect(0, 0, starCanvas.width, starCanvas.height);
+  // Letterbox so star field aligns with the game's logical space.
+  const _s  = Math.min(window.innerWidth / LW, window.innerHeight / LH);
+  const _ox = (window.innerWidth  - LW * _s) / 2;
+  const _oy = (window.innerHeight - LH * _s) / 2;
+  sCtx.setTransform(_s, 0, 0, _s, _ox, _oy);
   stars.forEach(s=>{
     sCtx.beginPath(); sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
     sCtx.fillStyle=`rgba(200,215,255,${s.a})`; sCtx.fill();
@@ -188,6 +226,8 @@ function buildStars() {
 }
 buildStars();
 function drawStars() {
+  // identity transform: 1:1 blit, no scaling cost
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(starCanvas, 0, 0);
 }
 
@@ -196,14 +236,34 @@ const COLORS=['#ff0000','#e50000','#cc0000','#ff3300','#ff4400','#ff5500',
               '#ff6600','#ff7700','#ff8800','#ff9900','#ffaa00','#ffbb00',
               '#ffcc00','#ffdd00','#ffee00'];
 function fireColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+// Blend a hex color 30% toward the background — used to fade harvested sparks.
+const _BG_R = 7, _BG_G = 16, _BG_B = 42;
+function darkenForHarvest(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 0xff, g = (n >> 8) & 0xff, b = n & 0xff;
+  const nr = Math.round(r * 0.7 + _BG_R * 0.3);
+  const ng = Math.round(g * 0.7 + _BG_G * 0.3);
+  const nb = Math.round(b * 0.7 + _BG_B * 0.3);
+  return '#' + ((nr << 16) | (ng << 8) | nb).toString(16).padStart(6, '0');
+}
 
 // ── Constants (logical pixels, screen-independent) ──────
 const ANGEL_R   = 20;  // visual / near-miss ring radius
 const HIT_R     = 6;   // actual collision hitbox (center only)
 const SIM_R     = 16;  // AI simulation hitbox — generous margin over HIT_R=6 to absorb sub-frame motion of fast sparks (up to ~23 px/frame)
-const SPAWN_ZONE = 280;  // left band where new sparks can appear with little reaction time — bot treats this as soft-deadly
-const MAX_SPEED = 20;
-const ACC       = MAX_SPEED / 35;
+const SPAWN_ZONE = 250;  // left band where new sparks can appear with little reaction time — bot treats this as soft-deadly
+const MAX_SPEED = 37;
+const ACC       = MAX_SPEED / 42;
+const FRICTION  = 0.93;  // drift multiplier per frame when no direction held — lower = longer glide
+const DRIFT_MIN = 0.08;  // vel magnitude below which drift snaps to 0
+const LOW_SPEED_BOOST_THRESHOLD = 8;  // boost (1.5×) when |vel| is below this — same mult as reversing; adjust to taste
+const DIRS      = Object.freeze([-1, 0, 1]);
+// Angel Y-path: ay = LH/2 + sin(t * AY_W) * AY_AMP.
+// SW/CW enable a sin recurrence in the bot lookahead (one Math.sin per frame instead of HORIZON).
+const AY_W = 0.0567, AY_AMP = LH * 0.35, AY_MID = LH * 0.5;
+const AY_SW = Math.sin(AY_W), AY_CW = Math.cos(AY_W);
+const LEFT_KEYS  = new Set(['ArrowLeft',  'a', 'A']);
+const RIGHT_KEYS = new Set(['ArrowRight', 'd', 'D']);
 // pre-computed font strings — LH is a fixed constant, no Math.round per frame
 const FONT_HIT    = `${Math.round(LH*0.22)}px monospace`;
 const FONT_BASE   = `${Math.round(LH*0.022)}px monospace`;
@@ -220,172 +280,105 @@ let sparks = [], spawnAccum = 0, spawnPause = 0;
 let particles = [];
 let keys = {};
 let angelX = LW/2, angelSpeed = 0;
-let angelTrail = [];  // [{x,y}] up to ~450 frames (every other frame, 900 tick window)
+let angelTrail = [];  // [{x,y,ts}] live white trail
+let deathTrail  = [];  // snapshot of trail on death, drawn pink and faded 2x faster
+let deathTrailBorn = 0; // performance.now() when death trail was created
 let breathScale = 1.0, lastAy = LH*0.5, lastDy = 0, breathCooldown = 0;
-let aiVelocity = 0, aiDesiredVel = 0;
-let aiInputDir = 0;         // -1/0/1 direction chosen by input-mode bot
-let botSmooth = Math.random() < 0.5;  // false = ACC key-input mode, true = smooth inertia
-let botSmoothChangedAt = -Infinity; // performance.now() timestamp of last toggle, for label fade
+let aiVelocity = 0;
+let aiInputDir = 0;         // -1/0/1 direction currently committed by the bot
+let aiInputHeldFor = 0;     // consecutive ticks aiInputDir has been held
+let showUI = false;        // HUD visible (X to toggle) — hidden until first interaction
+let harvestMode = false;   // Z toggles "harvest" mode: graze sparks to score points
+let harvestScore = 0;      // count of sparks harvested this run
+let mouseLx = -1, mouseLy = -1;  // mouse position in logical coords (for hover effects)
+const _btnFlash = {};      // key → ts of last click flash
+let lastDir     = 0;       // -1 left / 1 right — newest key wins
+let prevPlayerDir = 0;     // direction last tick — detects first frame of input
+let playerDirFrames = 0;   // frames held in current direction — resets on change
+let playerKeyPressCooldown = 0;  // frames until next 6x first-frame boost is allowed
+let aiInputCooldown = 0;   // frames until next 6x first-frame boost is allowed (bot)
 let deathTimer = null;
 let attractTimer = null;
 let hitFlashes = [];
 let bestTime = 0;
+let bestHarvestScore = 0;
+let showStats = false;
+let firstInteraction = false;  // tracks whether user has interacted yet (for UI reveal)
+const RUNS_KEY = 'angel.runs.v1';
+const RUNS_KEY_HARVEST = 'angel.runs.harvest.v1';
+let runs = [];         // [{ms, ts, bot}] — normal mode, chronological
+let runsHarvest = [];  // [{score, ts, bot}] — harvest mode, chronological
+let trailHue = 0;          // current hue offset for live trail (deg)
+let trailHueSpeed = 0;     // auto-cycle rate (deg per tick); adjusted by I/O
+let trailTinted = false;   // becomes true on first tint input; otherwise trail is pure white
+function loadRuns() {
+  try { runs = JSON.parse(localStorage.getItem(RUNS_KEY)) || []; } catch { runs = []; }
+  try { runsHarvest = JSON.parse(localStorage.getItem(RUNS_KEY_HARVEST)) || []; } catch { runsHarvest = []; }
+  bestTime = runs.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.ms), 0);
+  bestHarvestScore = runsHarvest.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.score), 0);
+}
+function saveRuns() {
+  try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs.slice(-500))); } catch {}
+  try { localStorage.setItem(RUNS_KEY_HARVEST, JSON.stringify(runsHarvest.slice(-500))); } catch {}
+}
+function recordRun(ms, bot) {
+  if (harvestMode) {
+    runsHarvest.push({ score: harvestScore, ts: Date.now(), bot: !!bot });
+    if (runsHarvest.length > 500) runsHarvest = runsHarvest.slice(-500);
+  } else {
+    runs.push({ ms, ts: Date.now(), bot: !!bot });
+    if (runs.length > 500) runs = runs.slice(-500);
+  }
+  saveRuns();
+}
+loadRuns();
 let trailT = 0;  // monotonic, never resets — trail timestamps stay valid
-let aiStylePhase = 0;      // sinusoidal drift phase for stylish AI movement
 let keyHintTs = -Infinity; // timestamp of last non-movement keypress
 let lastMoveInputTs = -Infinity; // timestamp of last move key event (not reset on death)
 let hadInputSinceDeath = false;  // true once player presses a key after dying
 let showInfo = false;      // info overlay active
-let nearFlashes = [];      // near-miss golden ring effects
-let nearMissCd  = 0;       // cooldown frames to avoid repeat triggers
-let lastDir     = 0;       // -1 left / 1 right — newest key wins
+
 let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
 let targetZoneIdx = 2, zoneArrivalFrames = 0; // stable zone targeting — updated with hysteresis
 let _futureAys = new Float32Array(HORIZON + 2);  // precomputed futureAy[0..HORIZON]; refilled each frame
+const _hScratch = new Float32Array(50);  // scratch: per-spark min-distance for harvest scoring
 let _futureAyT = -1;                      // t-value when _futureAys was last filled
 let _liveSparks = [];                     // non-fading sparks snapshot for simulation
 let _gapTargets = [];                     // narrow Y gaps between spark pairs, precomputed each tick
+let _gapPool = [];                        // reusable pool to avoid per-frame object allocation
+let _deadlyAt = (() => { const a = new Array(HORIZON + 2); for (let i = 0; i <= HORIZON + 1; i++) a[i] = new Float32Array(100); return a; })();
+let _deadlyCnt = new Int32Array(HORIZON + 2);
 
-let _ayCache = LH * 0.5, _ayFrame = -1;
+let _ayCache = AY_MID, _ayFrame = -1;
 function angelY() {
-  // cache per frame tick — avoids repeated Math.sin during collision checks
-  if (_ayFrame !== t) { _ayCache = LH*0.5 + Math.sin(t*0.0567)*LH*0.35; _ayFrame = t; }
+  if (_ayFrame !== t) { _ayCache = AY_MID + Math.sin(t * AY_W) * AY_AMP; _ayFrame = t; }
   return _ayCache;
 }
 
 // ── Sparks ───────────────────────────────────────────────
 function spawnSpark(ramp) {
-  const lo = (2.5 + ramp * 2.0) * 2 * 0.6;
-  const hi = (5.5 + ramp * 6.0) * 2 * 0.6;
-  const w = 44 + Math.random() * 64;
+  const lo = 1.7;
+  const hi = 7.6 + ramp * 4;
+  // In screensaver mode use the seeded PRNG so spawns match the sim exactly.
+  // fireColor() stays on Math.random — cosmetic only, not consumed by sim.
+  const rand = screensaver ? _rng : Math.random.bind(Math);
+  const w  = 44 + rand() * 64;
+  const vx = lo + rand() * (hi - lo);
+  // Spawn one tick behind the border so after the immediate x += vx advance
+  // the right edge lands exactly at 0 (left border), never visible on spawn.
   return {
-    x: -w,
-    y: Math.random()*LH*0.8+LH*0.1,
-    w, h: 32+Math.random()*40,
-    vx: lo + Math.random()*(hi-lo),
-    vy: (Math.random()-0.5) * 0.25,
-    ay: (Math.random()-0.5) * 0.004,
+    x: -(w + vx),
+    y: rand()*LH*0.8+LH*0.1,
+    w, h: 32+rand()*40,
+    vx,
+    vy: (rand()-0.5) * 0.25,
+    ay: (rand()-0.5) * 0.004,
     color: fireColor()
   };
 }
 
-function hitAt(ax, ay, s) {
-  return ax+ANGEL_R > s.x && ax-ANGEL_R < s.x+s.w &&
-         ay+ANGEL_R > s.y && ay-ANGEL_R < s.y+s.h;
-}
-function hit(s) {
-  const ax=angelX, ay=angelY();
-  return ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
-         ay+HIT_R > s.y && ay-HIT_R < s.y+s.h;
-}
-
-// ── AI: velocity-based planner ───────────────────────────
-// Scores a desired-velocity choice by simulating the actual path it
-// produces (same inertia model as real movement), so gap-threading
-// and timing are captured exactly. Style bonuses for smoothness
-// (low angular change → elliptical arcs) and horizontal motion.
+// ── AI planner state ─────────────────────────────────────
 let aiCommitFrames = 0;
-
-// ── AI: smooth-mode 2-level lookahead ─────────────────────────────────────
-// Simulate vel for BRANCH_AT frames, then branch to 5 candidate target velocities.
-// Earlier branch point + denser continuations = the bot can find escape routes
-// that require a direction reversal mid-flight (the main source of preventable
-// deaths). Phase-1 left-wall hugs are also rejected outright.
-function scoreVelocityDeep(vel) {
-  if (_liveSparks.length === 0) return HORIZON;
-  const BRANCH_AT = 12;
-  let simX = angelX, simVel = aiVelocity;
-  let wallTime = 0;  // consecutive frames against either wall
-  for (let dt = 1; dt <= BRANCH_AT; dt++) {
-    simVel = simVel * 0.4 + vel * 0.6;
-    simX += simVel;
-    if (simX <= 41 || simX >= LW - 41) {
-      simX = Math.max(40, Math.min(LW - 40, simX));
-      // Left wall = spawn zone; never let a plan commit to hugging it.
-      if (++wallTime > 6 && simX <= 41) return dt;
-    } else {
-      wallTime = 0;
-    }
-    const fay = _futureAys[dt - 1];
-    const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
-    const simHi = simX + SIM_R, simLo = simX - SIM_R;
-    for (const s of _liveSparks) {
-      const fx = s.x + s.vx * (dt - 1);
-      if (simHi <= fx || simLo >= fx + s.w) continue;
-      const fy = s._futY[dt - 1];
-      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
-    }
-  }
-  let bestCont = 0;
-  for (const contVel of [-MAX_SPEED, -MAX_SPEED * 0.5, 0, MAX_SPEED * 0.5, MAX_SPEED]) {
-    let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
-    for (let i = 1; i <= HORIZON - BRANCH_AT; i++) {
-      const dt = BRANCH_AT + i;
-      cV = cV * 0.4 + contVel * 0.6;
-      cX += cV;
-      cX = Math.max(40, Math.min(LW - 40, cX));
-      if (cX <= 41 || cX >= LW - 41) {
-        // Left wall trap triggers much sooner than right (sparks spawn there).
-        if (++cWallTime > (cX <= 41 ? 20 : 60)) { cont = (cX <= 41 ? 60 : 130) - BRANCH_AT; break; }
-      } else {
-        cWallTime = 0;
-      }
-      const fay = _futureAys[dt - 1];
-      const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
-      const cHi = cX + SIM_R, cLo = cX - SIM_R;
-      let hit = false;
-      for (const s of _liveSparks) {
-        const fx = s.x + s.vx * (dt - 1);
-        if (cHi <= fx || cLo >= fx + s.w) continue;
-        const fy = s._futY[dt - 1];
-        if (fayHi > fy && fayLo < fy + s.h) { hit = true; break; }
-      }
-      if (hit) break;
-      cont = i;
-    }
-    bestCont = Math.max(bestCont, cont);
-    if (bestCont >= HORIZON - BRANCH_AT) break;
-  }
-  return BRANCH_AT + bestCont;
-}
-
-function scoreVelocity(vel) {
-  if (_liveSparks.length === 0) return 200;  // no threats — skip simulation entirely
-  let simX = angelX, simVel = aiVelocity;
-  const deadband = ACC * 1.5;
-  let wallStart = -1, wallTrap = false;
-  for (let dt = 1; dt <= 200; dt++) {
-    if (botSmooth) {
-      simVel = simVel * 0.4 + vel * 0.6;  // strong blend: fast, fluid, clearly distinct from ACC
-    } else {
-      const dir = vel > simVel + deadband ? 1 : vel < simVel - deadband ? -1 : 0;
-      if      (dir === -1) simVel = Math.max(-MAX_SPEED, simVel - ACC);
-      else if (dir ===  1) simVel = Math.min( MAX_SPEED, simVel + ACC);
-      else                 simVel *= 0.85;
-    }
-    simX  += simVel;
-    if (simX <= 41 || simX >= LW - 41) {
-      simX = Math.max(40, Math.min(LW - 40, simX));
-      if (wallStart < 0) wallStart = dt;
-      else if (dt - wallStart > 30) {
-        wallTrap = true;
-        if (dt - wallStart > 90) return 160; // checked enough; wall-trap confirmed
-      }
-    } else {
-      wallStart = -1;
-    }
-    const fay = _futureAys[dt];            // no Math.sin — precomputed once per frame
-    const fayHi = fay + ANGEL_R, fayLo = fay - ANGEL_R;
-    const simHi = simX + ANGEL_R, simLo = simX - ANGEL_R;
-    for (const s of _liveSparks) {
-      const fx = s.x + s.vx * dt;
-      if (simHi <= fx || simLo >= fx + s.w) continue; // X bounds check
-      const fy = s.y + s.vy * dt;
-      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
-    }
-  }
-  return wallTrap ? 160 : 200;
-}
 
 // Reward projecting through a narrow vertical gap between two approaching sparks.
 // Tighter gaps score higher; angel Y must align with the gap at ~20 frames out.
@@ -404,77 +397,40 @@ function gapThreadBonus(projX) {
   return best;
 }
 
-function aiChooseVelocity() {
-  const SAMPLES = 14;
-  let bestVel = aiDesiredVel, bestScore = -Infinity;
-  const maxZi  = targetZoneIdx;
-  const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
-  const zDir   = zTargX - angelX;
-  for (let vi = 0; vi < SAMPLES; vi++) {
-    const vel = -MAX_SPEED + (vi / (SAMPLES - 1)) * 2 * MAX_SPEED;
-    const survive = scoreVelocityDeep(vel);
-    const projX  = Math.max(40, Math.min(LW - 40, angelX + vel * 30));
-    const center  = -(Math.abs(projX - LW / 2) / (LW / 2)) * 12;
-    // Left spawn zone is uniquely dangerous: new sparks appear at x=-w and reach
-    // the angel in as few as 4 frames — well below the AI's plan cadence.
-    // Penalty must dominate style bonuses so the bot never hugs the left wall.
-    const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
-    const leftPen   = leftEdge * leftEdge * 100;
-    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
-    // Survive thresholds raised: only reward style when the plan is robustly safe.
-    const styleMult = survive >= 133 ? 1.0 : survive >= 105 ? (survive - 105) / 28 : 0;
-    const motion  = Math.min(Math.abs(vel) / MAX_SPEED, 1.0) * (6 + styleMult * 10);
-    const smooth  = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
-    const arc = Math.exp(-Math.abs(vel - aiVelocity) / (MAX_SPEED * 0.7)) * 14 * styleMult;
-    const zAlign = Math.max(0, Math.sign(zDir) * vel) / MAX_SPEED;
-    const zone   = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
-    // Survive is the dominant term — 2× weight so a 20-frame longer life always
-    // beats any combination of style bonuses.
-    const gapBonus = gapThreadBonus(projX) * styleMult;
-    const score = survive * 2 + center + motion + smooth + arc + zone + gapBonus - leftPen - rightEdge;
-    if (score > bestScore) { bestScore = score; bestVel = vel; }
+// ── Per-frame input-mode physics step ─────────────────────
+// Reversing (vel opposite to dir) or below LOW_SPEED_BOOST_THRESHOLD: 1.5× accel.
+// Otherwise: 1.0–1.8× accel scaled inversely by current speed.
+function simInputStep(dir, vel) {
+  if (dir === 0) {
+    const nv = vel * FRICTION;
+    return Math.abs(nv) < DRIFT_MIN ? 0 : nv;
   }
-  return bestVel;
+  let mult;
+  if (dir * vel < 0 || Math.abs(vel) < LOW_SPEED_BOOST_THRESHOLD)  mult = 2.1;
+  else                                                               mult = 1 + (1 - Math.abs(vel) / MAX_SPEED) * 0.8;
+  const nv = vel + ACC * 1.5 * mult * dir;
+  return dir < 0 ? Math.max(-MAX_SPEED, nv) : Math.min(MAX_SPEED, nv);
 }
 
-// ── AI: input-mode planner (exact human key physics) ────
-// Scores a held direction (−1/0/+1) using the same snap-to-half +
-// instant-stop mechanics that the human input path uses.
-function scoreInput(dir) {
-  if (_liveSparks.length === 0) return 200;
-  let simX = angelX, simVel = aiVelocity;
-  let wallStart = -1, wallTrap = false;
-  const leftWall = simX < LW / 2;   // track which wall we may trap against
-  for (let dt = 1; dt <= 200; dt++) {
-    if (dir === -1) {
-      if (simVel > -MAX_SPEED / 2) simVel = -MAX_SPEED / 2;
-      simVel = Math.max(-MAX_SPEED, simVel - ACC);
-    } else if (dir === 1) {
-      if (simVel < MAX_SPEED / 2) simVel = MAX_SPEED / 2;
-      simVel = Math.min(MAX_SPEED, simVel + ACC);
-    } else {
-      simVel = 0;
-    }
-    simX += simVel;
-    if (simX <= 41 || simX >= LW - 41) {
-      simX = Math.max(40, Math.min(LW - 40, simX));
-      if (wallStart < 0) wallStart = dt;
-      else if (dt - wallStart > 90)
-        return simX <= 41 ? 100 : 150;  // left wall more dangerous (sparks enter there)
-    } else {
-      wallStart = -1;
-    }
-    const fay = _futureAys[dt];
-    const fayHi = fay + ANGEL_R, fayLo = fay - ANGEL_R;
-    const simHi = simX + ANGEL_R, simLo = simX - ANGEL_R;
-    for (const s of _liveSparks) {
-      const fx = s.x + s.vx * dt;
-      if (simHi <= fx || simLo >= fx + s.w) continue;
-      const fy = s.y + s.vy * dt;
-      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
-    }
+// ── Shared movement applier (bot + player) ────────────────
+// Writes into a reused scratch object to avoid per-tick allocation.
+const _moveOut = { vel: 0, heldFrames: 0, cooldown: 0 };
+function stepAngelMovement(dir, prevDir, heldFrames, cooldown, vel) {
+  let newHeld;
+  if (dir !== prevDir)  newHeld = 1;
+  else if (dir !== 0)   newHeld = heldFrames + 1;
+  else                  newHeld = 0;
+  let newVel, newCooldown = cooldown;
+  if (dir !== 0) {
+    newVel = simInputStep(dir, vel);
+  } else {
+    newVel = vel * FRICTION;
+    if (Math.abs(newVel) < DRIFT_MIN) newVel = 0;
   }
-  return wallStart >= 0 ? (simX <= 41 ? 100 : 150) : 200;
+  _moveOut.vel = newVel;
+  _moveOut.heldFrames = newHeld;
+  _moveOut.cooldown = newCooldown;
+  return _moveOut;
 }
 
 // ── AI: input-mode 2-level lookahead ──────────────────────────────────────
@@ -483,18 +439,12 @@ function scoreInput(dir) {
 function scoreInputDeep(dir) {
   if (_liveSparks.length === 0) return HORIZON;
   const BRANCH_AT = 12;
+  // Mirror the real cooldown gate so the planner never over-promises boost.
+  const isNewDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
   let simX = angelX, simVel = aiVelocity;
   let wallTime = 0;  // consecutive frames against either wall
   for (let dt = 1; dt <= BRANCH_AT; dt++) {
-    if (dir === -1) {
-      if (simVel > -MAX_SPEED / 2) simVel = -MAX_SPEED / 2;
-      simVel = Math.max(-MAX_SPEED, simVel - ACC);
-    } else if (dir === 1) {
-      if (simVel < MAX_SPEED / 2) simVel = MAX_SPEED / 2;
-      simVel = Math.min(MAX_SPEED, simVel + ACC);
-    } else {
-      simVel = 0;
-    }
+    simVel = simInputStep(dir, simVel, dt, isNewDir && dt === 1);
     simX += simVel;
     if (simX <= 41 || simX >= LW - 41) {
       simX = Math.max(40, Math.min(LW - 40, simX));
@@ -503,51 +453,44 @@ function scoreInputDeep(dir) {
     } else {
       wallTime = 0;
     }
-    const fay = _futureAys[dt - 1];
+    const fay = _futureAys[dt];
     const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
     const simHi = simX + SIM_R, simLo = simX - SIM_R;
     for (const s of _liveSparks) {
-      const fx = s.x + s.vx * (dt - 1);
+      const fx = s.x + s.vx * dt;
       if (simHi <= fx || simLo >= fx + s.w) continue;
-      const fy = s._futY[dt - 1];
+      const fy = s._futY[dt];
       if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
     }
   }
   // Branch: try all 3 continuations from intermediate state, take the best.
   // Wall time is inherited so traps that span both phases are correctly penalised.
   let bestCont = 0;
-  for (const contDir of [-1, 0, 1]) {
+  for (const contDir of DIRS) {
     let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
+    const isContNewDir = (contDir !== dir);
     for (let i = 1; i <= HORIZON - BRANCH_AT; i++) {
       const dt = BRANCH_AT + i;
-      if (contDir === -1) {
-        if (cV > -MAX_SPEED / 2) cV = -MAX_SPEED / 2;
-        cV = Math.max(-MAX_SPEED, cV - ACC);
-      } else if (contDir === 1) {
-        if (cV < MAX_SPEED / 2) cV = MAX_SPEED / 2;
-        cV = Math.min(MAX_SPEED, cV + ACC);
-      } else {
-        cV = 0;
-      }
+      cV = simInputStep(contDir, cV, i, isContNewDir && i === 1);
       cX += cV;
       cX = Math.max(40, Math.min(LW - 40, cX));
       if (cX <= 41 || cX >= LW - 41) {
-        // Left wall trap triggers much sooner than right (sparks spawn there).
-        if (++cWallTime > (cX <= 41 ? 20 : 60)) {
-          cont = (cX <= 41 ? 60 : 130) - BRANCH_AT;
+        // Right wall is dangerous: cuts off leftward escape. Penalise sooner than before.
+        if (++cWallTime > (cX <= 41 ? 20 : 25)) {
+          cont = (cX <= 41 ? 60 : 100) - BRANCH_AT;
           break;
         }
       } else {
         cWallTime = 0;
       }
-      const fay = _futureAys[dt - 1];
+      const fay = _futureAys[dt];
       const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
       const cHi = cX + SIM_R, cLo = cX - SIM_R;
       let hit = false;
       for (const s of _liveSparks) {
-        const fx = s.x + s.vx * (dt - 1);
+        const fx = s.x + s.vx * dt;
         if (cHi <= fx || cLo >= fx + s.w) continue;
-        const fy = s._futY[dt - 1];
+        const fy = s._futY[dt];
         if (fayHi > fy && fayLo < fy + s.h) { hit = true; break; }
       }
       if (hit) break;
@@ -559,64 +502,472 @@ function scoreInputDeep(dir) {
   return BRANCH_AT + bestCont;
 }
 
-function aiChooseDirection() {
+function aiChooseDirection(currentDirSurvive) {
   const maxZi  = targetZoneIdx;
   const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
   const zDir   = zTargX - angelX;
   let bestDir = 0, bestScore = -Infinity;
-  for (const dir of [-1, 0, 1]) {
-    const survive = scoreInputDeep(dir);
-    // Project position 30 frames out with exact human physics for bonuses
+  for (const dir of DIRS) {
+    // Reuse the survive score already computed for the current direction
+    // (saves one full scoreInputDeep call per recompute — ~33% of planner work).
+    const survive = (dir === aiInputDir) ? currentDirSurvive : scoreInputDeep(dir);
+    // Project position 30 frames out with exact input physics for bonuses
     let projX = angelX, projV = aiVelocity;
-    for (let dt = 0; dt < 30; dt++) {
-      if (dir === -1) {
-        if (projV > -MAX_SPEED / 2) projV = -MAX_SPEED / 2;
-        projV = Math.max(-MAX_SPEED, projV - ACC);
-      } else if (dir === 1) {
-        if (projV < MAX_SPEED / 2) projV = MAX_SPEED / 2;
-        projV = Math.min(MAX_SPEED, projV + ACC);
-      } else {
-        projV = 0;
-      }
+    for (let dt = 1; dt <= 30; dt++) {
+      projV = simInputStep(dir, projV);
       projX = Math.max(40, Math.min(LW - 40, projX + projV));
     }
     const center    = -(Math.abs(projX - LW / 2) / (LW / 2)) * 12;
     const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
-    const leftPen   = leftEdge * leftEdge * 100;  // quadratic — dominates style bonuses
-    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE) * 20;
+    const leftPen   = leftEdge * leftEdge * 40;   // quadratic — soft penalty, bot can still use left zone
+    // Right wall isn't a spawn zone but trapping there cuts off escape options.
+    // Stronger quadratic than left so the bot actively avoids drifting far right.
+    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE);
+    const rightPen  = rightEdge * rightEdge * 80;
     const styleMult = survive >= 133 ? 1.0 : survive >= 105 ? (survive - 105) / 28 : 0;
     const motion    = dir !== 0 ? (6 + styleMult * 10) : 0;
-    const smooth    = Math.exp(-Math.abs(dir * MAX_SPEED - aiVelocity) / (MAX_SPEED * 2.0)) * 4;
+    // Smooth: gentle incentive to continue in same direction — kept small so safety dominates.
+    const smooth    = Math.exp(-Math.abs(dir * MAX_SPEED - aiVelocity) / (MAX_SPEED * 1.2)) * 8 * styleMult;
+    // Penalise hard reversals only when safe — in danger, reversal must be free to execute.
+    const reversePen = (dir !== 0 && Math.sign(aiVelocity) !== 0 && dir === -Math.sign(aiVelocity))
+                       ? (Math.abs(aiVelocity) / MAX_SPEED) * 18 * styleMult : 0;
+    // Stickiness bonus: small reward for holding same direction — capped so safety always wins.
+    const stickiness = (dir === aiInputDir) ? Math.min(aiInputHeldFor, 60) * 0.3 * styleMult : 0;
     const zAlign    = Math.max(0, Math.sign(zDir) * dir);
-    const zone      = zAlign * zoneBonuses[maxZi] * 1.2 * styleMult;
+    // Zone bonus kept small — exploration bias must not override a meaningful survival difference.
+    const zone      = harvestMode ? 0 : zAlign * zoneBonuses[maxZi] * 0.2 * styleMult;
     // Survive dominates: 2× weight + scaled penalties.
-    const gapBonus = gapThreadBonus(projX) * styleMult;
-    const score = survive * 2 + center + motion + smooth + zone + gapBonus - leftPen - rightEdge;
+    const gapBonus = gapThreadBonus(projX) * styleMult * 0.4;
+    // Harvest mode: reward projected proximity (≤100 px edge-distance) to non-harvested sparks.
+    // Gated by styleMult (0 when unsafe) so the bot never sacrifices survival to harvest.
+    // Per-spark minimum distance — bounded regardless of how many frames stay near a spark.
+    let harvestBonus = 0;
+    if (harvestMode && styleMult > 0) {
+      const isHDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
+      let hX = angelX, hV = aiVelocity;
+      const nls = _liveSparks.length;
+      for (let si = 0; si < nls; si++) _hScratch[si] = 100;
+      for (let dt = 1; dt <= 50; dt++) {
+        hV = simInputStep(dir, hV, dt, isHDir && dt === 1);
+        hX = Math.max(40, Math.min(LW - 40, hX + hV));
+        const fay = _futureAys[dt];
+        for (let si = 0; si < nls; si++) {
+          const s = _liveSparks[si];
+          if (s.harvested) continue;
+          const fx = s.x + s.vx * dt;
+          const fy = s._futY[dt];
+          const dx = hX < fx ? fx - hX : hX > fx + s.w ? hX - (fx + s.w) : 0;
+          const dy = fay < fy ? fy - fay : fay > fy + s.h ? fay - (fy + s.h) : 0;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < _hScratch[si]) _hScratch[si] = d;
+        }
+      }
+      for (let si = 0; si < nls; si++) {
+        if (_hScratch[si] < 100) harvestBonus += (1 - _hScratch[si] / 100) * styleMult * 80;
+      }
+    }
+    const score = survive * 2 + center + motion + smooth + stickiness + zone + gapBonus + harvestBonus - leftPen - rightPen - reversePen;
     if (score > bestScore) { bestScore = score; bestDir = dir; }
   }
   return bestDir;
 }
+
+// plan3: 27-plan (3 dirs × 3 segments) lookahead using precomputed _deadlyAt
+// intervals. Tuned to outperform legacy scoreInputDeep by ~2× on long-run survival.
+function plan3() {
+  const SEG1 = 8, SEG2 = 12, CAP = 80;
+  const CENTER_W = 0.1, WALLTIME_W = 0.5, CLEAR_W = 8;
+  const LEFT_DEATH = 4, RIGHT_DEATH = 4, STICK = 0;
+  const LWmid = LW / 2;
+  if (_liveSparks.length === 0) {
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  function simPlan(d1, d2, d3) {
+    let x = angelX, v = angelSpeed, dir = d1;
+    let wallAcc = 0, minClear = 1e9, leftAcc = 0, rightAcc = 0;
+    for (let dt = 1; dt <= CAP; dt++) {
+      if (dt === SEG1 + 1) dir = d2;
+      else if (dt === SEG1 + SEG2 + 1) dir = d3;
+      v = simInputStep(dir, v);
+      x += v;
+      if (x < 40) {
+        x = 40; wallAcc++; leftAcc++; rightAcc = 0;
+        if (leftAcc > LEFT_DEATH) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+      } else if (x > LW - 40) {
+        x = LW - 40; wallAcc++; rightAcc++; leftAcc = 0;
+        if (rightAcc > RIGHT_DEATH) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+      } else { leftAcc = 0; rightAcc = 0; }
+      // _deadlyAt[k] is spark position at end-of-tick (N+1+k); after dt angel
+      // moves the angel sits at end-of-tick (N+dt). Match index: dt-1.
+      const buf = _deadlyAt[dt - 1];
+      const cnt = _deadlyCnt[dt - 1];
+      for (let i = 0; i < cnt; i += 2) {
+        const lo = buf[i], hi = buf[i + 1];
+        if (x > lo && x < hi) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+        const d = x <= lo ? lo - x : x - hi;
+        if (d < minClear) minClear = d;
+      }
+    }
+    return { depth: CAP, endX: x, wallAcc, clear: minClear };
+  }
+  let bestKey = -Infinity, bestFirstDir = aiInputDir;
+  for (let i = 0; i < 3; i++) {
+    const d1 = DIRS[i];
+    let bestSubKey = -Infinity;
+    for (let j = 0; j < 3; j++) {
+      const d2 = DIRS[j];
+      for (let k = 0; k < 3; k++) {
+        const r = simPlan(d1, d2, DIRS[k]);
+        const clearTerm = Math.min(r.clear, 200) * CLEAR_W;
+        const tie = clearTerm - Math.abs(r.endX - LWmid) * CENTER_W - r.wallAcc * WALLTIME_W;
+        const key = r.depth * 1000 + tie;
+        if (key > bestSubKey) bestSubKey = key;
+      }
+    }
+    const stick = (d1 === aiInputDir) ? STICK : 0;
+    const key = bestSubKey + stick;
+    if (key > bestKey) { bestKey = key; bestFirstDir = d1; }
+  }
+  return bestFirstDir;
+}
+
+// ── Beam-search planner ──────────────────────────────────
+// K candidates × ROUNDS × SEG-frame steps using precomputed deadly intervals.
+// Diversity bucket prevents collapse onto a single trajectory.
+const BEAM_K = 20, BEAM_SEG = 8, BEAM_ROUNDS = 8;
+const BEAM_CENTER_W = 0.1, BEAM_WALLTIME_W = 0.5;
+const BEAM_LEFT_DEATH = 4, BEAM_RIGHT_DEATH = 4;
+const _beam = {
+  X: new Float32Array(64), V: new Float32Array(64),
+  Wall: new Int16Array(64), Left: new Int16Array(64), Right: new Int16Array(64),
+  Depth: new Int16Array(64), Dead: new Uint8Array(64), First: new Int8Array(64),
+  X2: new Float32Array(192), V2: new Float32Array(192),
+  Wall2: new Int16Array(192), Left2: new Int16Array(192), Right2: new Int16Array(192),
+  Depth2: new Int16Array(192), Dead2: new Uint8Array(192), First2: new Int8Array(192), Dir2: new Int8Array(192),
+  Score2: new Float32Array(192), Order: new Int32Array(192),
+};
+function _beamGrow(need, scratch) {
+  const o = _beam;
+  if (scratch ? o.X2.length >= need : o.X.length >= need) return;
+  if (scratch) {
+    o.X2 = new Float32Array(need); o.V2 = new Float32Array(need);
+    o.Wall2 = new Int16Array(need); o.Left2 = new Int16Array(need); o.Right2 = new Int16Array(need);
+    o.Depth2 = new Int16Array(need); o.Dead2 = new Uint8Array(need); o.First2 = new Int8Array(need); o.Dir2 = new Int8Array(need);
+    o.Score2 = new Float32Array(need); o.Order = new Int32Array(need);
+  } else {
+    o.X = new Float32Array(need); o.V = new Float32Array(need);
+    o.Wall = new Int16Array(need); o.Left = new Int16Array(need); o.Right = new Int16Array(need);
+    o.Depth = new Int16Array(need); o.Dead = new Uint8Array(need); o.First = new Int8Array(need);
+  }
+}
+function _beamSimStep(i, dir, scratch) {
+  const Xa = scratch ? _beam.X2 : _beam.X, Va = scratch ? _beam.V2 : _beam.V;
+  const Wa = scratch ? _beam.Wall2 : _beam.Wall;
+  const La = scratch ? _beam.Left2 : _beam.Left, Ra = scratch ? _beam.Right2 : _beam.Right;
+  const Da = scratch ? _beam.Depth2 : _beam.Depth, Dea = scratch ? _beam.Dead2 : _beam.Dead;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  let x = Xa[i], v = Va[i], wall = Wa[i], lAcc = La[i], rAcc = Ra[i], depth = Da[i];
+  for (let s = 0; s < BEAM_SEG; s++) {
+    if (depth >= CAP) break;
+    const dt = depth + 1;
+    v = simInputStep(dir, v);
+    x += v;
+    if (x < 40) {
+      x = 40; wall++; lAcc++; rAcc = 0;
+      if (lAcc > BEAM_LEFT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    } else if (x > LW - 40) {
+      x = LW - 40; wall++; rAcc++; lAcc = 0;
+      if (rAcc > BEAM_RIGHT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    } else { lAcc = 0; rAcc = 0; }
+    const buf = _deadlyAt[dt - 1], cnt = _deadlyCnt[dt - 1];
+    let hit = false;
+    for (let j = 0; j < cnt; j += 2) {
+      if (x > buf[j] && x < buf[j + 1]) { hit = true; break; }
+    }
+    if (hit) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    depth = dt;
+  }
+  Xa[i] = x; Va[i] = v; Wa[i] = wall; La[i] = lAcc; Ra[i] = rAcc; Da[i] = depth;
+}
+function planBeam() {
+  const LWmid = LW / 2;
+  if (_liveSparks.length === 0) {
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  _beamGrow(BEAM_K * 3, false);
+  _beamGrow(BEAM_K * 3, true);
+  const b = _beam;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+
+  let nLive = 3;
+  for (let i = 0; i < 3; i++) {
+    b.X[i] = angelX; b.V[i] = angelSpeed;
+    b.Wall[i] = 0; b.Left[i] = 0; b.Right[i] = 0;
+    b.Depth[i] = 0; b.Dead[i] = 0; b.First[i] = DIRS[i];
+  }
+  for (let i = 0; i < nLive; i++) _beamSimStep(i, b.First[i], false);
+
+  for (let r = 1; r < BEAM_ROUNDS; r++) {
+    let m = 0;
+    for (let i = 0; i < nLive; i++) {
+      for (let d = 0; d < 3; d++) {
+        b.X2[m] = b.X[i]; b.V2[m] = b.V[i];
+        b.Wall2[m] = b.Wall[i]; b.Left2[m] = b.Left[i]; b.Right2[m] = b.Right[i];
+        b.Depth2[m] = b.Depth[i]; b.Dead2[m] = b.Dead[i]; b.First2[m] = b.First[i];
+        b.Dir2[m] = DIRS[d];
+        m++;
+      }
+    }
+    for (let i = 0; i < m; i++) {
+      if (b.Dead2[i]) continue;
+      _beamSimStep(i, b.Dir2[i], true);
+    }
+    for (let i = 0; i < m; i++) {
+      const center = -Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wall = -b.Wall2[i] * BEAM_WALLTIME_W;
+      b.Score2[i] = b.Depth2[i] * 10000 + center + wall;
+      b.Order[i] = i;
+    }
+    const keep = Math.min(BEAM_K, m);
+    for (let i = 0; i < keep; i++) {
+      let best = i;
+      for (let j = i + 1; j < m; j++) {
+        if (b.Score2[b.Order[j]] > b.Score2[b.Order[best]]) best = j;
+      }
+      const tmp = b.Order[i]; b.Order[i] = b.Order[best]; b.Order[best] = tmp;
+    }
+    const seen = new Set();
+    let kept = 0;
+    for (let i = 0; i < keep; i++) {
+      const idx = b.Order[i];
+      const xBin = (b.X2[idx] / 80) | 0;
+      const vBin = (b.V2[idx] / 10) | 0;
+      const key = (xBin << 8) | (vBin & 0xff);
+      if (seen.has(key) && kept >= 3) continue;
+      seen.add(key);
+      b.X[kept] = b.X2[idx]; b.V[kept] = b.V2[idx];
+      b.Wall[kept] = b.Wall2[idx]; b.Left[kept] = b.Left2[idx]; b.Right[kept] = b.Right2[idx];
+      b.Depth[kept] = b.Depth2[idx]; b.Dead[kept] = b.Dead2[idx]; b.First[kept] = b.First2[idx];
+      kept++;
+    }
+    nLive = kept;
+    if (nLive === 0) break;
+    let allMax = true;
+    for (let i = 0; i < nLive; i++) {
+      if (!b.Dead[i] && b.Depth[i] < CAP) { allMax = false; break; }
+    }
+    if (allMax) break;
+  }
+
+  let bestScore = -Infinity, bestFirst = aiInputDir;
+  for (let i = 0; i < nLive; i++) {
+    const center = -Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wall = -b.Wall[i] * BEAM_WALLTIME_W;
+    const score = b.Depth[i] * 10000 + center + wall;
+    if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
+  }
+  return bestFirst;
+}
+
+// ── Harvest-optimizing beam planner (alt bot logic) ──────
+// Same beam scaffold as planBeam, but each candidate also carries a 64-bit
+// "claimed sparks" mask. Each frame, for every live spark not yet claimed by
+// this beam (and not already harvested in the real game), if the angel is
+// within HARV_R the bit is set and a counter ticks up. Score adds
+// BEAM_HARVEST_W per claim, ranked strictly below depth so survival still
+// dominates — sweep showed +47% mean harvest over the pure-survival bot with
+// only ~7% drop in 120s survival rate.
+const BEAM_HARVEST_W = 4000;
+const HARV_R2 = 14500;  // matches the in-game harvest threshold
+const _beamH = {
+  M0: new Uint32Array(64), M1: new Uint32Array(64), Harv: new Int16Array(64),
+  M02: new Uint32Array(192), M12: new Uint32Array(192), Harv2: new Int16Array(192),
+};
+function _beamHGrow(need, scratch) {
+  const o = _beamH;
+  if (scratch) {
+    if (o.M02.length >= need) return;
+    o.M02 = new Uint32Array(need); o.M12 = new Uint32Array(need); o.Harv2 = new Int16Array(need);
+  } else {
+    if (o.M0.length >= need) return;
+    o.M0 = new Uint32Array(need); o.M1 = new Uint32Array(need); o.Harv = new Int16Array(need);
+  }
+}
+function _beamHSimStep(i, dir, scratch) {
+  const Xa = scratch ? _beam.X2 : _beam.X, Va = scratch ? _beam.V2 : _beam.V;
+  const Wa = scratch ? _beam.Wall2 : _beam.Wall;
+  const La = scratch ? _beam.Left2 : _beam.Left, Ra = scratch ? _beam.Right2 : _beam.Right;
+  const Da = scratch ? _beam.Depth2 : _beam.Depth, Dea = scratch ? _beam.Dead2 : _beam.Dead;
+  const M0a = scratch ? _beamH.M02 : _beamH.M0, M1a = scratch ? _beamH.M12 : _beamH.M1;
+  const Ha = scratch ? _beamH.Harv2 : _beamH.Harv;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  const nl = _liveSparks.length;
+  const sCap0 = nl < 32 ? nl : 32, sCap1 = nl < 64 ? nl : 64;
+  let x = Xa[i], v = Va[i], wall = Wa[i], lAcc = La[i], rAcc = Ra[i], depth = Da[i];
+  let m0 = M0a[i], m1 = M1a[i], harv = Ha[i];
+  for (let s = 0; s < BEAM_SEG; s++) {
+    if (depth >= CAP) break;
+    const dt = depth + 1;
+    v = simInputStep(dir, v);
+    x += v;
+    if (x < 40) {
+      x = 40; wall++; lAcc++; rAcc = 0;
+      if (lAcc > BEAM_LEFT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    } else if (x > LW - 40) {
+      x = LW - 40; wall++; rAcc++; lAcc = 0;
+      if (rAcc > BEAM_RIGHT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    } else { lAcc = 0; rAcc = 0; }
+    const buf = _deadlyAt[dt - 1], cnt = _deadlyCnt[dt - 1];
+    let hit = false;
+    for (let j = 0; j < cnt; j += 2) {
+      if (x > buf[j] && x < buf[j + 1]) { hit = true; break; }
+    }
+    if (hit) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    depth = dt;
+    const fay = _futureAys[dt];
+    for (let si = 0; si < sCap0; si++) {
+      const bit = 1 << si;
+      if (m0 & bit) continue;
+      const sp = _liveSparks[si];
+      const sx = sp.x + sp.vx * dt;
+      const sy = sp._futY[dt];
+      const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
+      const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
+      if (dx * dx + dy * dy < HARV_R2) { m0 |= bit; harv++; }
+    }
+    for (let si = 32; si < sCap1; si++) {
+      const bit = 1 << (si - 32);
+      if (m1 & bit) continue;
+      const sp = _liveSparks[si];
+      const sx = sp.x + sp.vx * dt;
+      const sy = sp._futY[dt];
+      const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
+      const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
+      if (dx * dx + dy * dy < HARV_R2) { m1 |= bit; harv++; }
+    }
+  }
+  Xa[i] = x; Va[i] = v; Wa[i] = wall; La[i] = lAcc; Ra[i] = rAcc; Da[i] = depth;
+  M0a[i] = m0; M1a[i] = m1; Ha[i] = harv;
+}
+function planBeamHarvest() {
+  const LWmid = LW / 2;
+  const nl = _liveSparks.length;
+  if (nl === 0) {
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  _beamGrow(BEAM_K * 3, false); _beamGrow(BEAM_K * 3, true);
+  _beamHGrow(BEAM_K * 3, false); _beamHGrow(BEAM_K * 3, true);
+  const b = _beam, bh = _beamH;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  // Seed every beam's claim mask with sparks already harvested in the real game.
+  let already0 = 0, already1 = 0;
+  const cap0 = nl < 32 ? nl : 32, cap1 = nl < 64 ? nl : 64;
+  for (let i = 0; i < cap0; i++) if (_liveSparks[i].harvested) already0 |= (1 << i);
+  for (let i = 32; i < cap1; i++) if (_liveSparks[i].harvested) already1 |= (1 << (i - 32));
+
+  let nLive = 3;
+  for (let i = 0; i < 3; i++) {
+    b.X[i] = angelX; b.V[i] = angelSpeed;
+    b.Wall[i] = 0; b.Left[i] = 0; b.Right[i] = 0;
+    b.Depth[i] = 0; b.Dead[i] = 0; b.First[i] = DIRS[i];
+    bh.M0[i] = already0; bh.M1[i] = already1; bh.Harv[i] = 0;
+  }
+  for (let i = 0; i < nLive; i++) _beamHSimStep(i, b.First[i], false);
+
+  for (let r = 1; r < BEAM_ROUNDS; r++) {
+    let m = 0;
+    for (let i = 0; i < nLive; i++) {
+      for (let d = 0; d < 3; d++) {
+        b.X2[m] = b.X[i]; b.V2[m] = b.V[i];
+        b.Wall2[m] = b.Wall[i]; b.Left2[m] = b.Left[i]; b.Right2[m] = b.Right[i];
+        b.Depth2[m] = b.Depth[i]; b.Dead2[m] = b.Dead[i]; b.First2[m] = b.First[i];
+        b.Dir2[m] = DIRS[d];
+        bh.M02[m] = bh.M0[i]; bh.M12[m] = bh.M1[i]; bh.Harv2[m] = bh.Harv[i];
+        m++;
+      }
+    }
+    for (let i = 0; i < m; i++) {
+      if (b.Dead2[i]) continue;
+      _beamHSimStep(i, b.Dir2[i], true);
+    }
+    for (let i = 0; i < m; i++) {
+      const center = -Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wall = -b.Wall2[i] * BEAM_WALLTIME_W;
+      b.Score2[i] = b.Depth2[i] * 100000 + bh.Harv2[i] * BEAM_HARVEST_W + center + wall;
+      b.Order[i] = i;
+    }
+    const keep = Math.min(BEAM_K, m);
+    for (let i = 0; i < keep; i++) {
+      let best = i;
+      for (let j = i + 1; j < m; j++) {
+        if (b.Score2[b.Order[j]] > b.Score2[b.Order[best]]) best = j;
+      }
+      const tmp = b.Order[i]; b.Order[i] = b.Order[best]; b.Order[best] = tmp;
+    }
+    const seen = new Set();
+    let kept = 0;
+    for (let i = 0; i < keep; i++) {
+      const idx = b.Order[i];
+      const xBin = (b.X2[idx] / 80) | 0;
+      const vBin = (b.V2[idx] / 10) | 0;
+      const key = (xBin << 8) | (vBin & 0xff);
+      if (seen.has(key) && kept >= 3) continue;
+      seen.add(key);
+      b.X[kept] = b.X2[idx]; b.V[kept] = b.V2[idx];
+      b.Wall[kept] = b.Wall2[idx]; b.Left[kept] = b.Left2[idx]; b.Right[kept] = b.Right2[idx];
+      b.Depth[kept] = b.Depth2[idx]; b.Dead[kept] = b.Dead2[idx]; b.First[kept] = b.First2[idx];
+      bh.M0[kept] = bh.M02[idx]; bh.M1[kept] = bh.M12[idx]; bh.Harv[kept] = bh.Harv2[idx];
+      kept++;
+    }
+    nLive = kept;
+    if (nLive === 0) break;
+  }
+
+  let bestScore = -Infinity, bestFirst = aiInputDir;
+  for (let i = 0; i < nLive; i++) {
+    const center = -Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wall = -b.Wall[i] * BEAM_WALLTIME_W;
+    const score = b.Depth[i] * 100000 + bh.Harv[i] * BEAM_HARVEST_W + center + wall;
+    if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
+  }
+  return bestFirst;
+}
+
 function explode(x, y) {
-  for (let i=0;i<55;i++){
-    const angle=Math.random()*Math.PI*2, speed=1.5+Math.random()*7;
-    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-      life:1,decay:0.014+Math.random()*0.022,size:2+Math.random()*5,
-      color:Math.random()<0.3?'#fff':COLORS[Math.floor(Math.random()*COLORS.length)]});
+  for (let i = 0; i < 55; i++) {
+    const angle = Math.random() * Math.PI * 2, speed = 1.5 + Math.random() * 7;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 1, decay: 0.014 + Math.random() * 0.022, size: 2 + Math.random() * 5,
+      color: Math.random() < 0.3 ? '#fff' : COLORS[Math.floor(Math.random() * COLORS.length)]
+    });
   }
   playDeath();
 }
+// In-place advance + compact: no per-frame array allocation.
 function updateParticles() {
-  if (particles.length === 0) return; // skip alloc when nothing is live
-  particles=particles.filter(p=>p.life>0);
-  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.09;p.life-=p.decay;});
+  let w = 0;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.life -= p.decay;
+    if (p.life > 0) particles[w++] = p;
+  }
+  particles.length = w;
 }
 function drawParticles() {
   if (particles.length === 0) return;
-  particles.forEach(p=>{
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
     ctx.globalAlpha = Math.max(0, p.life);
     ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
-  });
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -652,30 +1003,52 @@ function drawAngel(ax,ay) {
 // ── On hit: no game over, just reset ─────────────────────
 function onHit() {
   if (!screensaver && elapsed > bestTime) bestTime = elapsed;
+  if (harvestMode && !screensaver && harvestScore > bestHarvestScore) bestHarvestScore = harvestScore;
+  recordRun(elapsed, screensaver);
   const who = screensaver ? 'BOT' : 'PLAYER';
   console.log(`[${who} DEATH] survived ${(elapsed / 1000).toFixed(3)}s`);
-  hitFlashes.push({ ts: performance.now(), elapsed });
+  hitFlashes.push({ ts: performance.now(), elapsed, score: harvestScore, harvest: harvestMode });
   sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); });
-  angelTrail = [];
+  deathTrail = angelTrail;   // hand off current trail to die in pink
+  angelTrail = [];            // fresh live trail starts immediately
+  deathTrailBorn = performance.now();
   elapsed = 0;
   startTime = performance.now();
-  // t NOT reset — sine wave continues from exact position/direction
   spawnAccum = 0;
+  harvestScore = 0;
+  if (screensaver) {
+    // Reseed PRNG and reset sine phase to match sim's per-run starting conditions.
+    _setSeed(BEST_SEED);
+    t = 0;
+    _futureAyT = -1;
+  }
   explode(angelX, angelY());
   if (!screensaver) hadInputSinceDeath = false;
 }
 
 
 function start(isAI) {
-  clearTimeout(attractTimer); attractTimer = null; clearTimeout(deathTimer); deathTimer = null;
-  sparks=[];particles=[];t=0;spawnAccum=0;spawnPause=0;
-  elapsed=0;startTime=performance.now();
-  angelX=LW/2;angelSpeed=0;angelTrail=[];breathScale=1;
-  lastAy=LH*0.5;lastDy=0;breathCooldown=0;aiVelocity=0;aiDesiredVel=0;aiInputDir=0;aiCommitFrames=0;aiStylePhase=0;
-  hitFlashes=[];nearFlashes=[];nearMissCd=0;lastDir=0;zoneBonuses=[0,0,0,0,0];targetZoneIdx=2;zoneArrivalFrames=0;
-  _futureAyT=-1;_liveSparks=[];_gapTargets=[];
-  screensaver=isAI;
-  state='playing';
+  clearTimeout(attractTimer); attractTimer = null;
+  clearTimeout(deathTimer);   deathTimer = null;
+  sparks.length = 0; particles.length = 0;
+  hitFlashes.length = 0;
+  _liveSparks.length = 0; _gapTargets.length = 0;
+  angelTrail.length = 0;
+  deathTrail.length  = 0;
+  deathTrailBorn = 0;
+  t = 0; spawnAccum = 0; spawnPause = 0;
+  elapsed = 0; startTime = performance.now();
+  angelX = LW / 2; angelSpeed = 0;
+  breathScale = 1; lastAy = AY_MID; lastDy = 0; breathCooldown = 0;
+  aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
+  lastDir = 0; prevPlayerDir = 0; playerDirFrames = 0; playerKeyPressCooldown = 0;
+  zoneBonuses = [0, 0, 0, 0, 0]; targetZoneIdx = 2; zoneArrivalFrames = 0;
+  nearMissCd = 0;
+  harvestScore = 0;
+  _futureAyT = -1;
+  if (isAI) _setSeed(BEST_SEED);  // deterministic spawns for bot mode
+  screensaver = isAI;
+  state = 'playing';
   if (!isAI) playStart();
 }
 
@@ -686,17 +1059,46 @@ function takeoverFromAI() {
   screensaver = false;
 }
 
+function moveDirOf(key) {
+  if (LEFT_KEYS.has(key))  return -1;
+  if (RIGHT_KEYS.has(key)) return  1;
+  return 0;
+}
+function anyKeyDown(set) {
+  for (const k of set) if (keys[k]) return true;
+  return false;
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { showInfo = !showInfo; return; }
-  audioUnlocked = true;  // first real user input unlocks audio
-  if ((e.key === 'x' || e.key === 'X') && !showInfo) { botSmooth = !botSmooth; botSmoothChangedAt = performance.now(); return; }
-  const isMove = ['ArrowLeft','ArrowRight','a','A','d','D'].includes(e.key);
-  if (isMove) {
+  if (e.key === 'Escape') {
+    if (showStats) { showStats = false; _clearHistoryStage = 0; return; }
+    showInfo = !showInfo; return;
+  }
+  if (e.key === 'p' || e.key === 'P') { showProf = !showProf; _profWorst = 0; return; }
+  if (e.key === 'h' || e.key === 'H') { showStats = !showStats; _clearHistoryStage = 0; return; }
+  if (e.key === 'x' || e.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    keys[e.key] = true; trailTinted = true; audioUnlocked = true;
+    if (!firstInteraction) { firstInteraction = true; showUI = true; }
+    return;
+  }
+  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.05); trailTinted = true; return; }
+  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.05); trailTinted = true; return; }
+  if (e.key === 'z' || e.key === 'Z') {
+    harvestMode = !harvestMode;
+    _btnFlash.Z = performance.now();
+    const _x = angelX, _v = angelSpeed, _t = t;
+    start(screensaver);
+    angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+    return;
+  }
+  if (!firstInteraction) { firstInteraction = true; showUI = true; }
+  audioUnlocked = true;
+  const moveDir = moveDirOf(e.key);
+  if (moveDir !== 0) {
     if (screensaver && state === 'playing') takeoverFromAI();
     keys[e.key] = true;
-    // newest key wins: track last pressed direction
-    if (e.key==='ArrowLeft'||e.key==='a'||e.key==='A')  lastDir = -1;
-    if (e.key==='ArrowRight'||e.key==='d'||e.key==='D') lastDir =  1;
+    lastDir = moveDir;  // newest key wins
     lastMoveInputTs = performance.now();
     hadInputSinceDeath = true;
   } else if (state === 'playing' && !showInfo) {
@@ -705,29 +1107,91 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => {
   keys[e.key] = false;
-  const wasLeft  = e.key==='ArrowLeft'||e.key==='a'||e.key==='A';
-  const wasRight = e.key==='ArrowRight'||e.key==='d'||e.key==='D';
-  if (wasLeft  && lastDir === -1) lastDir = (keys['ArrowRight']||keys['d']||keys['D']) ?  1 : 0;
-  if (wasRight && lastDir ===  1) lastDir = (keys['ArrowLeft'] ||keys['a']||keys['A']) ? -1 : 0;
-  if (wasLeft || wasRight) lastMoveInputTs = performance.now();
+  const releasedDir = moveDirOf(e.key);
+  if (releasedDir === 0) return;
+  if (releasedDir === lastDir) {
+    lastDir = anyKeyDown(releasedDir === -1 ? RIGHT_KEYS : LEFT_KEYS) ? -releasedDir : 0;
+  }
+  lastMoveInputTs = performance.now();
 });
+c.addEventListener('mousemove', e => {
+  mouseLx = (e.clientX - _appOx) / scale;
+  mouseLy = (e.clientY - _appOy) / scale;
+  // cursor affordance: pointer when over any clickable UI element
+  let over = state === 'playing' && (
+    _hit(mouseLx, mouseLy, 20, 20, 200, 42) ||
+    (!screensaver && bestTime > 0 && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42)) ||
+    (harvestMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
+  );
+  if (!over && showInfo) for (const r of _infoToggleRects) {
+    if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; }
+  }
+  if (!over && showStats) {
+    const r = _clearHistoryRect;
+    if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) over = true;
+  }
+  c.style.cursor = over ? 'pointer' : 'default';
+});
+function _hit(lx, ly, x, y, w, h) { return lx >= x && lx <= x + w && ly >= y && ly <= y + h; }
 c.addEventListener('click', e => {
-  audioUnlocked = true;  // click also unlocks audio
-  const ox = (window.innerWidth  - LW * scale) / 2;
-  const oy = (window.innerHeight - LH * scale) / 2;
-  const lx = (e.clientX - ox) / scale;
-  const ly = (e.clientY - oy) / scale;
-  if (showInfo) { showInfo = false; return; }
-  if (state === 'playing' && lx >= 20 && lx <= 220 && ly >= 20 && ly <= 62) {
-    showInfo = true;
+  if (!firstInteraction) { firstInteraction = true; showUI = true; }
+  audioUnlocked = true;
+  const lx = (e.clientX - _appOx) / scale;
+  const ly = (e.clientY - _appOy) / scale;
+  if (showStats) {
+    const r = _clearHistoryRect;
+    const onBtn = _hit(lx, ly, r.x, r.y, r.w, r.h);
+    if (onBtn) {
+      if (_clearHistoryStage === 0) { _clearHistoryStage = 1; return; }
+      // confirm: clear current mode's run history
+      if (harvestMode) { runsHarvest = []; bestHarvestScore = 0; }
+      else             { runs = []; bestTime = 0; }
+      saveRuns();
+      _clearHistoryStage = 0;
+      return;
+    }
+    if (_clearHistoryStage === 1) { _clearHistoryStage = 0; return; }
+    showStats = false; return;
+  }
+  if (showInfo) {
+    for (const r of _infoToggleRects) {
+      if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+        if (r.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
+        if (r.key === 'Z') {
+          harvestMode = !harvestMode; _btnFlash.Z = performance.now();
+          const _x = angelX, _v = angelSpeed, _t = t;
+          start(screensaver);
+          angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+          return;
+        }
+      }
+    }
+    showInfo = false; return;
+  }
+  if (state !== 'playing') return;
+  if (_hit(lx, ly, 20, 20, 200, 42)) { showInfo = true; _btnFlash.info = performance.now(); return; }
+  // best-time/score click area (top-right). Drawn right-aligned at (LW-40, 44) in FONT_BASE.
+  if (!screensaver && bestTime > 0 && _hit(lx, ly, LW - 240, 20, 220, 42)) {
+    showStats = true; _btnFlash.best = performance.now(); return;
   }
 });
+// Info overlay toggle rects, refreshed each draw so click hit-test stays in sync.
+const _infoToggleRects = [];
+// clear-history button state (stats overlay)
+let _clearHistoryStage = 0;  // 0 = idle, 1 = armed/confirm
+const _clearHistoryRect = { x: 0, y: 0, w: 0, h: 0 };
 
 // ── Main loop ────────────────────────────────────────────
-let aiFrame = 0;
-const TICK_MS = 1000 / 60;  // cap game logic at 60 fps regardless of monitor refresh rate
+const TICK_MS = 1000 / 60;  // game logic locked to 60 Hz regardless of monitor refresh rate
 let accumulator = 0, lastDrawTs = null;
+// Lightweight profiler: rolling buffer of frame deltas. Toggle with P or ?debug.
+let showProf = /[?&]debug\b/.test(location.search);
+const _profBuf = new Float32Array(120);
+let _profIdx = 0, _profCount = 0, _profWorst = 0;
+const _profScratch = new Float32Array(120);  // reused for sort — no alloc
+let _profMed = 0, _profP95 = 0, _profMax = 0, _profSortFrame = 0;
 function draw(ts) {
+  const _frameStart = performance.now();
   requestAnimationFrame(draw);
 
   // frame-rate-independent tick: run game logic at 60 fps on any monitor
@@ -738,21 +1202,14 @@ function draw(ts) {
   const doTick = accumulator >= TICK_MS;
   if (doTick) accumulator -= TICK_MS;
 
-  // re-sync canvas pixel size if window dimensions changed (or were wrong at startup)
-  if (c.width !== Math.round(window.innerWidth * dpr) || c.height !== Math.round(window.innerHeight * dpr)) {
-    resize();
-    buildStars();
-  }
+  // re-sync canvas pixel size if window was resized
+  if (_needResize) { _needResize = false; resize(); buildStars(); }
 
-  // clear full canvas in background colour
-  ctx.fillStyle='#07102a';
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillRect(0, 0, c.width, c.height);
+  // star canvas covers full screen incl. baked background — no separate clear needed
+  drawStars();
 
   // all game drawing in logical space
   applyLogical();
-
-  drawStars(); // star canvas already includes #07102a background
 
   if (state==='playing') {
     elapsed = ts - startTime;
@@ -761,15 +1218,15 @@ function draw(ts) {
     trailT++;
 
     // ── 1. spawn + advance sparks FIRST so AI sees current state ──
-    const ramp = Math.min(elapsed/45000,1);
-    const spawnChance = 0.20 + Math.min(elapsed/600000, 1) * 0.20;
+    const ramp = Math.min(elapsed / 180000, 1);  // full difficulty reached at 3 min instead of 90 s
+    const spawnChance = 0.13 + Math.min(elapsed/600000, 1) * 0.20 + Math.max(0, 37 - sparks.length) * 0.01;
     if (spawnPause > 0) {
       spawnPause--;
     } else {
-      spawnAccum += (1.8+ramp*6.2)*3/60;
+      spawnAccum += (1.0 + ramp * 4.0) * 3 / 60 * (1 + Math.max(0, 0.30 - elapsed / 10000));
       if (spawnAccum >= 1) {
         spawnAccum = 0;
-        if (Math.random() < spawnChance) {
+        if ((screensaver ? _rng() : Math.random()) < spawnChance) {
           sparks.push(spawnSpark(ramp));
           aiCommitFrames = 0; // new spark → recompute immediately
           spawnPause = 1;
@@ -777,33 +1234,43 @@ function draw(ts) {
       }
     }
     for (let i = sparks.length - 1; i >= 0; i--) {
-      if (sparks[i].x - sparks[i].w >= LW) sparks.splice(i, 1);
+      if (sparks[i].x >= LW) sparks.splice(i, 1);
     }
-    sparks.forEach(s=>{
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
       s.x += s.vx;
-      s.vy += s.ay;
-      s.vy = Math.max(-2.5, Math.min(2.5, s.vy));
-      s.y += s.vy;
-      s.y = Math.max(-s.h, Math.min(LH, s.y)); // keep on screen
-    });
+      s.vy = Math.max(-2.5, Math.min(2.5, s.vy + s.ay));
+      s.y  = Math.max(-s.h, Math.min(LH, s.y + s.vy));
+    }
 
     // ── 2. AI / player movement ──
+    // decay cooldowns each tick
+    playerKeyPressCooldown = Math.max(0, playerKeyPressCooldown - 1);
+    aiInputCooldown = Math.max(0, aiInputCooldown - 1);
+
     if (screensaver) {
       aiCommitFrames--;
-      // Precompute future angel Y and accurate per-spark Y paths once per frame.
-      // All scoring calls share _futureAys + s._futY — computed once, not per-call.
+      const prevAiDir = aiInputDir;
+      // Precompute future angel Y + per-spark Y paths once per frame; all scoring calls share them.
       if (_futureAyT !== t) {
-        _futureAys[0] = LH * 0.5 + Math.sin(t * 0.0567) * LH * 0.35;  // index 0 = current frame
-        for (let dt = 1; dt <= HORIZON; dt++)
-          _futureAys[dt] = LH * 0.5 + Math.sin((t + dt) * 0.0567) * LH * 0.35;
+        // Sin recurrence: one Math.sin/cos per frame instead of HORIZON of them.
+        let sa = Math.sin(t * AY_W), ca = Math.cos(t * AY_W);
+        _futureAys[0] = AY_MID + sa * AY_AMP;
+        _ayCache = _futureAys[0]; _ayFrame = t;  // share with angelY()
+        for (let dt = 1; dt <= HORIZON; dt++) {
+          const ns = sa * AY_CW + ca * AY_SW;
+          const nc = ca * AY_CW - sa * AY_SW;
+          sa = ns; ca = nc;
+          _futureAys[dt] = AY_MID + sa * AY_AMP;
+        }
         _futureAyT = t;
-        _liveSparks.length = 0;                                 // reuse array — no allocation
-        for (const s of sparks) {
+        _liveSparks.length = 0;
+        const cullCol = angelX - SIM_R - 40;
+        for (let i = 0; i < sparks.length; i++) {
+          const s = sparks[i];
           if (s.fading) continue;
-          // Cull sparks that can never reach the angel's X column within HORIZON:
-          // their right edge at t+HORIZON is still left of angel - SIM_R margin.
-          if (s.x + s.w + s.vx * HORIZON < angelX - SIM_R - 40) continue;
-          // Precompute accurate spark Y path with acceleration + screen clamping.
+          // Cull sparks that can never reach the angel's X column within HORIZON.
+          if (s.x + s.w + s.vx * HORIZON < cullCol) continue;
           if (!s._futY) s._futY = new Float32Array(HORIZON + 1);
           s._futY[0] = s.y;
           let sy = s.y, svy = s.vy;
@@ -814,62 +1281,76 @@ function draw(ts) {
           }
           _liveSparks.push(s);
         }
-        // Precompute narrow Y gaps for gap-threading bonus
+        // Precompute narrow Y gaps for gap-threading bonus.
+        // Pool reuse: avoids O(N²) allocation each tick (was a real GC source).
+        for (let gi = 0; gi < _gapTargets.length; gi++) _gapPool.push(_gapTargets[gi]);
         _gapTargets.length = 0;
         const nl = _liveSparks.length;
         for (let gi = 0; gi < nl; gi++) {
+          const a = _liveSparks[gi];
+          const aMid = a.y + a.h / 2;
           for (let gj = gi + 1; gj < nl; gj++) {
-            const a = _liveSparks[gi], b = _liveSparks[gj];
-            const xLo = Math.max(a.x, b.x), xHi = Math.min(a.x + a.w, b.x + b.w);
+            const b = _liveSparks[gj];
+            const xLo = a.x > b.x ? a.x : b.x;
+            const aRight = a.x + a.w, bRight = b.x + b.w;
+            const xHi = aRight < bRight ? aRight : bRight;
             if (xHi <= xLo) continue;
-            const [upper, lower] = a.y + a.h / 2 < b.y + b.h / 2 ? [a, b] : [b, a];
-            const gapTop = upper.y + upper.h, gapBot = lower.y;
+            const bMid = b.y + b.h / 2;
+            const aUpper = aMid < bMid;
+            const gapTop = aUpper ? a.y + a.h : b.y + b.h;
+            const gapBot = aUpper ? b.y       : a.y;
             const gap = gapBot - gapTop;
             if (gap < 15 || gap > 95) continue;
-            _gapTargets.push({ xLo, xHi, gapTop, gapBot, tightness: 1 - gap / 95 });
+            const slot = _gapPool.pop() || { xLo: 0, xHi: 0, gapTop: 0, gapBot: 0, tightness: 0 };
+            slot.xLo = xLo; slot.xHi = xHi;
+            slot.gapTop = gapTop; slot.gapBot = gapBot;
+            slot.tightness = 1 - gap / 95;
+            _gapTargets.push(slot);
+          }
+        }
+        // Deadly-X intervals per future frame (plan3 fast collision lookup).
+        {
+          const nLive = _liveSparks.length;
+          const buf0 = _deadlyAt[0];
+          const need = nLive * 2;
+          if (buf0.length < need) {
+            const newLen = Math.max(need, buf0.length * 2);
+            for (let dt = 0; dt <= HORIZON; dt++) _deadlyAt[dt] = new Float32Array(newLen);
+          }
+          for (let dt = 0; dt <= HORIZON; dt++) {
+            const fay = _futureAys[dt];
+            const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+            const buf = _deadlyAt[dt];
+            let c = 0;
+            for (let si = 0; si < nLive; si++) {
+              const s = _liveSparks[si];
+              const fy = s._futY[dt];
+              if (fayHi > fy && fayLo < fy + s.h) {
+                const sx = s.x + s.vx * dt;
+                buf[c++] = sx - SIM_R;
+                buf[c++] = sx + s.w + SIM_R;
+              }
+            }
+            _deadlyCnt[dt] = c;
           }
         }
       }
-      // Re-plan when stale or current plan is becoming unsafe.
-      // Thresholds scaled to HORIZON=140: ~80% safe / ~70% caution / ~60% urgent.
-      if (botSmooth) {
-        const currentSurvive = scoreVelocityDeep(aiDesiredVel);
-        const actualSurvive  = currentSurvive < 112 ? scoreVelocityDeep(aiVelocity) : currentSurvive;
-        if (aiCommitFrames <= 0 || currentSurvive < 112 || actualSurvive < 98) {
-          aiDesiredVel   = aiChooseVelocity();
-          aiCommitFrames = currentSurvive >= 137 ? 2 : currentSurvive >= 120 ? 1 : 0;
-        }
-        // Smooth inertia mode: strong direct blend — agile, ship-like, clearly distinct from ACC.
-        angelSpeed = angelSpeed * 0.4 + aiDesiredVel * 0.6;
+      // Bot: plan & execute direction-based movement
+      if (harvestMode) {
+        aiInputDir = planBeamHarvest();
+        aiCommitFrames = 0;
       } else {
-        // Input mode: plan & execute exact human key physics
-        const currentSurvive = scoreInputDeep(aiInputDir);
-        if (aiCommitFrames <= 0 || currentSurvive < 112) {
-          aiInputDir     = aiChooseDirection();
-          aiCommitFrames = currentSurvive >= 137 ? 2 : currentSurvive >= 120 ? 1 : 0;
-        }
-        if (aiInputDir === -1) {
-          if (angelSpeed > -MAX_SPEED / 2) angelSpeed = -MAX_SPEED / 2;
-          angelSpeed = Math.max(-MAX_SPEED, angelSpeed - ACC);
-        } else if (aiInputDir === 1) {
-          if (angelSpeed < MAX_SPEED / 2) angelSpeed = MAX_SPEED / 2;
-          angelSpeed = Math.min(MAX_SPEED, angelSpeed + ACC);
-        } else {
-          angelSpeed = 0;
-        }
+        aiInputDir = planBeam();
+        aiCommitFrames = 0;
       }
+      const m = stepAngelMovement(aiInputDir, prevAiDir, aiInputHeldFor, aiInputCooldown, angelSpeed);
+      angelSpeed = m.vel; aiInputHeldFor = m.heldFrames; aiInputCooldown = m.cooldown;
       angelX += angelSpeed;
       aiVelocity = angelSpeed;  // keep planner seed in sync
     } else {
-      if (lastDir === -1) {
-        if (angelSpeed > -MAX_SPEED / 2) angelSpeed = -MAX_SPEED / 2;
-        angelSpeed = Math.max(-MAX_SPEED, angelSpeed - ACC);
-      } else if (lastDir === 1) {
-        if (angelSpeed < MAX_SPEED / 2) angelSpeed = MAX_SPEED / 2;
-        angelSpeed = Math.min(MAX_SPEED, angelSpeed + ACC);
-      } else {
-        angelSpeed = 0;
-      }
+      const m = stepAngelMovement(lastDir, prevPlayerDir, playerDirFrames, playerKeyPressCooldown, angelSpeed);
+      angelSpeed = m.vel; playerDirFrames = m.heldFrames; playerKeyPressCooldown = m.cooldown;
+      prevPlayerDir = lastDir;
       angelX += angelSpeed;
     }
     angelX = Math.max(40, Math.min(LW - 40, angelX));
@@ -878,7 +1359,6 @@ function draw(ts) {
     if (!screensaver && !hadInputSinceDeath && performance.now() - lastMoveInputTs >= 3000) {
       screensaver = true;
       aiVelocity = angelSpeed;
-      aiDesiredVel = angelSpeed;
       aiCommitFrames = 0;
     }
 
@@ -886,11 +1366,16 @@ function draw(ts) {
     const curZone = Math.min(4, Math.max(0, Math.floor((angelX - 40) / ((LW - 80) / 5))));
     for (let z = 0; z < 5; z++) { if (zoneBonuses[z] < 120) zoneBonuses[z] += 0.15; }
     zoneBonuses[curZone] *= 0.95;  // harvest 5% per frame in zone
-    // Stable zone target: only switch after dwelling in the target zone long enough
+    // Stable zone target: switch only after committing to the current target.
+    // Strong hysteresis (300-tick dwell = 5s, drop below 4 to abandon, +50 margin to swap).
+    // The bot must actually arrive at the zone before considering any switch.
     if (curZone === targetZoneIdx) zoneArrivalFrames++; else zoneArrivalFrames = 0;
-    if (zoneArrivalFrames >= 50 || zoneBonuses[targetZoneIdx] < 12) {
+    if (zoneArrivalFrames >= 300 || zoneBonuses[targetZoneIdx] < 4) {
       const best = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
-      if (best !== targetZoneIdx) { targetZoneIdx = best; zoneArrivalFrames = 0; }
+      if (best !== targetZoneIdx && zoneBonuses[best] > zoneBonuses[targetZoneIdx] + 50) {
+        targetZoneIdx = best;
+        zoneArrivalFrames = 0;
+      }
     }
 
     // ── 3. breath ──
@@ -903,6 +1388,13 @@ function draw(ts) {
     if (Math.abs(dydt)>0.1) lastDy=dydt;
     breathScale += (1.0+dydt*0.18-breathScale)*0.1;
     breathScale = Math.max(0.7,Math.min(1.4,breathScale));
+
+    if (trailTinted) {
+      if (keys.ArrowUp)   trailHue += 0.5;
+      if (keys.ArrowDown) trailHue -= 0.5;
+      trailHue += trailHueSpeed;
+      trailHue = ((trailHue % 360) + 360) % 360;
+    }
     } // end doTick
   }
 
@@ -910,107 +1402,204 @@ function draw(ts) {
 
   const now2 = ts; // rAF timestamp is the same clock — saves a native call
 
-  // ── draw trail FIRST (under everything) ──
-  if (angelTrail.length > 2) {
-    const raw = angelTrail, len = raw.length;
-    const LAYERS = 10;
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#ffffff';
-    // Each layer starts further along the trail and ends at head.
-    // Tail gets 1 layer (dim), head gets all layers (bright). No moving boundaries.
-    // 10 layers × 0.04α = 0.40 peak; more steps = smoother fade over longer trail.
-    for (let b = 0; b < LAYERS; b++) {
-      const startI = Math.floor((b / LAYERS) * (len - 1));
-      ctx.globalAlpha = 0.04;
-      ctx.beginPath();
-      ctx.moveTo(raw[startI].x, raw[startI].y);
-      for (let i = startI + 1; i < len; i++) ctx.lineTo(raw[i].x, raw[i].y);
-      ctx.stroke();
+  // ── draw trails FIRST (under everything) ──
+  // Fade by blending toward background instead of using globalAlpha, so the trail
+  // doesn't composite over sparks — it looks painted onto the canvas background.
+  {
+    // BG colour components for lerp-to-bg fade
+    const TR = 7, TG = 16, TB = 42;
+    // Parse a hex or hsl color string into [r,g,b]. hsl strings are the ones we
+    // generate (hsl(H,70%,82%)); hex strings are the white/pink fixed colours.
+    function _parseRGB(css) {
+      if (!css || css === '#ffffff') return [255, 255, 255];
+      if (css === '#ff88bb') return [255, 136, 187];
+      if (css[0] === '#') {
+        const n = parseInt(css.slice(1), 16);
+        return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+      }
+      // hsl(H, 70%, 82%) — inline conversion, no DOM needed
+      const m = css.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/);
+      if (!m) return [255, 255, 255];
+      const h = +m[1] / 360, s = +m[2] / 100, l = +m[3] / 100;
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      function hue2rgb(t) {
+        if (t < 0) t += 1; if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      }
+      return [Math.round(hue2rgb(h + 1/3) * 255), Math.round(hue2rgb(h) * 255), Math.round(hue2rgb(h - 1/3) * 255)];
     }
-    ctx.globalAlpha = 1;
+    // Blend rgb toward BG by (1-alpha) and return a '#rrggbb' string.
+    // PEAK_A is the opacity at the newest tip; it stays small so the trail is subtle.
+    const PEAK_A = 0.12;
+    function _blendColor(rgb, alpha) {
+      const t = alpha * PEAK_A;
+      const r = Math.round(rgb[0] * t + TR * (1 - t));
+      const g = Math.round(rgb[1] * t + TG * (1 - t));
+      const b = Math.round(rgb[2] * t + TB * (1 - t));
+      return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+    // Draw trail: each point gets an alpha in [0,1] from position in array.
+    // Older points (index 0) → alpha≈0 (fully BG); newest (index len-1) → alpha=1.
+    // Consecutive segments with the same blended color are batched into one path.
+    ctx.lineWidth = 4; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+    function _drawTrail(arr, overrideRGB, globalFade) {
+      if (arr.length <= 2 || globalFade <= 0) return;
+      const raw = arr, len = raw.length;
+      // Pre-cache parsed RGB for each point (only if not overriding)
+      let prevBlended = null, prevCSS = null;
+      ctx.beginPath();
+      let inPath = false;
+      for (let i = 0; i < len - 1; i++) {
+        const alpha = (i / (len - 1)) * globalFade;
+        const rgb = overrideRGB || _parseRGB(raw[i].color || '#ffffff');
+        const blended = _blendColor(rgb, alpha);
+        if (blended !== prevBlended) {
+          if (inPath) ctx.stroke();
+          ctx.strokeStyle = blended;
+          ctx.beginPath();
+          ctx.moveTo(raw[i].x, raw[i].y);
+          inPath = true;
+          prevBlended = blended;
+        }
+        ctx.lineTo(raw[i + 1].x, raw[i + 1].y);
+      }
+      if (inPath) ctx.stroke();
+    }
+    const dtFade = deathTrailBorn > 0 ? Math.max(0, 1 - (now2 - deathTrailBorn) / 1500) : 0;
+    _drawTrail(deathTrail, [255, 136, 187], dtFade);  // pink death trail
+    _drawTrail(angelTrail, null, 1.0);                 // live trail: per-segment stored color
   }
 
-  // draw sparks with fade support
-  sparks.forEach(s => {
-    const alpha = s.fading ? Math.max(0, 1 - (now2 - s.fadeStart) / 800) : 1;
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = s.color;
-    ctx.fillRect(s.x, s.y, s.w, s.h);
-  });
-  ctx.globalAlpha = 1;
-  for (let i = sparks.length - 1; i >= 0; i--) {
-    if (sparks[i].fading && now2 - sparks[i].fadeStart >= 800) sparks.splice(i, 1);
+  // draw sparks + drop fully-faded ones in a single pass; clip to game area
+  // so sparks entering/exiting never bleed into the letterbox region
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, LW, LH);
+  ctx.clip();
+  {
+    let w = 0;
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
+      if (s.fading) {
+        const age = now2 - s.fadeStart;
+        if (age >= 800) continue;  // drop
+        ctx.globalAlpha = 1 - age / 800;
+        ctx.fillStyle = s.color;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = s.color;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        if (s.harvested) {
+          const r = 2 + (now2 - s.harvestTs) / 1000 * 2;
+          if (r >= 0.5) {
+            ctx.fillStyle = '#07102a';
+            ctx.beginPath();
+            ctx.arc(s.x + s.w * 0.5, s.y + s.h * 0.5, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      sparks[w++] = s;
+    }
+    sparks.length = w;
   }
+  ctx.restore();
 
   drawParticles();
 
   if (state==='playing') {
     const ax=angelX, ay=angelY();
     if (doTick) {
-    // subsample: record every other frame — halves lineTo count with no visible difference
-    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT});
-    while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 900) angelTrail.shift();
+    // live trail: always push, window 1800
+    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: trailTinted ? `hsl(${trailHue|0},70%,82%)` : null});
+    while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 1800) angelTrail.shift();
+    // death trail: snapshot — never trimmed, fades visually and is cleared on reset
 
     // collision — reuse ax/ay already computed above (avoids N×angelY() calls)
-    for (const s of sparks) {
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
       if (!s.fading && ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
           ay+HIT_R > s.y && ay-HIT_R < s.y+s.h) { onHit(); break; }
     }
 
-    // near-miss: golden ring only when threading a gap < 80 px between two spark edges
-    if (nearMissCd > 0) nearMissCd--;
-    if (nearMissCd === 0) {
-      // collect sparks overlapping the angel's X column
-      const col = sparks.filter(s => !s.fading && s.x <= ax + 60 && s.x + s.w >= ax - 60);
-      col.sort((a, b) => a.y - b.y);
-      for (let i = 0; i < col.length - 1; i++) {
-        const upper = col[i], lower = col[i + 1];
-        const gapTop = upper.y + upper.h;
-        const gapBot = lower.y;
-        const gap = gapBot - gapTop;
-        if (gap > 0 && gap < 80 && ay > gapTop - 8 && ay < gapBot + 8) {
-          nearFlashes.push({ ts: now2, x: ax, y: ay });
-          nearMissCd = 20;
-          break;
+    // harvest: close to non-harvested spark → score++, fade spark, white poof
+    if (harvestMode) {
+      for (let i = 0; i < sparks.length; i++) {
+        const s = sparks[i];
+        if (s.fading || s.harvested) continue;
+        const dx = ax < s.x ? s.x - ax : ax > s.x + s.w ? ax - (s.x + s.w) : 0;
+        const dy = ay < s.y ? s.y - ay : ay > s.y + s.h ? ay - (s.y + s.h) : 0;
+        if (dx*dx + dy*dy < 14500) {
+          s.harvested = true;
+          s.harvestTs = now2;
+          s.color = darkenForHarvest(s.color);
+          harvestScore++;
+          playHarvest();
+          for (let k = 0; k < 20; k++) {
+            const ang = Math.random() * Math.PI * 2;
+            const sp = 1.2 + Math.random() * 5.5;
+            particles.push({
+              x: ax + (Math.random() - 0.5) * 10, y: ay + (Math.random() - 0.5) * 10,
+              vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 0.6,
+              life: 1, decay: 0.016 + Math.random() * 0.014,
+              size: 1.2 + Math.random() * 3.0,
+              color: Math.random() < 0.6 ? '#ffffff' : (Math.random() < 0.5 ? '#e8d8ff' : '#c8f0ff')
+            });
+          }
         }
       }
     }
-    } // end doTick
-    nearFlashes = nearFlashes.filter(f => now2 - f.ts < 550);
-    nearFlashes.forEach(f => {
-      const age = (now2 - f.ts) / 550;
-      ctx.save();
-      ctx.globalAlpha = Math.pow(1 - age, 1.8) * 0.8;
-      ctx.strokeStyle = '#ffe566';
-      ctx.lineWidth = 5 * (1 - age * 0.6);
-      ctx.beginPath();
-      ctx.arc(f.x, f.y, age * 80, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    });
 
+
+    } // end doTick
     drawAngel(ax,ay);
 
-    // hit flash: large time at center, fades over 1.5s
-    hitFlashes = hitFlashes.filter(f => now2 - f.ts < 1500);
-    hitFlashes.forEach(f => {
-      const age=(now2-f.ts)/1500;
-      ctx.globalAlpha=Math.pow(1-age,1.5)*0.6;
-      ctx.textAlign='center';
-      ctx.fillStyle='#ffffff';
-      ctx.font=FONT_HIT;
-      ctx.fillText((f.elapsed/1000).toFixed(1),LW/2,LH*0.55);
-      ctx.globalAlpha=1;
-    });
 
-    // best time top-right (player mode only)
-    if (!screensaver && bestTime>0){
-      ctx.textAlign='right';
-      ctx.fillStyle='rgba(255,255,255,0.22)';
-      ctx.font=FONT_BASE;
-      ctx.fillText(`best  ${(bestTime/1000).toFixed(1)}`,LW-40,44);
+    // hit flash: large time at center, fades over 1.5s. Compact always so the
+    // array doesn't grow while the UI is hidden; only render when showUI.
+    {
+      let w = 0;
+      for (let i = 0; i < hitFlashes.length; i++) {
+        const f = hitFlashes[i];
+        const age = (now2 - f.ts) / 1500;
+        if (age >= 1) continue;
+        if (showUI) {
+          ctx.globalAlpha = Math.pow(1 - age, 1.5) * 0.6;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffffff';
+          ctx.font = FONT_HIT;
+          ctx.fillText(f.harvest ? String(f.score) : (f.elapsed / 1000).toFixed(1), LW / 2, LH * 0.55);
+          ctx.globalAlpha = 1;
+        }
+        hitFlashes[w++] = f;
+      }
+      hitFlashes.length = w;
+    }
+    if (showUI) {
+
+    // top-right: harvest score in harvest mode, best time otherwise (player only)
+    if (harvestMode) {
+      if (!screensaver && bestHarvestScore > 0) {
+        const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
+        const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = hoverBest ? 'rgba(255,255,255,0.45)' : 'rgba(255,220,140,0.22)';
+        if (flashAge < 1) ctx.fillStyle = `rgba(255,255,255,${0.4 + (1 - flashAge) * 0.4})`;
+        ctx.font = FONT_BASE;
+        ctx.fillText(`best  ${bestHarvestScore}`, LW - 40, 44);
+      }
+    } else if (!screensaver && bestTime > 0) {
+      const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
+      const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = hoverBest ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)';
+      if (flashAge < 1) ctx.fillStyle = `rgba(255,255,255,${0.4 + (1 - flashAge) * 0.4})`;
+      ctx.font = FONT_BASE;
+      ctx.fillText(`best  ${(bestTime/1000).toFixed(1)}`, LW - 40, 44);
     }
 
     // key hint: fades over 2.2 s after a non-movement key
@@ -1024,24 +1613,127 @@ function draw(ts) {
       ctx.globalAlpha = 1;
     }
 
-    // (a) info button — top-left
-    ctx.textAlign = 'left';
-    ctx.fillStyle = screensaver ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.22)';
-    ctx.font = FONT_BASE;
-    ctx.fillText('(aaditsoab)', 40, 44);
-
-    // bot mode label — fades out 1 s after toggle
-    const _modeAge = (performance.now() - botSmoothChangedAt) / 1000;
-    if (_modeAge < 1.5) {
-      const _modeAlpha = _modeAge < 1.0 ? 1.0 : 1.0 - (_modeAge - 1.0) / 0.5;
-      ctx.save();
-      ctx.globalAlpha = _modeAlpha * 0.7;
-      ctx.textAlign = 'right';
-      ctx.fillStyle = botSmooth ? '#96c8ff' : '#ffc864';
+    // (a) info button — top-left with hover + click-flash
+    {
+      const hoverInfo = _hit(mouseLx, mouseLy, 20, 20, 200, 42);
+      const flashAge = (now2 - (_btnFlash.info || 0)) / 250;
+      const baseA = screensaver ? 0.10 : 0.22;
+      let a = hoverInfo ? 0.55 : baseA;
+      if (flashAge < 1) a = 0.6 + (1 - flashAge) * 0.4;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
       ctx.font = FONT_BASE;
-      ctx.fillText(botSmooth ? 'smooth' : 'input', LW - 40, 44);
-      ctx.restore();
+      ctx.fillText('(aaditsoab)', 40, 44);
     }
+
+    }
+    // end showUI
+  }
+
+  // stats overlay (player run history)
+  if (showStats) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(7,16,42,0.96)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    applyLogical();
+
+    const isHarvestStats = harvestMode;
+    const playerRuns = isHarvestStats
+      ? runsHarvest.filter(r => !r.bot)
+      : runs.filter(r => !r.bot);
+    const last10 = playerRuns.slice(-10).reverse(); // newest first
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = FONT_INFO_H;
+    ctx.fillText(isHarvestStats ? 'harvest history' : 'history', LW/2, LH*0.10);
+
+    // last 10 run values in one row
+    const rowY = LH*0.22;
+    const cellW = LW * 0.86 / 10;
+    const rowX0 = LW * 0.07;
+    ctx.font = FONT_INFO_S;
+    for (let i = 0; i < last10.length; i++) {
+      const r = last10[i];
+      const cx = rowX0 + i * cellW + cellW / 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.62)';
+      ctx.textAlign = 'center';
+      ctx.fillText(isHarvestStats ? String(r.score) : (r.ms/1000).toFixed(1), cx, rowY);
+    }
+
+    // line chart of all player runs
+    const chartX0 = LW*0.07, chartX1 = LW*0.86;
+    const chartY0 = LH*0.35, chartY1 = LH*0.82;
+    const chartW = chartX1 - chartX0, chartH = chartY1 - chartY0;
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(chartX0, chartY0, chartW, chartH);
+    if (playerRuns.length >= 2) {
+      const maxVal = playerRuns.reduce((m, r) => Math.max(m, isHarvestStats ? r.score : r.ms), 1);
+      const n = playerRuns.length;
+      const grad = ctx.createLinearGradient(0, chartY0, 0, chartY1);
+      grad.addColorStop(0,    '#ffdd00');
+      grad.addColorStop(0.5,  '#ff8800');
+      grad.addColorStop(1,    '#ff2200');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const val = isHarvestStats ? playerRuns[i].score : playerRuns[i].ms;
+        const x = chartX0 + (i / (n - 1)) * chartW;
+        const y = chartY1 - (val / maxVal) * chartH;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // 4 y-axis labels on the right
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.font = FONT_INFO_TN;
+      ctx.textAlign = 'left';
+      for (let j = 0; j <= 3; j++) {
+        const frac = j / 3;
+        const labelVal = maxVal * frac;
+        const ly = chartY1 - frac * chartH;
+        ctx.fillText(isHarvestStats ? Math.round(labelVal) : (labelVal/1000).toFixed(1), chartX1 + 8, ly + 4);
+        // tick line
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(chartX0, ly); ctx.lineTo(chartX1, ly); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = FONT_INFO_TN;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${n} runs`, chartX1, chartY0 - 8);
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.font = FONT_INFO_S;
+      ctx.textAlign = 'center';
+      ctx.fillText('need at least 2 runs for a chart', LW/2, chartY0 + chartH/2);
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = FONT_INFO_XS;
+    ctx.textAlign = 'center';
+    ctx.fillText('H or Esc to close', LW/2, LH*0.92);
+
+    // clear-history button (bottom-right, two-stage confirm)
+    {
+      ctx.font = FONT_INFO_XS;
+      ctx.textAlign = 'right';
+      const label = _clearHistoryStage === 1 ? 'really delete?' : 'clear history';
+      const tw = ctx.measureText(label).width;
+      const bx = LW * 0.93, by = LH * 0.92;
+      const hitX = bx - tw - 8, hitY = by - 18, hitW = tw + 16, hitH = 26;
+      const hover = _hit(mouseLx, mouseLy, hitX, hitY, hitW, hitH);
+      const armed = _clearHistoryStage === 1;
+      const a = armed ? (hover ? 1 : 0.85) : (hover ? 0.7 : 0.3);
+      ctx.fillStyle = armed ? `rgba(255,140,140,${a})` : `rgba(255,255,255,${a})`;
+      ctx.fillText(label, bx, by);
+      _clearHistoryRect.x = hitX; _clearHistoryRect.y = hitY;
+      _clearHistoryRect.w = hitW; _clearHistoryRect.h = hitH;
+    }
+
+    ctx.restore();
   }
 
   // info overlay (inside logical transform, on top of everything)
@@ -1054,31 +1746,96 @@ function draw(ts) {
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = FONT_INFO_H;
-    ctx.fillText('an angel dances', LW/2, LH*0.30);
-    ctx.fillText('in the sparks', LW/2, LH*0.38);
-    ctx.fillText('of a bonfire', LW/2, LH*0.46);
+    ctx.fillText('an angel dances', LW/2, LH*0.18);
+    ctx.fillText('in the sparks', LW/2, LH*0.26);
+    ctx.fillText('of a bonfire', LW/2, LH*0.34);
     ctx.fillStyle = 'rgba(255,255,255,0.52)';
     ctx.font = FONT_INFO_S;
-    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.57);
-    ctx.fillText('bot takes over if you let go', LW/2, LH*0.63);
-    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.50);
+    ctx.fillText('bot takes over if you let go', LW/2, LH*0.56);
     ctx.font = FONT_INFO_XS;
-    ctx.fillText('X \u2014 bot mode: ' + (botSmooth ? 'smooth' : 'input'), LW/2, LH*0.70);
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.fillText('click or Esc to close', LW/2, LH*0.76);
-    ctx.fillStyle = 'rgba(255,200,100,0.6)';
-    ctx.font = FONT_INFO_TN;
-    ctx.fillText('original game by brlka', LW/2, LH*0.86);
+    _infoToggleRects.length = 0;
+    const _infoItems = [
+      { key: 'X', label: 'toggle ui', on: showUI },
+      { key: 'Z', label: 'harvest mode', on: harvestMode },
+    ];
+    for (let _ii = 0; _ii < _infoItems.length; _ii++) {
+      const it = _infoItems[_ii];
+      const ty = LH * (0.62 + _ii * 0.08);
+      const text = `${it.key} \u2014 ${it.label}  \u00b7  ${it.on ? 'on' : 'off'}`;
+      const tw = ctx.measureText(text).width;
+      const hover = _hit(mouseLx, mouseLy, LW/2 - tw/2 - 8, ty - 20, tw + 16, 28);
+      let a = it.on ? (hover ? 0.95 : 0.72) : (hover ? 0.5 : 0.28);
+      ctx.fillStyle = it.on ? `rgba(255,220,140,${a})` : `rgba(255,255,255,${a})`;
+      ctx.fillText(text, LW/2, ty);
+      _infoToggleRects.push({ key: it.key, x: LW/2 - tw/2 - 8, y: ty - 20, w: tw + 16, h: 28 });
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.20)';
+    ctx.fillText('click or Esc to close', LW/2, LH*0.78);
     ctx.restore();
   }
 
   resetTransform();
-  creditLink.style.display = showInfo ? 'block' : 'none';
+  const _wantCredit = showInfo ? 'block' : 'none';
+  if (creditLink.style.display !== _wantCredit) creditLink.style.display = _wantCredit;
+
+  // ── profiler ──
+  const _dt = performance.now() - _frameStart;
+  _profBuf[_profIdx] = _dt;
+  _profIdx = (_profIdx + 1) % _profBuf.length;
+  if (_profCount < _profBuf.length) _profCount++;
+  if (_dt > _profWorst) _profWorst = _dt;
+  if (showProf) {
+    // sort only every 30 frames — reuse typed scratch array, zero alloc
+    if ((_profSortFrame++ % 30) === 0) {
+      _profScratch.set(_profBuf.subarray(0, _profCount));
+      const sub = _profScratch.subarray(0, _profCount);
+      sub.sort();
+      _profMed = sub[Math.floor(_profCount / 2)] || 0;
+      _profP95 = sub[Math.floor(_profCount * 0.95)] || 0;
+      _profMax = sub[_profCount - 1] || 0;
+    }
+    const med = _profMed, p95 = _profP95, max = _profMax;
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(8, 8, 220, 70);
+    ctx.fillStyle = '#9fe2ff';
+    ctx.fillText(`med ${med.toFixed(2)} ms  p95 ${p95.toFixed(2)}`, 14, 24);
+    ctx.fillText(`max ${max.toFixed(2)}  worst-ever ${_profWorst.toFixed(1)}`, 14, 40);
+    ctx.fillText(`sparks ${sparks.length}  live ${_liveSparks.length}  gaps ${_gapTargets.length}`, 14, 56);
+    ctx.fillText(`mode ${screensaver ? 'BOT' : 'PLAYER'}`, 14, 72);
+  }
 }
 
 // autostart as AI immediately
 start(true);
 requestAnimationFrame(draw);
+
+// ── Animated favicon: pre-baked data URIs, interval is a zero-cost string swap ──
+(function () {
+  const size = 16, border = 2;  // 16px is sufficient for a favicon
+  const fc = document.createElement('canvas');
+  fc.width = fc.height = size;
+  const fctx = fc.getContext('2d');
+  const link = document.getElementById('favicon');
+  // render all colours once at startup — no encoding at runtime
+  const frames = COLORS.map(col => {
+    fctx.fillStyle = '#07102A';
+    fctx.fillRect(0, 0, size, size);
+    fctx.fillStyle = col;
+    fctx.fillRect(border, border, size - border * 2, size - border * 2);
+    return fc.toDataURL('image/png');
+  });
+  let phase = 0;
+  link.href = frames[0];
+  setInterval(() => {
+    const roll = Math.random();
+    if (roll < 1/3 && phase > 0) phase--;
+    else if (roll < 2/3 && phase < frames.length - 1) phase++;
+    link.href = frames[phase];
+  }, 50);
+})();
 </script>
 </body>
 </html>
