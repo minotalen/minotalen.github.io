@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>an angel dances in the sparks of a bonfire</title>
+<link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
+  canvas { display: block; }
+  #creditLink {
+    position: fixed;
+    bottom: 95px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,200,100,0.62);
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 14px;
+    display: none;
+    z-index: 1000;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 120ms ease;
+    padding: 8px 12px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+  #creditLink:hover {
+    color: rgba(255,220,140,1);
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">original game by brlka</a>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d', { alpha: false }); // skip per-pixel alpha compositing
+const creditLink = document.getElementById('creditLink');
+
+// ── Logical canvas: scaled to fill screen with letterbox ─────
+const LW = 1920, LH = 1080;
+const HORIZON = 240;  // bot lookahead frames (~4s)
+
+let scale = 1, _appOx = 0, _appOy = 0;
+function resize() {
+  scale = Math.min(window.innerWidth / LW, window.innerHeight / LH);
+  _appOx = (window.innerWidth  - LW * scale) / 2;
+  _appOy = (window.innerHeight - LH * scale) / 2;
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+  c.style.position = 'absolute';
+  c.style.left = '0'; c.style.top = '0';
+}
+resize();
+window.addEventListener('resize', () => { resize(); buildStars(); });
+let _needResize = false;
+new ResizeObserver(() => { _needResize = true; }).observe(document.documentElement);
+
+function applyLogical()   { ctx.setTransform(scale, 0, 0, scale, _appOx, _appOy); }
+function resetTransform() { ctx.setTransform(1, 0, 0, 1, 0, 0); }
+
+// ── Audio ───────────────────────────────────────────────
+let audioCtx = null;
+let audioUnlocked = false;  // muted until first real user input (keypress / click)
+function getAudio() {
+  if (!audioUnlocked) return null;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBreath(isInhale) {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    const dur = isInhale ? 1.8 : 2.2;
+    const sr  = ac.sampleRate;
+
+    // pink noise (softer, more organic than white)
+    const buf = ac.createBuffer(1, sr * dur, sr);
+    const d   = buf.getChannelData(0);
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0;
+    for (let i = 0; i < d.length; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886*b0 + w*0.0555179;
+      b1 = 0.99332*b1 + w*0.0750759;
+      b2 = 0.96900*b2 + w*0.1538520;
+      b3 = 0.86650*b3 + w*0.3104856;
+      b4 = 0.55000*b4 + w*0.5329522;
+      b5 = -0.7616*b5 + w*0.0168981;
+      d[i] = (b0+b1+b2+b3+b4+b5) * 0.11;
+    }
+
+    const src = ac.createBufferSource(); src.buffer = buf;
+
+    // shaping filter
+    const filt = ac.createBiquadFilter();
+    if (isInhale) {
+      // inhale: nasal, rising hiss
+      filt.type = 'bandpass'; filt.Q.value = 4;
+      filt.frequency.setValueAtTime(1600, t0);
+      filt.frequency.linearRampToValueAtTime(3200, t0 + dur * 0.8);
+    } else {
+      // exhale: chesty, falling warmth
+      filt.type = 'bandpass'; filt.Q.value = 3;
+      filt.frequency.setValueAtTime(1200, t0);
+      filt.frequency.exponentialRampToValueAtTime(400, t0 + dur);
+    }
+
+    // master envelope — very gradual onset, no click/drum at all
+    const gain = ac.createGain();
+    if (isInhale) {
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.0, t0 + 0.05); // silent start
+      gain.gain.linearRampToValueAtTime(0.13, t0 + dur * 0.65);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+    } else {
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.13, t0 + 0.18); // 180ms ramp-in
+      gain.gain.linearRampToValueAtTime(0.10, t0 + dur * 0.5);
+      gain.gain.linearRampToValueAtTime(0, t0 + dur);
+    }
+
+    src.connect(filt); filt.connect(gain); gain.connect(ac.destination);
+    src.start(t0);
+  } catch(e) {}
+}
+function playDeath() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const osc=ac.createOscillator(), g=ac.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(180,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40,ac.currentTime+0.6);
+    g.gain.setValueAtTime(0.25,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.7);
+    osc.connect(g);g.connect(ac.destination);
+    osc.start();osc.stop(ac.currentTime+0.7);
+    const buf=ac.createBuffer(1,ac.sampleRate*0.4,ac.sampleRate);
+    const dd=buf.getChannelData(0);
+    for(let i=0;i<dd.length;i++) dd[i]=(Math.random()*2-1)*Math.pow(1-i/dd.length,0.5)*0.4;
+    const ns=ac.createBufferSource(); ns.buffer=buf;
+    const ng=ac.createGain(); ng.gain.value=0.15;
+    ns.connect(ng);ng.connect(ac.destination);ns.start();
+  } catch(e){}
+}
+function playStart() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    [330,440,550].forEach((freq,i)=>{
+      const osc=ac.createOscillator(), g=ac.createGain();
+      osc.type='sine'; osc.frequency.value=freq;
+      g.gain.setValueAtTime(0,ac.currentTime+i*0.07);
+      g.gain.linearRampToValueAtTime(0.045,ac.currentTime+i*0.07+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+i*0.07+0.22);
+      osc.connect(g);g.connect(ac.destination);
+      osc.start(ac.currentTime+i*0.07);
+      osc.stop(ac.currentTime+i*0.07+0.25);
+    });
+  } catch(e){}
+}
+function playHarvest() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [1480, 1980].forEach((freq, i) => {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t0 + i * 0.018);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.82, t0 + i * 0.018 + 0.18);
+      g.gain.setValueAtTime(0, t0 + i * 0.018);
+      g.gain.linearRampToValueAtTime(0.038, t0 + i * 0.018 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.018 + 0.22);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0 + i * 0.018);
+      osc.stop(t0 + i * 0.018 + 0.25);
+    });
+  } catch(e) {}
+}
+function playDing() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [1047, 1319].forEach((freq, i) => {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, t0 + i * 0.06);
+      g.gain.linearRampToValueAtTime(0.055, t0 + i * 0.06 + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.06 + 0.45);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0 + i * 0.06); osc.stop(t0 + i * 0.06 + 0.5);
+    });
+  } catch(e) {}
+}
+
+// ── Stars ───────────────────────────────────────────────
+let stars = [], starCanvas = null;
+function buildStars() {
+  stars = [];
+  const n = Math.floor(LW * LH / 11000);
+  for (let i=0;i<n;i++) stars.push({
+    x: Math.random()*LW, y: Math.random()*LH,
+    r: Math.random()<0.07?1.4:Math.random()<0.25?0.9:0.45,
+    a: 0.12+Math.random()*0.5
+  });
+  // Pre-render stars at the actual screen size so per-frame blit is a 1:1 copy
+  // (no canvas scaling). Background colour is baked in — main loop skips fillRect.
+  starCanvas = document.createElement('canvas');
+  starCanvas.width  = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  const sCtx = starCanvas.getContext('2d');
+  sCtx.fillStyle = '#07102a';
+  sCtx.fillRect(0, 0, starCanvas.width, starCanvas.height);
+  // Letterbox so star field aligns with the game's logical space.
+  const _s  = Math.min(window.innerWidth / LW, window.innerHeight / LH);
+  const _ox = (window.innerWidth  - LW * _s) / 2;
+  const _oy = (window.innerHeight - LH * _s) / 2;
+  sCtx.setTransform(_s, 0, 0, _s, _ox, _oy);
+  stars.forEach(s=>{
+    sCtx.beginPath(); sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sCtx.fillStyle=`rgba(200,215,255,${s.a})`; sCtx.fill();
+  });
+}
+buildStars();
+function drawStars() {
+  // identity transform: 1:1 blit, no scaling cost
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(starCanvas, 0, 0);
+}
+
+// ── Palette ─────────────────────────────────────────────
+const COLORS=['#ff0000','#e50000','#cc0000','#ff3300','#ff4400','#ff5500',
+              '#ff6600','#ff7700','#ff8800','#ff9900','#ffaa00','#ffbb00',
+              '#ffcc00','#ffdd00','#ffee00'];
+function fireColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+// Blend a hex color 30% toward the background — used to fade harvested sparks.
+const _BG_R = 7, _BG_G = 16, _BG_B = 42;
+function darkenForHarvest(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 0xff, g = (n >> 8) & 0xff, b = n & 0xff;
+  const nr = Math.round(r * 0.7 + _BG_R * 0.3);
+  const ng = Math.round(g * 0.7 + _BG_G * 0.3);
+  const nb = Math.round(b * 0.7 + _BG_B * 0.3);
+  return '#' + ((nr << 16) | (ng << 8) | nb).toString(16).padStart(6, '0');
+}
+
+// ── Constants (logical pixels, screen-independent) ──────
+const ANGEL_R   = 20;  // visual / near-miss ring radius
+const HIT_R     = 6;   // actual collision hitbox (center only)
+const SIM_R     = 16;  // AI simulation hitbox — generous margin over HIT_R=6 to absorb sub-frame motion of fast sparks (up to ~23 px/frame)
+const SPAWN_ZONE = 250;  // left band where new sparks can appear with little reaction time — bot treats this as soft-deadly
+const MAX_SPEED = 37;
+const ACC       = MAX_SPEED / 35;
+const FRICTION  = 0.93;  // drift multiplier per frame when no direction held — lower = longer glide
+const DRIFT_MIN = 0.05;  // vel magnitude below which drift snaps to 0
+const LOW_SPEED_BOOST_THRESHOLD = 5;  // boost (1.5×) when |vel| is below this — same mult as reversing; adjust to taste
+const DIRS      = Object.freeze([-1, 0, 1]);
+// Angel Y-path: ay = LH/2 + sin(t * AY_W) * AY_AMP.
+// SW/CW enable a sin recurrence in the bot lookahead (one Math.sin per frame instead of HORIZON).
+const AY_W = 0.0567, AY_AMP = LH * 0.35, AY_MID = LH * 0.5;
+const AY_SW = Math.sin(AY_W), AY_CW = Math.cos(AY_W);
+const LEFT_KEYS  = new Set(['ArrowLeft',  'a', 'A']);
+const RIGHT_KEYS = new Set(['ArrowRight', 'd', 'D']);
+// pre-computed font strings — LH is a fixed constant, no Math.round per frame
+const FONT_HIT    = `${Math.round(LH*0.22)}px monospace`;
+const FONT_BASE   = `${Math.round(LH*0.022)}px monospace`;
+const FONT_INFO_H = `${Math.round(LH*0.038)}px monospace`;
+const FONT_INFO_S = `${Math.round(LH*0.024)}px monospace`;
+const FONT_INFO_XS= `${Math.round(LH*0.019)}px monospace`;
+const FONT_INFO_TN= `${Math.round(LH*0.018)}px monospace`;
+
+// ── Game state ───────────────────────────────────────────
+let state = 'idle';      // idle | playing | dead | screensaver
+let screensaver = false;
+let t = 0, startTime = 0, elapsed = 0;
+let sparks = [], spawnAccum = 0, spawnPause = 0;
+let particles = [];
+let keys = {};
+let angelX = LW/2, angelSpeed = 0;
+let angelTrail = [];  // [{x,y,ts}] live white trail
+let deathTrail  = [];  // snapshot of trail on death, drawn pink and faded 2x faster
+let deathTrailBorn = 0; // performance.now() when death trail was created
+let breathScale = 1.0, lastAy = LH*0.5, lastDy = 0, breathCooldown = 0;
+let angelLean = 0;
+let aiVelocity = 0;
+let aiInputDir = 0;         // -1/0/1 direction currently committed by the bot
+let aiInputHeldFor = 0;     // consecutive ticks aiInputDir has been held
+let showUI = false;        // HUD visible (X to toggle) — hidden until first interaction
+let harvestMode = false;   // Z toggles "harvest" mode: graze sparks to score points
+let nonchalance = 0.0;     // 0 = survival, 1 = style/dance  (slider sets)
+let danceMode = 0;         // which style behaviour: 0=sweep 1=graze 2=flow  (auto-cycles with nonchalance)
+
+let harvestScore = 0;      // count of sparks harvested this run
+let mouseLx = -1, mouseLy = -1;  // mouse position in logical coords (for hover effects)
+const _btnFlash = {};      // key → ts of last click flash
+let lastDir     = 0;       // -1 left / 1 right — newest key wins
+let prevPlayerDir = 0;     // direction last tick — detects first frame of input
+let playerDirFrames = 0;   // frames held in current direction — resets on change
+let playerKeyPressCooldown = 0;  // frames until next 6x first-frame boost is allowed
+let aiInputCooldown = 0;   // frames until next 6x first-frame boost is allowed (bot)
+let deathTimer = null;
+let attractTimer = null;
+let hitFlashes = [];
+let bestTime = 0;
+let bestHarvestScore = 0;
+let showStats = false;
+const HALO_KEY = 'angel.halo.deaths.v1';
+let haloDeathCount = 0;
+try { haloDeathCount = parseInt(localStorage.getItem(HALO_KEY)) || 0; } catch {}
+nonchalance = Math.random();
+let haloActive = false;
+let haloUsedThisLife = false;
+let haloStartTs = 0;
+const HALO_DURATION = 12000;
+let haloTrailHue = 0;
+let firstInteraction = false;  // tracks whether user has interacted yet (for UI reveal)
+const RUNS_KEY = 'angel.runs.v1';
+const RUNS_KEY_HARVEST = 'angel.runs.harvest.v1';
+let runs = [];         // [{ms, ts, bot}] — normal mode, chronological
+let runsHarvest = [];  // [{score, ts, bot}] — harvest mode, chronological
+let trailHue = Math.random() * 360;  // current hue offset for live trail (deg)
+let trailHueSpeed = 0;     // auto-cycle rate (deg per tick); adjusted by I/O
+let trailTinted = false;   // becomes true on first tint input; otherwise trail is pure white
+let lastDingMinute = 0;    // tracks last 60-second mark that played a ding
+function loadRuns() {
+  try { runs = JSON.parse(localStorage.getItem(RUNS_KEY)) || []; } catch { runs = []; }
+  try { runsHarvest = JSON.parse(localStorage.getItem(RUNS_KEY_HARVEST)) || []; } catch { runsHarvest = []; }
+  bestTime = runs.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.ms), 0);
+  bestHarvestScore = runsHarvest.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.score), 0);
+}
+function saveRuns() {
+  try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs.slice(-500))); } catch {}
+  try { localStorage.setItem(RUNS_KEY_HARVEST, JSON.stringify(runsHarvest.slice(-500))); } catch {}
+}
+function recordRun(ms, bot) {
+  if (harvestMode) {
+    runsHarvest.push({ score: harvestScore, ts: Date.now(), bot: !!bot });
+    if (runsHarvest.length > 500) runsHarvest = runsHarvest.slice(-500);
+  } else {
+    runs.push({ ms, ts: Date.now(), bot: !!bot });
+    if (runs.length > 500) runs = runs.slice(-500);
+  }
+  saveRuns();
+}
+loadRuns();
+let trailT = 0;  // monotonic, never resets — trail timestamps stay valid
+let keyHintTs = -Infinity; // timestamp of last non-movement keypress
+let danceModeFlashTs = -Infinity;  // timestamp of last dance-mode change
+let danceModeFlashColor = '#fff';  // spark color picked at last mode change
+let lastMoveInputTs = -Infinity; // timestamp of last move key event (not reset on death)
+let hadInputSinceDeath = false;  // true once player presses a key after dying
+let showInfo = false;      // info overlay active
+let showInfoOpenedAt = 0;  // ts when info overlay was opened (for animation reset)
+
+let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
+let targetZoneIdx = 2, zoneArrivalFrames = 0; // stable zone targeting — updated with hysteresis
+let _futureAys = new Float32Array(HORIZON + 2);  // precomputed futureAy[0..HORIZON]; refilled each frame
+const _hScratch = new Float32Array(50);  // scratch: per-spark min-distance for harvest scoring
+let _futureAyT = -1;                      // t-value when _futureAys was last filled
+let _liveSparks = [];                     // non-fading sparks snapshot for simulation
+let _gapTargets = [];                     // narrow Y gaps between spark pairs, precomputed each tick
+let _gapPool = [];                        // reusable pool to avoid per-frame object allocation
+let _deadlyAt = (() => { const a = new Array(HORIZON + 2); for (let i = 0; i <= HORIZON + 1; i++) a[i] = new Float32Array(100); return a; })();
+let _deadlyCnt = new Int32Array(HORIZON + 2);
+
+let _ayCache = AY_MID, _ayFrame = -1;
+function angelY() {
+  if (_ayFrame !== t) { _ayCache = AY_MID + Math.sin(t * AY_W) * AY_AMP; _ayFrame = t; }
+  return _ayCache;
+}
+
+// ── Sparks ───────────────────────────────────────────────
+function spawnSpark(ramp) {
+  const lo = 1.7;
+  const hi = 7.6 + ramp * 4;
+  // In screensaver mode use the seeded PRNG so spawns match the sim exactly.
+  // fireColor() stays on Math.random — cosmetic only, not consumed by sim.
+  const rand = Math.random.bind(Math);
+  const w  = 44 + rand() * 64;
+  const vx = lo + rand() * (hi - lo);
+  // Spawn one tick behind the border so after the immediate x += vx advance
+  // the right edge lands exactly at 0 (left border), never visible on spawn.
+  return {
+    x: -(w + vx),
+    y: rand()*LH*0.8+LH*0.1,
+    w, h: 32+rand()*40,
+    vx,
+    vy: (rand()-0.5) * 0.25,
+    ay: (rand()-0.5) * 0.004,
+    color: fireColor()
+  };
+}
+
+// ── AI planner state ─────────────────────────────────────
+let aiCommitFrames = 0;
+
+// Reward projecting through a narrow vertical gap between two approaching sparks.
+// Tighter gaps score higher; angel Y must align with the gap at ~20 frames out.
+function gapThreadBonus(projX) {
+  if (_gapTargets.length === 0) return 0;
+  const ay = _futureAys[20];
+  let best = 0;
+  for (const g of _gapTargets) {
+    if (ay < g.gapTop - 30 || ay > g.gapBot + 30) continue;
+    const xCenter = (g.xLo + g.xHi) / 2;
+    const halfW = (g.xHi - g.xLo) / 2 + 80;
+    const dist = Math.max(0, Math.abs(projX - xCenter) - halfW);
+    if (dist > 160) continue;
+    best = Math.max(best, g.tightness * (1 - dist / 160) * 35);
+  }
+  return best;
+}
+
+// ── Per-frame input-mode physics step ─────────────────────
+// Reversing (vel opposite to dir) or below LOW_SPEED_BOOST_THRESHOLD: 1.5× accel.
+// Otherwise: 1.0–1.8× accel scaled inversely by current speed.
+function simInputStep(dir, vel) {
+  if (dir === 0) {
+    const nv = vel * FRICTION;
+    return Math.abs(nv) < DRIFT_MIN ? 0 : nv;
+  }
+  let mult;
+  if (dir * vel < 0 || Math.abs(vel) < LOW_SPEED_BOOST_THRESHOLD)  mult = 1.95;
+  else                                                               mult = 1 + (1 - Math.abs(vel) / MAX_SPEED) * 0.8;
+  const nv = vel + ACC * 1.5 * mult * dir;
+  return dir < 0 ? Math.max(-MAX_SPEED, nv) : Math.min(MAX_SPEED, nv);
+}
+
+// ── Shared movement applier (bot + player) ────────────────
+// Writes into a reused scratch object to avoid per-tick allocation.
+const _moveOut = { vel: 0, heldFrames: 0, cooldown: 0 };
+function stepAngelMovement(dir, prevDir, heldFrames, cooldown, vel) {
+  let newHeld;
+  if (dir !== prevDir)  newHeld = 1;
+  else if (dir !== 0)   newHeld = heldFrames + 1;
+  else                  newHeld = 0;
+  let newVel, newCooldown = cooldown;
+  if (dir !== 0) {
+    newVel = simInputStep(dir, vel);
+  } else {
+    newVel = vel * FRICTION;
+    if (Math.abs(newVel) < DRIFT_MIN) newVel = 0;
+  }
+  _moveOut.vel = newVel;
+  _moveOut.heldFrames = newHeld;
+  _moveOut.cooldown = newCooldown;
+  return _moveOut;
+}
+
+// ── AI: input-mode 2-level lookahead ──────────────────────────────────────
+// Simulate dir for BRANCH_AT frames, then branch to all 3 continuations.
+// The bot can now see escape routes that require a direction change mid-flight.
+function scoreInputDeep(dir) {
+  if (_liveSparks.length === 0) return HORIZON;
+  const BRANCH_AT = 12;
+  // Mirror the real cooldown gate so the planner never over-promises boost.
+  const isNewDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
+  let simX = angelX, simVel = aiVelocity;
+  let wallTime = 0;  // consecutive frames against either wall
+  for (let dt = 1; dt <= BRANCH_AT; dt++) {
+    simVel = simInputStep(dir, simVel, dt, isNewDir && dt === 1);
+    simX += simVel;
+    if (simX <= 41 || simX >= LW - 41) {
+      simX = Math.max(40, Math.min(LW - 40, simX));
+      // Left wall = spawn zone; never let phase 1 commit to hugging it.
+      if (++wallTime > 6 && simX <= 41) return dt;
+    } else {
+      wallTime = 0;
+    }
+    const fay = _futureAys[dt];
+    const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+    const simHi = simX + SIM_R, simLo = simX - SIM_R;
+    for (const s of _liveSparks) {
+      const fx = s.x + s.vx * dt;
+      if (simHi <= fx || simLo >= fx + s.w) continue;
+      const fy = s._futY[dt];
+      if (fayHi > fy && fayLo < fy + s.h) return dt - 1;
+    }
+  }
+  // Branch: try all 3 continuations from intermediate state, take the best.
+  // Wall time is inherited so traps that span both phases are correctly penalised.
+  let bestCont = 0;
+  for (const contDir of DIRS) {
+    let cX = simX, cV = simVel, cWallTime = wallTime, cont = 0;
+    const isContNewDir = (contDir !== dir);
+    for (let i = 1; i <= HORIZON - BRANCH_AT; i++) {
+      const dt = BRANCH_AT + i;
+      cV = simInputStep(contDir, cV, i, isContNewDir && i === 1);
+      cX += cV;
+      cX = Math.max(40, Math.min(LW - 40, cX));
+      if (cX <= 41 || cX >= LW - 41) {
+        // Right wall is dangerous: cuts off leftward escape. Penalise sooner than before.
+        if (++cWallTime > (cX <= 41 ? 20 : 25)) {
+          cont = (cX <= 41 ? 60 : 100) - BRANCH_AT;
+          break;
+        }
+      } else {
+        cWallTime = 0;
+      }
+      const fay = _futureAys[dt];
+      const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+      const cHi = cX + SIM_R, cLo = cX - SIM_R;
+      let hit = false;
+      for (const s of _liveSparks) {
+        const fx = s.x + s.vx * dt;
+        if (cHi <= fx || cLo >= fx + s.w) continue;
+        const fy = s._futY[dt];
+        if (fayHi > fy && fayLo < fy + s.h) { hit = true; break; }
+      }
+      if (hit) break;
+      cont = i;
+    }
+    bestCont = Math.max(bestCont, cont);
+    if (bestCont >= HORIZON - BRANCH_AT) break;
+  }
+  return BRANCH_AT + bestCont;
+}
+
+function aiChooseDirection(currentDirSurvive) {
+  const maxZi  = targetZoneIdx;
+  const zTargX = 40 + (maxZi + 0.5) * (LW - 80) / 5;
+  const zDir   = zTargX - angelX;
+  let bestDir = 0, bestScore = -Infinity;
+  for (const dir of DIRS) {
+    // Reuse the survive score already computed for the current direction
+    // (saves one full scoreInputDeep call per recompute — ~33% of planner work).
+    const survive = (dir === aiInputDir) ? currentDirSurvive : scoreInputDeep(dir);
+    // Project position 30 frames out with exact input physics for bonuses
+    let projX = angelX, projV = aiVelocity;
+    for (let dt = 1; dt <= 30; dt++) {
+      projV = simInputStep(dir, projV);
+      projX = Math.max(40, Math.min(LW - 40, projX + projV));
+    }
+    const center    = -(Math.abs(projX - LW / 2) / (LW / 2)) * 12;
+    const leftEdge  = Math.max(0, (SPAWN_ZONE - projX) / SPAWN_ZONE);
+    const leftPen   = leftEdge * leftEdge * 40;   // quadratic — soft penalty, bot can still use left zone
+    // Right wall isn't a spawn zone but trapping there cuts off escape options.
+    // Stronger quadratic than left so the bot actively avoids drifting far right.
+    const rightEdge = Math.max(0, (projX - (LW - SPAWN_ZONE)) / SPAWN_ZONE);
+    const rightPen  = rightEdge * rightEdge * 80;
+    const styleMult = survive >= 133 ? 1.0 : survive >= 105 ? (survive - 105) / 28 : 0;
+    const motion    = dir !== 0 ? (6 + styleMult * 10) : 0;
+    // Smooth: gentle incentive to continue in same direction — kept small so safety dominates.
+    const smooth    = Math.exp(-Math.abs(dir * MAX_SPEED - aiVelocity) / (MAX_SPEED * 1.2)) * 8 * styleMult;
+    // Penalise hard reversals only when safe — in danger, reversal must be free to execute.
+    const reversePen = (dir !== 0 && Math.sign(aiVelocity) !== 0 && dir === -Math.sign(aiVelocity))
+                       ? (Math.abs(aiVelocity) / MAX_SPEED) * 18 * styleMult : 0;
+    // Stickiness bonus: small reward for holding same direction — capped so safety always wins.
+    const stickiness = (dir === aiInputDir) ? Math.min(aiInputHeldFor, 60) * 0.3 * styleMult : 0;
+    const zAlign    = Math.max(0, Math.sign(zDir) * dir);
+    // Zone bonus kept small — exploration bias must not override a meaningful survival difference.
+    const zone      = harvestMode ? 0 : zAlign * zoneBonuses[maxZi] * 0.2 * styleMult;
+    // Survive dominates: 2× weight + scaled penalties.
+    const gapBonus = gapThreadBonus(projX) * styleMult * 0.4;
+    // Harvest mode: reward projected proximity (≤100 px edge-distance) to non-harvested sparks.
+    // Gated by styleMult (0 when unsafe) so the bot never sacrifices survival to harvest.
+    // Per-spark minimum distance — bounded regardless of how many frames stay near a spark.
+    let harvestBonus = 0;
+    if (harvestMode && styleMult > 0) {
+      const isHDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
+      let hX = angelX, hV = aiVelocity;
+      const nls = _liveSparks.length;
+      for (let si = 0; si < nls; si++) _hScratch[si] = 100;
+      for (let dt = 1; dt <= 50; dt++) {
+        hV = simInputStep(dir, hV, dt, isHDir && dt === 1);
+        hX = Math.max(40, Math.min(LW - 40, hX + hV));
+        const fay = _futureAys[dt];
+        for (let si = 0; si < nls; si++) {
+          const s = _liveSparks[si];
+          if (s.harvested) continue;
+          const fx = s.x + s.vx * dt;
+          const fy = s._futY[dt];
+          const dx = hX < fx ? fx - hX : hX > fx + s.w ? hX - (fx + s.w) : 0;
+          const dy = fay < fy ? fy - fay : fay > fy + s.h ? fay - (fy + s.h) : 0;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < _hScratch[si]) _hScratch[si] = d;
+        }
+      }
+      for (let si = 0; si < nls; si++) {
+        if (_hScratch[si] < 100) harvestBonus += (1 - _hScratch[si] / 100) * styleMult * 80;
+      }
+    }
+    const score = survive * 2 + center + motion + smooth + stickiness + zone + gapBonus + harvestBonus - leftPen - rightPen - reversePen;
+    if (score > bestScore) { bestScore = score; bestDir = dir; }
+  }
+  return bestDir;
+}
+
+// plan3: 27-plan (3 dirs × 3 segments) lookahead using precomputed _deadlyAt
+// intervals. Tuned to outperform legacy scoreInputDeep by ~2× on long-run survival.
+function plan3() {
+  const SEG1 = 8, SEG2 = 12, CAP = 80;
+  const CENTER_W = 0.1, WALLTIME_W = 0.5, CLEAR_W = 8;
+  const LEFT_DEATH = 4, RIGHT_DEATH = 4, STICK = 0;
+  const LWmid = LW / 2;
+  if (_liveSparks.length === 0) {
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  function simPlan(d1, d2, d3) {
+    let x = angelX, v = angelSpeed, dir = d1;
+    let wallAcc = 0, minClear = 1e9, leftAcc = 0, rightAcc = 0;
+    for (let dt = 1; dt <= CAP; dt++) {
+      if (dt === SEG1 + 1) dir = d2;
+      else if (dt === SEG1 + SEG2 + 1) dir = d3;
+      v = simInputStep(dir, v);
+      x += v;
+      if (x < 40) {
+        x = 40; wallAcc++; leftAcc++; rightAcc = 0;
+        if (leftAcc > LEFT_DEATH) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+      } else if (x > LW - 40) {
+        x = LW - 40; wallAcc++; rightAcc++; leftAcc = 0;
+        if (rightAcc > RIGHT_DEATH) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+      } else { leftAcc = 0; rightAcc = 0; }
+      // _deadlyAt[k] is spark position at end-of-tick (N+1+k); after dt angel
+      // moves the angel sits at end-of-tick (N+dt). Match index: dt-1.
+      const buf = _deadlyAt[dt - 1];
+      const cnt = _deadlyCnt[dt - 1];
+      for (let i = 0; i < cnt; i += 2) {
+        const lo = buf[i], hi = buf[i + 1];
+        if (x > lo && x < hi) return { depth: dt - 1, endX: x, wallAcc, clear: 0 };
+        const d = x <= lo ? lo - x : x - hi;
+        if (d < minClear) minClear = d;
+      }
+    }
+    return { depth: CAP, endX: x, wallAcc, clear: minClear };
+  }
+  let bestKey = -Infinity, bestFirstDir = aiInputDir;
+  for (let i = 0; i < 3; i++) {
+    const d1 = DIRS[i];
+    let bestSubKey = -Infinity;
+    for (let j = 0; j < 3; j++) {
+      const d2 = DIRS[j];
+      for (let k = 0; k < 3; k++) {
+        const r = simPlan(d1, d2, DIRS[k]);
+        const clearTerm = Math.min(r.clear, 200) * CLEAR_W;
+        const tie = clearTerm - Math.abs(r.endX - LWmid) * CENTER_W - r.wallAcc * WALLTIME_W;
+        const key = r.depth * 1000 + tie;
+        if (key > bestSubKey) bestSubKey = key;
+      }
+    }
+    const stick = (d1 === aiInputDir) ? STICK : 0;
+    const key = bestSubKey + stick;
+    if (key > bestKey) { bestKey = key; bestFirstDir = d1; }
+  }
+  return bestFirstDir;
+}
+
+// ── Beam-search planner ──────────────────────────────────
+// K candidates × ROUNDS × SEG-frame steps using precomputed deadly intervals.
+// Diversity bucket prevents collapse onto a single trajectory.
+const BEAM_K = 30, BEAM_SEG = 8, BEAM_ROUNDS = 12;
+const BEAM_CENTER_W = 0.05, BEAM_WALLTIME_W = 0.3;
+const BEAM_LEFT_DEATH = 8, BEAM_RIGHT_DEATH = 8;
+// style-behaviour presets — each weights one aesthetic goal; nonchalance scales all
+const DANCE_MODES = [
+  // disp: reward distance traveled  ·  smth: reward sustained velocity in 1st dir
+  // mom: bonus when 1st dir matches current input  ·  prox: reward proximity to sparks
+  // still: bonus when 1st dir == 0  ·  trace: reward proximity to own trail
+  // left: reward closeness to left edge  ·  col: flash/display color
+  { name: 'sweep',    disp: 12,  smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff0000' },
+  { name: 'graze',    disp: 0,   smth: 0,   mom: 0,     prox: 12000,still: 0,    trace: 0,     left: 0,    col: '#ff3300' },
+  { name: 'flow',     disp: 1,   smth: 300, mom: 1500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff5500' },
+  { name: 'drift',    disp: 0,   smth: 0,   mom: 5500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff7700' },
+  { name: 'dart',     disp: 18,  smth: 0,   mom: -3000, prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff9900' },
+  { name: 'tempo',    disp: 0,   smth: 0,   mom: 0,     prox: 0,    still: 9000, trace: 0,     left: 0,    col: '#ffbb00' },
+  { name: 'trace',    disp: 0,   smth: 0,   mom: 1500,  prox: 0,    still: 0,    trace: 11000, left: 0,    col: '#ffdd00' },
+  { name: 'reckless', disp: 4,   smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 9000, col: '#ffee00' },
+];
+const _beam = {
+  X: new Float32Array(64), V: new Float32Array(64),
+  Wall: new Int16Array(64), Left: new Int16Array(64), Right: new Int16Array(64),
+  Depth: new Int16Array(64), Dead: new Uint8Array(64), First: new Int8Array(64),
+  X2: new Float32Array(192), V2: new Float32Array(192),
+  Wall2: new Int16Array(192), Left2: new Int16Array(192), Right2: new Int16Array(192),
+  Depth2: new Int16Array(192), Dead2: new Uint8Array(192), First2: new Int8Array(192), Dir2: new Int8Array(192),
+  Score2: new Float32Array(192), Order: new Int32Array(192),
+};
+function _beamGrow(need, scratch) {
+  const o = _beam;
+  if (scratch ? o.X2.length >= need : o.X.length >= need) return;
+  if (scratch) {
+    o.X2 = new Float32Array(need); o.V2 = new Float32Array(need);
+    o.Wall2 = new Int16Array(need); o.Left2 = new Int16Array(need); o.Right2 = new Int16Array(need);
+    o.Depth2 = new Int16Array(need); o.Dead2 = new Uint8Array(need); o.First2 = new Int8Array(need); o.Dir2 = new Int8Array(need);
+    o.Score2 = new Float32Array(need); o.Order = new Int32Array(need);
+  } else {
+    o.X = new Float32Array(need); o.V = new Float32Array(need);
+    o.Wall = new Int16Array(need); o.Left = new Int16Array(need); o.Right = new Int16Array(need);
+    o.Depth = new Int16Array(need); o.Dead = new Uint8Array(need); o.First = new Int8Array(need);
+  }
+}
+function _beamSimStep(i, dir, scratch) {
+  const Xa = scratch ? _beam.X2 : _beam.X, Va = scratch ? _beam.V2 : _beam.V;
+  const Wa = scratch ? _beam.Wall2 : _beam.Wall;
+  const La = scratch ? _beam.Left2 : _beam.Left, Ra = scratch ? _beam.Right2 : _beam.Right;
+  const Da = scratch ? _beam.Depth2 : _beam.Depth, Dea = scratch ? _beam.Dead2 : _beam.Dead;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  let x = Xa[i], v = Va[i], wall = Wa[i], lAcc = La[i], rAcc = Ra[i], depth = Da[i];
+  for (let s = 0; s < BEAM_SEG; s++) {
+    if (depth >= CAP) break;
+    const dt = depth + 1;
+    v = simInputStep(dir, v);
+    x += v;
+    if (x < 40) {
+      x = 40; v = 0; wall++; lAcc++; rAcc = 0;
+      if (lAcc > BEAM_LEFT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    } else if (x > LW - 40) {
+      x = LW - 40; v = 0; wall++; rAcc++; lAcc = 0;
+      if (rAcc > BEAM_RIGHT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    } else { lAcc = 0; rAcc = 0; }
+    const buf = _deadlyAt[dt - 1], cnt = _deadlyCnt[dt - 1];
+    let hit = false;
+    for (let j = 0; j < cnt; j += 2) {
+      if (x > buf[j] && x < buf[j + 1]) { hit = true; break; }
+    }
+    if (hit) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
+    depth = dt;
+  }
+  Xa[i] = x; Va[i] = v; Wa[i] = wall; La[i] = lAcc; Ra[i] = rAcc; Da[i] = depth;
+}
+function planBeam() {
+  const LWmid = LW / 2;
+  if (_liveSparks.length === 0) {
+    if (nonchalance > 0.5 && aiInputDir !== 0) return aiInputDir;
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  _beamGrow(BEAM_K * 3, false);
+  _beamGrow(BEAM_K * 3, true);
+  const b = _beam;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+
+  let nLive = 3;
+  for (let i = 0; i < 3; i++) {
+    b.X[i] = angelX; b.V[i] = angelSpeed;
+    b.Wall[i] = 0; b.Left[i] = 0; b.Right[i] = 0;
+    b.Depth[i] = 0; b.Dead[i] = 0; b.First[i] = DIRS[i];
+  }
+  for (let i = 0; i < nLive; i++) _beamSimStep(i, b.First[i], false);
+
+  for (let r = 1; r < BEAM_ROUNDS; r++) {
+    let m = 0;
+    for (let i = 0; i < nLive; i++) {
+      for (let d = 0; d < 3; d++) {
+        b.X2[m] = b.X[i]; b.V2[m] = b.V[i];
+        b.Wall2[m] = b.Wall[i]; b.Left2[m] = b.Left[i]; b.Right2[m] = b.Right[i];
+        b.Depth2[m] = b.Depth[i]; b.Dead2[m] = b.Dead[i]; b.First2[m] = b.First[i];
+        b.Dir2[m] = DIRS[d];
+        m++;
+      }
+    }
+    for (let i = 0; i < m; i++) {
+      if (b.Dead2[i]) continue;
+      _beamSimStep(i, b.Dir2[i], true);
+    }
+    const _n = nonchalance;
+    const _ns = _n * _n;  // quadratic style ramp — keeps mid-slider survival-dominant
+    const wt = DANCE_MODES[danceMode];
+    for (let i = 0; i < m; i++) {
+      const disp = _ns * wt.disp * Math.abs(b.X2[i] - angelX);
+      const smth = _ns * wt.smth * b.V2[i] * (b.First2[i] || 1);
+      const mom  = (_n > 0 && aiInputDir !== 0 && b.First2[i] === aiInputDir) ? _ns * wt.mom : 0;
+      const still = (b.First2[i] === 0) ? _ns * wt.still : 0;
+      let prox = 0;
+      if (_n > 0 && wt.prox > 0 && _liveSparks.length > 0) {
+        let minDx = Infinity;
+        for (const s of _liveSparks) { const dx = Math.abs(b.X2[i] - s.x); if (dx < minDx) minDx = dx; }
+        prox = _ns * wt.prox * Math.max(0, 1 - minDx / 400);
+      }
+      let trace = 0;
+      if (_n > 0 && wt.trace > 0 && angelTrail.length > 1) {
+        const tlen = angelTrail.length, startIdx = Math.max(0, tlen - 100);
+        const tY = _futureAys[Math.min(b.Depth2[i], HORIZON)];
+        let best = 0;
+        for (let ti = startIdx; ti < tlen; ti++) {
+          const pt = angelTrail[ti];
+          const dx = b.X2[i] - pt.x, dy = tY - pt.y;
+          const recency = (ti - startIdx + 1) / (tlen - startIdx);
+          const s = recency / (1 + (dx*dx + dy*dy) / 8000);
+          if (s > best) best = s;
+        }
+        trace = _ns * wt.trace * best;
+      }
+      const left = _ns * wt.left * Math.max(0, 1 - b.X2[i] / (LW / 2));
+      const ctr  = -(1 - _n) * Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wll  = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall2[i];
+      b.Score2[i] = (b.Depth2[i] / (BEAM_SEG * BEAM_ROUNDS)) * (10000 - _ns * 3000) + disp + smth + mom + still + trace + prox + left + ctr + wll;
+      b.Order[i] = i;
+    }
+    const keep = Math.min(BEAM_K, m);
+    for (let i = 0; i < keep; i++) {
+      let best = i;
+      for (let j = i + 1; j < m; j++) {
+        if (b.Score2[b.Order[j]] > b.Score2[b.Order[best]]) best = j;
+      }
+      const tmp = b.Order[i]; b.Order[i] = b.Order[best]; b.Order[best] = tmp;
+    }
+    const seen = new Set();
+    let kept = 0;
+    for (let i = 0; i < keep; i++) {
+      const idx = b.Order[i];
+      const xBin = (b.X2[idx] / 80) | 0;
+      const vBin = (b.V2[idx] / 10) | 0;
+      const key = (xBin << 8) | (vBin & 0xff);
+      if (seen.has(key) && kept >= 3) continue;
+      seen.add(key);
+      b.X[kept] = b.X2[idx]; b.V[kept] = b.V2[idx];
+      b.Wall[kept] = b.Wall2[idx]; b.Left[kept] = b.Left2[idx]; b.Right[kept] = b.Right2[idx];
+      b.Depth[kept] = b.Depth2[idx]; b.Dead[kept] = b.Dead2[idx]; b.First[kept] = b.First2[idx];
+      kept++;
+    }
+    nLive = kept;
+    if (nLive === 0) break;
+    let allMax = true;
+    for (let i = 0; i < nLive; i++) {
+      if (!b.Dead[i] && b.Depth[i] < CAP) { allMax = false; break; }
+    }
+    if (allMax) break;
+  }
+
+  const _n = nonchalance;
+  const _ns = _n * _n;
+  const wt = DANCE_MODES[danceMode];
+  let bestScore = -Infinity, bestFirst = aiInputDir;
+  for (let i = 0; i < nLive; i++) {
+    const disp = _ns * wt.disp * Math.abs(b.X[i] - angelX);
+    const smth = _ns * wt.smth * b.V[i] * (b.First[i] || 1);
+    const mom  = (_n > 0 && aiInputDir !== 0 && b.First[i] === aiInputDir) ? _ns * wt.mom : 0;
+    const still = (b.First[i] === 0) ? _ns * wt.still : 0;
+    let prox = 0;
+    if (_n > 0 && wt.prox > 0 && _liveSparks.length > 0) {
+      let minDx = Infinity;
+      for (const s of _liveSparks) { const dx = Math.abs(b.X[i] - s.x); if (dx < minDx) minDx = dx; }
+      prox = _ns * wt.prox * Math.max(0, 1 - minDx / 400);
+    }
+    let trace = 0;
+    if (_n > 0 && wt.trace > 0 && angelTrail.length > 1) {
+      const tlen = angelTrail.length, startIdx = Math.max(0, tlen - 100);
+      const tY = _futureAys[Math.min(b.Depth[i], HORIZON)];
+      let best = 0;
+      for (let ti = startIdx; ti < tlen; ti++) {
+        const pt = angelTrail[ti];
+        const dx = b.X[i] - pt.x, dy = tY - pt.y;
+        const recency = (ti - startIdx + 1) / (tlen - startIdx);
+        const s = recency / (1 + (dx*dx + dy*dy) / 8000);
+        if (s > best) best = s;
+      }
+      trace = _ns * wt.trace * best;
+    }
+    const left = _ns * wt.left * Math.max(0, 1 - b.X[i] / (LW / 2));
+    const ctr  = -(1 - _n) * Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wll  = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall[i];
+    const score = (b.Depth[i] / (BEAM_SEG * BEAM_ROUNDS)) * (10000 - _ns * 3000) + disp + smth + mom + still + trace + prox + left + ctr + wll;
+    if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
+  }
+  return bestFirst;
+}
+
+// ── Harvest-optimizing beam planner (alt bot logic) ──────
+// Same beam scaffold as planBeam, but each candidate also carries a 64-bit
+// "claimed sparks" mask. Each frame, for every live spark not yet claimed by
+// this beam (and not already harvested in the real game), if the angel is
+// within HARV_R the bit is set and a counter ticks up. Score adds
+// BEAM_HARVEST_W per claim, ranked strictly below depth so survival still
+// dominates — sweep showed +47% mean harvest over the pure-survival bot with
+// only ~7% drop in 120s survival rate.
+const BEAM_HARVEST_W = 4000;
+const HARV_R2 = 14500;  // matches the in-game harvest threshold
+const _beamH = {
+  M0: new Uint32Array(64), M1: new Uint32Array(64), Harv: new Int16Array(64),
+  M02: new Uint32Array(192), M12: new Uint32Array(192), Harv2: new Int16Array(192),
+};
+function _beamHGrow(need, scratch) {
+  const o = _beamH;
+  if (scratch) {
+    if (o.M02.length >= need) return;
+    o.M02 = new Uint32Array(need); o.M12 = new Uint32Array(need); o.Harv2 = new Int16Array(need);
+  } else {
+    if (o.M0.length >= need) return;
+    o.M0 = new Uint32Array(need); o.M1 = new Uint32Array(need); o.Harv = new Int16Array(need);
+  }
+}
+function _beamHSimStep(i, dir, scratch) {
+  const Xa = scratch ? _beam.X2 : _beam.X, Va = scratch ? _beam.V2 : _beam.V;
+  const Wa = scratch ? _beam.Wall2 : _beam.Wall;
+  const La = scratch ? _beam.Left2 : _beam.Left, Ra = scratch ? _beam.Right2 : _beam.Right;
+  const Da = scratch ? _beam.Depth2 : _beam.Depth, Dea = scratch ? _beam.Dead2 : _beam.Dead;
+  const M0a = scratch ? _beamH.M02 : _beamH.M0, M1a = scratch ? _beamH.M12 : _beamH.M1;
+  const Ha = scratch ? _beamH.Harv2 : _beamH.Harv;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  const nl = _liveSparks.length;
+  const sCap0 = nl < 32 ? nl : 32, sCap1 = nl < 64 ? nl : 64;
+  let x = Xa[i], v = Va[i], wall = Wa[i], lAcc = La[i], rAcc = Ra[i], depth = Da[i];
+  let m0 = M0a[i], m1 = M1a[i], harv = Ha[i];
+  for (let s = 0; s < BEAM_SEG; s++) {
+    if (depth >= CAP) break;
+    const dt = depth + 1;
+    v = simInputStep(dir, v);
+    x += v;
+    if (x < 40) {
+      x = 40; wall++; lAcc++; rAcc = 0;
+      if (lAcc > BEAM_LEFT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    } else if (x > LW - 40) {
+      x = LW - 40; wall++; rAcc++; lAcc = 0;
+      if (rAcc > BEAM_RIGHT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    } else { lAcc = 0; rAcc = 0; }
+    const buf = _deadlyAt[dt - 1], cnt = _deadlyCnt[dt - 1];
+    let hit = false;
+    for (let j = 0; j < cnt; j += 2) {
+      if (x > buf[j] && x < buf[j + 1]) { hit = true; break; }
+    }
+    if (hit) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; M0a[i] = m0; M1a[i] = m1; Ha[i] = harv; return; }
+    depth = dt;
+    const fay = _futureAys[dt];
+    for (let si = 0; si < sCap0; si++) {
+      const bit = 1 << si;
+      if (m0 & bit) continue;
+      const sp = _liveSparks[si];
+      const sx = sp.x + sp.vx * dt;
+      const sy = sp._futY[dt];
+      const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
+      const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
+      if (dx * dx + dy * dy < HARV_R2) { m0 |= bit; harv++; }
+    }
+    for (let si = 32; si < sCap1; si++) {
+      const bit = 1 << (si - 32);
+      if (m1 & bit) continue;
+      const sp = _liveSparks[si];
+      const sx = sp.x + sp.vx * dt;
+      const sy = sp._futY[dt];
+      const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
+      const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
+      if (dx * dx + dy * dy < HARV_R2) { m1 |= bit; harv++; }
+    }
+  }
+  Xa[i] = x; Va[i] = v; Wa[i] = wall; La[i] = lAcc; Ra[i] = rAcc; Da[i] = depth;
+  M0a[i] = m0; M1a[i] = m1; Ha[i] = harv;
+}
+function planBeamHarvest() {
+  const LWmid = LW / 2;
+  const nl = _liveSparks.length;
+  if (nl === 0) {
+    if (angelX < LWmid - 40) return 1;
+    if (angelX > LWmid + 40) return -1;
+    return 0;
+  }
+  _beamGrow(BEAM_K * 3, false); _beamGrow(BEAM_K * 3, true);
+  _beamHGrow(BEAM_K * 3, false); _beamHGrow(BEAM_K * 3, true);
+  const b = _beam, bh = _beamH;
+  const CAP = BEAM_SEG * BEAM_ROUNDS;
+  // Seed every beam's claim mask with sparks already harvested in the real game.
+  let already0 = 0, already1 = 0;
+  const cap0 = nl < 32 ? nl : 32, cap1 = nl < 64 ? nl : 64;
+  for (let i = 0; i < cap0; i++) if (_liveSparks[i].harvested) already0 |= (1 << i);
+  for (let i = 32; i < cap1; i++) if (_liveSparks[i].harvested) already1 |= (1 << (i - 32));
+
+  let nLive = 3;
+  for (let i = 0; i < 3; i++) {
+    b.X[i] = angelX; b.V[i] = angelSpeed;
+    b.Wall[i] = 0; b.Left[i] = 0; b.Right[i] = 0;
+    b.Depth[i] = 0; b.Dead[i] = 0; b.First[i] = DIRS[i];
+    bh.M0[i] = already0; bh.M1[i] = already1; bh.Harv[i] = 0;
+  }
+  for (let i = 0; i < nLive; i++) _beamHSimStep(i, b.First[i], false);
+
+  for (let r = 1; r < BEAM_ROUNDS; r++) {
+    let m = 0;
+    for (let i = 0; i < nLive; i++) {
+      for (let d = 0; d < 3; d++) {
+        b.X2[m] = b.X[i]; b.V2[m] = b.V[i];
+        b.Wall2[m] = b.Wall[i]; b.Left2[m] = b.Left[i]; b.Right2[m] = b.Right[i];
+        b.Depth2[m] = b.Depth[i]; b.Dead2[m] = b.Dead[i]; b.First2[m] = b.First[i];
+        b.Dir2[m] = DIRS[d];
+        bh.M02[m] = bh.M0[i]; bh.M12[m] = bh.M1[i]; bh.Harv2[m] = bh.Harv[i];
+        m++;
+      }
+    }
+    for (let i = 0; i < m; i++) {
+      if (b.Dead2[i]) continue;
+      _beamHSimStep(i, b.Dir2[i], true);
+    }
+    for (let i = 0; i < m; i++) {
+      const center = -Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wall = -b.Wall2[i] * BEAM_WALLTIME_W;
+      b.Score2[i] = b.Depth2[i] * 100000 + bh.Harv2[i] * BEAM_HARVEST_W + center + wall;
+      b.Order[i] = i;
+    }
+    const keep = Math.min(BEAM_K, m);
+    for (let i = 0; i < keep; i++) {
+      let best = i;
+      for (let j = i + 1; j < m; j++) {
+        if (b.Score2[b.Order[j]] > b.Score2[b.Order[best]]) best = j;
+      }
+      const tmp = b.Order[i]; b.Order[i] = b.Order[best]; b.Order[best] = tmp;
+    }
+    const seen = new Set();
+    let kept = 0;
+    for (let i = 0; i < keep; i++) {
+      const idx = b.Order[i];
+      const xBin = (b.X2[idx] / 80) | 0;
+      const vBin = (b.V2[idx] / 10) | 0;
+      const key = (xBin << 8) | (vBin & 0xff);
+      if (seen.has(key) && kept >= 3) continue;
+      seen.add(key);
+      b.X[kept] = b.X2[idx]; b.V[kept] = b.V2[idx];
+      b.Wall[kept] = b.Wall2[idx]; b.Left[kept] = b.Left2[idx]; b.Right[kept] = b.Right2[idx];
+      b.Depth[kept] = b.Depth2[idx]; b.Dead[kept] = b.Dead2[idx]; b.First[kept] = b.First2[idx];
+      bh.M0[kept] = bh.M02[idx]; bh.M1[kept] = bh.M12[idx]; bh.Harv[kept] = bh.Harv2[idx];
+      kept++;
+    }
+    nLive = kept;
+    if (nLive === 0) break;
+  }
+
+  let bestScore = -Infinity, bestFirst = aiInputDir;
+  for (let i = 0; i < nLive; i++) {
+    const center = -Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wall = -b.Wall[i] * BEAM_WALLTIME_W;
+    const score = b.Depth[i] * 100000 + bh.Harv[i] * BEAM_HARVEST_W + center + wall;
+    if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
+  }
+  return bestFirst;
+}
+
+function explode(x, y) {
+  for (let i = 0; i < 55; i++) {
+    const angle = Math.random() * Math.PI * 2, speed = 1.5 + Math.random() * 7;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 1, decay: 0.014 + Math.random() * 0.022, size: 2 + Math.random() * 5,
+      color: Math.random() < 0.3 ? '#fff' : COLORS[Math.floor(Math.random() * COLORS.length)]
+    });
+  }
+  playDeath();
+}
+// In-place advance + compact: no per-frame array allocation.
+// In-place advance + compact: no per-frame array allocation.
+function updateParticles() {
+  const _ax = angelX, _ay = angelY();
+  let w = 0;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    if (p.grav) {
+      // Gravitational attraction toward angel
+      const dx = _ax - p.x, dy = _ay - p.y;
+      const dist2 = dx * dx + dy * dy;
+      if (dist2 < 20 * 20) continue;  // touched angel — consume particle
+      const dist = Math.sqrt(dist2);
+      const acc = 22 / dist;          // G/dist — gentle gravity that builds as they close in
+      p.vx += acc * dx / dist;
+      p.vy += acc * dy / dist;
+      p.vx *= 0.97;
+      p.vy *= 0.97;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= p.decay;
+      if (p.life > 0) particles[w++] = p;
+    } else {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.life -= p.decay;
+      if (p.life > 0) particles[w++] = p;
+    }
+  }
+  particles.length = w;
+}
+function drawParticles() {
+  if (particles.length === 0) return;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ── Angel ────────────────────────────────────────────────
+function drawAngel(ax,ay,inputDir) {
+  const bs=breathScale;
+  ctx.save(); ctx.translate(ax,ay); ctx.rotate(angelLean); ctx.scale(1.4,1.4);
+  // wings
+  for (const side of [-1,1]) {
+    ctx.save(); ctx.scale(side,1);
+    ctx.beginPath();
+    ctx.moveTo(0,-3);
+    ctx.bezierCurveTo(-5,-11,-16,-9,-19,-1);
+    ctx.bezierCurveTo(-16,4,-7,3,0,3);
+    ctx.closePath();
+    const lit = inputDir !== 0 && side === -inputDir;
+    ctx.fillStyle = lit ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.15)'; ctx.fill();
+    ctx.strokeStyle = lit ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)'; ctx.lineWidth=1.1; ctx.stroke();
+    ctx.restore();
+  }
+  // robe
+  ctx.beginPath();
+  ctx.moveTo(-5*bs,-8);ctx.bezierCurveTo(-7*bs,0,-9*bs,8,-6*bs,18);
+  ctx.lineTo(6*bs,18);ctx.bezierCurveTo(9*bs,8,7*bs,0,5*bs,-8);ctx.closePath();
+  ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fill();
+  ctx.beginPath();ctx.moveTo(-1*bs,-6);ctx.bezierCurveTo(-2*bs,4,-3*bs,10,-2*bs,18);
+  ctx.strokeStyle='rgba(180,180,220,0.3)';ctx.lineWidth=0.7;ctx.stroke();
+  // head
+  ctx.beginPath();ctx.arc(0,-13,5.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fill();
+  ctx.restore();
+}
+
+// ── On hit: no game over, just reset ─────────────────────
+function onHit() {
+  if (!screensaver && elapsed > bestTime) bestTime = elapsed;
+  if (harvestMode && !screensaver && harvestScore > bestHarvestScore) bestHarvestScore = harvestScore;
+  recordRun(elapsed, screensaver);
+  const who = screensaver ? 'BOT' : 'PLAYER';
+  console.log(`[${who} DEATH] survived ${(elapsed / 1000).toFixed(3)}s`);
+  hitFlashes.push({ ts: performance.now(), elapsed, score: harvestScore, harvest: harvestMode });
+  sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); });
+  deathTrail = angelTrail;   // hand off current trail to die in pink
+  angelTrail = [];            // fresh live trail starts immediately
+  deathTrailBorn = performance.now();
+  elapsed = 0;
+  startTime = performance.now();
+  spawnAccum = 0;
+  harvestScore = 0;
+  if (screensaver) {
+    t = 0;
+    _futureAyT = -1;
+  }
+  if (haloActive) {
+    haloDeathCount++;
+    try { localStorage.setItem(HALO_KEY, String(haloDeathCount)); } catch {}
+  }
+  haloActive = false;
+  haloUsedThisLife = false;
+  if (moodCycle) {
+    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+  explode(angelX, angelY());
+  if (!screensaver) hadInputSinceDeath = false;
+}
+
+
+function start(isAI) {
+  clearTimeout(attractTimer); attractTimer = null;
+  clearTimeout(deathTimer);   deathTimer = null;
+  sparks.length = 0; particles.length = 0;
+  hitFlashes.length = 0;
+  _liveSparks.length = 0; _gapTargets.length = 0;
+  angelTrail.length = 0;
+  deathTrail.length  = 0;
+  deathTrailBorn = 0;
+  t = 0; spawnAccum = 0; spawnPause = 0;
+  elapsed = 0; startTime = performance.now();
+  angelX = LW / 2; angelSpeed = 0;
+  breathScale = 1; lastAy = AY_MID; lastDy = 0; breathCooldown = 0;
+  angelLean = 0; haloActive = false; haloUsedThisLife = false;
+  aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
+  lastDir = 0; prevPlayerDir = 0; playerDirFrames = 0; playerKeyPressCooldown = 0;
+  zoneBonuses = [0, 0, 0, 0, 0]; targetZoneIdx = 2; zoneArrivalFrames = 0;
+  nearMissCd = 0;
+  harvestScore = 0;
+  lastDingMinute = 0;
+  _futureAyT = -1;
+  if (moodCycle) {
+    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+  screensaver = isAI;
+  state = 'playing';
+  if (!isAI) playStart();
+}
+
+// ── Input ────────────────────────────────────────────────
+function takeoverFromAI() {
+  // Reset score/timer when bot has played more than 5s, or scored in harvest mode.
+  const smooth = elapsed <= 5000 && !(harvestMode && harvestScore > 0);
+  // Clear AI input state but preserve position (angelX, t) and speed
+  aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
+  _futureAyT = -1;
+  haloActive = false;
+  if (!smooth) {
+    elapsed = 0; startTime = performance.now();
+    spawnAccum = 0; harvestScore = 0;
+    playDing();
+  }
+  lastDingMinute = Math.floor(elapsed / 60000);
+  screensaver = false;
+}
+
+function moveDirOf(key) {
+  if (LEFT_KEYS.has(key))  return -1;
+  if (RIGHT_KEYS.has(key)) return  1;
+  return 0;
+}
+function anyKeyDown(set) {
+  for (const k of set) if (keys[k]) return true;
+  return false;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (showStats) { showStats = false; _clearHistoryStage = 0; return; }
+    if (!showInfo) showInfoOpenedAt = performance.now();
+    showInfo = !showInfo; return;
+  }
+  if (e.key === 'p' || e.key === 'P') { showProf = !showProf; _profWorst = 0; return; }
+  if (e.key === 'h' || e.key === 'H') { showStats = !showStats; _clearHistoryStage = 0; return; }
+  if (e.key === 'x' || e.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    keys[e.key] = true; trailTinted = true; audioUnlocked = true;
+    if (!firstInteraction) { firstInteraction = true; showUI = true; }
+    return;
+  }
+  if (e.key === 'b' || e.key === 'B') { angelTrail.length = 0; _btnFlash.B = performance.now(); return; }
+  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.05); trailTinted = true; return; }
+  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.05); trailTinted = true; return; }
+  if (e.key === 'u' || e.key === 'U') { trailHue = ((trailHue + 360/COLORS.length) % 360); trailTinted = true; return; }
+  if (e.key === 'd' || e.key === 'D') { trailHue = ((trailHue - 360/COLORS.length + 360) % 360); trailTinted = true; return; }
+  if (e.key === 'v' || e.key === 'V') {
+    danceMode = (danceMode + 1) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    return;
+  }
+  if (e.key === 'z' || e.key === 'Z') {
+    harvestMode = !harvestMode;
+    _btnFlash.Z = performance.now();
+    const _x = angelX, _v = angelSpeed, _t = t;
+    start(screensaver);
+    angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+    return;
+  }
+  if (e.key === ' ') {
+    if (state === 'playing' && screensaver && !haloUsedThisLife) {
+      haloActive = true;
+      haloUsedThisLife = true;
+      haloStartTs = performance.now();
+      haloTrailHue = Math.random() * 360;
+    }
+    trailTinted = !trailTinted;
+    e.preventDefault();
+    return;
+  }
+  if (!firstInteraction) { firstInteraction = true; showUI = true; }
+  audioUnlocked = true;
+  const moveDir = moveDirOf(e.key);
+  if (moveDir !== 0) {
+    if (screensaver && state === 'playing') {
+      takeoverFromAI();
+    }
+    keys[e.key] = true;
+    lastDir = moveDir;  // newest key wins
+    lastMoveInputTs = performance.now();
+    hadInputSinceDeath = true;
+  } else if (state === 'playing' && !showInfo) {
+    keyHintTs = performance.now();
+  }
+});
+document.addEventListener('keyup', e => {
+  keys[e.key] = false;
+  const releasedDir = moveDirOf(e.key);
+  if (releasedDir === 0) return;
+  if (releasedDir === lastDir) {
+    lastDir = anyKeyDown(releasedDir === -1 ? RIGHT_KEYS : LEFT_KEYS) ? -releasedDir : 0;
+  }
+  lastMoveInputTs = performance.now();
+});
+c.addEventListener('mousemove', e => {
+  mouseLx = (e.clientX - _appOx) / scale;
+  mouseLy = (e.clientY - _appOy) / scale;
+  if (_sliderDrag && _nonchalanceSliderRect) {
+    nonchalance = Math.max(0, Math.min(1, (mouseLx - _nonchalanceSliderRect.x) / _nonchalanceSliderRect.w));
+    try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
+  }
+  // cursor affordance: pointer when over any clickable UI element
+  let over = state === 'playing' && (
+    _hit(mouseLx, mouseLy, 20, 20, 200, 42) ||
+    (!screensaver && bestTime > 0 && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42)) ||
+    (harvestMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
+  );
+  if (!over && showInfo) {
+    for (const r of _infoToggleRects) {
+      if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; }
+    }
+    if (!over && _nonchalanceSliderRect && _hit(mouseLx, mouseLy, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) over = true;
+    if (!over) for (const r of _moodRects) { if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; } }
+    if (!over && _cycleToggleRect && _hit(mouseLx, mouseLy, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) over = true;
+  }
+  if (!over && showStats) {
+    const r = _clearHistoryRect;
+    if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) over = true;
+  }
+  c.style.cursor = over ? 'pointer' : 'default';
+});
+function _hit(lx, ly, x, y, w, h) { return lx >= x && lx <= x + w && ly >= y && ly <= y + h; }
+c.addEventListener('mousedown', e => {
+  if (!showInfo || !_nonchalanceSliderRect) return;
+  const lx = (e.clientX - _appOx) / scale;
+  const ly = (e.clientY - _appOy) / scale;
+  const r = _nonchalanceSliderRect;
+  if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+    _sliderDrag = true;
+    nonchalance = Math.max(0, Math.min(1, (lx - r.x) / r.w));
+    try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
+    e.preventDefault();
+  }
+});
+document.addEventListener('mouseup', () => { _sliderDrag = false; });
+c.addEventListener('click', e => {
+  if (!firstInteraction) { firstInteraction = true; showUI = true; }
+  audioUnlocked = true;
+  const lx = (e.clientX - _appOx) / scale;
+  const ly = (e.clientY - _appOy) / scale;
+  if (showStats) {
+    const r = _clearHistoryRect;
+    const onBtn = _hit(lx, ly, r.x, r.y, r.w, r.h);
+    if (onBtn) {
+      if (_clearHistoryStage === 0) { _clearHistoryStage = 1; return; }
+      // confirm: clear current mode's run history
+      if (harvestMode) { runsHarvest = []; bestHarvestScore = 0; }
+      else             { runs = []; bestTime = 0; }
+      saveRuns();
+      _clearHistoryStage = 0;
+      return;
+    }
+    if (_clearHistoryStage === 1) { _clearHistoryStage = 0; return; }
+    showStats = false; return;
+  }
+  if (showInfo) {
+    if (_nonchalanceSliderRect && _hit(lx, ly, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) return;
+    for (const r of _infoToggleRects) {
+      if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+        if (r.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
+        if (r.key === 'Z') {
+          harvestMode = !harvestMode; _btnFlash.Z = performance.now();
+          const _x = angelX, _v = angelSpeed, _t = t;
+          start(screensaver);
+          angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+          return;
+        }
+      }
+    }
+    for (const r of _moodRects) {
+      if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+        danceMode = r.i;
+        danceModeFlashTs = performance.now();
+        danceModeFlashColor = DANCE_MODES[r.i].col;
+        return;
+      }
+    }
+    if (_cycleToggleRect && _hit(lx, ly, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) {
+      moodCycle = !moodCycle;
+      return;
+    }
+    showInfo = false; return;
+  }
+  if (state !== 'playing') return;
+  if (_hit(lx, ly, 20, 20, 200, 42)) { showInfo = true; showInfoOpenedAt = performance.now(); _btnFlash.info = performance.now(); return; }
+  // best-time/score click area (top-right). Drawn right-aligned at (LW-40, 44) in FONT_BASE.
+  if (!screensaver && bestTime > 0 && _hit(lx, ly, LW - 240, 20, 220, 42)) {
+    showStats = true; _btnFlash.best = performance.now(); return;
+  }
+});
+// Info overlay toggle rects, refreshed each draw so click hit-test stays in sync.
+const _infoToggleRects = [];
+let _sliderDrag = false;
+let _nonchalanceSliderRect = null;
+let _moodRects = [];
+let _cycleToggleRect = null;
+let moodCycle = true;  // true = cycle mood on death
+// clear-history button state (stats overlay)
+let _clearHistoryStage = 0;  // 0 = idle, 1 = armed/confirm
+const _clearHistoryRect = { x: 0, y: 0, w: 0, h: 0 };
+
+// ── Main loop ────────────────────────────────────────────
+const TICK_MS = 1000 / 60;  // game logic locked to 60 Hz regardless of monitor refresh rate
+let accumulator = 0, lastDrawTs = null;
+// Lightweight profiler: rolling buffer of frame deltas. Toggle with P or ?debug.
+let showProf = /[?&]debug\b/.test(location.search);
+const _profBuf = new Float32Array(120);
+let _profIdx = 0, _profCount = 0, _profWorst = 0;
+const _profScratch = new Float32Array(120);  // reused for sort — no alloc
+let _profMed = 0, _profP95 = 0, _profMax = 0, _profSortFrame = 0;
+function draw(ts) {
+  const _frameStart = performance.now();
+  requestAnimationFrame(draw);
+
+  // frame-rate-independent tick: run game logic at 60 fps on any monitor
+  if (lastDrawTs === null) lastDrawTs = ts;
+  const delta = Math.min(ts - lastDrawTs, 100);
+  lastDrawTs = ts;
+  accumulator += delta;
+  const doTick = accumulator >= TICK_MS;
+  if (doTick) accumulator -= TICK_MS;
+
+  // re-sync canvas pixel size if window was resized
+  if (_needResize) { _needResize = false; resize(); buildStars(); }
+
+  // star canvas covers full screen incl. baked background — no separate clear needed
+  drawStars();
+
+  // all game drawing in logical space
+  applyLogical();
+
+  if (state==='playing') {
+    elapsed = ts - startTime;
+    if (doTick) {
+    t++;
+    trailT++;
+
+    // ── 1. spawn + advance sparks FIRST so AI sees current state ──
+    const ramp = Math.min(elapsed / 180000, 1);  // full difficulty reached at 3 min instead of 90 s
+    const spawnChance = 0.13 + Math.min(elapsed/12000000, 1) * 0.7 + Math.max(0, 35 - sparks.length) * 0.02;
+    if (spawnPause > 0) {
+      spawnPause--;
+    } else {
+      spawnAccum += (1.0 + ramp * 4.0) * 3 / 60 * (1 + Math.max(0, 0.30 - elapsed / 10000));
+      if (spawnAccum >= 1) {
+        spawnAccum = 0;
+        if (Math.random() < spawnChance) {
+          sparks.push(spawnSpark(ramp));
+          aiCommitFrames = 0; // new spark → recompute immediately
+          spawnPause = 1;
+        }
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      if (sparks[i].x >= LW) sparks.splice(i, 1);
+    }
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
+      s.x += s.vx;
+      const maxVy = s.harvested ? 7.5 : 2.5;  // harvested sparks have 3x max velocity
+      s.vy = Math.max(-maxVy, Math.min(maxVy, s.vy + s.ay));
+      s.y  = Math.max(-s.h, Math.min(LH, s.y + s.vy));
+    }
+
+    // ── 2. AI / player movement ──
+    // decay cooldowns each tick
+    playerKeyPressCooldown = Math.max(0, playerKeyPressCooldown - 1);
+    aiInputCooldown = Math.max(0, aiInputCooldown - 1);
+
+    if (screensaver) {
+      aiCommitFrames--;
+      const prevAiDir = aiInputDir;
+      // Precompute future angel Y + per-spark Y paths once per frame; all scoring calls share them.
+      if (_futureAyT !== t) {
+        // Sin recurrence: one Math.sin/cos per frame instead of HORIZON of them.
+        let sa = Math.sin(t * AY_W), ca = Math.cos(t * AY_W);
+        _futureAys[0] = AY_MID + sa * AY_AMP;
+        _ayCache = _futureAys[0]; _ayFrame = t;  // share with angelY()
+        for (let dt = 1; dt <= HORIZON; dt++) {
+          const ns = sa * AY_CW + ca * AY_SW;
+          const nc = ca * AY_CW - sa * AY_SW;
+          sa = ns; ca = nc;
+          _futureAys[dt] = AY_MID + sa * AY_AMP;
+        }
+        _futureAyT = t;
+        _liveSparks.length = 0;
+        const cullCol = angelX - SIM_R - 40;
+        for (let i = 0; i < sparks.length; i++) {
+          const s = sparks[i];
+          if (s.fading) continue;
+          // Cull sparks that can never reach the angel's X column within HORIZON.
+          if (s.x + s.w + s.vx * HORIZON < cullCol) continue;
+          if (!s._futY) s._futY = new Float32Array(HORIZON + 1);
+          s._futY[0] = s.y;
+          let sy = s.y, svy = s.vy;
+          for (let dt = 1; dt <= HORIZON; dt++) {
+            svy = Math.max(-2.5, Math.min(2.5, svy + s.ay));
+            sy  = Math.max(-s.h, Math.min(LH, sy + svy));
+            s._futY[dt] = sy;
+          }
+          _liveSparks.push(s);
+        }
+        // Precompute narrow Y gaps for gap-threading bonus.
+        // Pool reuse: avoids O(N²) allocation each tick (was a real GC source).
+        for (let gi = 0; gi < _gapTargets.length; gi++) _gapPool.push(_gapTargets[gi]);
+        _gapTargets.length = 0;
+        const nl = _liveSparks.length;
+        for (let gi = 0; gi < nl; gi++) {
+          const a = _liveSparks[gi];
+          const aMid = a.y + a.h / 2;
+          for (let gj = gi + 1; gj < nl; gj++) {
+            const b = _liveSparks[gj];
+            const xLo = a.x > b.x ? a.x : b.x;
+            const aRight = a.x + a.w, bRight = b.x + b.w;
+            const xHi = aRight < bRight ? aRight : bRight;
+            if (xHi <= xLo) continue;
+            const bMid = b.y + b.h / 2;
+            const aUpper = aMid < bMid;
+            const gapTop = aUpper ? a.y + a.h : b.y + b.h;
+            const gapBot = aUpper ? b.y       : a.y;
+            const gap = gapBot - gapTop;
+            if (gap < 15 || gap > 95) continue;
+            const slot = _gapPool.pop() || { xLo: 0, xHi: 0, gapTop: 0, gapBot: 0, tightness: 0 };
+            slot.xLo = xLo; slot.xHi = xHi;
+            slot.gapTop = gapTop; slot.gapBot = gapBot;
+            slot.tightness = 1 - gap / 95;
+            _gapTargets.push(slot);
+          }
+        }
+        // Deadly-X intervals per future frame (plan3 fast collision lookup).
+        {
+          const nLive = _liveSparks.length;
+          const buf0 = _deadlyAt[0];
+          const need = nLive * 2;
+          if (buf0.length < need) {
+            const newLen = Math.max(need, buf0.length * 2);
+            for (let dt = 0; dt <= HORIZON; dt++) _deadlyAt[dt] = new Float32Array(newLen);
+          }
+          for (let dt = 0; dt <= HORIZON; dt++) {
+            const fay = _futureAys[dt];
+            const fayHi = fay + SIM_R, fayLo = fay - SIM_R;
+            const buf = _deadlyAt[dt];
+            let c = 0;
+            for (let si = 0; si < nLive; si++) {
+              const s = _liveSparks[si];
+              const fy = s._futY[dt];
+              if (fayHi > fy && fayLo < fy + s.h) {
+                const sx = s.x + s.vx * dt;
+                buf[c++] = sx - SIM_R;
+                buf[c++] = sx + s.w + SIM_R;
+              }
+            }
+            _deadlyCnt[dt] = c;
+          }
+        }
+      }
+      // Bot: plan & execute direction-based movement
+      if (harvestMode) {
+        aiInputDir = planBeamHarvest();
+        aiCommitFrames = 0;
+      } else {
+        aiInputDir = planBeam();
+        aiCommitFrames = 0;
+      }
+      const m = stepAngelMovement(aiInputDir, prevAiDir, aiInputHeldFor, aiInputCooldown, angelSpeed);
+      angelSpeed = m.vel; aiInputHeldFor = m.heldFrames; aiInputCooldown = m.cooldown;
+      angelX += angelSpeed;
+      aiVelocity = angelSpeed;  // keep planner seed in sync
+    } else {
+      const m = stepAngelMovement(lastDir, prevPlayerDir, playerDirFrames, playerKeyPressCooldown, angelSpeed);
+      angelSpeed = m.vel; playerDirFrames = m.heldFrames; playerKeyPressCooldown = m.cooldown;
+      prevPlayerDir = lastDir;
+      angelX += angelSpeed;
+    }
+    const _cx = Math.max(40, Math.min(LW - 40, angelX));
+    if (_cx !== angelX) { angelSpeed = 0; aiVelocity = 0; }
+    angelX = _cx;
+
+    // idle → bot handoff: only if no input since last death, and 3 s idle
+    if (!screensaver && !hadInputSinceDeath && performance.now() - lastMoveInputTs >= 3000) {
+      screensaver = true;
+      aiVelocity = angelSpeed;
+      aiCommitFrames = 0;
+    }
+
+    // ── zone exploration: grow unvisited zones, clear current ──
+    const curZone = Math.min(4, Math.max(0, Math.floor((angelX - 40) / ((LW - 80) / 5))));
+    for (let z = 0; z < 5; z++) { if (zoneBonuses[z] < 120) zoneBonuses[z] += 0.15; }
+    zoneBonuses[curZone] *= 0.95;  // harvest 5% per frame in zone
+    // Stable zone target: switch only after committing to the current target.
+    // Strong hysteresis (300-tick dwell = 5s, drop below 4 to abandon, +50 margin to swap).
+    // The bot must actually arrive at the zone before considering any switch.
+    if (curZone === targetZoneIdx) zoneArrivalFrames++; else zoneArrivalFrames = 0;
+    if (zoneArrivalFrames >= 300 || zoneBonuses[targetZoneIdx] < 4) {
+      const best = zoneBonuses.reduce((mi, v, i, a) => v > a[mi] ? i : mi, 0);
+      if (best !== targetZoneIdx && zoneBonuses[best] > zoneBonuses[targetZoneIdx] + 50) {
+        targetZoneIdx = best;
+        zoneArrivalFrames = 0;
+      }
+    }
+
+    // ── 3. breath ──
+    const ay = angelY();
+    const dydt = ay - lastAy; lastAy = ay;
+    breathCooldown--;
+    if (lastDy!==0 && Math.sign(dydt)!==Math.sign(lastDy) && breathCooldown<0) {
+      playBreath(dydt<0); breathCooldown=40;
+    }
+    if (Math.abs(dydt)>0.1) lastDy=dydt;
+    breathScale += (1.0+dydt*0.18-breathScale)*0.1;
+    breathScale = Math.max(0.7,Math.min(1.4,breathScale));
+    const _leanDir = screensaver ? aiInputDir : lastDir;
+    angelLean += (_leanDir * 0.1047 - angelLean) * 0.09;
+    if (haloActive) haloTrailHue = (haloTrailHue + 0.3) % 360;
+
+    if (trailTinted) {
+      if (keys.ArrowUp)   trailHue += 0.5;
+      if (keys.ArrowDown) trailHue -= 0.5;
+      trailHue += trailHueSpeed;
+      trailHue = ((trailHue % 360) + 360) % 360;
+    }
+    // 60-second gameplay ding (player only)
+    if (!screensaver) {
+      const dingMinute = Math.floor(elapsed / 60000);
+      if (dingMinute > lastDingMinute) { lastDingMinute = dingMinute; playDing(); }
+    }
+    } // end doTick
+  }
+
+  if (doTick) updateParticles();
+
+  const now2 = ts; // rAF timestamp is the same clock — saves a native call
+
+  // ── draw trails FIRST (under everything) ──
+  // Fade by blending toward background instead of using globalAlpha, so the trail
+  // doesn't composite over sparks — it looks painted onto the canvas background.
+  {
+    // BG colour components for lerp-to-bg fade
+    const TR = 7, TG = 16, TB = 42;
+    // Parse a hex or hsl color string into [r,g,b]. hsl strings are the ones we
+    // generate (hsl(H,70%,82%)); hex strings are the white/pink fixed colours.
+    function _parseRGB(css) {
+      if (!css || css === '#ffffff') return [255, 255, 255];
+      if (css === '#ff88bb') return [255, 136, 187];
+      if (css[0] === '#') {
+        const n = parseInt(css.slice(1), 16);
+        return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+      }
+      // hsl(H, 70%, 82%) — inline conversion, no DOM needed
+      const m = css.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/);
+      if (!m) return [255, 255, 255];
+      const h = +m[1] / 360, s = +m[2] / 100, l = +m[3] / 100;
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      function hue2rgb(t) {
+        if (t < 0) t += 1; if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      }
+      return [Math.round(hue2rgb(h + 1/3) * 255), Math.round(hue2rgb(h) * 255), Math.round(hue2rgb(h - 1/3) * 255)];
+    }
+    // Blend rgb toward BG by (1-alpha) and return a '#rrggbb' string.
+    // PEAK_A is the opacity at the newest tip; it stays small so the trail is subtle.
+    const PEAK_A = 0.20;
+    function _blendColor(rgb, alpha) {
+      const t = alpha * PEAK_A;
+      const r = Math.round(rgb[0] * t + TR * (1 - t));
+      const g = Math.round(rgb[1] * t + TG * (1 - t));
+      const b = Math.round(rgb[2] * t + TB * (1 - t));
+      return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    }
+    // Draw trail: each point gets an alpha in [0,1] from position in array.
+    // Older points (index 0) → alpha≈0 (fully BG); newest (index len-1) → alpha=1.
+    // Consecutive segments with the same blended color are batched into one path.
+    ctx.lineWidth = 4; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+    function _drawTrail(arr, overrideRGB, globalFade) {
+      if (arr.length <= 2 || globalFade <= 0) return;
+      const raw = arr, len = raw.length;
+      // Pre-cache parsed RGB for each point (only if not overriding)
+      let prevBlended = null, prevCSS = null;
+      ctx.beginPath();
+      let inPath = false;
+      for (let i = 0; i < len - 1; i++) {
+        const alpha = (i / (len - 1)) * globalFade;
+        const rgb = overrideRGB || _parseRGB(raw[i].color || '#ffffff');
+        const blended = _blendColor(rgb, alpha);
+        if (blended !== prevBlended) {
+          if (inPath) ctx.stroke();
+          ctx.strokeStyle = blended;
+          ctx.beginPath();
+          ctx.moveTo(raw[i].x, raw[i].y);
+          inPath = true;
+          prevBlended = blended;
+        }
+        ctx.lineTo(raw[i + 1].x, raw[i + 1].y);
+      }
+      if (inPath) ctx.stroke();
+    }
+    const dtFade = deathTrailBorn > 0 ? Math.max(0, 1 - (now2 - deathTrailBorn) / 1500) : 0;
+    _drawTrail(deathTrail, [255, 136, 187], dtFade);  // pink death trail
+    _drawTrail(angelTrail, null, 1.0);                 // live trail: per-segment stored color
+  }
+
+  // draw sparks + drop fully-faded ones in a single pass; clip to game area
+  // so sparks entering/exiting never bleed into the letterbox region
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, LW, LH);
+  ctx.clip();
+  {
+    let w = 0;
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
+      if (s.fading) {
+        const age = now2 - s.fadeStart;
+        if (age >= 800) continue;  // drop
+        ctx.globalAlpha = 1 - age / 800;
+        ctx.fillStyle = s.color;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = s.color;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        if (s.harvested) {
+          const r = 2 + (now2 - s.harvestTs) / 1000 * 2;
+          if (r >= 0.5) {
+            ctx.fillStyle = '#07102a';
+            ctx.beginPath();
+            ctx.arc(s.x + s.w * 0.5, s.y + s.h * 0.5, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      sparks[w++] = s;
+    }
+    sparks.length = w;
+  }
+  ctx.restore();
+
+  drawParticles();
+
+  if (state==='playing') {
+    const ax=angelX, ay=angelY();
+    if (doTick) {
+    // live trail: always push, window 1800
+    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: haloActive ? `hsl(${haloTrailHue|0},80%,75%)` : (trailTinted ? `hsl(${trailHue|0},52%,86%)` : null)});
+    while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 1800) angelTrail.shift();
+    // death trail: snapshot — never trimmed, fades visually and is cleared on reset
+
+    // collision — reuse ax/ay already computed above (avoids N×angelY() calls)
+    for (let i = 0; i < sparks.length; i++) {
+      const s = sparks[i];
+      if (!s.fading && ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
+          ay+HIT_R > s.y && ay-HIT_R < s.y+s.h) { onHit(); break; }
+    }
+
+    // harvest: close to non-harvested spark → score++, fade spark, white poof
+    if (harvestMode) {
+      for (let i = 0; i < sparks.length; i++) {
+        const s = sparks[i];
+        if (s.fading || s.harvested) continue;
+        const dx = ax < s.x ? s.x - ax : ax > s.x + s.w ? ax - (s.x + s.w) : 0;
+        const dy = ay < s.y ? s.y - ay : ay > s.y + s.h ? ay - (s.y + s.h) : 0;
+        if (dx*dx + dy*dy < 14500) {
+          const _origColor = s.color;
+          s.harvested = true;
+          s.harvestTs = now2;
+          s.color = darkenForHarvest(s.color);
+          harvestScore++;
+          playHarvest();
+          for (let k = 0; k < 20; k++) {
+            const ang = Math.random() * Math.PI * 2;
+            const sp = 0.5 + Math.random() * 3.5;
+            particles.push({
+              x: s.x + Math.random() * s.w, y: s.y + Math.random() * s.h,
+              vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+              life: 1, decay: 0.010 + Math.random() * 0.012,
+              size: 1.2 + Math.random() * 3.0,
+              color: Math.random() < 0.45 ? _origColor : (Math.random() < 0.5 ? '#ffffff' : '#ffe8a0'),
+              grav: true
+            });
+          }
+        }
+      }
+    }
+
+
+    } // end doTick
+    drawAngel(ax, ay, screensaver ? aiInputDir : lastDir);
+
+    // halo ring (bot+harvest, space-activated, 12s)
+    if (haloActive) {
+      if (now2 - haloStartTs > HALO_DURATION) {
+        haloActive = false;
+      } else {
+        const haloFrac = (now2 - haloStartTs) / HALO_DURATION;
+        const pulse = 0.75 + Math.sin(now2 / 160) * 0.25;
+        const haloAlpha = (1 - haloFrac * 0.5) * pulse * 0.9;
+        ctx.save();
+        ctx.strokeStyle = `rgba(255,230,100,${haloAlpha.toFixed(3)})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = 'rgba(255,230,100,0.6)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.ellipse(ax, ay - 30, 13, 5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // hit flash: large time at center, fades over 1.5s. Compact always so the
+    // array doesn't grow while the UI is hidden; only render when showUI.
+    {
+      let w = 0;
+      for (let i = 0; i < hitFlashes.length; i++) {
+        const f = hitFlashes[i];
+        const age = (now2 - f.ts) / 1500;
+        if (age >= 1) continue;
+        if (showUI) {
+          ctx.globalAlpha = Math.pow(1 - age, 1.5) * 0.6;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffffff';
+          ctx.font = FONT_HIT;
+          ctx.fillText(f.harvest ? String(f.score) : (f.elapsed / 1000).toFixed(1), LW / 2, LH * 0.55);
+          ctx.globalAlpha = 1;
+        }
+        hitFlashes[w++] = f;
+      }
+      hitFlashes.length = w;
+    }
+    if (showUI) {
+
+    // top-right: mode name flash overrides score for 1.2 s after a mode change
+    const _modeFlashAge = (now2 - danceModeFlashTs) / 1200;
+    if (_modeFlashAge < 1) {
+      ctx.save();
+      ctx.globalAlpha = Math.pow(1 - _modeFlashAge, 1.5);
+      ctx.textAlign = 'right';
+      ctx.font = FONT_BASE;
+      ctx.fillStyle = danceModeFlashColor;
+      ctx.fillText(DANCE_MODES[danceMode].name, LW - 40, 44);
+      ctx.restore();
+    } else if (harvestMode) {
+      if (!screensaver && bestHarvestScore > 0) {
+        const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
+        const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
+        ctx.textAlign = 'right';
+        ctx.fillStyle = hoverBest ? 'rgba(255,255,255,0.45)' : 'rgba(255,220,140,0.22)';
+        if (flashAge < 1) ctx.fillStyle = `rgba(255,255,255,${0.4 + (1 - flashAge) * 0.4})`;
+        ctx.font = FONT_BASE;
+        ctx.fillText(`best  ${bestHarvestScore}`, LW - 40, 44);
+      }
+    } else if (!screensaver && bestTime > 0) {
+      const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
+      const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = hoverBest ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)';
+      if (flashAge < 1) ctx.fillStyle = `rgba(255,255,255,${0.4 + (1 - flashAge) * 0.4})`;
+      ctx.font = FONT_BASE;
+      ctx.fillText(`best  ${(bestTime/1000).toFixed(1)}`, LW - 40, 44);
+    }
+
+    // key hint: fades over 2.2 s after a non-movement key
+    const hintAge = (now2 - keyHintTs) / 2200;
+    if (hintAge < 1) {
+      ctx.globalAlpha = Math.pow(1 - hintAge, 1.8) * 0.72;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = FONT_BASE;
+      ctx.fillText('\u2190 \u2192  or  A / D  to move', LW/2, LH*0.82);
+      ctx.globalAlpha = 1;
+    }
+
+    // (a) info button — top-left with hover + click-flash
+    {
+      const hoverInfo = _hit(mouseLx, mouseLy, 20, 20, 200, 42);
+      const flashAge = (now2 - (_btnFlash.info || 0)) / 250;
+      const baseA = screensaver ? 0.10 : 0.22;
+      let a = hoverInfo ? 0.55 : baseA;
+      if (flashAge < 1) a = 0.6 + (1 - flashAge) * 0.4;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      ctx.font = FONT_BASE;
+      ctx.fillText('(aaditsoab)', 40, 44);
+    }
+
+    }
+    // end showUI
+    if (screensaver && firstInteraction && showUI && haloDeathCount > 0) {
+      ctx.textAlign = 'right';
+      ctx.font = FONT_BASE;
+      ctx.fillStyle = 'rgba(255,230,100,0.55)';
+      ctx.fillText(String(haloDeathCount), LW - 40, 44);
+    }
+  }
+
+  // stats overlay (player run history)
+  if (showStats) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(7,16,42,0.96)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    applyLogical();
+
+    const isHarvestStats = harvestMode;
+    const playerRuns = isHarvestStats
+      ? runsHarvest.filter(r => !r.bot)
+      : runs.filter(r => !r.bot);
+    const last10 = playerRuns.slice(-10).reverse(); // newest first
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = FONT_INFO_H;
+    ctx.fillText(isHarvestStats ? 'harvest history' : 'history', LW/2, LH*0.10);
+
+    // last 10 run values in one row
+    const rowY = LH*0.22;
+    const cellW = LW * 0.86 / 10;
+    const rowX0 = LW * 0.07;
+    ctx.font = FONT_INFO_S;
+    for (let i = 0; i < last10.length; i++) {
+      const r = last10[i];
+      const cx = rowX0 + i * cellW + cellW / 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.62)';
+      ctx.textAlign = 'center';
+      ctx.fillText(isHarvestStats ? String(r.score) : (r.ms/1000).toFixed(1), cx, rowY);
+    }
+
+    // line chart of all player runs
+    const chartX0 = LW*0.07, chartX1 = LW*0.86;
+    const chartY0 = LH*0.35, chartY1 = LH*0.82;
+    const chartW = chartX1 - chartX0, chartH = chartY1 - chartY0;
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(chartX0, chartY0, chartW, chartH);
+    if (playerRuns.length >= 2) {
+      const maxVal = playerRuns.reduce((m, r) => Math.max(m, isHarvestStats ? r.score : r.ms), 1);
+      const n = playerRuns.length;
+      const grad = ctx.createLinearGradient(0, chartY0, 0, chartY1);
+      grad.addColorStop(0,    '#ffdd00');
+      grad.addColorStop(0.5,  '#ff8800');
+      grad.addColorStop(1,    '#ff2200');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const val = isHarvestStats ? playerRuns[i].score : playerRuns[i].ms;
+        const x = chartX0 + (i / (n - 1)) * chartW;
+        const y = chartY1 - (val / maxVal) * chartH;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // 4 y-axis labels on the right
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.font = FONT_INFO_TN;
+      ctx.textAlign = 'left';
+      for (let j = 0; j <= 3; j++) {
+        const frac = j / 3;
+        const labelVal = maxVal * frac;
+        const ly = chartY1 - frac * chartH;
+        ctx.fillText(isHarvestStats ? Math.round(labelVal) : (labelVal/1000).toFixed(1), chartX1 + 8, ly + 4);
+        // tick line
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(chartX0, ly); ctx.lineTo(chartX1, ly); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = FONT_INFO_TN;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${n} runs`, chartX1, chartY0 - 8);
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.font = FONT_INFO_S;
+      ctx.textAlign = 'center';
+      ctx.fillText('need at least 2 runs for a chart', LW/2, chartY0 + chartH/2);
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = FONT_INFO_XS;
+    ctx.textAlign = 'center';
+    ctx.fillText('H or Esc to close', LW/2, LH*0.92);
+
+    // clear-history button (bottom-right, two-stage confirm)
+    {
+      ctx.font = FONT_INFO_XS;
+      ctx.textAlign = 'right';
+      const label = _clearHistoryStage === 1 ? 'really delete?' : 'clear history';
+      const tw = ctx.measureText(label).width;
+      const bx = LW * 0.93, by = LH * 0.92;
+      const hitX = bx - tw - 8, hitY = by - 18, hitW = tw + 16, hitH = 26;
+      const hover = _hit(mouseLx, mouseLy, hitX, hitY, hitW, hitH);
+      const armed = _clearHistoryStage === 1;
+      const a = armed ? (hover ? 1 : 0.85) : (hover ? 0.7 : 0.3);
+      ctx.fillStyle = armed ? `rgba(255,140,140,${a})` : `rgba(255,255,255,${a})`;
+      ctx.fillText(label, bx, by);
+      _clearHistoryRect.x = hitX; _clearHistoryRect.y = hitY;
+      _clearHistoryRect.w = hitW; _clearHistoryRect.h = hitH;
+    }
+
+    ctx.restore();
+  }
+
+  // info overlay (inside logical transform, on top of everything)
+  if (showInfo) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);  // screen coords for full coverage
+    ctx.fillStyle = 'rgba(7,16,42,0.94)';
+    ctx.fillRect(0, 0, c.width, c.height);
+    applyLogical();  // logical coords for text
+    ctx.textAlign = 'center';
+    // title
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = FONT_INFO_H;
+    // Prime-number sine waves for each line: ±15px horizontal motion (resets on reopen)
+    const elapsedSinceOpen = now2 - showInfoOpenedAt;
+    const off1 = Math.sin(elapsedSinceOpen / 1300) * 15;  // prime 2
+    const off2 = Math.sin(elapsedSinceOpen / 1700) * 15;  // prime 3
+    const off3 = Math.sin(elapsedSinceOpen / 1900) * 15;  // prime 5
+    ctx.fillText('an angel dances', LW/2 + off1, LH*0.13);
+    ctx.fillText('in the sparks', LW/2 + off2, LH*0.21);
+    ctx.fillText('of a bonfire', LW/2 + off3, LH*0.29);
+    // controls
+    ctx.fillStyle = 'rgba(255,255,255,0.50)';
+    ctx.font = FONT_INFO_S;
+    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.39);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.font = FONT_INFO_XS;
+    ctx.fillText('bot takes over if you let go', LW/2, LH*0.45);
+    // toggles
+    _infoToggleRects.length = 0;
+    const _infoItems = [
+      { key: 'X', label: 'toggle ui', on: showUI },
+      { key: 'Z', label: 'harvest mode', on: harvestMode },
+    ];
+    for (let _ii = 0; _ii < _infoItems.length; _ii++) {
+      const it = _infoItems[_ii];
+      const ty = LH * (0.54 + _ii * 0.07);
+      const text = `${it.key} \u2014 ${it.label}  \u00b7  ${it.on ? 'on' : 'off'}`;
+      const tw = ctx.measureText(text).width;
+      const hover = _hit(mouseLx, mouseLy, LW/2 - tw/2 - 8, ty - 20, tw + 16, 28);
+      let a = it.on ? (hover ? 0.95 : 0.72) : (hover ? 0.5 : 0.28);
+      ctx.fillStyle = it.on ? `rgba(255,220,140,${a})` : `rgba(255,255,255,${a})`;
+      ctx.fillText(text, LW/2, ty);
+      _infoToggleRects.push({ key: it.key, x: LW/2 - tw/2 - 8, y: ty - 20, w: tw + 16, h: 28 });
+    }
+    // nonchalance slider — labels flank the track; opacity reflects current value
+    const slW = LW * 0.125, slX0 = LW / 2 - slW / 2, slX1 = slX0 + slW;
+    const slY = LH * 0.71, slTrackH = 5, slThumbR = 11;
+    const thumbX = slX0 + nonchalance * slW;
+    ctx.font = FONT_INFO_XS;
+    ctx.textAlign = 'right';
+    const lAlpha = 0.15 + 0.75 * (1 - nonchalance);
+    ctx.fillStyle = `rgba(200,220,255,${lAlpha.toFixed(2)})`;
+    ctx.fillText('pragmatic', slX0 - 18, slY + 5);
+    ctx.textAlign = 'left';
+    const rAlpha = 0.15 + 0.75 * nonchalance;
+    ctx.fillStyle = `rgba(255,210,120,${rAlpha.toFixed(2)})`;
+    ctx.fillText('nonchalant', slX1 + 18, slY + 5);
+    // track
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.fillRect(slX0, slY - slTrackH / 2, slW, slTrackH);
+    const grd = ctx.createLinearGradient(slX0, 0, slX1, 0);
+    grd.addColorStop(0, 'rgba(100,150,255,0.40)');
+    grd.addColorStop(1, 'rgba(255,200,80,0.60)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(slX0, slY - slTrackH / 2, nonchalance * slW, slTrackH);
+    // thumb
+    const tHov = _hit(mouseLx, mouseLy, thumbX - slThumbR - 6, slY - slThumbR - 6, (slThumbR + 6) * 2, (slThumbR + 6) * 2);
+    ctx.beginPath();
+    ctx.arc(thumbX, slY, slThumbR, 0, Math.PI * 2);
+    ctx.fillStyle = (tHov || _sliderDrag) ? 'rgba(255,220,140,1)' : 'rgba(255,255,255,0.92)';
+    ctx.fill();
+    // store slider hit rect (fixed x/w for stable drag)
+    _nonchalanceSliderRect = { x: slX0, y: slY - 18, w: slW, h: 36 };
+    // mood selector row
+    {
+      const moodY = slY + 56;
+      ctx.font = FONT_INFO_XS;
+      ctx.textAlign = 'left';
+      // measure total width to center the row
+      let rowW = 0;
+      const gap = 28;
+      const widths = DANCE_MODES.map(m => ctx.measureText(m.name).width);
+      for (const w of widths) rowW += w + gap;
+      rowW -= gap;
+      let mx = LW / 2 - rowW / 2;
+      _moodRects.length = 0;
+      // label
+      ctx.fillStyle = 'rgba(200,220,255,0.28)';
+      ctx.textAlign = 'right';
+      //ctx.fillText('mood:', mx - 14, moodY + 1);
+      ctx.textAlign = 'left';
+      for (let mi = 0; mi < DANCE_MODES.length; mi++) {
+        const wt = DANCE_MODES[mi];
+        const tw = widths[mi];
+        const isActive = mi === danceMode;
+        const hover = _hit(mouseLx, mouseLy, mx - 4, moodY - 16, tw, 24);
+        ctx.fillStyle = isActive ? wt.col : (hover ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)');
+        ctx.fillText(wt.name, mx, moodY);
+        _moodRects.push({ i: mi, x: mx - 4, y: moodY - 16, w: tw, h: 24 });
+        mx += tw + gap;
+      }
+      // cycle toggle — same row, separated by a pipe
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillText('|', mx, moodY);
+      mx += ctx.measureText('|').width + gap * 0.6;
+      const cycleW = ctx.measureText('cycle').width;
+      const cycleHov = _hit(mouseLx, mouseLy, mx - 4, moodY - 16, cycleW + 8, 24);
+      ctx.fillStyle = moodCycle
+        ? (cycleHov ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.50)')
+        : (cycleHov ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.15)');
+      ctx.fillText('cycle', mx, moodY);
+      _cycleToggleRect = { x: mx - 4, y: moodY - 16, w: cycleW + 8, h: 24 };
+    }
+    // close hint
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = FONT_INFO_XS;
+    ctx.fillText('click or Esc to close', LW / 2, LH * 0.83);
+    ctx.restore();
+  }
+
+  resetTransform();
+  const _wantCredit = showInfo ? 'block' : 'none';
+  if (creditLink.style.display !== _wantCredit) creditLink.style.display = _wantCredit;
+
+  // ── profiler ──
+  const _dt = performance.now() - _frameStart;
+  _profBuf[_profIdx] = _dt;
+  _profIdx = (_profIdx + 1) % _profBuf.length;
+  if (_profCount < _profBuf.length) _profCount++;
+  if (_dt > _profWorst) _profWorst = _dt;
+  if (showProf) {
+    // sort only every 30 frames — reuse typed scratch array, zero alloc
+    if ((_profSortFrame++ % 30) === 0) {
+      _profScratch.set(_profBuf.subarray(0, _profCount));
+      const sub = _profScratch.subarray(0, _profCount);
+      sub.sort();
+      _profMed = sub[Math.floor(_profCount / 2)] || 0;
+      _profP95 = sub[Math.floor(_profCount * 0.95)] || 0;
+      _profMax = sub[_profCount - 1] || 0;
+    }
+    const med = _profMed, p95 = _profP95, max = _profMax;
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(8, 8, 220, 70);
+    ctx.fillStyle = '#9fe2ff';
+    ctx.fillText(`med ${med.toFixed(2)} ms  p95 ${p95.toFixed(2)}`, 14, 24);
+    ctx.fillText(`max ${max.toFixed(2)}  worst-ever ${_profWorst.toFixed(1)}`, 14, 40);
+    ctx.fillText(`sparks ${sparks.length}  live ${_liveSparks.length}  gaps ${_gapTargets.length}`, 14, 56);
+    ctx.fillText(`mode ${screensaver ? 'BOT' : 'PLAYER'}`, 14, 72);
+  }
+}
+
+// autostart as AI immediately
+start(true);
+requestAnimationFrame(draw);
+
+// ── Animated favicon: pre-baked data URIs, interval is a zero-cost string swap ──
+(function () {
+  const size = 16, border = 2;  // 16px is sufficient for a favicon
+  const fc = document.createElement('canvas');
+  fc.width = fc.height = size;
+  const fctx = fc.getContext('2d');
+  const link = document.getElementById('favicon');
+  // render all colours once at startup — no encoding at runtime
+  const frames = COLORS.map(col => {
+    fctx.fillStyle = '#07102A';
+    fctx.fillRect(0, 0, size, size);
+    fctx.fillStyle = col;
+    fctx.fillRect(border, border, size - border * 2, size - border * 2);
+    return fc.toDataURL('image/png');
+  });
+  let phase = 0;
+  link.href = frames[0];
+  setInterval(() => {
+    const roll = Math.random();
+    if (roll < 1/3 && phase > 0) phase--;
+    else if (roll < 2/3 && phase < frames.length - 1) phase++;
+    link.href = frames[phase];
+  }, 50);
+})();
+</script>
+</body>
+</html>
