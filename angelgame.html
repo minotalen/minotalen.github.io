@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>an angel dances in the sparks of a bonfire</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,29 +10,25 @@
   canvas { display: block; }
   #creditLink {
     position: fixed;
-    bottom: 20px;
+    bottom: 95px;
     left: 50%;
     transform: translateX(-50%);
-    color: rgba(255,200,100,0.45);
+    color: rgba(255,200,100,0.62);
     text-decoration: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    font-family: monospace;
+    font-size: 14px;
     display: none;
     z-index: 1000;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 140ms ease;
-    padding: 6px 10px;
-    letter-spacing: 0.3px;
-    line-height: 1.3;
-    border: 1px solid rgba(255,200,100,0.2);
-    border-radius: 3px;
+    transition: color 120ms ease;
+    padding: 8px 12px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
   }
   #creditLink:hover {
-    color: rgba(255,220,140,0.95);
-    border-color: rgba(255,220,140,0.6);
-    background: rgba(255,200,100,0.08);
-    text-decoration: none;
+    color: rgba(255,220,140,1);
+    text-decoration: underline;
   }
 </style>
 </head>
@@ -189,6 +182,23 @@ function playHarvest() {
     });
   } catch(e) {}
 }
+function playDing() {
+  try {
+    const ac = getAudio();
+    if (!ac) return;
+    const t0 = ac.currentTime;
+    [1047, 1319].forEach((freq, i) => {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, t0 + i * 0.06);
+      g.gain.linearRampToValueAtTime(0.055, t0 + i * 0.06 + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + i * 0.06 + 0.45);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0 + i * 0.06); osc.stop(t0 + i * 0.06 + 0.5);
+    });
+  } catch(e) {}
+}
 
 // ── Stars ───────────────────────────────────────────────
 let stars = [], starCanvas = null;
@@ -246,11 +256,11 @@ const ANGEL_R   = 20;  // visual / near-miss ring radius
 const HIT_R     = 6;   // actual collision hitbox (center only)
 const SIM_R     = 16;  // AI simulation hitbox — generous margin over HIT_R=6 to absorb sub-frame motion of fast sparks (up to ~23 px/frame)
 const SPAWN_ZONE = 250;  // left band where new sparks can appear with little reaction time — bot treats this as soft-deadly
-const MAX_SPEED = 42;
-const ACC       = MAX_SPEED / 50;
-const FRICTION  = 0.92;  // drift multiplier per frame when no direction held — lower = longer glide
+const MAX_SPEED = 37;
+const ACC       = MAX_SPEED / 35;
+const FRICTION  = 0.93;  // drift multiplier per frame when no direction held — lower = longer glide
 const DRIFT_MIN = 0.05;  // vel magnitude below which drift snaps to 0
-const LOW_SPEED_BOOST_THRESHOLD = 0;  // boost (1.5×) when |vel| is below this — same mult as reversing; adjust to taste
+const LOW_SPEED_BOOST_THRESHOLD = 5;  // boost (1.5×) when |vel| is below this — same mult as reversing; adjust to taste
 const DIRS      = Object.freeze([-1, 0, 1]);
 // Angel Y-path: ay = LH/2 + sin(t * AY_W) * AY_AMP.
 // SW/CW enable a sin recurrence in the bot lookahead (one Math.sin per frame instead of HORIZON).
@@ -259,18 +269,17 @@ const AY_SW = Math.sin(AY_W), AY_CW = Math.cos(AY_W);
 const LEFT_KEYS  = new Set(['ArrowLeft',  'a', 'A']);
 const RIGHT_KEYS = new Set(['ArrowRight', 'd', 'D']);
 // pre-computed font strings — LH is a fixed constant, no Math.round per frame
-const FONT_HIT    = `${Math.round(LH*0.22)}px 'IBM Plex Mono', monospace`;
-const FONT_BASE   = `${Math.round(LH*0.022)}px 'IBM Plex Mono', monospace`;
-const FONT_INFO_H = `${Math.round(LH*0.038)}px 'IBM Plex Mono', monospace`;
-const FONT_INFO_S = `${Math.round(LH*0.024)}px 'IBM Plex Mono', monospace`;
-const FONT_INFO_XS= `${Math.round(LH*0.019)}px 'IBM Plex Mono', monospace`;
-const FONT_INFO_TN= `${Math.round(LH*0.018)}px 'IBM Plex Mono', monospace`;
+const FONT_HIT    = `${Math.round(LH*0.22)}px monospace`;
+const FONT_BASE   = `${Math.round(LH*0.022)}px monospace`;
+const FONT_INFO_H = `${Math.round(LH*0.038)}px monospace`;
+const FONT_INFO_S = `${Math.round(LH*0.024)}px monospace`;
+const FONT_INFO_XS= `${Math.round(LH*0.019)}px monospace`;
+const FONT_INFO_TN= `${Math.round(LH*0.018)}px monospace`;
 
 // ── Game state ───────────────────────────────────────────
 let state = 'idle';      // idle | playing | dead | screensaver
 let screensaver = false;
 let t = 0, startTime = 0, elapsed = 0;
-let ayPhaseOffset = 0; // preserves angel Y position when t resets
 let sparks = [], spawnAccum = 0, spawnPause = 0;
 let particles = [];
 let keys = {};
@@ -279,11 +288,15 @@ let angelTrail = [];  // [{x,y,ts}] live white trail
 let deathTrail  = [];  // snapshot of trail on death, drawn pink and faded 2x faster
 let deathTrailBorn = 0; // performance.now() when death trail was created
 let breathScale = 1.0, lastAy = LH*0.5, lastDy = 0, breathCooldown = 0;
+let angelLean = 0;
 let aiVelocity = 0;
 let aiInputDir = 0;         // -1/0/1 direction currently committed by the bot
 let aiInputHeldFor = 0;     // consecutive ticks aiInputDir has been held
 let showUI = false;        // HUD visible (X to toggle) — hidden until first interaction
 let harvestMode = false;   // Z toggles "harvest" mode: graze sparks to score points
+let nonchalance = 0.0;     // 0 = survival, 1 = style/dance  (slider sets)
+let danceMode = 0;         // which style behaviour: 0=sweep 1=graze 2=flow  (auto-cycles with nonchalance)
+
 let harvestScore = 0;      // count of sparks harvested this run
 let mouseLx = -1, mouseLy = -1;  // mouse position in logical coords (for hover effects)
 const _btnFlash = {};      // key → ts of last click flash
@@ -301,20 +314,21 @@ let showStats = false;
 const HALO_KEY = 'angel.halo.deaths.v1';
 let haloDeathCount = 0;
 try { haloDeathCount = parseInt(localStorage.getItem(HALO_KEY)) || 0; } catch {}
+nonchalance = Math.random();
 let haloActive = false;
 let haloUsedThisLife = false;
 let haloStartTs = 0;
 const HALO_DURATION = 12000;
-let showInfo = false;      // info overlay active
-let showInfoOpenedAt = 0;  // ts when info overlay was opened (for animation reset)
+let haloTrailHue = 0;
 let firstInteraction = false;  // tracks whether user has interacted yet (for UI reveal)
 const RUNS_KEY = 'angel.runs.v1';
 const RUNS_KEY_HARVEST = 'angel.runs.harvest.v1';
 let runs = [];         // [{ms, ts, bot}] — normal mode, chronological
 let runsHarvest = [];  // [{score, ts, bot}] — harvest mode, chronological
-let trailHue = 0;          // current hue offset for live trail (deg)
+let trailHue = Math.random() * 360;  // current hue offset for live trail (deg)
 let trailHueSpeed = 0;     // auto-cycle rate (deg per tick); adjusted by I/O
 let trailTinted = false;   // becomes true on first tint input; otherwise trail is pure white
+let lastDingMinute = 0;    // tracks last 60-second mark that played a ding
 function loadRuns() {
   try { runs = JSON.parse(localStorage.getItem(RUNS_KEY)) || []; } catch { runs = []; }
   try { runsHarvest = JSON.parse(localStorage.getItem(RUNS_KEY_HARVEST)) || []; } catch { runsHarvest = []; }
@@ -326,7 +340,6 @@ function saveRuns() {
   try { localStorage.setItem(RUNS_KEY_HARVEST, JSON.stringify(runsHarvest.slice(-500))); } catch {}
 }
 function recordRun(ms, bot) {
-  if (ms < 5000) return;
   if (harvestMode) {
     runsHarvest.push({ score: harvestScore, ts: Date.now(), bot: !!bot });
     if (runsHarvest.length > 500) runsHarvest = runsHarvest.slice(-500);
@@ -339,8 +352,12 @@ function recordRun(ms, bot) {
 loadRuns();
 let trailT = 0;  // monotonic, never resets — trail timestamps stay valid
 let keyHintTs = -Infinity; // timestamp of last non-movement keypress
+let danceModeFlashTs = -Infinity;  // timestamp of last dance-mode change
+let danceModeFlashColor = '#fff';  // spark color picked at last mode change
 let lastMoveInputTs = -Infinity; // timestamp of last move key event (not reset on death)
 let hadInputSinceDeath = false;  // true once player presses a key after dying
+let showInfo = false;      // info overlay active
+let showInfoOpenedAt = 0;  // ts when info overlay was opened (for animation reset)
 
 let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
 let targetZoneIdx = 2, zoneArrivalFrames = 0; // stable zone targeting — updated with hysteresis
@@ -355,7 +372,7 @@ let _deadlyCnt = new Int32Array(HORIZON + 2);
 
 let _ayCache = AY_MID, _ayFrame = -1;
 function angelY() {
-  if (_ayFrame !== t) { _ayCache = AY_MID + Math.sin((t + ayPhaseOffset) * AY_W) * AY_AMP; _ayFrame = t; }
+  if (_ayFrame !== t) { _ayCache = AY_MID + Math.sin(t * AY_W) * AY_AMP; _ayFrame = t; }
   return _ayCache;
 }
 
@@ -641,8 +658,23 @@ function plan3() {
 // K candidates × ROUNDS × SEG-frame steps using precomputed deadly intervals.
 // Diversity bucket prevents collapse onto a single trajectory.
 const BEAM_K = 30, BEAM_SEG = 8, BEAM_ROUNDS = 12;
-const BEAM_CENTER_W = 0.1, BEAM_WALLTIME_W = 1.5;
-const BEAM_LEFT_DEATH = 4, BEAM_RIGHT_DEATH = 4;
+const BEAM_CENTER_W = 0.05, BEAM_WALLTIME_W = 0.3;
+const BEAM_LEFT_DEATH = 8, BEAM_RIGHT_DEATH = 8;
+// style-behaviour presets — each weights one aesthetic goal; nonchalance scales all
+const DANCE_MODES = [
+  // disp: reward distance traveled  ·  smth: reward sustained velocity in 1st dir
+  // mom: bonus when 1st dir matches current input  ·  prox: reward proximity to sparks
+  // still: bonus when 1st dir == 0  ·  trace: reward proximity to own trail
+  // left: reward closeness to left edge  ·  col: flash/display color
+  { name: 'sweep',    disp: 12,  smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff0000' },
+  { name: 'graze',    disp: 0,   smth: 0,   mom: 0,     prox: 12000,still: 0,    trace: 0,     left: 0,    col: '#ff3300' },
+  { name: 'flow',     disp: 1,   smth: 300, mom: 1500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff5500' },
+  { name: 'drift',    disp: 0,   smth: 0,   mom: 5500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff7700' },
+  { name: 'dart',     disp: 18,  smth: 0,   mom: -3000, prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff9900' },
+  { name: 'tempo',    disp: 0,   smth: 0,   mom: 0,     prox: 0,    still: 9000, trace: 0,     left: 0,    col: '#ffbb00' },
+  { name: 'trace',    disp: 0,   smth: 0,   mom: 1500,  prox: 0,    still: 0,    trace: 11000, left: 0,    col: '#ffdd00' },
+  { name: 'reckless', disp: 4,   smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 9000, col: '#ffee00' },
+];
 const _beam = {
   X: new Float32Array(64), V: new Float32Array(64),
   Wall: new Int16Array(64), Left: new Int16Array(64), Right: new Int16Array(64),
@@ -679,10 +711,10 @@ function _beamSimStep(i, dir, scratch) {
     v = simInputStep(dir, v);
     x += v;
     if (x < 40) {
-      x = 40; wall++; lAcc++; rAcc = 0;
+      x = 40; v = 0; wall++; lAcc++; rAcc = 0;
       if (lAcc > BEAM_LEFT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
     } else if (x > LW - 40) {
-      x = LW - 40; wall++; rAcc++; lAcc = 0;
+      x = LW - 40; v = 0; wall++; rAcc++; lAcc = 0;
       if (rAcc > BEAM_RIGHT_DEATH) { Dea[i] = 1; Da[i] = dt - 1; Xa[i] = x; Va[i] = v; Wa[i] = wall; return; }
     } else { lAcc = 0; rAcc = 0; }
     const buf = _deadlyAt[dt - 1], cnt = _deadlyCnt[dt - 1];
@@ -698,6 +730,7 @@ function _beamSimStep(i, dir, scratch) {
 function planBeam() {
   const LWmid = LW / 2;
   if (_liveSparks.length === 0) {
+    if (nonchalance > 0.5 && aiInputDir !== 0) return aiInputDir;
     if (angelX < LWmid - 40) return 1;
     if (angelX > LWmid + 40) return -1;
     return 0;
@@ -730,10 +763,38 @@ function planBeam() {
       if (b.Dead2[i]) continue;
       _beamSimStep(i, b.Dir2[i], true);
     }
+    const _n = nonchalance;
+    const _ns = _n * _n;  // quadratic style ramp — keeps mid-slider survival-dominant
+    const wt = DANCE_MODES[danceMode];
     for (let i = 0; i < m; i++) {
-      const center = -Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
-      const wall = -b.Wall2[i] * BEAM_WALLTIME_W;
-      b.Score2[i] = b.Depth2[i] * 10000 + center + wall;
+      const disp = _ns * wt.disp * Math.abs(b.X2[i] - angelX);
+      const smth = _ns * wt.smth * b.V2[i] * (b.First2[i] || 1);
+      const mom  = (_n > 0 && aiInputDir !== 0 && b.First2[i] === aiInputDir) ? _ns * wt.mom : 0;
+      const still = (b.First2[i] === 0) ? _ns * wt.still : 0;
+      let prox = 0;
+      if (_n > 0 && wt.prox > 0 && _liveSparks.length > 0) {
+        let minDx = Infinity;
+        for (const s of _liveSparks) { const dx = Math.abs(b.X2[i] - s.x); if (dx < minDx) minDx = dx; }
+        prox = _ns * wt.prox * Math.max(0, 1 - minDx / 400);
+      }
+      let trace = 0;
+      if (_n > 0 && wt.trace > 0 && angelTrail.length > 1) {
+        const tlen = angelTrail.length, startIdx = Math.max(0, tlen - 100);
+        const tY = _futureAys[Math.min(b.Depth2[i], HORIZON)];
+        let best = 0;
+        for (let ti = startIdx; ti < tlen; ti++) {
+          const pt = angelTrail[ti];
+          const dx = b.X2[i] - pt.x, dy = tY - pt.y;
+          const recency = (ti - startIdx + 1) / (tlen - startIdx);
+          const s = recency / (1 + (dx*dx + dy*dy) / 8000);
+          if (s > best) best = s;
+        }
+        trace = _ns * wt.trace * best;
+      }
+      const left = _ns * wt.left * Math.max(0, 1 - b.X2[i] / (LW / 2));
+      const ctr  = -(1 - _n) * Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wll  = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall2[i];
+      b.Score2[i] = (b.Depth2[i] / (BEAM_SEG * BEAM_ROUNDS)) * (10000 - _ns * 3000) + disp + smth + mom + still + trace + prox + left + ctr + wll;
       b.Order[i] = i;
     }
     const keep = Math.min(BEAM_K, m);
@@ -767,11 +828,39 @@ function planBeam() {
     if (allMax) break;
   }
 
+  const _n = nonchalance;
+  const _ns = _n * _n;
+  const wt = DANCE_MODES[danceMode];
   let bestScore = -Infinity, bestFirst = aiInputDir;
   for (let i = 0; i < nLive; i++) {
-    const center = -Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
-    const wall = -b.Wall[i] * BEAM_WALLTIME_W;
-    const score = b.Depth[i] * 10000 + center + wall;
+    const disp = _ns * wt.disp * Math.abs(b.X[i] - angelX);
+    const smth = _ns * wt.smth * b.V[i] * (b.First[i] || 1);
+    const mom  = (_n > 0 && aiInputDir !== 0 && b.First[i] === aiInputDir) ? _ns * wt.mom : 0;
+    const still = (b.First[i] === 0) ? _ns * wt.still : 0;
+    let prox = 0;
+    if (_n > 0 && wt.prox > 0 && _liveSparks.length > 0) {
+      let minDx = Infinity;
+      for (const s of _liveSparks) { const dx = Math.abs(b.X[i] - s.x); if (dx < minDx) minDx = dx; }
+      prox = _ns * wt.prox * Math.max(0, 1 - minDx / 400);
+    }
+    let trace = 0;
+    if (_n > 0 && wt.trace > 0 && angelTrail.length > 1) {
+      const tlen = angelTrail.length, startIdx = Math.max(0, tlen - 100);
+      const tY = _futureAys[Math.min(b.Depth[i], HORIZON)];
+      let best = 0;
+      for (let ti = startIdx; ti < tlen; ti++) {
+        const pt = angelTrail[ti];
+        const dx = b.X[i] - pt.x, dy = tY - pt.y;
+        const recency = (ti - startIdx + 1) / (tlen - startIdx);
+        const s = recency / (1 + (dx*dx + dy*dy) / 8000);
+        if (s > best) best = s;
+      }
+      trace = _ns * wt.trace * best;
+    }
+    const left = _ns * wt.left * Math.max(0, 1 - b.X[i] / (LW / 2));
+    const ctr  = -(1 - _n) * Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wll  = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall[i];
+    const score = (b.Depth[i] / (BEAM_SEG * BEAM_ROUNDS)) * (10000 - _ns * 3000) + disp + smth + mom + still + trace + prox + left + ctr + wll;
     if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
   }
   return bestFirst;
@@ -955,12 +1044,30 @@ function explode(x, y) {
   playDeath();
 }
 // In-place advance + compact: no per-frame array allocation.
+// In-place advance + compact: no per-frame array allocation.
 function updateParticles() {
+  const _ax = angelX, _ay = angelY();
   let w = 0;
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
-    p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.life -= p.decay;
-    if (p.life > 0) particles[w++] = p;
+    if (p.grav) {
+      // Gravitational attraction toward angel
+      const dx = _ax - p.x, dy = _ay - p.y;
+      const dist2 = dx * dx + dy * dy;
+      if (dist2 < 20 * 20) continue;  // touched angel — consume particle
+      const dist = Math.sqrt(dist2);
+      const acc = 22 / dist;          // G/dist — gentle gravity that builds as they close in
+      p.vx += acc * dx / dist;
+      p.vy += acc * dy / dist;
+      p.vx *= 0.97;
+      p.vy *= 0.97;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= p.decay;
+      if (p.life > 0) particles[w++] = p;
+    } else {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.life -= p.decay;
+      if (p.life > 0) particles[w++] = p;
+    }
   }
   particles.length = w;
 }
@@ -976,9 +1083,9 @@ function drawParticles() {
 }
 
 // ── Angel ────────────────────────────────────────────────
-function drawAngel(ax,ay) {
+function drawAngel(ax,ay,inputDir) {
   const bs=breathScale;
-  ctx.save(); ctx.translate(ax,ay); ctx.scale(1.4,1.4);
+  ctx.save(); ctx.translate(ax,ay); ctx.rotate(angelLean); ctx.scale(1.4,1.4);
   // wings
   for (const side of [-1,1]) {
     ctx.save(); ctx.scale(side,1);
@@ -987,8 +1094,9 @@ function drawAngel(ax,ay) {
     ctx.bezierCurveTo(-5,-11,-16,-9,-19,-1);
     ctx.bezierCurveTo(-16,4,-7,3,0,3);
     ctx.closePath();
-    ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=1.1; ctx.stroke();
+    const lit = inputDir !== 0 && side === -inputDir;
+    ctx.fillStyle = lit ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.15)'; ctx.fill();
+    ctx.strokeStyle = lit ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)'; ctx.lineWidth=1.1; ctx.stroke();
     ctx.restore();
   }
   // robe
@@ -1018,11 +1126,10 @@ function onHit() {
   deathTrailBorn = performance.now();
   elapsed = 0;
   startTime = performance.now();
-  ayPhaseOffset += t;  // accumulate so Y position stays continuous when t resets
-  t = 0;
   spawnAccum = 0;
   harvestScore = 0;
   if (screensaver) {
+    t = 0;
     _futureAyT = -1;
   }
   if (haloActive) {
@@ -1031,6 +1138,11 @@ function onHit() {
   }
   haloActive = false;
   haloUsedThisLife = false;
+  if (moodCycle) {
+    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
   explode(angelX, angelY());
   if (!screensaver) hadInputSinceDeath = false;
 }
@@ -1047,17 +1159,21 @@ function start(isAI) {
   deathTrailBorn = 0;
   t = 0; spawnAccum = 0; spawnPause = 0;
   elapsed = 0; startTime = performance.now();
-  ayPhaseOffset = 0;  // reset phase when starting fresh
   angelX = LW / 2; angelSpeed = 0;
   breathScale = 1; lastAy = AY_MID; lastDy = 0; breathCooldown = 0;
+  angelLean = 0; haloActive = false; haloUsedThisLife = false;
   aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
   lastDir = 0; prevPlayerDir = 0; playerDirFrames = 0; playerKeyPressCooldown = 0;
   zoneBonuses = [0, 0, 0, 0, 0]; targetZoneIdx = 2; zoneArrivalFrames = 0;
   nearMissCd = 0;
   harvestScore = 0;
-  haloActive = false;
-  haloUsedThisLife = false;
+  lastDingMinute = 0;
   _futureAyT = -1;
+  if (moodCycle) {
+    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
   screensaver = isAI;
   state = 'playing';
   if (!isAI) playStart();
@@ -1065,15 +1181,18 @@ function start(isAI) {
 
 // ── Input ────────────────────────────────────────────────
 function takeoverFromAI() {
-  // Smooth handoff: preserve timer/score when bot has barely played or scored nothing.
-  const smooth = elapsed < 5000 || (harvestMode && harvestScore === 0);
+  // Reset score/timer when bot has played more than 5s, or scored in harvest mode.
+  const smooth = elapsed <= 5000 && !(harvestMode && harvestScore > 0);
   // Clear AI input state but preserve position (angelX, t) and speed
   aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
   _futureAyT = -1;
+  haloActive = false;
   if (!smooth) {
     elapsed = 0; startTime = performance.now();
     spawnAccum = 0; harvestScore = 0;
+    playDing();
   }
+  lastDingMinute = Math.floor(elapsed / 60000);
   screensaver = false;
 }
 
@@ -1090,7 +1209,8 @@ function anyKeyDown(set) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (showStats) { showStats = false; _clearHistoryStage = 0; return; }
-    showInfo = !showInfo; if (showInfo) showInfoOpenedAt = performance.now(); return;
+    if (!showInfo) showInfoOpenedAt = performance.now();
+    showInfo = !showInfo; return;
   }
   if (e.key === 'p' || e.key === 'P') { showProf = !showProf; _profWorst = 0; return; }
   if (e.key === 'h' || e.key === 'H') { showStats = !showStats; _clearHistoryStage = 0; return; }
@@ -1100,23 +1220,33 @@ document.addEventListener('keydown', e => {
     if (!firstInteraction) { firstInteraction = true; showUI = true; }
     return;
   }
-  if (e.key === 'u' || e.key === 'U') { trailTinted = false; trailHue = 0; trailHueSpeed = 0; return; }
-  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.5); trailTinted = true; return; }
-  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.5); trailTinted = true; return; }
+  if (e.key === 'b' || e.key === 'B') { angelTrail.length = 0; _btnFlash.B = performance.now(); return; }
+  if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.05); trailTinted = true; return; }
+  if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.05); trailTinted = true; return; }
+  if (e.key === 'u' || e.key === 'U') { trailHue = ((trailHue + 360/COLORS.length) % 360); trailTinted = true; return; }
+  if (e.key === 'd' || e.key === 'D') { trailHue = ((trailHue - 360/COLORS.length + 360) % 360); trailTinted = true; return; }
+  if (e.key === 'v' || e.key === 'V') {
+    danceMode = (danceMode + 1) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    return;
+  }
   if (e.key === 'z' || e.key === 'Z') {
     harvestMode = !harvestMode;
     _btnFlash.Z = performance.now();
-    const _x = angelX, _v = angelSpeed, _t = t, _phase = ayPhaseOffset;
+    const _x = angelX, _v = angelSpeed, _t = t;
     start(screensaver);
-    angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t; ayPhaseOffset = _phase;
+    angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
     return;
   }
   if (e.key === ' ') {
-    if (state === 'playing' && screensaver && harvestMode && !haloUsedThisLife) {
+    if (state === 'playing' && screensaver && !haloUsedThisLife) {
       haloActive = true;
       haloUsedThisLife = true;
       haloStartTs = performance.now();
+      haloTrailHue = Math.random() * 360;
     }
+    trailTinted = !trailTinted;
     e.preventDefault();
     return;
   }
@@ -1147,14 +1277,23 @@ document.addEventListener('keyup', e => {
 c.addEventListener('mousemove', e => {
   mouseLx = (e.clientX - _appOx) / scale;
   mouseLy = (e.clientY - _appOy) / scale;
+  if (_sliderDrag && _nonchalanceSliderRect) {
+    nonchalance = Math.max(0, Math.min(1, (mouseLx - _nonchalanceSliderRect.x) / _nonchalanceSliderRect.w));
+    try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
+  }
   // cursor affordance: pointer when over any clickable UI element
   let over = state === 'playing' && (
     _hit(mouseLx, mouseLy, 20, 20, 200, 42) ||
     (!screensaver && bestTime > 0 && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42)) ||
     (harvestMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
   );
-  if (!over && showInfo) for (const r of _infoToggleRects) {
-    if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; }
+  if (!over && showInfo) {
+    for (const r of _infoToggleRects) {
+      if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; }
+    }
+    if (!over && _nonchalanceSliderRect && _hit(mouseLx, mouseLy, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) over = true;
+    if (!over) for (const r of _moodRects) { if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; } }
+    if (!over && _cycleToggleRect && _hit(mouseLx, mouseLy, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) over = true;
   }
   if (!over && showStats) {
     const r = _clearHistoryRect;
@@ -1163,6 +1302,19 @@ c.addEventListener('mousemove', e => {
   c.style.cursor = over ? 'pointer' : 'default';
 });
 function _hit(lx, ly, x, y, w, h) { return lx >= x && lx <= x + w && ly >= y && ly <= y + h; }
+c.addEventListener('mousedown', e => {
+  if (!showInfo || !_nonchalanceSliderRect) return;
+  const lx = (e.clientX - _appOx) / scale;
+  const ly = (e.clientY - _appOy) / scale;
+  const r = _nonchalanceSliderRect;
+  if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+    _sliderDrag = true;
+    nonchalance = Math.max(0, Math.min(1, (lx - r.x) / r.w));
+    try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
+    e.preventDefault();
+  }
+});
+document.addEventListener('mouseup', () => { _sliderDrag = false; });
 c.addEventListener('click', e => {
   if (!firstInteraction) { firstInteraction = true; showUI = true; }
   audioUnlocked = true;
@@ -1184,17 +1336,30 @@ c.addEventListener('click', e => {
     showStats = false; return;
   }
   if (showInfo) {
+    if (_nonchalanceSliderRect && _hit(lx, ly, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) return;
     for (const r of _infoToggleRects) {
       if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
         if (r.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
         if (r.key === 'Z') {
           harvestMode = !harvestMode; _btnFlash.Z = performance.now();
-          const _x = angelX, _v = angelSpeed, _t = t, _phase = ayPhaseOffset;
+          const _x = angelX, _v = angelSpeed, _t = t;
           start(screensaver);
-          angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t; ayPhaseOffset = _phase;
+          angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
           return;
         }
       }
+    }
+    for (const r of _moodRects) {
+      if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+        danceMode = r.i;
+        danceModeFlashTs = performance.now();
+        danceModeFlashColor = DANCE_MODES[r.i].col;
+        return;
+      }
+    }
+    if (_cycleToggleRect && _hit(lx, ly, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) {
+      moodCycle = !moodCycle;
+      return;
     }
     showInfo = false; return;
   }
@@ -1207,6 +1372,11 @@ c.addEventListener('click', e => {
 });
 // Info overlay toggle rects, refreshed each draw so click hit-test stays in sync.
 const _infoToggleRects = [];
+let _sliderDrag = false;
+let _nonchalanceSliderRect = null;
+let _moodRects = [];
+let _cycleToggleRect = null;
+let moodCycle = true;  // true = cycle mood on death
 // clear-history button state (stats overlay)
 let _clearHistoryStage = 0;  // 0 = idle, 1 = armed/confirm
 const _clearHistoryRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -1242,14 +1412,14 @@ function draw(ts) {
   applyLogical();
 
   if (state==='playing') {
+    elapsed = ts - startTime;
     if (doTick) {
     t++;
     trailT++;
-    elapsed = t * TICK_MS;
 
     // ── 1. spawn + advance sparks FIRST so AI sees current state ──
     const ramp = Math.min(elapsed / 180000, 1);  // full difficulty reached at 3 min instead of 90 s
-    const spawnChance = 0.13 + Math.min(elapsed/12000000, 1) * 0.7 + Math.max(0, 37 - sparks.length) * 0.01;
+    const spawnChance = 0.13 + Math.min(elapsed/12000000, 1) * 0.7 + Math.max(0, 35 - sparks.length) * 0.02;
     if (spawnPause > 0) {
       spawnPause--;
     } else {
@@ -1269,7 +1439,8 @@ function draw(ts) {
     for (let i = 0; i < sparks.length; i++) {
       const s = sparks[i];
       s.x += s.vx;
-      s.vy = Math.max(-2.5, Math.min(2.5, s.vy + s.ay));
+      const maxVy = s.harvested ? 7.5 : 2.5;  // harvested sparks have 3x max velocity
+      s.vy = Math.max(-maxVy, Math.min(maxVy, s.vy + s.ay));
       s.y  = Math.max(-s.h, Math.min(LH, s.y + s.vy));
     }
 
@@ -1284,7 +1455,7 @@ function draw(ts) {
       // Precompute future angel Y + per-spark Y paths once per frame; all scoring calls share them.
       if (_futureAyT !== t) {
         // Sin recurrence: one Math.sin/cos per frame instead of HORIZON of them.
-        let sa = Math.sin((t + ayPhaseOffset) * AY_W), ca = Math.cos((t + ayPhaseOffset) * AY_W);
+        let sa = Math.sin(t * AY_W), ca = Math.cos(t * AY_W);
         _futureAys[0] = AY_MID + sa * AY_AMP;
         _ayCache = _futureAys[0]; _ayFrame = t;  // share with angelY()
         for (let dt = 1; dt <= HORIZON; dt++) {
@@ -1420,12 +1591,20 @@ function draw(ts) {
     if (Math.abs(dydt)>0.1) lastDy=dydt;
     breathScale += (1.0+dydt*0.18-breathScale)*0.1;
     breathScale = Math.max(0.7,Math.min(1.4,breathScale));
+    const _leanDir = screensaver ? aiInputDir : lastDir;
+    angelLean += (_leanDir * 0.1047 - angelLean) * 0.09;
+    if (haloActive) haloTrailHue = (haloTrailHue + 0.3) % 360;
 
     if (trailTinted) {
-      if (keys.ArrowUp)   trailHue += 3;
-      if (keys.ArrowDown) trailHue -= 3;
+      if (keys.ArrowUp)   trailHue += 0.5;
+      if (keys.ArrowDown) trailHue -= 0.5;
       trailHue += trailHueSpeed;
       trailHue = ((trailHue % 360) + 360) % 360;
+    }
+    // 60-second gameplay ding (player only)
+    if (!screensaver) {
+      const dingMinute = Math.floor(elapsed / 60000);
+      if (dingMinute > lastDingMinute) { lastDingMinute = dingMinute; playDing(); }
     }
     } // end doTick
   }
@@ -1464,11 +1643,10 @@ function draw(ts) {
       return [Math.round(hue2rgb(h + 1/3) * 255), Math.round(hue2rgb(h) * 255), Math.round(hue2rgb(h - 1/3) * 255)];
     }
     // Blend rgb toward BG by (1-alpha) and return a '#rrggbb' string.
-    // PEAK_A is the opacity at the newest tip; PEAK_A_TINT is higher so hue changes are visible.
+    // PEAK_A is the opacity at the newest tip; it stays small so the trail is subtle.
     const PEAK_A = 0.20;
-    const PEAK_A_TINT = 0.60;
-    function _blendColor(rgb, alpha, pa) {
-      const t = alpha * pa;
+    function _blendColor(rgb, alpha) {
+      const t = alpha * PEAK_A;
       const r = Math.round(rgb[0] * t + TR * (1 - t));
       const g = Math.round(rgb[1] * t + TG * (1 - t));
       const b = Math.round(rgb[2] * t + TB * (1 - t));
@@ -1488,8 +1666,7 @@ function draw(ts) {
       for (let i = 0; i < len - 1; i++) {
         const alpha = (i / (len - 1)) * globalFade;
         const rgb = overrideRGB || _parseRGB(raw[i].color || '#ffffff');
-        const pa = overrideRGB ? PEAK_A : (raw[i].color ? PEAK_A_TINT : PEAK_A);
-        const blended = _blendColor(rgb, alpha, pa);
+        const blended = _blendColor(rgb, alpha);
         if (blended !== prevBlended) {
           if (inPath) ctx.stroke();
           ctx.strokeStyle = blended;
@@ -1549,7 +1726,7 @@ function draw(ts) {
     const ax=angelX, ay=angelY();
     if (doTick) {
     // live trail: always push, window 1800
-    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: trailTinted ? `hsl(${trailHue|0},50%,78%)` : null});
+    if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: haloActive ? `hsl(${haloTrailHue|0},80%,75%)` : (trailTinted ? `hsl(${trailHue|0},52%,86%)` : null)});
     while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 1800) angelTrail.shift();
     // death trail: snapshot — never trimmed, fades visually and is cleared on reset
 
@@ -1568,6 +1745,7 @@ function draw(ts) {
         const dx = ax < s.x ? s.x - ax : ax > s.x + s.w ? ax - (s.x + s.w) : 0;
         const dy = ay < s.y ? s.y - ay : ay > s.y + s.h ? ay - (s.y + s.h) : 0;
         if (dx*dx + dy*dy < 14500) {
+          const _origColor = s.color;
           s.harvested = true;
           s.harvestTs = now2;
           s.color = darkenForHarvest(s.color);
@@ -1575,13 +1753,14 @@ function draw(ts) {
           playHarvest();
           for (let k = 0; k < 20; k++) {
             const ang = Math.random() * Math.PI * 2;
-            const sp = 1.2 + Math.random() * 5.5;
+            const sp = 0.5 + Math.random() * 3.5;
             particles.push({
-              x: ax + (Math.random() - 0.5) * 10, y: ay + (Math.random() - 0.5) * 10,
-              vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 0.6,
-              life: 1, decay: 0.016 + Math.random() * 0.014,
+              x: s.x + Math.random() * s.w, y: s.y + Math.random() * s.h,
+              vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+              life: 1, decay: 0.010 + Math.random() * 0.012,
               size: 1.2 + Math.random() * 3.0,
-              color: Math.random() < 0.6 ? '#ffffff' : (Math.random() < 0.5 ? '#e8d8ff' : '#c8f0ff')
+              color: Math.random() < 0.45 ? _origColor : (Math.random() < 0.5 ? '#ffffff' : '#ffe8a0'),
+              grav: true
             });
           }
         }
@@ -1590,7 +1769,7 @@ function draw(ts) {
 
 
     } // end doTick
-    drawAngel(ax,ay);
+    drawAngel(ax, ay, screensaver ? aiInputDir : lastDir);
 
     // halo ring (bot+harvest, space-activated, 12s)
     if (haloActive) {
@@ -1634,8 +1813,17 @@ function draw(ts) {
     }
     if (showUI) {
 
-    // top-right: harvest score in harvest mode, best time otherwise (player only)
-    if (harvestMode) {
+    // top-right: mode name flash overrides score for 1.2 s after a mode change
+    const _modeFlashAge = (now2 - danceModeFlashTs) / 1200;
+    if (_modeFlashAge < 1) {
+      ctx.save();
+      ctx.globalAlpha = Math.pow(1 - _modeFlashAge, 1.5);
+      ctx.textAlign = 'right';
+      ctx.font = FONT_BASE;
+      ctx.fillStyle = danceModeFlashColor;
+      ctx.fillText(DANCE_MODES[danceMode].name, LW - 40, 44);
+      ctx.restore();
+    } else if (harvestMode) {
       if (!screensaver && bestHarvestScore > 0) {
         const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
         const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
@@ -1681,11 +1869,11 @@ function draw(ts) {
 
     }
     // end showUI
-    if (haloDeathCount > 0) {
+    if (screensaver && firstInteraction && showUI && haloDeathCount > 0) {
       ctx.textAlign = 'right';
       ctx.font = FONT_BASE;
       ctx.fillStyle = 'rgba(255,230,100,0.55)';
-      ctx.fillText(`○ ${haloDeathCount}`, LW - 40, 80);
+      ctx.fillText(String(haloDeathCount), LW - 40, 44);
     }
   }
 
@@ -1803,6 +1991,7 @@ function draw(ts) {
     ctx.fillRect(0, 0, c.width, c.height);
     applyLogical();  // logical coords for text
     ctx.textAlign = 'center';
+    // title
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = FONT_INFO_H;
     // Prime-number sine waves for each line: ±15px horizontal motion (resets on reopen)
@@ -1810,14 +1999,17 @@ function draw(ts) {
     const off1 = Math.sin(elapsedSinceOpen / 1300) * 15;  // prime 2
     const off2 = Math.sin(elapsedSinceOpen / 1700) * 15;  // prime 3
     const off3 = Math.sin(elapsedSinceOpen / 1900) * 15;  // prime 5
-    ctx.fillText('an angel dances', LW/2 + off1, LH*0.18);
-    ctx.fillText('in the sparks', LW/2 + off2, LH*0.26);
-    ctx.fillText('of a bonfire', LW/2 + off3, LH*0.34);
-    ctx.fillStyle = 'rgba(255,255,255,0.52)';
+    ctx.fillText('an angel dances', LW/2 + off1, LH*0.13);
+    ctx.fillText('in the sparks', LW/2 + off2, LH*0.21);
+    ctx.fillText('of a bonfire', LW/2 + off3, LH*0.29);
+    // controls
+    ctx.fillStyle = 'rgba(255,255,255,0.50)';
     ctx.font = FONT_INFO_S;
-    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.50);
-    ctx.fillText('bot takes over if you let go', LW/2, LH*0.56);
+    ctx.fillText('\u2190 \u2192  or  A / D  \u2014  move', LW/2, LH*0.39);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
     ctx.font = FONT_INFO_XS;
+    ctx.fillText('bot takes over if you let go', LW/2, LH*0.45);
+    // toggles
     _infoToggleRects.length = 0;
     const _infoItems = [
       { key: 'X', label: 'toggle ui', on: showUI },
@@ -1825,7 +2017,7 @@ function draw(ts) {
     ];
     for (let _ii = 0; _ii < _infoItems.length; _ii++) {
       const it = _infoItems[_ii];
-      const ty = LH * (0.64 + _ii * 0.06);
+      const ty = LH * (0.54 + _ii * 0.07);
       const text = `${it.key} \u2014 ${it.label}  \u00b7  ${it.on ? 'on' : 'off'}`;
       const tw = ctx.measureText(text).width;
       const hover = _hit(mouseLx, mouseLy, LW/2 - tw/2 - 8, ty - 20, tw + 16, 28);
@@ -1834,8 +2026,80 @@ function draw(ts) {
       ctx.fillText(text, LW/2, ty);
       _infoToggleRects.push({ key: it.key, x: LW/2 - tw/2 - 8, y: ty - 20, w: tw + 16, h: 28 });
     }
-    ctx.fillStyle = 'rgba(255,255,255,0.20)';
-    ctx.fillText('click or Esc to close', LW/2, LH*0.78);
+    // nonchalance slider — labels flank the track; opacity reflects current value
+    const slW = LW * 0.125, slX0 = LW / 2 - slW / 2, slX1 = slX0 + slW;
+    const slY = LH * 0.71, slTrackH = 5, slThumbR = 11;
+    const thumbX = slX0 + nonchalance * slW;
+    ctx.font = FONT_INFO_XS;
+    ctx.textAlign = 'right';
+    const lAlpha = 0.15 + 0.75 * (1 - nonchalance);
+    ctx.fillStyle = `rgba(200,220,255,${lAlpha.toFixed(2)})`;
+    ctx.fillText('pragmatic', slX0 - 18, slY + 5);
+    ctx.textAlign = 'left';
+    const rAlpha = 0.15 + 0.75 * nonchalance;
+    ctx.fillStyle = `rgba(255,210,120,${rAlpha.toFixed(2)})`;
+    ctx.fillText('nonchalant', slX1 + 18, slY + 5);
+    // track
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.fillRect(slX0, slY - slTrackH / 2, slW, slTrackH);
+    const grd = ctx.createLinearGradient(slX0, 0, slX1, 0);
+    grd.addColorStop(0, 'rgba(100,150,255,0.40)');
+    grd.addColorStop(1, 'rgba(255,200,80,0.60)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(slX0, slY - slTrackH / 2, nonchalance * slW, slTrackH);
+    // thumb
+    const tHov = _hit(mouseLx, mouseLy, thumbX - slThumbR - 6, slY - slThumbR - 6, (slThumbR + 6) * 2, (slThumbR + 6) * 2);
+    ctx.beginPath();
+    ctx.arc(thumbX, slY, slThumbR, 0, Math.PI * 2);
+    ctx.fillStyle = (tHov || _sliderDrag) ? 'rgba(255,220,140,1)' : 'rgba(255,255,255,0.92)';
+    ctx.fill();
+    // store slider hit rect (fixed x/w for stable drag)
+    _nonchalanceSliderRect = { x: slX0, y: slY - 18, w: slW, h: 36 };
+    // mood selector row
+    {
+      const moodY = slY + 56;
+      ctx.font = FONT_INFO_XS;
+      ctx.textAlign = 'left';
+      // measure total width to center the row
+      let rowW = 0;
+      const gap = 28;
+      const widths = DANCE_MODES.map(m => ctx.measureText(m.name).width);
+      for (const w of widths) rowW += w + gap;
+      rowW -= gap;
+      let mx = LW / 2 - rowW / 2;
+      _moodRects.length = 0;
+      // label
+      ctx.fillStyle = 'rgba(200,220,255,0.28)';
+      ctx.textAlign = 'right';
+      //ctx.fillText('mood:', mx - 14, moodY + 1);
+      ctx.textAlign = 'left';
+      for (let mi = 0; mi < DANCE_MODES.length; mi++) {
+        const wt = DANCE_MODES[mi];
+        const tw = widths[mi];
+        const isActive = mi === danceMode;
+        const hover = _hit(mouseLx, mouseLy, mx - 4, moodY - 16, tw, 24);
+        ctx.fillStyle = isActive ? wt.col : (hover ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)');
+        ctx.fillText(wt.name, mx, moodY);
+        _moodRects.push({ i: mi, x: mx - 4, y: moodY - 16, w: tw, h: 24 });
+        mx += tw + gap;
+      }
+      // cycle toggle — same row, separated by a pipe
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillText('|', mx, moodY);
+      mx += ctx.measureText('|').width + gap * 0.6;
+      const cycleW = ctx.measureText('cycle').width;
+      const cycleHov = _hit(mouseLx, mouseLy, mx - 4, moodY - 16, cycleW + 8, 24);
+      ctx.fillStyle = moodCycle
+        ? (cycleHov ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.50)')
+        : (cycleHov ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.15)');
+      ctx.fillText('cycle', mx, moodY);
+      _cycleToggleRect = { x: mx - 4, y: moodY - 16, w: cycleW + 8, h: 24 };
+    }
+    // close hint
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.font = FONT_INFO_XS;
+    ctx.fillText('click or Esc to close', LW / 2, LH * 0.83);
     ctx.restore();
   }
 
@@ -1860,7 +2124,7 @@ function draw(ts) {
       _profMax = sub[_profCount - 1] || 0;
     }
     const med = _profMed, p95 = _profP95, max = _profMax;
-    ctx.font = "12px 'IBM Plex Mono', monospace";
+    ctx.font = '12px monospace';
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(8, 8, 220, 70);
