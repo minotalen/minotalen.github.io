@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>an angel dances in the sparks of a bonfire</title>
 <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
@@ -15,7 +16,7 @@
     transform: translateX(-50%);
     color: rgba(255,200,100,0.62);
     text-decoration: none;
-    font-family: monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 14px;
     display: none;
     z-index: 1000;
@@ -70,7 +71,14 @@ function getAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-function playBreath(isInhale) {
+// Compute three sine wave modulations using same frequencies as header logo
+function getBreathSineModulations(elapsed) {
+  const mod1 = Math.sin(elapsed / 1300) * 0.5 + 0.5;  // 0 to 1
+  const mod2 = Math.sin(elapsed / 1700) * 0.5 + 0.5;  // 0 to 1
+  const mod3 = Math.sin(elapsed / 1900) * 0.5 + 0.5;  // 0 to 1
+  return { mod1, mod2, mod3 };
+}
+function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5) {
   try {
     const ac = getAudio();
     if (!ac) return;
@@ -95,30 +103,37 @@ function playBreath(isInhale) {
 
     const src = ac.createBufferSource(); src.buffer = buf;
 
-    // shaping filter
+    // shaping filter with modulation
     const filt = ac.createBiquadFilter();
     if (isInhale) {
-      // inhale: nasal, rising hiss
-      filt.type = 'bandpass'; filt.Q.value = 4;
-      filt.frequency.setValueAtTime(1600, t0);
-      filt.frequency.linearRampToValueAtTime(3200, t0 + dur * 0.8);
+      // inhale: nasal, rising hiss — mod1 modulates frequency range
+      const qBase = 4, qMod = qBase + (mod2 - 0.5) * 2;  // Q varies ±1
+      filt.type = 'bandpass'; filt.Q.value = qMod;
+      const freqStart = 1600 + (mod1 - 0.5) * 400;  // ±200 Hz shift
+      const freqEnd = 3200 + (mod1 - 0.5) * 400;
+      filt.frequency.setValueAtTime(freqStart, t0);
+      filt.frequency.linearRampToValueAtTime(freqEnd, t0 + dur * 0.8);
     } else {
-      // exhale: chesty, falling warmth
-      filt.type = 'bandpass'; filt.Q.value = 3;
-      filt.frequency.setValueAtTime(1200, t0);
-      filt.frequency.exponentialRampToValueAtTime(400, t0 + dur);
+      // exhale: chesty, falling warmth — mod1 modulates frequency range
+      const qBase = 3, qMod = qBase + (mod2 - 0.5) * 1.5;  // Q varies ±0.75
+      filt.type = 'bandpass'; filt.Q.value = qMod;
+      const freqStart = 1200 + (mod1 - 0.5) * 400;  // ±200 Hz shift
+      const freqEnd = 400 + (mod1 - 0.5) * 200;
+      filt.frequency.setValueAtTime(freqStart, t0);
+      filt.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
     }
 
-    // master envelope — very gradual onset, no click/drum at all
+    // master envelope with modulation on attack time
     const gain = ac.createGain();
+    const attackMod = 0.02 + mod3 * 0.06;  // attack varies 20ms to 80ms
     if (isInhale) {
       gain.gain.setValueAtTime(0, t0);
-      gain.gain.linearRampToValueAtTime(0.0, t0 + 0.05); // silent start
+      gain.gain.linearRampToValueAtTime(0.0, t0 + attackMod); // modulated silent start
       gain.gain.linearRampToValueAtTime(0.13, t0 + dur * 0.65);
       gain.gain.linearRampToValueAtTime(0, t0 + dur);
     } else {
       gain.gain.setValueAtTime(0, t0);
-      gain.gain.linearRampToValueAtTime(0.13, t0 + 0.18); // 180ms ramp-in
+      gain.gain.linearRampToValueAtTime(0.13, t0 + attackMod * 9); // 180ms base + modulation (18ms to 720ms, capped by dur)
       gain.gain.linearRampToValueAtTime(0.10, t0 + dur * 0.5);
       gain.gain.linearRampToValueAtTime(0, t0 + dur);
     }
@@ -163,7 +178,7 @@ function playStart() {
     });
   } catch(e){}
 }
-function playHarvest() {
+function playEnergize() {
   try {
     const ac = getAudio();
     if (!ac) return;
@@ -240,9 +255,9 @@ const COLORS=['#ff0000','#e50000','#cc0000','#ff3300','#ff4400','#ff5500',
               '#ff6600','#ff7700','#ff8800','#ff9900','#ffaa00','#ffbb00',
               '#ffcc00','#ffdd00','#ffee00'];
 function fireColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
-// Blend a hex color 30% toward the background — used to fade harvested sparks.
+// Blend a hex color 30% toward the background — used to fade energized sparks.
 const _BG_R = 7, _BG_G = 16, _BG_B = 42;
-function darkenForHarvest(hex) {
+function darkenForEnergize(hex) {
   const n = parseInt(hex.slice(1), 16);
   const r = (n >> 16) & 0xff, g = (n >> 8) & 0xff, b = n & 0xff;
   const nr = Math.round(r * 0.7 + _BG_R * 0.3);
@@ -293,11 +308,11 @@ let aiVelocity = 0;
 let aiInputDir = 0;         // -1/0/1 direction currently committed by the bot
 let aiInputHeldFor = 0;     // consecutive ticks aiInputDir has been held
 let showUI = false;        // HUD visible (X to toggle) — hidden until first interaction
-let harvestMode = false;   // Z toggles "harvest" mode: graze sparks to score points
+let energizeMode = false;   // Z toggles "energize" mode: graze sparks to score points
 let nonchalance = 0.0;     // 0 = survival, 1 = style/dance  (slider sets)
 let danceMode = 0;         // which style behaviour: 0=sweep 1=graze 2=flow  (auto-cycles with nonchalance)
 
-let harvestScore = 0;      // count of sparks harvested this run
+let energizeScore = 0;      // count of sparks energized this run
 let mouseLx = -1, mouseLy = -1;  // mouse position in logical coords (for hover effects)
 const _btnFlash = {};      // key → ts of last click flash
 let lastDir     = 0;       // -1 left / 1 right — newest key wins
@@ -309,7 +324,7 @@ let deathTimer = null;
 let attractTimer = null;
 let hitFlashes = [];
 let bestTime = 0;
-let bestHarvestScore = 0;
+let bestEnergizeScore = 0;
 let showStats = false;
 const HALO_KEY = 'angel.halo.deaths.v1';
 let haloDeathCount = 0;
@@ -320,30 +335,33 @@ let haloUsedThisLife = false;
 let haloStartTs = 0;
 const HALO_DURATION = 12000;
 let haloTrailHue = 0;
+let haloPosBuf = [];  // [oldest…newest] 2-frame lag buffer for halo ring position
 let firstInteraction = false;  // tracks whether user has interacted yet (for UI reveal)
 const RUNS_KEY = 'angel.runs.v1';
-const RUNS_KEY_HARVEST = 'angel.runs.harvest.v1';
+const RUNS_KEY_ENERGIZE = 'angel.runs.energize.v1';
 let runs = [];         // [{ms, ts, bot}] — normal mode, chronological
-let runsHarvest = [];  // [{score, ts, bot}] — harvest mode, chronological
+let runsEnergize = [];  // [{score, ts, bot}] — energize mode, chronological
 let trailHue = Math.random() * 360;  // current hue offset for live trail (deg)
 let trailHueSpeed = 0;     // auto-cycle rate (deg per tick); adjusted by I/O
 let trailTinted = false;   // becomes true on first tint input; otherwise trail is pure white
 let lastDingMinute = 0;    // tracks last 60-second mark that played a ding
 function loadRuns() {
   try { runs = JSON.parse(localStorage.getItem(RUNS_KEY)) || []; } catch { runs = []; }
-  try { runsHarvest = JSON.parse(localStorage.getItem(RUNS_KEY_HARVEST)) || []; } catch { runsHarvest = []; }
+  try { runsEnergize = JSON.parse(localStorage.getItem(RUNS_KEY_ENERGIZE)) || []; } catch { runsEnergize = []; }
   bestTime = runs.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.ms), 0);
-  bestHarvestScore = runsHarvest.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.score), 0);
+  bestEnergizeScore = runsEnergize.filter(r => !r.bot).reduce((m, r) => Math.max(m, r.score), 0);
 }
 function saveRuns() {
   try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs.slice(-500))); } catch {}
-  try { localStorage.setItem(RUNS_KEY_HARVEST, JSON.stringify(runsHarvest.slice(-500))); } catch {}
+  try { localStorage.setItem(RUNS_KEY_ENERGIZE, JSON.stringify(runsEnergize.slice(-500))); } catch {}
 }
 function recordRun(ms, bot) {
-  if (harvestMode) {
-    runsHarvest.push({ score: harvestScore, ts: Date.now(), bot: !!bot });
-    if (runsHarvest.length > 500) runsHarvest = runsHarvest.slice(-500);
+  if (energizeMode) {
+    if (energizeScore === 0) return;
+    runsEnergize.push({ score: energizeScore, ts: Date.now(), bot: !!bot });
+    if (runsEnergize.length > 500) runsEnergize = runsEnergize.slice(-500);
   } else {
+    if (ms < 10000) return;
     runs.push({ ms, ts: Date.now(), bot: !!bot });
     if (runs.length > 500) runs = runs.slice(-500);
   }
@@ -354,6 +372,7 @@ let trailT = 0;  // monotonic, never resets — trail timestamps stay valid
 let keyHintTs = -Infinity; // timestamp of last non-movement keypress
 let danceModeFlashTs = -Infinity;  // timestamp of last dance-mode change
 let danceModeFlashColor = '#fff';  // spark color picked at last mode change
+let energizeModeFlashTs = -Infinity;  // timestamp of last energize toggle
 let lastMoveInputTs = -Infinity; // timestamp of last move key event (not reset on death)
 let hadInputSinceDeath = false;  // true once player presses a key after dying
 let showInfo = false;      // info overlay active
@@ -362,7 +381,7 @@ let showInfoOpenedAt = 0;  // ts when info overlay was opened (for animation res
 let zoneBonuses = [0,0,0,0,0]; // per-zone exploration bonus; grows over time, cleared on visit
 let targetZoneIdx = 2, zoneArrivalFrames = 0; // stable zone targeting — updated with hysteresis
 let _futureAys = new Float32Array(HORIZON + 2);  // precomputed futureAy[0..HORIZON]; refilled each frame
-const _hScratch = new Float32Array(50);  // scratch: per-spark min-distance for harvest scoring
+const _eScratch = new Float32Array(50);  // scratch: per-spark min-distance for energize scoring
 let _futureAyT = -1;                      // t-value when _futureAys was last filled
 let _liveSparks = [];                     // non-fading sparks snapshot for simulation
 let _gapTargets = [];                     // narrow Y gaps between spark pairs, precomputed each tick
@@ -556,38 +575,38 @@ function aiChooseDirection(currentDirSurvive) {
     const stickiness = (dir === aiInputDir) ? Math.min(aiInputHeldFor, 60) * 0.3 * styleMult : 0;
     const zAlign    = Math.max(0, Math.sign(zDir) * dir);
     // Zone bonus kept small — exploration bias must not override a meaningful survival difference.
-    const zone      = harvestMode ? 0 : zAlign * zoneBonuses[maxZi] * 0.2 * styleMult;
+    const zone      = energizeMode ? 0 : zAlign * zoneBonuses[maxZi] * 0.2 * styleMult;
     // Survive dominates: 2× weight + scaled penalties.
     const gapBonus = gapThreadBonus(projX) * styleMult * 0.4;
-    // Harvest mode: reward projected proximity (≤100 px edge-distance) to non-harvested sparks.
+    // Energize mode: reward projected proximity (≤100 px edge-distance) to non-energized sparks.
     // Gated by styleMult (0 when unsafe) so the bot never sacrifices survival to harvest.
     // Per-spark minimum distance — bounded regardless of how many frames stay near a spark.
-    let harvestBonus = 0;
-    if (harvestMode && styleMult > 0) {
-      const isHDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
-      let hX = angelX, hV = aiVelocity;
+    let energizeBonus = 0;
+    if (energizeMode && styleMult > 0) {
+      const isEDir = (dir !== aiInputDir) && aiInputCooldown <= 0;
+      let eX = angelX, eV = aiVelocity;
       const nls = _liveSparks.length;
-      for (let si = 0; si < nls; si++) _hScratch[si] = 100;
+      for (let si = 0; si < nls; si++) _eScratch[si] = 100;
       for (let dt = 1; dt <= 50; dt++) {
-        hV = simInputStep(dir, hV, dt, isHDir && dt === 1);
-        hX = Math.max(40, Math.min(LW - 40, hX + hV));
+        eV = simInputStep(dir, eV, dt, isEDir && dt === 1);
+        eX = Math.max(40, Math.min(LW - 40, eX + eV));
         const fay = _futureAys[dt];
         for (let si = 0; si < nls; si++) {
           const s = _liveSparks[si];
-          if (s.harvested) continue;
+          if (s.energized) continue;
           const fx = s.x + s.vx * dt;
           const fy = s._futY[dt];
-          const dx = hX < fx ? fx - hX : hX > fx + s.w ? hX - (fx + s.w) : 0;
+          const dx = eX < fx ? fx - eX : eX > fx + s.w ? eX - (fx + s.w) : 0;
           const dy = fay < fy ? fy - fay : fay > fy + s.h ? fay - (fy + s.h) : 0;
           const d = Math.sqrt(dx*dx + dy*dy);
-          if (d < _hScratch[si]) _hScratch[si] = d;
+          if (d < _eScratch[si]) _eScratch[si] = d;
         }
       }
       for (let si = 0; si < nls; si++) {
-        if (_hScratch[si] < 100) harvestBonus += (1 - _hScratch[si] / 100) * styleMult * 80;
+        if (_eScratch[si] < 100) energizeBonus += (1 - _eScratch[si] / 100) * styleMult * 80;
       }
     }
-    const score = survive * 2 + center + motion + smooth + stickiness + zone + gapBonus + harvestBonus - leftPen - rightPen - reversePen;
+    const score = survive * 2 + center + motion + smooth + stickiness + zone + gapBonus + energizeBonus - leftPen - rightPen - reversePen;
     if (score > bestScore) { bestScore = score; bestDir = dir; }
   }
   return bestDir;
@@ -658,7 +677,7 @@ function plan3() {
 // K candidates × ROUNDS × SEG-frame steps using precomputed deadly intervals.
 // Diversity bucket prevents collapse onto a single trajectory.
 const BEAM_K = 30, BEAM_SEG = 8, BEAM_ROUNDS = 12;
-const BEAM_CENTER_W = 0.05, BEAM_WALLTIME_W = 0.3;
+const BEAM_CENTER_W = 0.1, BEAM_WALLTIME_W = 0.3;
 const BEAM_LEFT_DEATH = 8, BEAM_RIGHT_DEATH = 8;
 // style-behaviour presets — each weights one aesthetic goal; nonchalance scales all
 const DANCE_MODES = [
@@ -671,9 +690,9 @@ const DANCE_MODES = [
   { name: 'flow',     disp: 1,   smth: 300, mom: 1500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff5500' },
   { name: 'drift',    disp: 0,   smth: 0,   mom: 5500,  prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff7700' },
   { name: 'dart',     disp: 18,  smth: 0,   mom: -3000, prox: 0,    still: 0,    trace: 0,     left: 0,    col: '#ff9900' },
-  { name: 'tempo',    disp: 0,   smth: 0,   mom: 0,     prox: 0,    still: 9000, trace: 0,     left: 0,    col: '#ffbb00' },
+  { name: 'tempo',    disp: 2,   smth: 0,   mom: 0,     prox: 0,    still: 5000, trace: 0,     left: 0,    col: '#ffbb00' },
   { name: 'trace',    disp: 0,   smth: 0,   mom: 1500,  prox: 0,    still: 0,    trace: 11000, left: 0,    col: '#ffdd00' },
-  { name: 'reckless', disp: 4,   smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 9000, col: '#ffee00' },
+  { name: 'reckless', disp: 6,   smth: 0,   mom: 0,     prox: 0,    still: 0,    trace: 0,     left: 5000, col: '#ffee00' },
 ];
 const _beam = {
   X: new Float32Array(64), V: new Float32Array(64),
@@ -764,7 +783,7 @@ function planBeam() {
       _beamSimStep(i, b.Dir2[i], true);
     }
     const _n = nonchalance;
-    const _ns = _n * _n;  // quadratic style ramp — keeps mid-slider survival-dominant
+    const _ns = _n * 0.8;  // linear style ramp, 20% lower max impact
     const wt = DANCE_MODES[danceMode];
     for (let i = 0; i < m; i++) {
       const disp = _ns * wt.disp * Math.abs(b.X2[i] - angelX);
@@ -869,13 +888,13 @@ function planBeam() {
 // ── Harvest-optimizing beam planner (alt bot logic) ──────
 // Same beam scaffold as planBeam, but each candidate also carries a 64-bit
 // "claimed sparks" mask. Each frame, for every live spark not yet claimed by
-// this beam (and not already harvested in the real game), if the angel is
-// within HARV_R the bit is set and a counter ticks up. Score adds
-// BEAM_HARVEST_W per claim, ranked strictly below depth so survival still
-// dominates — sweep showed +47% mean harvest over the pure-survival bot with
+// this beam (and not already energized in the real game), if the angel is
+// within ENRG_R the bit is set and a counter ticks up. Score adds
+// BEAM_ENERGIZE_W per claim, ranked strictly below depth so survival still
+// dominates — sweep showed +47% mean energize over the pure-survival bot with
 // only ~7% drop in 120s survival rate.
-const BEAM_HARVEST_W = 4000;
-const HARV_R2 = 14500;  // matches the in-game harvest threshold
+const BEAM_ENERGIZE_W = 4000;
+const ENRG_R2 = 14500;  // matches the in-game energize threshold
 const _beamH = {
   M0: new Uint32Array(64), M1: new Uint32Array(64), Harv: new Int16Array(64),
   M02: new Uint32Array(192), M12: new Uint32Array(192), Harv2: new Int16Array(192),
@@ -930,7 +949,7 @@ function _beamHSimStep(i, dir, scratch) {
       const sy = sp._futY[dt];
       const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
       const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
-      if (dx * dx + dy * dy < HARV_R2) { m0 |= bit; harv++; }
+      if (dx * dx + dy * dy < ENRG_R2) { m0 |= bit; harv++; }
     }
     for (let si = 32; si < sCap1; si++) {
       const bit = 1 << (si - 32);
@@ -940,16 +959,17 @@ function _beamHSimStep(i, dir, scratch) {
       const sy = sp._futY[dt];
       const dx = x < sx ? sx - x : x > sx + sp.w ? x - (sx + sp.w) : 0;
       const dy = fay < sy ? sy - fay : fay > sy + sp.h ? fay - (sy + sp.h) : 0;
-      if (dx * dx + dy * dy < HARV_R2) { m1 |= bit; harv++; }
+      if (dx * dx + dy * dy < ENRG_R2) { m1 |= bit; harv++; }
     }
   }
   Xa[i] = x; Va[i] = v; Wa[i] = wall; La[i] = lAcc; Ra[i] = rAcc; Da[i] = depth;
   M0a[i] = m0; M1a[i] = m1; Ha[i] = harv;
 }
-function planBeamHarvest() {
+function planBeamEnergize() {
   const LWmid = LW / 2;
   const nl = _liveSparks.length;
   if (nl === 0) {
+    if (nonchalance > 0.5 && aiInputDir !== 0) return aiInputDir;
     if (angelX < LWmid - 40) return 1;
     if (angelX > LWmid + 40) return -1;
     return 0;
@@ -958,11 +978,11 @@ function planBeamHarvest() {
   _beamHGrow(BEAM_K * 3, false); _beamHGrow(BEAM_K * 3, true);
   const b = _beam, bh = _beamH;
   const CAP = BEAM_SEG * BEAM_ROUNDS;
-  // Seed every beam's claim mask with sparks already harvested in the real game.
+  // Seed every beam's claim mask with sparks already energized in the real game.
   let already0 = 0, already1 = 0;
   const cap0 = nl < 32 ? nl : 32, cap1 = nl < 64 ? nl : 64;
-  for (let i = 0; i < cap0; i++) if (_liveSparks[i].harvested) already0 |= (1 << i);
-  for (let i = 32; i < cap1; i++) if (_liveSparks[i].harvested) already1 |= (1 << (i - 32));
+  for (let i = 0; i < cap0; i++) if (_liveSparks[i].energized) already0 |= (1 << i);
+  for (let i = 32; i < cap1; i++) if (_liveSparks[i].energized) already1 |= (1 << (i - 32));
 
   let nLive = 3;
   for (let i = 0; i < 3; i++) {
@@ -989,10 +1009,16 @@ function planBeamHarvest() {
       if (b.Dead2[i]) continue;
       _beamHSimStep(i, b.Dir2[i], true);
     }
+    const _n = nonchalance;
+    const _ns = _n * 0.8;
+    const wt = DANCE_MODES[danceMode];
     for (let i = 0; i < m; i++) {
-      const center = -Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
-      const wall = -b.Wall2[i] * BEAM_WALLTIME_W;
-      b.Score2[i] = b.Depth2[i] * 100000 + bh.Harv2[i] * BEAM_HARVEST_W + center + wall;
+      const disp = _ns * wt.disp * Math.abs(b.X2[i] - angelX);
+      const smth = _ns * wt.smth * b.V2[i] * (b.First2[i] || 1);
+      const mom  = (_n > 0 && aiInputDir !== 0 && b.First2[i] === aiInputDir) ? _ns * wt.mom : 0;
+      const center = -(1 - _n) * Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
+      const wall = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall2[i];
+      b.Score2[i] = b.Depth2[i] * 100000 + bh.Harv2[i] * BEAM_ENERGIZE_W + center + wall + disp + smth + mom;
       b.Order[i] = i;
     }
     const keep = Math.min(BEAM_K, m);
@@ -1022,11 +1048,17 @@ function planBeamHarvest() {
     if (nLive === 0) break;
   }
 
+  const _n = nonchalance;
+  const _ns = _n * _n;
+  const wt = DANCE_MODES[danceMode];
   let bestScore = -Infinity, bestFirst = aiInputDir;
   for (let i = 0; i < nLive; i++) {
-    const center = -Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
-    const wall = -b.Wall[i] * BEAM_WALLTIME_W;
-    const score = b.Depth[i] * 100000 + bh.Harv[i] * BEAM_HARVEST_W + center + wall;
+    const disp = _ns * wt.disp * Math.abs(b.X[i] - angelX);
+    const smth = _ns * wt.smth * b.V[i] * (b.First[i] || 1);
+    const mom  = (_n > 0 && aiInputDir !== 0 && b.First[i] === aiInputDir) ? _ns * wt.mom : 0;
+    const center = -(1 - _n) * Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
+    const wall = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall[i];
+    const score = b.Depth[i] * 100000 + bh.Harv[i] * BEAM_ENERGIZE_W + center + wall + disp + smth + mom;
     if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
   }
   return bestFirst;
@@ -1051,7 +1083,7 @@ function updateParticles() {
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
     if (p.grav) {
-      // Gravitational attraction toward angel
+      // Gravitational attraction toward angel (used for death explosions)
       const dx = _ax - p.x, dy = _ay - p.y;
       const dist2 = dx * dx + dy * dy;
       if (dist2 < 20 * 20) continue;  // touched angel — consume particle
@@ -1065,7 +1097,33 @@ function updateParticles() {
       p.life -= p.decay;
       if (p.life > 0) particles[w++] = p;
     } else {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.life -= p.decay;
+      // Energize particle: homes toward targetSpark, energizes on contact
+      p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+      // destroy if overlapping any non-fading spark
+      let _ovSpark = null;
+      for (let si = 0; si < sparks.length; si++) {
+        const s = sparks[si];
+        if (!s.fading && p.x > s.x && p.x < s.x + s.w && p.y > s.y && p.y < s.y + s.h) {
+          _ovSpark = s;
+          break;
+        }
+      }
+      if (_ovSpark) {
+        // particle consumed — only start the energize timer if it's the target
+        if (p.targetSpark && _ovSpark === p.targetSpark && !_ovSpark.energizeHitTs)
+          _ovSpark.energizeHitTs = performance.now();
+        continue;
+      }
+      if (p.targetSpark && !p.targetSpark.fading && !p.targetSpark.energized) {
+        const ts = p.targetSpark;
+        const tx = ts.x + ts.w * 0.5, ty = ts.y + ts.h * 0.5;
+        const hdx = tx - p.x, hdy = ty - p.y;
+        const hdist = Math.sqrt(hdx*hdx + hdy*hdy) || 1;
+        // soft homing: blend current velocity toward target direction
+        const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+        p.vx = p.vx * 0.5 + (hdx/hdist) * spd * 0.5;
+        p.vy = p.vy * 0.5 + (hdy/hdist) * spd * 0.5;
+      }
       if (p.life > 0) particles[w++] = p;
     }
   }
@@ -1115,11 +1173,11 @@ function drawAngel(ax,ay,inputDir) {
 // ── On hit: no game over, just reset ─────────────────────
 function onHit() {
   if (!screensaver && elapsed > bestTime) bestTime = elapsed;
-  if (harvestMode && !screensaver && harvestScore > bestHarvestScore) bestHarvestScore = harvestScore;
+  if (energizeMode && !screensaver && energizeScore > bestEnergizeScore) bestEnergizeScore = energizeScore;
   recordRun(elapsed, screensaver);
   const who = screensaver ? 'BOT' : 'PLAYER';
   console.log(`[${who} DEATH] survived ${(elapsed / 1000).toFixed(3)}s`);
-  hitFlashes.push({ ts: performance.now(), elapsed, score: harvestScore, harvest: harvestMode });
+  hitFlashes.push({ ts: performance.now(), elapsed, score: energizeScore, energize: energizeMode });
   sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); });
   deathTrail = angelTrail;   // hand off current trail to die in pink
   angelTrail = [];            // fresh live trail starts immediately
@@ -1127,8 +1185,11 @@ function onHit() {
   elapsed = 0;
   startTime = performance.now();
   spawnAccum = 0;
-  harvestScore = 0;
+  energizeScore = 0;
   if (screensaver) {
+    danceMode = (danceMode + 1) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = DANCE_MODES[danceMode].col;
     t = 0;
     _futureAyT = -1;
   }
@@ -1138,11 +1199,7 @@ function onHit() {
   }
   haloActive = false;
   haloUsedThisLife = false;
-  if (moodCycle) {
-    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
-    danceModeFlashTs = performance.now();
-    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-  }
+  trailTinted = false;
   explode(angelX, angelY());
   if (!screensaver) hadInputSinceDeath = false;
 }
@@ -1161,19 +1218,14 @@ function start(isAI) {
   elapsed = 0; startTime = performance.now();
   angelX = LW / 2; angelSpeed = 0;
   breathScale = 1; lastAy = AY_MID; lastDy = 0; breathCooldown = 0;
-  angelLean = 0; haloActive = false; haloUsedThisLife = false;
+  angelLean = 0; haloActive = false; haloUsedThisLife = false; haloPosBuf = [];
   aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
   lastDir = 0; prevPlayerDir = 0; playerDirFrames = 0; playerKeyPressCooldown = 0;
   zoneBonuses = [0, 0, 0, 0, 0]; targetZoneIdx = 2; zoneArrivalFrames = 0;
   nearMissCd = 0;
-  harvestScore = 0;
+  energizeScore = 0;
   lastDingMinute = 0;
   _futureAyT = -1;
-  if (moodCycle) {
-    danceMode = (danceMode + 1 + Math.floor(Math.random() * (DANCE_MODES.length - 1))) % DANCE_MODES.length;
-    danceModeFlashTs = performance.now();
-    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-  }
   screensaver = isAI;
   state = 'playing';
   if (!isAI) playStart();
@@ -1181,15 +1233,18 @@ function start(isAI) {
 
 // ── Input ────────────────────────────────────────────────
 function takeoverFromAI() {
-  // Reset score/timer when bot has played more than 5s, or scored in harvest mode.
-  const smooth = elapsed <= 5000 && !(harvestMode && harvestScore > 0);
+  // Reset score/timer when bot has played more than 5s, or scored in energize mode.
+  const smooth = elapsed <= 5000 && !(energizeMode && energizeScore > 0);
   // Clear AI input state but preserve position (angelX, t) and speed
   aiVelocity = 0; aiInputDir = 0; aiInputHeldFor = 0; aiCommitFrames = 0; aiInputCooldown = 0;
   _futureAyT = -1;
   haloActive = false;
+  // announce current dance mode on takeover
+  danceModeFlashTs = performance.now();
+  danceModeFlashColor = DANCE_MODES[danceMode].col;
   if (!smooth) {
     elapsed = 0; startTime = performance.now();
-    spawnAccum = 0; harvestScore = 0;
+    spawnAccum = 0; energizeScore = 0;
     playDing();
   }
   lastDingMinute = Math.floor(elapsed / 60000);
@@ -1224,19 +1279,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'i' || e.key === 'I') { trailHueSpeed = Math.min(5, trailHueSpeed + 0.05); trailTinted = true; return; }
   if (e.key === 'o' || e.key === 'O') { trailHueSpeed = Math.max(-5, trailHueSpeed - 0.05); trailTinted = true; return; }
   if (e.key === 'u' || e.key === 'U') { trailHue = ((trailHue + 360/COLORS.length) % 360); trailTinted = true; return; }
-  if (e.key === 'd' || e.key === 'D') { trailHue = ((trailHue - 360/COLORS.length + 360) % 360); trailTinted = true; return; }
-  if (e.key === 'v' || e.key === 'V') {
-    danceMode = (danceMode + 1) % DANCE_MODES.length;
-    danceModeFlashTs = performance.now();
-    danceModeFlashColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+  if (e.key === 'z' || e.key === 'Z') {
+    energizeMode = !energizeMode;
+    energizeModeFlashTs = performance.now();
+    _btnFlash.Z = performance.now();
+    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
     return;
   }
-  if (e.key === 'z' || e.key === 'Z') {
-    harvestMode = !harvestMode;
-    _btnFlash.Z = performance.now();
-    const _x = angelX, _v = angelSpeed, _t = t;
-    start(screensaver);
-    angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+  if (e.key === 'c' || e.key === 'C') {
+    danceMode = (danceMode + 1) % DANCE_MODES.length;
+    danceModeFlashTs = performance.now();
+    danceModeFlashColor = DANCE_MODES[danceMode].col;
+    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
     return;
   }
   if (e.key === ' ') {
@@ -1282,10 +1337,10 @@ c.addEventListener('mousemove', e => {
     try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
   }
   // cursor affordance: pointer when over any clickable UI element
-  let over = state === 'playing' && (
+  const over = state === 'playing' && (
     _hit(mouseLx, mouseLy, 20, 20, 200, 42) ||
     (!screensaver && bestTime > 0 && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42)) ||
-    (harvestMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
+    (energizeMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
   );
   if (!over && showInfo) {
     for (const r of _infoToggleRects) {
@@ -1293,7 +1348,7 @@ c.addEventListener('mousemove', e => {
     }
     if (!over && _nonchalanceSliderRect && _hit(mouseLx, mouseLy, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) over = true;
     if (!over) for (const r of _moodRects) { if (_hit(mouseLx, mouseLy, r.x, r.y, r.w, r.h)) { over = true; break; } }
-    if (!over && _cycleToggleRect && _hit(mouseLx, mouseLy, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) over = true;
+
   }
   if (!over && showStats) {
     const r = _clearHistoryRect;
@@ -1316,7 +1371,7 @@ c.addEventListener('mousedown', e => {
 });
 document.addEventListener('mouseup', () => { _sliderDrag = false; });
 c.addEventListener('click', e => {
-  if (!firstInteraction) { firstInteraction = true; showUI = true; }
+  if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; return; }
   audioUnlocked = true;
   const lx = (e.clientX - _appOx) / scale;
   const ly = (e.clientY - _appOy) / scale;
@@ -1326,7 +1381,7 @@ c.addEventListener('click', e => {
     if (onBtn) {
       if (_clearHistoryStage === 0) { _clearHistoryStage = 1; return; }
       // confirm: clear current mode's run history
-      if (harvestMode) { runsHarvest = []; bestHarvestScore = 0; }
+      if (energizeMode) { runsEnergize = []; bestEnergizeScore = 0; }
       else             { runs = []; bestTime = 0; }
       saveRuns();
       _clearHistoryStage = 0;
@@ -1337,14 +1392,16 @@ c.addEventListener('click', e => {
   }
   if (showInfo) {
     if (_nonchalanceSliderRect && _hit(lx, ly, _nonchalanceSliderRect.x, _nonchalanceSliderRect.y, _nonchalanceSliderRect.w, _nonchalanceSliderRect.h)) return;
+    // pragmatic / nonchalant label extremes
+    { const slW = LW * 0.125, slX0 = LW / 2 - slW / 2, slX1 = slX0 + slW, slY = LH * 0.71;
+      if (_hit(lx, ly, slX0 - 140, slY - 18, 122, 36)) { nonchalance = 0; try { localStorage.setItem('angel.nonchalance.v1', '0.000'); } catch {} return; }
+      if (_hit(lx, ly, slX1 + 18,  slY - 18, 130, 36)) { nonchalance = 1; try { localStorage.setItem('angel.nonchalance.v1', '1.000'); } catch {} return; } }
     for (const r of _infoToggleRects) {
       if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
         if (r.key === 'X') { showUI = !showUI; _btnFlash.X = performance.now(); return; }
         if (r.key === 'Z') {
-          harvestMode = !harvestMode; _btnFlash.Z = performance.now();
-          const _x = angelX, _v = angelSpeed, _t = t;
-          start(screensaver);
-          angelX = _x; angelSpeed = _v; aiVelocity = _v; t = _t;
+          energizeMode = !energizeMode;
+          _btnFlash.Z = performance.now();
           return;
         }
       }
@@ -1357,10 +1414,8 @@ c.addEventListener('click', e => {
         return;
       }
     }
-    if (_cycleToggleRect && _hit(lx, ly, _cycleToggleRect.x, _cycleToggleRect.y, _cycleToggleRect.w, _cycleToggleRect.h)) {
-      moodCycle = !moodCycle;
-      return;
-    }
+
+    if (lx >= LW / 3 && lx <= 2 * LW / 3) return;
     showInfo = false; return;
   }
   if (state !== 'playing') return;
@@ -1369,6 +1424,8 @@ c.addEventListener('click', e => {
   if (!screensaver && bestTime > 0 && _hit(lx, ly, LW - 240, 20, 220, 42)) {
     showStats = true; _btnFlash.best = performance.now(); return;
   }
+  // any empty-area click opens info
+  showInfo = true; showInfoOpenedAt = performance.now();
 });
 // Info overlay toggle rects, refreshed each draw so click hit-test stays in sync.
 const _infoToggleRects = [];
@@ -1376,7 +1433,6 @@ let _sliderDrag = false;
 let _nonchalanceSliderRect = null;
 let _moodRects = [];
 let _cycleToggleRect = null;
-let moodCycle = true;  // true = cycle mood on death
 // clear-history button state (stats overlay)
 let _clearHistoryStage = 0;  // 0 = idle, 1 = armed/confirm
 const _clearHistoryRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -1439,7 +1495,7 @@ function draw(ts) {
     for (let i = 0; i < sparks.length; i++) {
       const s = sparks[i];
       s.x += s.vx;
-      const maxVy = s.harvested ? 7.5 : 2.5;  // harvested sparks have 3x max velocity
+      const maxVy = s.energized ? 7.5 : 2.5;  // energized sparks have 3x max velocity
       s.vy = Math.max(-maxVy, Math.min(maxVy, s.vy + s.ay));
       s.y  = Math.max(-s.h, Math.min(LH, s.y + s.vy));
     }
@@ -1475,8 +1531,9 @@ function draw(ts) {
           if (!s._futY) s._futY = new Float32Array(HORIZON + 1);
           s._futY[0] = s.y;
           let sy = s.y, svy = s.vy;
+          const _simMaxVy = s.energized ? 7.5 : 2.5;
           for (let dt = 1; dt <= HORIZON; dt++) {
-            svy = Math.max(-2.5, Math.min(2.5, svy + s.ay));
+            svy = Math.max(-_simMaxVy, Math.min(_simMaxVy, svy + s.ay));
             sy  = Math.max(-s.h, Math.min(LH, sy + svy));
             s._futY[dt] = sy;
           }
@@ -1537,8 +1594,8 @@ function draw(ts) {
         }
       }
       // Bot: plan & execute direction-based movement
-      if (harvestMode) {
-        aiInputDir = planBeamHarvest();
+      if (energizeMode) {
+        aiInputDir = planBeamEnergize();
         aiCommitFrames = 0;
       } else {
         aiInputDir = planBeam();
@@ -1586,7 +1643,9 @@ function draw(ts) {
     const dydt = ay - lastAy; lastAy = ay;
     breathCooldown--;
     if (lastDy!==0 && Math.sign(dydt)!==Math.sign(lastDy) && breathCooldown<0) {
-      playBreath(dydt<0); breathCooldown=40;
+      const { mod1, mod2, mod3 } = getBreathSineModulations(elapsed);
+      playBreath(dydt<0, mod1, mod2, mod3);
+      breathCooldown=40;
     }
     if (Math.abs(dydt)>0.1) lastDy=dydt;
     breathScale += (1.0+dydt*0.18-breathScale)*0.1;
@@ -1704,14 +1763,17 @@ function draw(ts) {
       } else {
         ctx.fillStyle = s.color;
         ctx.fillRect(s.x, s.y, s.w, s.h);
-        if (s.harvested) {
-          const r = 2 + (now2 - s.harvestTs) / 1000 * 2;
-          if (r >= 0.5) {
-            ctx.fillStyle = '#07102a';
-            ctx.beginPath();
-            ctx.arc(s.x + s.w * 0.5, s.y + s.h * 0.5, r, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        if (s.energized) {
+          const _ft = Math.sin(elapsed / 240) * 0.5 + 0.5;
+          const _n1 = parseInt(s.energizeColor1.slice(1), 16);
+          const _n2 = parseInt(s.energizeColor2.slice(1), 16);
+          const _cr = (((_n1 >> 16) & 0xff) * (1 - _ft) + ((_n2 >> 16) & 0xff) * _ft);
+          const _cg = (((_n1 >> 8) & 0xff) * (1 - _ft) + ((_n2 >> 8) & 0xff) * _ft);
+          const _cb = ((_n1 & 0xff) * (1 - _ft) + (_n2 & 0xff) * _ft);
+          ctx.fillStyle = '#' + (Math.round(_cr) << 16 | Math.round(_cg) << 8 | Math.round(_cb)).toString(16).padStart(6, '0');
+          const _sqW = s.energizeSqW;
+          const _sqH = s.energizeSqH;
+          ctx.fillRect(s.x + s.w * (0.5 - _sqW * 0.5), s.y + s.h * (0.5 - _sqH * 0.5), s.w * _sqW, s.h * _sqH);
         }
       }
       sparks[w++] = s;
@@ -1724,6 +1786,9 @@ function draw(ts) {
 
   if (state==='playing') {
     const ax=angelX, ay=angelY();
+    // advance 2-frame halo lag buffer (updated every render, capped at 3 entries)
+    haloPosBuf.push({x:ax, y:ay});
+    if (haloPosBuf.length > 3) haloPosBuf.shift();
     if (doTick) {
     // live trail: always push, window 1800
     if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: haloActive ? `hsl(${haloTrailHue|0},80%,75%)` : (trailTinted ? `hsl(${trailHue|0},52%,86%)` : null)});
@@ -1731,42 +1796,62 @@ function draw(ts) {
     // death trail: snapshot — never trimmed, fades visually and is cleared on reset
 
     // collision — reuse ax/ay already computed above (avoids N×angelY() calls)
+    // Die on spark contact in all modes
     for (let i = 0; i < sparks.length; i++) {
       const s = sparks[i];
       if (!s.fading && ax+HIT_R > s.x && ax-HIT_R < s.x+s.w &&
           ay+HIT_R > s.y && ay-HIT_R < s.y+s.h) { onHit(); break; }
     }
 
-    // harvest: close to non-harvested spark → score++, fade spark, white poof
-    if (harvestMode) {
+    // energize mode: emit 2 particles/frame toward nearby sparks; 50ms delayed energize on contact
+    if (energizeMode) {
       for (let i = 0; i < sparks.length; i++) {
         const s = sparks[i];
-        if (s.fading || s.harvested) continue;
+        if (s.fading || s.energized || s.energizeHitTs) continue;
         const dx = ax < s.x ? s.x - ax : ax > s.x + s.w ? ax - (s.x + s.w) : 0;
         const dy = ay < s.y ? s.y - ay : ay > s.y + s.h ? ay - (s.y + s.h) : 0;
-        if (dx*dx + dy*dy < 14500) {
-          const _origColor = s.color;
-          s.harvested = true;
-          s.harvestTs = now2;
-          s.color = darkenForHarvest(s.color);
-          harvestScore++;
-          playHarvest();
-          for (let k = 0; k < 20; k++) {
-            const ang = Math.random() * Math.PI * 2;
-            const sp = 0.5 + Math.random() * 3.5;
+        if (dx*dx + dy*dy < 18000) {
+          const sx = s.x + s.w * 0.5, sy = s.y + s.h * 0.5;
+          const baseAng = Math.atan2(sy - ay, sx - ax);
+          for (let k = 0; k < 2; k++) {
+            const spread = (Math.random() - 0.5) * Math.PI * 1.5;
+            const sp = 1.5 + Math.random() * 6;
+            const _bvx = Math.cos(baseAng + spread) * sp;
+            const _bvy = Math.sin(baseAng + spread) * sp;
             particles.push({
-              x: s.x + Math.random() * s.w, y: s.y + Math.random() * s.h,
-              vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
-              life: 1, decay: 0.010 + Math.random() * 0.012,
-              size: 1.2 + Math.random() * 3.0,
-              color: Math.random() < 0.45 ? _origColor : (Math.random() < 0.5 ? '#ffffff' : '#ffe8a0'),
-              grav: true
+              x: ax, y: ay,
+              vx: _bvx + (Math.random() - 0.5) * 2,
+              vy: _bvy + (Math.random() - 0.5) * 2,
+              life: 1, decay: 0.003 + Math.random() * 0.003,
+              size: 1.5 + Math.random() * 2.0,
+              color: COLORS[Math.floor(Math.random() * COLORS.length)],
+              grav: false,
+              targetSpark: s
             });
           }
         }
       }
+      // delayed energize: fire 50ms after first particle contact
+      const _now = performance.now();
+      for (let i = 0; i < sparks.length; i++) {
+        const s = sparks[i];
+        if (!s.energizeHitTs || s.energized) continue;
+        if (_now - s.energizeHitTs >= 50) {
+          s.energized = true;
+          s.vx *= 1.2;  // energize speed boost
+          s.energizeTs = _now;
+          s.energizeElapsed = elapsed;
+          s.energizeSqW = 0.25 + Math.random() * 0.25;
+          s.energizeSqH = 0.25 + Math.random() * 0.25;
+          const _hci = Math.floor(Math.random() * COLORS.length);
+          s.energizeColor1 = COLORS[_hci];
+          s.energizeColor2 = COLORS[(_hci + 1 + Math.floor(Math.random() * (COLORS.length - 1))) % COLORS.length];
+          s.color = darkenForEnergize(s.color);
+          energizeScore++;
+          playEnergize();
+        }
+      }
     }
-
 
     } // end doTick
     drawAngel(ax, ay, screensaver ? aiInputDir : lastDir);
@@ -1775,6 +1860,7 @@ function draw(ts) {
     if (haloActive) {
       if (now2 - haloStartTs > HALO_DURATION) {
         haloActive = false;
+        trailTinted = false;
       } else {
         const haloFrac = (now2 - haloStartTs) / HALO_DURATION;
         const pulse = 0.75 + Math.sin(now2 / 160) * 0.25;
@@ -1784,8 +1870,9 @@ function draw(ts) {
         ctx.lineWidth = 2.5;
         ctx.shadowColor = 'rgba(255,230,100,0.6)';
         ctx.shadowBlur = 10;
+        const _hlp = haloPosBuf.length >= 3 ? haloPosBuf[0] : {x:ax, y:ay};
         ctx.beginPath();
-        ctx.ellipse(ax, ay - 30, 13, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(_hlp.x, _hlp.y - 15, 11, 4, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -1804,34 +1891,50 @@ function draw(ts) {
           ctx.textAlign = 'center';
           ctx.fillStyle = '#ffffff';
           ctx.font = FONT_HIT;
-          ctx.fillText(f.harvest ? String(f.score) : (f.elapsed / 1000).toFixed(1), LW / 2, LH * 0.55);
+          ctx.fillText(f.energize ? String(f.score) : (f.elapsed / 1000).toFixed(1), LW / 2, LH * 0.55);
           ctx.globalAlpha = 1;
         }
         hitFlashes[w++] = f;
       }
       hitFlashes.length = w;
     }
+    // top-right toast age — computed for halo counter visibility
+    const _modeFlashAge = (now2 - danceModeFlashTs) / 2500;
+    const _energizeFlashAge = (now2 - energizeModeFlashTs) / 2500;
+    const _toastActive = _energizeFlashAge < 1 || _modeFlashAge < 1;
+
     if (showUI) {
 
-    // top-right: mode name flash overrides score for 1.2 s after a mode change
-    const _modeFlashAge = (now2 - danceModeFlashTs) / 1200;
-    if (_modeFlashAge < 1) {
+    // top-right toast
+    if (_energizeFlashAge < 1) {
       ctx.save();
-      ctx.globalAlpha = Math.pow(1 - _modeFlashAge, 1.5);
+      ctx.globalAlpha = _energizeFlashAge < 0.5 ? 1 : Math.pow(1 - (_energizeFlashAge - 0.5) / 0.5, 2);
+      ctx.textAlign = 'right';
+      ctx.font = FONT_BASE;
+      ctx.fillStyle = energizeMode ? '#ffc864' : '#96c8ff';
+      ctx.fillText(energizeMode ? 'energize' : 'avoidance', LW - 40, 44);
+      ctx.restore();
+    } else if (_modeFlashAge < 1) {
+      ctx.save();
+      ctx.globalAlpha = _modeFlashAge < 0.5 ? 1 : Math.pow(1 - (_modeFlashAge - 0.5) / 0.5, 2);
       ctx.textAlign = 'right';
       ctx.font = FONT_BASE;
       ctx.fillStyle = danceModeFlashColor;
       ctx.fillText(DANCE_MODES[danceMode].name, LW - 40, 44);
       ctx.restore();
-    } else if (harvestMode) {
-      if (!screensaver && bestHarvestScore > 0) {
+    }
+
+    // top-right score (hidden while toast active)
+    if (!_toastActive) {
+    if (energizeMode) {
+      if (!screensaver && bestEnergizeScore > 0) {
         const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
         const flashAge = (now2 - (_btnFlash.best || 0)) / 250;
         ctx.textAlign = 'right';
         ctx.fillStyle = hoverBest ? 'rgba(255,255,255,0.45)' : 'rgba(255,220,140,0.22)';
         if (flashAge < 1) ctx.fillStyle = `rgba(255,255,255,${0.4 + (1 - flashAge) * 0.4})`;
         ctx.font = FONT_BASE;
-        ctx.fillText(`best  ${bestHarvestScore}`, LW - 40, 44);
+        ctx.fillText(`best  ${bestEnergizeScore}`, LW - 40, 44);
       }
     } else if (!screensaver && bestTime > 0) {
       const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
@@ -1842,6 +1945,7 @@ function draw(ts) {
       ctx.font = FONT_BASE;
       ctx.fillText(`best  ${(bestTime/1000).toFixed(1)}`, LW - 40, 44);
     }
+    } // end !_toastActive score block
 
     // key hint: fades over 2.2 s after a non-movement key
     const hintAge = (now2 - keyHintTs) / 2200;
@@ -1869,7 +1973,7 @@ function draw(ts) {
 
     }
     // end showUI
-    if (screensaver && firstInteraction && showUI && haloDeathCount > 0) {
+    if (!_toastActive && screensaver && firstInteraction && showUI && haloDeathCount > 0) {
       ctx.textAlign = 'right';
       ctx.font = FONT_BASE;
       ctx.fillStyle = 'rgba(255,230,100,0.55)';
@@ -1885,16 +1989,16 @@ function draw(ts) {
     ctx.fillRect(0, 0, c.width, c.height);
     applyLogical();
 
-    const isHarvestStats = harvestMode;
-    const playerRuns = isHarvestStats
-      ? runsHarvest.filter(r => !r.bot)
+    const isEnergizeStats = energizeMode;
+    const playerRuns = isEnergizeStats
+      ? runsEnergize.filter(r => !r.bot)
       : runs.filter(r => !r.bot);
     const last10 = playerRuns.slice(-10).reverse(); // newest first
 
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = FONT_INFO_H;
-    ctx.fillText(isHarvestStats ? 'harvest history' : 'history', LW/2, LH*0.10);
+    ctx.fillText(isEnergizeStats ? 'energize history' : 'history', LW/2, LH*0.10);
 
     // last 10 run values in one row
     const rowY = LH*0.22;
@@ -1906,7 +2010,7 @@ function draw(ts) {
       const cx = rowX0 + i * cellW + cellW / 2;
       ctx.fillStyle = 'rgba(255,255,255,0.62)';
       ctx.textAlign = 'center';
-      ctx.fillText(isHarvestStats ? String(r.score) : (r.ms/1000).toFixed(1), cx, rowY);
+      ctx.fillText(isEnergizeStats ? String(r.score) : (r.ms/1000).toFixed(1), cx, rowY);
     }
 
     // line chart of all player runs
@@ -1916,7 +2020,7 @@ function draw(ts) {
     ctx.fillStyle = 'rgba(255,255,255,0.04)';
     ctx.fillRect(chartX0, chartY0, chartW, chartH);
     if (playerRuns.length >= 2) {
-      const maxVal = playerRuns.reduce((m, r) => Math.max(m, isHarvestStats ? r.score : r.ms), 1);
+      const maxVal = playerRuns.reduce((m, r) => Math.max(m, isEnergizeStats ? r.score : r.ms), 1);
       const n = playerRuns.length;
       const grad = ctx.createLinearGradient(0, chartY0, 0, chartY1);
       grad.addColorStop(0,    '#ffdd00');
@@ -1927,7 +2031,7 @@ function draw(ts) {
       ctx.lineJoin = 'round';
       ctx.beginPath();
       for (let i = 0; i < n; i++) {
-        const val = isHarvestStats ? playerRuns[i].score : playerRuns[i].ms;
+        const val = isEnergizeStats ? playerRuns[i].score : playerRuns[i].ms;
         const x = chartX0 + (i / (n - 1)) * chartW;
         const y = chartY1 - (val / maxVal) * chartH;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
@@ -1941,7 +2045,7 @@ function draw(ts) {
         const frac = j / 3;
         const labelVal = maxVal * frac;
         const ly = chartY1 - frac * chartH;
-        ctx.fillText(isHarvestStats ? Math.round(labelVal) : (labelVal/1000).toFixed(1), chartX1 + 8, ly + 4);
+        ctx.fillText(isEnergizeStats ? Math.round(labelVal) : (labelVal/1000).toFixed(1), chartX1 + 8, ly + 4);
         // tick line
         ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 0.5;
@@ -2013,7 +2117,7 @@ function draw(ts) {
     _infoToggleRects.length = 0;
     const _infoItems = [
       { key: 'X', label: 'toggle ui', on: showUI },
-      { key: 'Z', label: 'harvest mode', on: harvestMode },
+      { key: 'Z', label: 'energize mode', on: energizeMode },
     ];
     for (let _ii = 0; _ii < _infoItems.length; _ii++) {
       const it = _infoItems[_ii];
@@ -2049,10 +2153,8 @@ function draw(ts) {
     ctx.fillRect(slX0, slY - slTrackH / 2, nonchalance * slW, slTrackH);
     // thumb
     const tHov = _hit(mouseLx, mouseLy, thumbX - slThumbR - 6, slY - slThumbR - 6, (slThumbR + 6) * 2, (slThumbR + 6) * 2);
-    ctx.beginPath();
-    ctx.arc(thumbX, slY, slThumbR, 0, Math.PI * 2);
     ctx.fillStyle = (tHov || _sliderDrag) ? 'rgba(255,220,140,1)' : 'rgba(255,255,255,0.92)';
-    ctx.fill();
+    ctx.fillRect(thumbX - slThumbR, slY - slThumbR, slThumbR * 2, slThumbR * 2);
     // store slider hit rect (fixed x/w for stable drag)
     _nonchalanceSliderRect = { x: slX0, y: slY - 18, w: slW, h: 36 };
     // mood selector row
@@ -2083,17 +2185,6 @@ function draw(ts) {
         _moodRects.push({ i: mi, x: mx - 4, y: moodY - 16, w: tw, h: 24 });
         mx += tw + gap;
       }
-      // cycle toggle — same row, separated by a pipe
-      ctx.fillStyle = 'rgba(255,255,255,0.18)';
-      ctx.fillText('|', mx, moodY);
-      mx += ctx.measureText('|').width + gap * 0.6;
-      const cycleW = ctx.measureText('cycle').width;
-      const cycleHov = _hit(mouseLx, mouseLy, mx - 4, moodY - 16, cycleW + 8, 24);
-      ctx.fillStyle = moodCycle
-        ? (cycleHov ? 'rgba(255,255,255,0.80)' : 'rgba(255,255,255,0.50)')
-        : (cycleHov ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.15)');
-      ctx.fillText('cycle', mx, moodY);
-      _cycleToggleRect = { x: mx - 4, y: moodY - 16, w: cycleW + 8, h: 24 };
     }
     // close hint
     ctx.textAlign = 'center';
