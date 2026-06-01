@@ -43,7 +43,7 @@ const ANGEL_R = 20;
 const HIT_R = 6;
 const SIM_R = 16;
 const SPAWN_ZONE = 250;
-const MAX_SPEED = 35;
+const MAX_SPEED = 39;
 const ACC = 1.045;
 const FRICTION = 0.927;
 const DRIFT_MIN = 0.05;
@@ -51,8 +51,8 @@ const LOW_SPEED_BOOST_THRESHOLD = 3;
 const AY_W = 0.0567, AY_CW = 0.998, AY_SW = 0.056, AY_AMP = 378, AY_MID = 540;
 const HALO_DURATION = 18000;
 const TICK_MS = 20;
-const BEAM_K = 51, BEAM_SEG = 5, BEAM_ROUNDS = 8;
-const BEAM_CENTER_W = 0.5035, BEAM_WALLTIME_W = 2.7426;
+const BEAM_K = 46, BEAM_SEG = 6, BEAM_ROUNDS = 22;
+const BEAM_CENTER_W = 0.8056, BEAM_WALLTIME_W = 0.8172;
 
 // ===== constants.js =====
 // Core numeric constants are injected by build.js from constants.json
@@ -458,29 +458,15 @@ function drawStars() {
 
 
 // ===== audio.js =====
+'use strict';
+
 // =====================================================================
-//  audio.js  —  "an angel dances in the sparks of a bonfire"   (v6)
-// ---------------------------------------------------------------------
-//  Changes from v5:
-//   * Wider, jazzier per-mood ember scales: more octave range in BOTH
-//     directions, plus smaller steps (just semitones, 7ths, 9ths, #11)
-//     for jazz tension. (See _MOOD_SPEC.)
-//   * Proximity reach opened to the angel's full vertical sine swing.
-//
-//  Earlier (v5):
-//   * Breath polyphase modulators now get RANDOM phase offsets at load,
-//     so the three prime cycles start decorrelated (not all at 0.5).
-//   * Embers avoid landing on a pitch another live ember is already
-//     sounding -> no unison mud, easier to tell apart.
-//   * Ember stereo pan capped at +/-0.7 so edge embers stay audible in
-//     both ears.
-//   * Input click restored: a soft pentatonic tick, panned by steer
-//     direction, double-damped (rate-limit + density attenuation) so the
-//     bot's keydown/up spam can't machine-gun. Gated by sfxEngineOn (K).
-//
-//  Core: A1=55 Hz just tuning, peaceful binaural engine drone, per-mood
-//  ember scales, proximity glow, master limiter, suspend/resume pause,
-//  J/K/L toggles (sfxSparkOn / sfxEngineOn / sfxBreathOn).
+// audio.js — stable engine version
+// - keeps the existing engine character: bed + octave + draft
+// - removes key/steer transient perturbations that caused jitter
+// - ignores brief movement gaps before fading
+// - engine pans from movement direction
+// - sparks pan from position relative to angel
 // =====================================================================
 
 let audioCtx = null;
@@ -488,40 +474,66 @@ let audioUnlocked = false;
 let masterGain = null;
 let masterLimiter = null;
 
-// ---- runtime toggles (flipped from the keydown handler) ----
+// runtime toggles
 let sfxSparkOn = true;
 let sfxEngineOn = true;
 let sfxBreathOn = true;
 
-// ---- TUNING ----------------------------------------------------------
-const FUND = 55;                 // A1, the fire / the engine root
+// tuning
+const FUND = 55;
+const PHI = (1 + Math.sqrt(5)) / 2;
+const SCALE_PULL = 1 / PHI;
 
-// Random phase offsets for the breath polyphase, chosen ONCE at load so
-// the three prime cycles begin decorrelated instead of all at phase 0.
-const _BPH = [Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2];
+function hz(ratio, oct) {
+  return FUND * ratio * Math.pow(2, oct);
+}
 
-// Per-mood ember scales (just ratios of 55 Hz x octaves). Index matches
-// DANCE_MODES: 0 sweep 1 graze 2 flow 3 drift 4 dart 5 tempo 6 trace 7 reckless
-// Jazzier + wider than pentatonic: added 7ths/9ths/#11 and just semitones
-// (16/15) for half-step tension; octave spans widened for range both ways.
-const _MOOD_SPEC = [
-  { r: [1, 1.125, 1.25, 1.5, 1.6667, 1.875],            o: [2, 3, 4] }, // sweep: wide major-6/maj7, very broad
-  { r: [1, 1.125, 1.2, 1.3333, 1.5, 1.8],               o: [3, 4]    }, // graze: jazzy minor (add9, m7), tight steps
-  { r: [1, 1.125, 1.25, 1.3333, 1.5, 1.6667, 1.875],    o: [2, 3, 4]    }, // flow: full just MAJOR scale, smooth half-steps
-  { r: [1, 1.125, 1.5],                                 o: [2, 3, 4] }, // drift: open (root, 9th, 5th), sparse, wide
-  { r: [1, 1.25, 1.375, 1.5, 1.875],                    o: [3, 4]    }, // dart: bright altered (#11, maj7), high
-  { r: [1, 1.25, 1.5],                                  o: [2, 3, 4] }, // tempo: pure triad across 4 octaves
-  { r: [1, 1.125, 1.25, 1.3333, 1.5, 1.6667, 1.75, 1.875], o: [3, 4]   }, // trace: bebop 8-note, finest steps (incl 7/4)
-  { r: [1, 1.0667, 1.25, 1.375, 1.5, 1.75],             o: [3, 4]    }, // reckless: just semitone 16/15 + #11 + 7/4
+// breath phase offsets
+const _BPH = [
+  Math.random() * Math.PI * 2,
+  Math.random() * Math.PI * 2,
+  Math.random() * Math.PI * 2
 ];
-const MOOD_SCALES = _MOOD_SPEC.map(spec => {
-  const s = [];
-  for (const oct of spec.o) for (const ratio of spec.r) s.push(FUND * ratio * Math.pow(2, oct));
-  s.sort((a, b) => a - b);
-  return s;
-});
 
-// --- legacy state kept so external references never break ---
+// mood banks
+const MOOD_BANKS = [
+  {
+    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)],
+    q: 1.0, lpWarm: 1300, lpCold: 3000, hpWarm: 35, hpCold: 260, toneGain: 0.78
+  },
+  {
+    notes: [hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2), hz(1,3), hz(6/5,3), hz(4/3,3), hz(3/2,3)],
+    q: 1.3, lpWarm: 1000, lpCold: 2200, hpWarm: 30, hpCold: 220, toneGain: 0.88
+  },
+  {
+    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)],
+    q: 0.95, lpWarm: 1200, lpCold: 2600, hpWarm: 35, hpCold: 230, toneGain: 0.80
+  },
+  {
+    notes: [hz(1,2), hz(9/8,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(3/2,3)],
+    q: 0.85, lpWarm: 900, lpCold: 1800, hpWarm: 25, hpCold: 180, toneGain: 0.68
+  },
+  {
+    notes: [hz(5/4,2), hz(3/2,2), hz(15/8,2), hz(1,3), hz(5/4,3), hz(3/2,3)],
+    q: 1.45, lpWarm: 1400, lpCold: 3400, hpWarm: 45, hpCold: 320, toneGain: 0.74
+  },
+  {
+    notes: [hz(1,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(5/4,3), hz(3/2,3)],
+    q: 1.10, lpWarm: 1150, lpCold: 2200, hpWarm: 30, hpCold: 200, toneGain: 0.90
+  },
+  {
+    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3)],
+    q: 1.20, lpWarm: 1200, lpCold: 2800, hpWarm: 35, hpCold: 250, toneGain: 0.76
+  },
+  {
+    notes: [hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2), hz(9/5,2), hz(1,3), hz(6/5,3), hz(3/2,3)],
+    q: 1.55, lpWarm: 1350, lpCold: 3600, hpWarm: 55, hpCold: 380, toneGain: 0.72
+  }
+];
+
+const MOOD_SCALES = MOOD_BANKS.map(b => b.notes.slice().sort((a, b) => a - b));
+
+// keepers
 let lastBreathGains = [];
 let lastEngineDir = 0;
 let clickVolumeStack = [];
@@ -534,35 +546,209 @@ let lastMoodClickTime = 0;
 let lastMoodClicked = null;
 const DOUBLE_CLICK_THRESHOLD = 300;
 
+// engine + sparks
+let engine = null;
+const sparkOscs = new Map();
+
+// external fallbacks
+const MAX_SPEED_REF =
+  (typeof MAX_SPEED !== 'undefined') ? MAX_SPEED :
+  (typeof MAXSPEED !== 'undefined') ? MAXSPEED : 35;
+
+const AY_AMP_FALLBACK =
+  (typeof AY_AMP !== 'undefined') ? AY_AMP :
+  (typeof AYAMP !== 'undefined') ? AYAMP : 378;
+
+const EMBER_RANGE = AY_AMP_FALLBACK * 3;
+const MAX_CONCURRENT_SPARKS = 18;
+const SPARK_MIN_GAIN = 0.12;
+const ENGINE_DIR_PAN_WIDTH = 0.88;
+const SPARK_PAN_WIDTH = 0.82;
+
+// engine smoothing state
+const ENGINE_GAP_HOLD_MS = 40;
+const ENGINE_SPEED_TAU = 0.085;
+const ENGINE_DIR_TAU = 0.110;
+const ENGINE_PAN_DEADZONE = 0.06;
+
+let _noiseBuffer = null;
+let _lastEngineUpdateT = 0;
+let _engineHoldUntilMs = 0;
+let _engineTargetSpeed = 0;
+let _engineSmoothSpeed = 0;
+let _engineTargetPan = 0;
+let _engineSmoothPan = 0;
+let _engineHeldDir = 0;
+
 // ---------------------------------------------------------------------
-//  Context + master bus
+// helpers
+// ---------------------------------------------------------------------
+function _clamp(v, lo, hi) {
+  return v < lo ? lo : (v > hi ? hi : v);
+}
+
+function _lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function _hash01(v) {
+  const s = String(v);
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) / 4294967295;
+}
+
+function _canvasW() {
+  return (typeof LW !== 'undefined') ? LW : 1920;
+}
+
+function _canvasH() {
+  return (typeof LH !== 'undefined') ? LH : 1080;
+}
+
+function _angelX() {
+  return (typeof angelX !== 'undefined') ? angelX : _canvasW() * 0.5;
+}
+
+function _angelY() {
+  return (typeof angelY === 'function') ? angelY() : _canvasH() * 0.5;
+}
+
+function _nowMs(ac) {
+  return (typeof performance !== 'undefined') ? performance.now() : ac.currentTime * 1000;
+}
+
+function _currentMoodIndex() {
+  const raw = (typeof danceMode !== 'undefined') ? danceMode : 0;
+  return _clamp(raw | 0, 0, MOOD_BANKS.length - 1);
+}
+
+function _moodBank() {
+  return MOOD_BANKS[_currentMoodIndex()];
+}
+
+function _ramp(ac, param, target, atk = 0.015, rel = 0.10) {
+  const tc = target >= param.value ? atk : rel;
+  param.setTargetAtTime(target, ac.currentTime, tc);
+}
+
+function _equalPowerLR(pan) {
+  const p = _clamp(pan, -1, 1);
+  const t = (p + 1) * 0.5;
+  const ang = t * Math.PI * 0.5;
+  return { l: Math.cos(ang), r: Math.sin(ang) };
+}
+
+function _expSmooth(curr, target, dt, tau) {
+  const k = 1 - Math.exp(-dt / Math.max(0.001, tau));
+  return curr + (target - curr) * k;
+}
+
+function _ensureNoise(ac) {
+  if (_noiseBuffer && _noiseBuffer.sampleRate === ac.sampleRate) return _noiseBuffer;
+
+  const len = ac.sampleRate * 2;
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  let lp = 0;
+
+  for (let i = 0; i < len; i++) {
+    const w = Math.random() * 2 - 1;
+    lp = lp * 0.985 + w * 0.015;
+    d[i] = lp * 1.5;
+  }
+
+  _noiseBuffer = buf;
+  return buf;
+}
+
+function _sparkMetrics(x, y, w, h) {
+  const sx = x + w * 0.5;
+  const sy = y + h * 0.5;
+  const dx = sx - _angelX();
+  const dy = sy - _angelY();
+  const dist = Math.hypot(dx, dy);
+  const p = _clamp(1 - dist / EMBER_RANGE, 0, 1);
+
+  const xNorm = _clamp(sx / _canvasW(), 0, 1);
+  const warm = 1 - xNorm;
+  const cold = xNorm;
+  const relPan = _clamp(dx / EMBER_RANGE, -1, 1) * SPARK_PAN_WIDTH;
+
+  return { sx, sy, dx, dy, dist, p, warm, cold, relPan };
+}
+
+function _emberBaseVolume(y, w, h) {
+  const up = 1 - _clamp((y + h * 0.5) / _canvasH(), 0, 1);
+  const base = 0.0021 + up * 0.0023;
+  const sizeV = Math.min(0.0009, Math.log(w * h + 1) * 0.00018);
+  return base + sizeV;
+}
+
+function _nearestScaleFreq(notes, f) {
+  let best = notes[0];
+  let bestD = Math.abs(best - f);
+  for (let i = 1; i < notes.length; i++) {
+    const d = Math.abs(notes[i] - f);
+    if (d < bestD) {
+      bestD = d;
+      best = notes[i];
+    }
+  }
+  return best;
+}
+
+function _heightTunedFreq(y, h, bank) {
+  const cy = y + h * 0.5;
+  const up = 1 - _clamp(cy / _canvasH(), 0, 1);
+
+  const minFreq = bank.notes[0];
+  const maxFreq = bank.notes[bank.notes.length - 1];
+
+  const rawFreq = _lerp(minFreq, maxFreq, up);
+  const scaleFreq = _nearestScaleFreq(bank.notes, rawFreq);
+  const tunedFreq = rawFreq + (scaleFreq - rawFreq) * SCALE_PULL;
+
+  return { rawFreq, scaleFreq, tunedFreq, up };
+}
+
+// ---------------------------------------------------------------------
+// audio context + master
 // ---------------------------------------------------------------------
 function getAudio() {
   if (!audioUnlocked) return null;
+
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.9;
+    masterGain.gain.value = 0.88;
+
     masterLimiter = audioCtx.createDynamicsCompressor();
-    masterLimiter.threshold.value = -3;
-    masterLimiter.knee.value = 0;
-    masterLimiter.ratio.value = 20;
-    masterLimiter.attack.value = 0.003;
-    masterLimiter.release.value = 0.25;
+    masterLimiter.threshold.value = -5;
+    masterLimiter.knee.value = 3;
+    masterLimiter.ratio.value = 16;
+    masterLimiter.attack.value = 0.006;
+    masterLimiter.release.value = 0.20;
+
     masterGain.connect(masterLimiter);
     masterLimiter.connect(audioCtx.destination);
   }
+
   if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   return audioCtx;
 }
 
-function toMaster(node) { node.connect(masterGain); }
+function toMaster(node) {
+  if (masterGain) node.connect(masterGain);
+}
 
-// ---------------------------------------------------------------------
-//  Tab visibility — the real pause.
-// ---------------------------------------------------------------------
 document.addEventListener('visibilitychange', () => {
   if (!audioCtx) return;
+
   if (document.hidden) {
     try {
       if (engine) {
@@ -570,8 +756,11 @@ document.addEventListener('visibilitychange', () => {
         engine.octGain.gain.setValueAtTime(0, audioCtx.currentTime);
         engine.draftGain.gain.setValueAtTime(0, audioCtx.currentTime);
       }
-      sparkOscs.forEach(d => d.voiceGain.gain.setValueAtTime(0, audioCtx.currentTime));
+      sparkOscs.forEach(v => {
+        try { v.voiceGain.gain.setValueAtTime(0, audioCtx.currentTime); } catch (e) {}
+      });
     } catch (e) {}
+
     audioCtx.suspend().catch(() => {});
   } else if (audioUnlocked) {
     audioCtx.resume().catch(() => {});
@@ -579,47 +768,98 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------------------------------------------------------------------
-//  THE UNIVERSE ENGINE  (mechanical but peaceful, binaural)
+// engine
 // ---------------------------------------------------------------------
-let engine = null;
-const MAX_SPEED_REF = (typeof MAX_SPEED !== 'undefined') ? MAX_SPEED : 35;
-const ENGINE_TC = 0.15;
-
 function initEngine(ac) {
-  const root = ac.createOscillator(); root.type = 'sine'; root.frequency.value = FUND;
-  const bedFilter = ac.createBiquadFilter(); bedFilter.type = 'lowpass';
-  bedFilter.frequency.value = 200; bedFilter.Q.value = 0.6;
-  const warmLFO = ac.createOscillator(); warmLFO.type = 'sine'; warmLFO.frequency.value = 0.05;
-  const warmDepth = ac.createGain(); warmDepth.gain.value = 20;  // reduced from 45 to prevent feedback buildup
-  // Add smoothing filter to damp LFO modulation and prevent feedback spikes
-  const warmSmooth = ac.createBiquadFilter(); warmSmooth.type = 'lowpass'; warmSmooth.frequency.value = 0.5; warmSmooth.Q.value = 0.5;
-  warmLFO.connect(warmDepth); warmDepth.connect(warmSmooth); warmSmooth.connect(bedFilter.frequency);
-  const bedGain = ac.createGain(); bedGain.gain.value = 0.0;
-  root.connect(bedFilter); bedFilter.connect(bedGain); toMaster(bedGain);
+  const root = ac.createOscillator();
+  root.type = 'sine';
+  root.frequency.value = FUND;
 
-  const octL = ac.createOscillator(); octL.type = 'sine'; octL.frequency.value = FUND * 2 - 0.2;
-  const octR = ac.createOscillator(); octR.type = 'sine'; octR.frequency.value = FUND * 2 + 0.2;
-  const panL = ac.createStereoPanner(); panL.pan.value = -0.85;
-  const panR = ac.createStereoPanner(); panR.pan.value = 0.85;
-  const octGain = ac.createGain(); octGain.gain.value = 0.0;
-  octL.connect(panL); octR.connect(panR);
-  panL.connect(octGain); panR.connect(octGain); toMaster(octGain);
+  const bedFilter = ac.createBiquadFilter();
+  bedFilter.type = 'lowpass';
+  bedFilter.frequency.value = 200;
+  bedFilter.Q.value = 0.6;
 
-  const noiseLen = ac.sampleRate * 2;
-  const nb = ac.createBuffer(1, noiseLen, ac.sampleRate);
-  const ndb = nb.getChannelData(0);
-  let lp = 0;
-  for (let i = 0; i < noiseLen; i++) { const w = Math.random() * 2 - 1; lp = lp * 0.96 + w * 0.04; ndb[i] = lp * 3.0; }
-  const noise = ac.createBufferSource(); noise.buffer = nb; noise.loop = true;
-  const draftFilter = ac.createBiquadFilter(); draftFilter.type = 'bandpass';
-  draftFilter.frequency.value = 320; draftFilter.Q.value = 0.6;
-  const draftGain = ac.createGain(); draftGain.gain.value = 0.0;
-  const draftPan = ac.createStereoPanner(); draftPan.pan.value = 0;
-  noise.connect(draftFilter); draftFilter.connect(draftGain); draftGain.connect(draftPan); toMaster(draftPan);
+  const warmLFO = ac.createOscillator();
+  warmLFO.type = 'sine';
+  warmLFO.frequency.value = 0.05;
 
-  root.start(); warmLFO.start(); octL.start(); octR.start(); noise.start();
-  engine = { bedFilter, bedGain, octL, octR, octGain, draftFilter, draftGain, draftPan };
-  bedGain.gain.setValueAtTime(0, ac.currentTime);  // start silent; activity-based modulation takes over
+  const warmDepth = ac.createGain();
+  warmDepth.gain.value = 20;
+
+  const warmSmooth = ac.createBiquadFilter();
+  warmSmooth.type = 'lowpass';
+  warmSmooth.frequency.value = 0.5;
+  warmSmooth.Q.value = 0.5;
+
+  warmLFO.connect(warmDepth);
+  warmDepth.connect(warmSmooth);
+  warmSmooth.connect(bedFilter.frequency);
+
+  const bedGain = ac.createGain();
+  bedGain.gain.value = 0;
+  root.connect(bedFilter);
+  bedFilter.connect(bedGain);
+  toMaster(bedGain);
+
+  const octL = ac.createOscillator();
+  const octR = ac.createOscillator();
+  octL.type = 'sine';
+  octR.type = 'sine';
+  octL.frequency.value = FUND * 2 - 0.2;
+  octR.frequency.value = FUND * 2 + 0.2;
+
+  const panL = ac.createStereoPanner();
+  const panR = ac.createStereoPanner();
+  panL.pan.value = -0.85;
+  panR.pan.value = 0.85;
+
+  const octGain = ac.createGain();
+  octGain.gain.value = 0;
+
+  octL.connect(panL);
+  octR.connect(panR);
+  panL.connect(octGain);
+  panR.connect(octGain);
+  toMaster(octGain);
+
+  const noise = ac.createBufferSource();
+  noise.buffer = _ensureNoise(ac);
+  noise.loop = true;
+
+  const draftFilter = ac.createBiquadFilter();
+  draftFilter.type = 'bandpass';
+  draftFilter.frequency.value = 320;
+  draftFilter.Q.value = 0.6;
+
+  const draftGain = ac.createGain();
+  draftGain.gain.value = 0;
+
+  const draftPan = ac.createStereoPanner();
+  draftPan.pan.value = 0;
+
+  noise.connect(draftFilter);
+  draftFilter.connect(draftGain);
+  draftGain.connect(draftPan);
+  toMaster(draftPan);
+
+  root.start();
+  warmLFO.start();
+  octL.start();
+  octR.start();
+  noise.start();
+
+  engine = {
+    root,
+    bedFilter,
+    bedGain,
+    octL,
+    octR,
+    octGain,
+    draftFilter,
+    draftGain,
+    draftPan
+  };
 }
 
 function updateEngineHum(dir = 0, velocity = 0) {
@@ -627,86 +867,87 @@ function updateEngineHum(dir = 0, velocity = 0) {
     const ac = getAudio();
     if (!ac || document.hidden) return;
     if (!engine) initEngine(ac);
+
     const t = ac.currentTime;
+    const nowMs = _nowMs(ac);
+    const dt = _lastEngineUpdateT > 0 ? Math.max(1 / 240, t - _lastEngineUpdateT) : 1 / 60;
+    _lastEngineUpdateT = t;
 
     if (!sfxEngineOn) {
-      engine.bedGain.gain.setTargetAtTime(0, t, ENGINE_TC);
-      engine.octGain.gain.setTargetAtTime(0, t, ENGINE_TC);
-      engine.draftGain.gain.setTargetAtTime(0, t, ENGINE_TC);
+      engine.bedGain.gain.setTargetAtTime(0, t, 0.18);
+      engine.octGain.gain.setTargetAtTime(0, t, 0.18);
+      engine.draftGain.gain.setTargetAtTime(0, t, 0.18);
       return;
     }
 
-    // velocity response
-    let s = Math.abs(velocity) / MAX_SPEED_REF;
-    if (s > 1) s = 1; if (s < 0) s = 0;
-    s = s * s;
+    let rawSpeed = _clamp(Math.abs(velocity) / MAX_SPEED_REF, 0, 1);
+    let rawDir = dir < 0 ? -1 : dir > 0 ? 1 : 0;
 
-    // keypress recency: decay over ~2 seconds with no input
-    const now = typeof performance !== 'undefined' ? performance.now() : ac.currentTime * 1000;
+    if (rawSpeed > 0.0001) {
+      _engineTargetSpeed = rawSpeed;
+      _engineHoldUntilMs = nowMs + ENGINE_GAP_HOLD_MS;
+    }
+
+    if (rawDir !== 0) {
+      _engineHeldDir = rawDir;
+      _engineHoldUntilMs = nowMs + ENGINE_GAP_HOLD_MS;
+    }
+
+    if (nowMs >= _engineHoldUntilMs) {
+      _engineTargetSpeed = rawSpeed;
+      if (rawDir !== 0) _engineHeldDir = rawDir;
+    }
+
+    const stableDir = rawDir !== 0 ? rawDir : _engineHeldDir;
+    _engineTargetPan = stableDir * ENGINE_DIR_PAN_WIDTH;
+
+    _engineSmoothSpeed = _expSmooth(_engineSmoothSpeed, _engineTargetSpeed, dt, ENGINE_SPEED_TAU);
+    _engineSmoothPan = _expSmooth(_engineSmoothPan, _engineTargetPan, dt, ENGINE_DIR_TAU);
+
+    if (Math.abs(_engineSmoothPan) < ENGINE_PAN_DEADZONE) _engineSmoothPan = 0;
+
+    const s = _engineSmoothSpeed * _engineSmoothSpeed;
+
     const lastInput = (typeof lastMoveInputTs !== 'undefined') ? lastMoveInputTs : 0;
-    const timeSinceInput = Math.max(0, now - lastInput);
-    const inputDecay = Math.exp(-timeSinceInput / 2000);
-    const activityLevel = Math.max(s, inputDecay);  // use whichever is higher
+    const sinceInput = Math.max(0, nowMs - lastInput);
+    const recency = sinceInput > 1200 ? 0 : Math.exp(-sinceInput / 700);
+    const activity = Math.min(1, s + recency * 0.18);
 
-    engine.bedFilter.frequency.setTargetAtTime(180 + s * 1000, t, 0.18);
-    engine.bedGain.gain.setTargetAtTime(activityLevel * 0.10, t, ENGINE_TC);
+    const bedTarget = activity < 0.003 ? 0 : 0.020 + activity * 0.060;
+    const octTarget = activity < 0.003 ? 0 : 0.004 + activity * 0.026;
+    const draftTarget = s < 0.003 ? 0 : 0.010 + s * 0.070;
 
-    const beat = 0.2 + s * 0.4;
-    engine.octL.frequency.setTargetAtTime(FUND * 2 - beat, t, 0.25);
-    engine.octR.frequency.setTargetAtTime(FUND * 2 + beat, t, 0.25);
-    engine.octGain.gain.setTargetAtTime(activityLevel * 0.040, t, ENGINE_TC);
+    engine.bedFilter.frequency.setTargetAtTime(160 + activity * 900, t, 0.10);
+    _ramp(ac, engine.bedGain.gain, bedTarget, 0.05, 0.18);
 
-    engine.draftGain.gain.setTargetAtTime(s * 0.05, t, ENGINE_TC);
-    engine.draftFilter.frequency.setTargetAtTime(300 + s * 700, t, 0.18);
-    engine.draftPan.pan.setTargetAtTime(dir < 0 ? -0.6 : dir > 0 ? 0.6 : 0, t, 0.25);
+    const beat = 0.18 + activity * 0.28;
+    engine.octL.frequency.setTargetAtTime(FUND * 2 - beat, t, 0.10);
+    engine.octR.frequency.setTargetAtTime(FUND * 2 + beat, t, 0.10);
+    _ramp(ac, engine.octGain.gain, octTarget, 0.06, 0.18);
 
-    lastEngineDir = dir;
+    engine.draftFilter.frequency.setTargetAtTime(360 + s * 900, t, 0.12);
+    _ramp(ac, engine.draftGain.gain, draftTarget, 0.06, 0.20);
+    engine.draftPan.pan.setTargetAtTime(_engineSmoothPan, t, 0.12);
+
+    lastEngineDir = stableDir || lastEngineDir;
   } catch (e) {}
 }
 
-// ---------------------------------------------------------------------
-//  INPUT CLICK  (restored, double-damped so bot spam can't machine-gun)
-//  - rate-limit: ignore anything under ~35 ms since the last click.
-//  - density: the faster clicks arrive, the quieter each one gets.
-//  Soft pentatonic tick, panned by steer direction. Gated by K (engine).
-// ---------------------------------------------------------------------
-let _lastClickT = -1;
-let _clickDensity = 0;
+// no transient engine perturbation anymore
 function playKeyClick(dir = 0, warm = 0.5, keyHoldMs = 0) {
   try {
     if (!sfxEngineOn) return;
-    const ac = getAudio();
-    if (!ac || document.hidden) return;
-    const now = ac.currentTime;
-    const dt = (_lastClickT < 0) ? 1 : now - _lastClickT;
-
-    // decay the running density, then account for this request
-    _clickDensity *= Math.exp(-dt / 0.22);
-    if (dt < 0.035) { _clickDensity += 1; return; }  // too fast: count but stay silent
-    _clickDensity += 1;
-    _lastClickT = now;
-
-    const suppression = 1 / (1 + _clickDensity * 0.6);   // dense -> quiet
-    const g0 = 0.015 * warm * suppression;
-    if (g0 < 0.0005) return;
-
-    const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = 'sine';
-    const f = 1320; // E6 tick (in-scale)
-    osc.frequency.setValueAtTime(f, now);
-    osc.frequency.exponentialRampToValueAtTime(f * 0.75, now + 0.06);
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(g0, now + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0003, now + 0.12);
-    const pan = ac.createStereoPanner();
-    pan.pan.value = dir < 0 ? -0.4 : dir > 0 ? 0.4 : 0;
-    osc.connect(g); g.connect(pan); toMaster(pan);
-    osc.start(now); osc.stop(now + 0.085);
+    const side = dir < 0 ? -1 : dir > 0 ? 1 : 0;
+    if (side !== 0) {
+      _engineHeldDir = side;
+      lastEngineDir = side;
+      if (audioCtx) _engineHoldUntilMs = _nowMs(audioCtx) + ENGINE_GAP_HOLD_MS;
+    }
   } catch (e) {}
 }
 
 // ---------------------------------------------------------------------
-//  BREATH  (ethereal, prime polymeter, now randomly phased at load)
+// breath
 // ---------------------------------------------------------------------
 function getBreathSineModulations(elapsed) {
   const mod1 = Math.sin(elapsed / 3907 + _BPH[0]) * 0.5 + 0.5;
@@ -718,141 +959,164 @@ function getBreathSineModulations(elapsed) {
 function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#ffffff') {
   try {
     if (!sfxBreathOn) return;
+
     const ac = getAudio();
     if (!ac || document.hidden) return;
+
     const t0 = ac.currentTime;
     const dur = isInhale ? 1.8 : 2.2;
-    const sr = ac.sampleRate;
+    const len = Math.ceil(ac.sampleRate * (dur + 0.05));
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0;
+    for (let i = 0; i < d.length; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.997 * b0 + w * 0.05;
+      b1 = 0.985 * b1 + w * 0.09;
+      b2 = 0.950 * b2 + w * 0.18;
+      b3 = 0.820 * b3 + w * 0.30;
+      d[i] = (b0 + b1 + b2 + b3) * 0.07;
+    }
+
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+
+    const bp = ac.createBiquadFilter();
+    bp.type = 'bandpass';
 
     let cr = 1, cb = 1;
     if (moodColor && moodColor.length === 7) {
-      try { cr = parseInt(moodColor.slice(1, 3), 16) / 255; cb = parseInt(moodColor.slice(5, 7), 16) / 255; } catch (e) {}
+      try {
+        cr = parseInt(moodColor.slice(1, 3), 16) / 255;
+        cb = parseInt(moodColor.slice(5, 7), 16) / 255;
+      } catch (e) {}
     }
-    const colorShift = (cr - cb) * 160;
 
-    const buf = ac.createBuffer(1, sr * dur, sr);
-    const d = buf.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0;
-    for (let i = 0; i < d.length; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
-      b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
-      b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 + w * 0.0168981;
-      d[i] = (b0 + b1 + b2 + b3 + b4 + b5) * 0.11;
-    }
-    const src = ac.createBufferSource(); src.buffer = buf;
-
-    const filt = ac.createBiquadFilter();
-    filt.type = 'bandpass';
-    filt.Q.value = 3.5 * (0.95 + mod2 * 0.1);
+    const colorShift = (cr - cb) * 140;
     const fMod = (mod1 - 0.5) * 40;
+
     if (isInhale) {
-      filt.frequency.setValueAtTime(520 + colorShift + fMod, t0);
-      filt.frequency.linearRampToValueAtTime(820 + colorShift + fMod, t0 + dur * 0.8);
+      bp.frequency.setValueAtTime(500 + colorShift + fMod, t0);
+      bp.frequency.linearRampToValueAtTime(820 + colorShift + fMod, t0 + dur * 0.8);
     } else {
-      filt.frequency.setValueAtTime(640 + colorShift + fMod, t0);
-      filt.frequency.exponentialRampToValueAtTime(300 + colorShift * 0.4 + fMod * 0.4, t0 + dur);
+      bp.frequency.setValueAtTime(640 + colorShift + fMod, t0);
+      bp.frequency.exponentialRampToValueAtTime(280 + colorShift * 0.35 + fMod * 0.35, t0 + dur);
     }
 
-    const air = ac.createBiquadFilter();
-    air.type = 'bandpass'; air.Q.value = 0.8; air.frequency.value = 2400;
-    const airGain = ac.createGain(); airGain.gain.value = 0.015;
+    bp.Q.value = 2.6 + mod2 * 0.7;
 
-    const gain = ac.createGain();
-    const gMod = 1.0 + (mod3 - 0.5) * 0.1;
-    gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.exponentialRampToValueAtTime(0.13 * gMod, t0 + 0.35);
-    gain.gain.linearRampToValueAtTime((isInhale ? 0.13 : 0.10) * gMod, t0 + dur * 0.6);
-    gain.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    const airHP = ac.createBiquadFilter();
+    airHP.type = 'highpass';
+    airHP.frequency.value = 1800 + mod2 * 500;
+
+    const g = ac.createGain();
+    const gMod = 1 + (mod3 - 0.5) * 0.1;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.09 * gMod, t0 + 0.35);
+    g.gain.linearRampToValueAtTime((isInhale ? 0.09 : 0.072) * gMod, t0 + dur * 0.6);
+    g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
 
     const tap = ac.createDelay(0.2);
     tap.delayTime.value = 0.05 + Math.random() * 0.05;
-    const tapGain = ac.createGain(); tapGain.gain.value = 0.04;
 
-    src.connect(filt); src.connect(air);
-    filt.connect(gain); air.connect(airGain); airGain.connect(gain);
-    toMaster(gain);
-    gain.connect(tap); tap.connect(tapGain); toMaster(tapGain);
+    const tapGain = ac.createGain();
+    tapGain.gain.value = 0.03;
+
+    src.connect(bp);
+    bp.connect(airHP);
+    airHP.connect(g);
+    g.connect(tap);
+    tap.connect(tapGain);
+
+    toMaster(g);
+    toMaster(tapGain);
 
     src.start(t0);
-    src.stop(t0 + dur + 0.25);
+    src.stop(t0 + dur + 0.2);
+
+    lastBreathGains = [g.gain];
   } catch (e) {}
 }
 
 // ---------------------------------------------------------------------
-//  EMBERS  (per-mood scale, steady pitch, proximity glow, stereo place)
+// sparks
 // ---------------------------------------------------------------------
-const sparkOscs = new Map();
-const MAX_CONCURRENT_SPARKS = 7;
-// proximity reach = the angel's full vertical sine swing (peak-to-peak)
-const EMBER_RANGE = (typeof AY_AMP !== 'undefined') ? AY_AMP * 2 : 756;
-const EMBER_PAN_WIDTH = 0.7;     // cap pan so edge embers stay in both ears
-
-function _moodScale() {
-  let i = (typeof danceMode !== 'undefined') ? danceMode : 0;
-  if (i < 0 || i >= MOOD_SCALES.length) i = 0;
-  return MOOD_SCALES[i];
-}
-
-// pick a pitch by spawn height, but avoid a degree another ember already sounds
-function pickEmberFreq(y, w, h) {
-  const scale = _moodScale();
-  const up = 1 - Math.max(0, Math.min(1, y / LH));
-  const sizeBias = Math.min(0.15, Math.log(w * h + 1) * 0.01);
-  let pos = up - sizeBias; if (pos < 0) pos = 0; if (pos > 1) pos = 1;
-  const idx = Math.round(pos * (scale.length - 1));
-
-  const used = new Set();
-  sparkOscs.forEach(dd => used.add(Math.round(dd.freq)));
-
-  for (const off of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
-    const j = idx + off;
-    if (j < 0 || j >= scale.length) continue;
-    if (!used.has(Math.round(scale[j]))) return scale[j];
-  }
-  return scale[idx]; // all taken (tiny scale) -> reuse
-}
-
-function emberVolume(y, w, h) {
-  const up = 1 - Math.max(0, Math.min(1, y / LH));
-  const base = 0.004 + up * 0.004;
-  const sizeV = Math.min(0.0025, Math.log(w * h + 1) * 0.0005);
-  return base + sizeV;
-}
-
-function _proximity(x, y, w, h) {
-  const ax = (typeof angelX !== 'undefined') ? angelX : LW / 2;
-  const ay = (typeof angelY === 'function') ? angelY() : LH / 2;
-  const sx = x + w / 2, sy = y + h / 2;
-  const dist = Math.hypot(ax - sx, ay - sy);
-  let p = 1 - dist / EMBER_RANGE;
-  if (p < 0) p = 0; if (p > 1) p = 1;
-  return p * p;
-}
-
 function createSparkHum(sparkId, x, y, w, h) {
   try {
     const ac = getAudio();
     if (!ac || sparkOscs.has(sparkId)) return;
+
     if (sparkOscs.size >= MAX_CONCURRENT_SPARKS) {
-      const oldest = sparkOscs.keys().next().value;
-      if (oldest !== undefined) removeSparkHum(oldest);
+      let worstId;
+      let worstP = Infinity;
+
+      sparkOscs.forEach((v, id) => {
+        const pr = _sparkMetrics(v.lastX, v.lastY, v.lastW, v.lastH).p;
+        if (pr < worstP) {
+          worstP = pr;
+          worstId = id;
+        }
+      });
+
+      const newP = _sparkMetrics(x, y, w, h).p;
+      if (worstId !== undefined && newP >= worstP) removeSparkHum(worstId);
+      else return;
     }
-    const base = pickEmberFreq(y, w, h);
-    const f = base + (Math.random() - 0.5) * 1.0;     // tiny detune; pitch FIXED for life
 
-    const oscA = ac.createOscillator(); oscA.type = 'sine'; oscA.frequency.value = f;
-    const oscH = ac.createOscillator(); oscH.type = 'sine'; oscH.frequency.value = Math.min(f * 2, 3000); // octave glow, capped
-    const harmGain = ac.createGain(); harmGain.gain.value = 0;
-    const voiceGain = ac.createGain(); voiceGain.gain.setValueAtTime(0, ac.currentTime);
-    const pan = ac.createStereoPanner(); pan.pan.value = 0;
+    const bank = _moodBank();
+    const tone = _heightTunedFreq(y, h, bank);
+    const seed = _hash01(sparkId);
 
-    oscA.connect(voiceGain);
-    oscH.connect(harmGain); harmGain.connect(voiceGain);
-    voiceGain.connect(pan); toMaster(pan);
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = tone.tunedFreq;
 
-    oscA.start(); oscH.start();
-    sparkOscs.set(sparkId, { oscA, oscH, harmGain, voiceGain, pan, createdAt: ac.currentTime, freq: base });
+    const toneBP = ac.createBiquadFilter();
+    toneBP.type = 'bandpass';
+    toneBP.frequency.value = tone.tunedFreq;
+    toneBP.Q.value = bank.q;
+
+    const warmthLP = ac.createBiquadFilter();
+    warmthLP.type = 'lowpass';
+    warmthLP.frequency.value = bank.lpWarm;
+    warmthLP.Q.value = 0.4;
+
+    const coldHP = ac.createBiquadFilter();
+    coldHP.type = 'highpass';
+    coldHP.frequency.value = bank.hpWarm;
+    coldHP.Q.value = 0.35;
+
+    const voiceGain = ac.createGain();
+    voiceGain.gain.value = 0;
+
+    const pan = ac.createStereoPanner();
+    pan.pan.value = 0;
+
+    osc.connect(toneBP);
+    toneBP.connect(warmthLP);
+    warmthLP.connect(coldHP);
+    coldHP.connect(voiceGain);
+    voiceGain.connect(pan);
+    toMaster(pan);
+
+    osc.start();
+
+    sparkOscs.set(sparkId, {
+      osc,
+      toneBP,
+      warmthLP,
+      coldHP,
+      voiceGain,
+      pan,
+      seed,
+      baseFreq: tone.tunedFreq,
+      lastX: x,
+      lastY: y,
+      lastW: w,
+      lastH: h
+    });
+
     updateSparkHum(sparkId, x, y, w, h);
   } catch (e) {}
 }
@@ -861,60 +1125,93 @@ function updateSparkHum(sparkId, x, y, w, h) {
   try {
     const ac = getAudio();
     if (!ac || document.hidden || !sparkOscs.has(sparkId)) return;
+
     const data = sparkOscs.get(sparkId);
-    const { harmGain, voiceGain, pan, createdAt } = data;
     const t0 = ac.currentTime;
 
-    if (!sfxSparkOn) { voiceGain.gain.setTargetAtTime(0, t0, 0.05); return; }
+    if (!sfxSparkOn) {
+      data.voiceGain.gain.setTargetAtTime(0, t0, 0.08);
+      return;
+    }
 
-    const age = (t0 - createdAt) * 1000;
-    let vol = emberVolume(y, w, h);
-    const life = 2600, inEnd = life * 0.18, outStart = life * 0.80;
-    if (age < inEnd) vol *= age / inEnd;
-    else if (age > outStart) vol *= Math.max(0, 1 - (age - outStart) / (life - outStart));
+    data.lastX = x;
+    data.lastY = y;
+    data.lastW = w;
+    data.lastH = h;
 
-    const p = _proximity(x, y, w, h);
-    voiceGain.gain.setTargetAtTime(vol * (0.6 + p * 1.0), t0, 0.10);   // swell when near
-    harmGain.gain.setTargetAtTime(p * 0.40, t0, 0.12);                 // octave glow blooms near
+    const bank = _moodBank();
+    const tone = _heightTunedFreq(y, h, bank);
+    const { p, cold, relPan } = _sparkMetrics(x, y, w, h);
+    const baseVol = _emberBaseVolume(y, w, h);
+    const distGain = SPARK_MIN_GAIN + p * (1 - SPARK_MIN_GAIN);
 
-    const xNorm = Math.max(0, Math.min(1, x / LW));
-    pan.pan.setTargetAtTime((xNorm * 2 - 1) * EMBER_PAN_WIDTH, t0, 0.10);
-    // pitch intentionally NOT updated — steady, no wobble.
+    const flick1 = 0.5 + 0.5 * Math.sin(t0 * (1.1 + data.seed * 0.8) + data.seed * 6.28318);
+    const flick2 = 0.5 + 0.5 * Math.sin(t0 * (2.0 + data.seed * 1.1) + data.seed * 9.42477);
+    const shimmer = 0.95 + p * 0.08 * (0.7 * flick1 + 0.3 * flick2);
+
+    const targetGain = baseVol * distGain * bank.toneGain * shimmer;
+    const toneCenter = tone.tunedFreq * (0.99 + 0.02 * flick2 + p * 0.02);
+
+    data.baseFreq = tone.tunedFreq;
+    data.osc.frequency.setTargetAtTime(data.baseFreq, t0, 0.20);
+    data.toneBP.frequency.setTargetAtTime(toneCenter, t0, 0.16);
+    data.toneBP.Q.setTargetAtTime(bank.q * (0.96 + flick1 * 0.08), t0, 0.16);
+    data.warmthLP.frequency.setTargetAtTime(_lerp(bank.lpWarm, bank.lpCold, cold), t0, 0.16);
+    data.coldHP.frequency.setTargetAtTime(_lerp(bank.hpWarm, bank.hpCold, cold), t0, 0.16);
+
+    _ramp(ac, data.voiceGain.gain, targetGain, 0.04, 0.16);
+    data.pan.pan.setTargetAtTime(relPan, t0, 0.08);
   } catch (e) {}
 }
 
 function removeSparkHum(sparkId) {
   try {
     if (!sparkOscs.has(sparkId)) return;
-    const { oscA, oscH, voiceGain } = sparkOscs.get(sparkId);
+
+    const data = sparkOscs.get(sparkId);
     const ac = getAudio();
+
     if (ac) {
       const t0 = ac.currentTime;
-      voiceGain.gain.cancelScheduledValues(t0);
-      voiceGain.gain.setTargetAtTime(0, t0, 0.04);
-      oscA.stop(t0 + 0.18); oscH.stop(t0 + 0.18);
+      data.voiceGain.gain.cancelScheduledValues(t0);
+      data.voiceGain.gain.setTargetAtTime(0, t0, 0.08);
+      try { data.osc.stop(t0 + 0.22); } catch (e) {}
     }
+
     sparkOscs.delete(sparkId);
   } catch (e) {}
 }
 
 // ---------------------------------------------------------------------
-//  ONE-SHOTS — all just-tuned to the A pentatonic.
+// one-shots
 // ---------------------------------------------------------------------
+function _simpleTone(freq, t0, attack, release, peak, type = 'sine') {
+  const ac = getAudio();
+  if (!ac || document.hidden) return;
+
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+  g.gain.exponentialRampToValueAtTime(0.0006, t0 + release);
+
+  osc.connect(g);
+  toMaster(g);
+
+  osc.start(t0);
+  osc.stop(t0 + release + 0.05);
+}
+
 function playStart() {
   try {
     const ac = getAudio();
     if (!ac || document.hidden) return;
     const t0 = ac.currentTime;
-    [220, 275, 330].forEach((freq, i) => {
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'sine'; osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, t0 + i * 0.08);
-      g.gain.exponentialRampToValueAtTime(0.05, t0 + i * 0.08 + 0.04);
-      g.gain.exponentialRampToValueAtTime(0.0008, t0 + i * 0.08 + 0.6);
-      osc.connect(g); toMaster(g);
-      osc.start(t0 + i * 0.08); osc.stop(t0 + i * 0.08 + 0.65);
-    });
+    [220, 275, 330].forEach((f, i) => _simpleTone(f, t0 + i * 0.08, 0.04, 0.60, 0.05));
   } catch (e) {}
 }
 
@@ -923,15 +1220,7 @@ function playEnergize() {
     const ac = getAudio();
     if (!ac || document.hidden) return;
     const t0 = ac.currentTime;
-    [1320, 1760].forEach((freq, i) => {
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'sine'; osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, t0 + i * 0.02);
-      g.gain.exponentialRampToValueAtTime(0.013, t0 + i * 0.02 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0005, t0 + i * 0.02 + 0.5);
-      osc.connect(g); toMaster(g);
-      osc.start(t0 + i * 0.02); osc.stop(t0 + i * 0.02 + 0.55);
-    });
+    [1320, 1760].forEach((f, i) => _simpleTone(f, t0 + i * 0.02, 0.02, 0.50, 0.013));
   } catch (e) {}
 }
 
@@ -940,15 +1229,7 @@ function playDing() {
     const ac = getAudio();
     if (!ac || document.hidden) return;
     const t0 = ac.currentTime;
-    [660, 990].forEach((freq, i) => {
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'sine'; osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, t0 + i * 0.05);
-      g.gain.exponentialRampToValueAtTime(0.05, t0 + i * 0.05 + 0.006);
-      g.gain.exponentialRampToValueAtTime(0.0006, t0 + i * 0.05 + 0.6);
-      osc.connect(g); toMaster(g);
-      osc.start(t0 + i * 0.05); osc.stop(t0 + i * 0.05 + 0.65);
-    });
+    [660, 990].forEach((f, i) => _simpleTone(f, t0 + i * 0.05, 0.006, 0.60, 0.05));
   } catch (e) {}
 }
 
@@ -957,46 +1238,31 @@ function playDeath() {
     const ac = getAudio();
     if (!ac || document.hidden) return;
     const t0 = ac.currentTime;
-    const osc = ac.createOscillator(), g = ac.createGain();
+
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(165, t0);
     osc.frequency.exponentialRampToValueAtTime(FUND, t0 + 0.7);
+
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(0.20, t0 + 0.03);
     g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.8);
-    osc.connect(g); toMaster(g);
-    osc.start(t0); osc.stop(t0 + 0.85);
-    const buf = ac.createBuffer(1, ac.sampleRate * 0.4, ac.sampleRate);
-    const dd = buf.getChannelData(0);
-    for (let i = 0; i < dd.length; i++) dd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / dd.length, 0.6) * 0.3;
-    const ns = ac.createBufferSource(); ns.buffer = buf;
-    const ng = ac.createGain(); ng.gain.value = 0.09;
-    const nf = ac.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 1200;
-    ns.connect(nf); nf.connect(ng); toMaster(ng); ns.start(t0);
+
+    osc.connect(g);
+    toMaster(g);
+
+    osc.start(t0);
+    osc.stop(t0 + 0.85);
   } catch (e) {}
 }
 
-function playSteer(intensity = 0.5) {
-  try {
-    const ac = getAudio();
-    if (!ac || document.hidden) return;
-    const t0 = ac.currentTime;
-    const freq = 660 + intensity * 73;
-    const dur = 0.08 + intensity * 0.04;
-    const osc = ac.createOscillator(), g = ac.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, t0);
-    osc.frequency.exponentialRampToValueAtTime(freq * 0.94, t0 + dur);
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.06 * intensity + 0.0002, t0 + 0.006);
-    g.gain.exponentialRampToValueAtTime(0.0006, t0 + dur);
-    osc.connect(g); toMaster(g);
-    osc.start(t0); osc.stop(t0 + dur + 0.02);
-  } catch (e) {}
-}
+// intentionally no transient wobble
+function playSteer(intensity = 0.5) {}
 
 // ---------------------------------------------------------------------
-//  Keepers (external code still references these names)
+// keepers
 // ---------------------------------------------------------------------
 function updateClickVolume() {
   const now = performance.now();
@@ -1008,12 +1274,17 @@ function updateClickVolume() {
 function toggleMoodLock(moodName) {
   const now = performance.now();
   if (lastMoodClicked === moodName && (now - lastMoodClickTime) < DOUBLE_CLICK_THRESHOLD) {
-    moodLocked = !moodLocked; lastMoodClickTime = 0;
-  } else { lastMoodClicked = moodName; lastMoodClickTime = now; }
+    moodLocked = !moodLocked;
+    lastMoodClickTime = 0;
+  } else {
+    lastMoodClicked = moodName;
+    lastMoodClickTime = now;
+  }
 }
 
-function getMoodDisplayAlpha() { return 1.0 - (nonchalance * 0.5); }
-
+function getMoodDisplayAlpha() {
+  return 1.0 - ((typeof nonchalance !== 'undefined' ? nonchalance : 0) * 0.5);
+}
 
 // ===== input.js =====
 // Input handling
@@ -2027,6 +2298,17 @@ function stepAngelMovement(dir, prevDir, heldFrames, cooldown, vel) {
 
 // Declare game loop state variables before functions that use them
 let accumulator = 0, lastDrawTs = null;
+let pausedDuration = 0, _hiddenAt = null;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    _hiddenAt = performance.now();
+  } else if (_hiddenAt !== null) {
+    pausedDuration += performance.now() - _hiddenAt;
+    _hiddenAt = null;
+    lastDrawTs = null;  // prevent delta spike on resume
+  }
+});
 
 function onHit() {
   if (!screensaver && elapsed > bestTime) bestTime = elapsed;
@@ -2049,6 +2331,7 @@ function onHit() {
   
   elapsed = 0;
   startTime = performance.now();
+  pausedDuration = 0; _hiddenAt = null;
   spawnAccum = 0;
   energizeScore = 0;
   
@@ -2089,6 +2372,7 @@ function start(isAI) {
   deathTrailBorn = 0;
   t = 0; spawnAccum = 0; spawnPause = 0;
   elapsed = 0; startTime = performance.now();
+  pausedDuration = 0; _hiddenAt = null;
   // Preserve angel position and velocity across mode switches/resets (don't reset to center)
   // angelX and angelSpeed already initialized in game-state.js, keep them
   breathScale = 1; lastAy = AY_MID; lastDy = 0; breathCooldown = 0;
@@ -2131,8 +2415,7 @@ function draw(ts) {
   applyLogical();
 
   if (state==='playing') {
-    if (t === 0 || t % 60 === 0) console.log(`[DRAW] frame t=${t}, doTick=${doTick}, accumulator=${accumulator.toFixed(1)}, lastDir=${lastDir}`);
-    elapsed = ts - startTime;
+    elapsed = ts - startTime - pausedDuration;
     
     // Update key hold times (every frame)
     const now = performance.now();
@@ -2148,7 +2431,6 @@ function draw(ts) {
     
     if (doTick) {
       t++;
-      if (t % 60 === 0) console.log(`[TICK] t=${t}, lastDir=${lastDir}, screensaver=${screensaver}, angelX=${angelX.toFixed(1)}`);
       trailT++;
 
       // Spawn and advance sparks
