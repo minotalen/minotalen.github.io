@@ -176,7 +176,6 @@ const TMR  = {α:20000,β:60000,γ:120000,δ:360000};
 const TLBL = {α:'20s', β:'60s', γ:'2m', δ:'6m'};
 const RES  = ['α','β','γ','δ'];
 const RES_UNLOCK = {β:1, γ:2, δ:3};
-const PERM_RES_UNLOCK = {"α": 6, "β": 6, "γ": 7, "δ": 7};
 
 const SLOT_COSTS     = [25, 100, 300, 1000, 10000];
 const BAG_BASE_COST  = 10;
@@ -201,8 +200,8 @@ const PLVL_BY_Q        = [0, 0, 0.5, 0.75, 1.0, 1.25];
 const FORGE_MULTI_CHANCES = [[100, 0, 0, 0, 0], [90, 10, 0, 0, 0], [70, 20, 10, 0, 0], [60, 23, 12, 5, 0], [50, 26, 14, 7, 3], [35, 30, 18, 10, 5, 0, 2]];
 const ARMOR_SHRED_RANGE = [[0.15,0.30],[0.20,0.40],[0.25,0.50],[0.35,0.65],[0.50,0.85],[0.65,0.95]];
 
-const UPG = {"dm": {"label": "dmg.min +1", "st": "dMin", "res": "α", "base": 6.0}, "dx": {"label": "dmg.max +1", "st": "dMax", "res": "α", "base": 3.5, "scale": 1.25}, "acd": {"label": "atk.cd  /1.05", "st": "atkCd", "res": "α", "base": 13.5, "scale": 1.35, "permScale": 1.7}, "mm": {"label": "mult.min +.05", "st": "mMin", "res": "β", "base": 5.5, "scale": 1.33, "presBase": 7.0}, "mx": {"label": "mult.max +.05", "st": "mMax", "res": "β", "base": 4.0, "scale": 1.3, "presBase": 5.0}, "pen": {"label": "⛨ pierce +1", "st": "armorPierce", "res": "β", "base": 11.1, "scale": 1.1, "presBase": 10.0, "presScale": 1.25}, "βpenx": {"label": "⛨ pierce ×.1", "st": "armorPierceMulti", "res": "β", "base": 22.0, "scale": 1.35, "unlock": 5.0, "noPerm": true}, "αm": {"label": "α.min +1", "st": "rMin", "r": "α", "res": "α", "base": 6.0, "scale": 1.25, "presBase": 10.0, "permBase": 30.0}, "αx": {"label": "α.max +1", "st": "rMax", "r": "α", "res": "α", "base": 4.5, "scale": 1.21}, "αcd": {"label": "α.cd  -5%", "st": "resCd", "r": "α", "res": "α", "base": 10.0, "scale": 1.32, "presScale": 1.4, "permBase": 50.0, "permScale": 1.6, "presBase": 20.0}, "βm": {"label": "β.min +1", "st": "rMin", "r": "β", "res": "β", "base": 7.0, "scale": 1.25, "presBase": 13.0, "permBase": 40.0}, "βx": {"label": "β.max +1", "st": "rMax", "r": "β", "res": "β", "base": 6.0, "scale": 1.21}, "βcd": {"label": "β.cd  -5%", "st": "resCd", "r": "β", "res": "β", "base": 13.0, "scale": 1.31, "presScale": 1.4, "permBase": 60.0, "permScale": 1.6, "presBase": 23.0}, "γm": {"label": "γ.min +1", "st": "rMin", "r": "γ", "res": "γ", "base": 8.0, "scale": 1.24, "presBase": 16.0, "permBase": 55.0}, "γx": {"label": "γ.max +1", "st": "rMax", "r": "γ", "res": "γ", "base": 7.0, "scale": 1.2}, "γcd": {"label": "γ.cd  -5%", "st": "resCd", "r": "γ", "res": "γ", "base": 16.0, "scale": 1.3, "presScale": 1.4, "permBase": 70.0, "permScale": 1.6, "presBase": 26.0}, "γcrit": {"label": "crit chance +2%", "st": "critChance", "res": "γ", "base": 6.6, "scale": 1.3}, "γcritdmg": {"label": "crit dmg +.2x", "st": "critDmg", "res": "γ", "base": 12.5, "scale": 1.27}, "γsupercrit": {"label": "super crit +1%", "st": "superCritChance", "res": "γ", "base": 15.0, "scale": 1.4, "unlock": 4.0}, "γsupercritdmg": {"label": "super crit dmg +.1x", "st": "superCritDmg", "res": "γ", "base": 28.0, "scale": 1.35, "unlock": 4.0}, "δm": {"label": "δ.min +1", "st": "rMin", "r": "δ", "res": "δ", "base": 9.0, "scale": 1.24, "presBase": 20.0, "permBase": 70.0}, "δx": {"label": "δ.max +1", "st": "rMax", "r": "δ", "res": "δ", "base": 10.0, "scale": 1.2}, "δcd": {"label": "δ.cd  -5%", "st": "resCd", "r": "δ", "res": "δ", "base": 20.0, "scale": 1.29, "presScale": 1.4, "permBase": 80.0, "permScale": 1.6, "presBase": 30.0}, "δdmgexpMin": {"label": "dmg exp min +.01", "st": "dmgExpMin", "res": "δ", "base": 8.0, "scale": 1.55, "permBase": 80.0, "presBase": 25.0, "presScale": 1.55}, "δdmgexpMax": {"label": "dmg exp max +.01", "st": "dmgExpMax", "res": "δ", "base": 6.0, "scale": 1.4, "permBase": 50.0, "presBase": 15.0, "presScale": 1.5}, "δppx": {"label": "prestige +.1", "st": "ppMulti", "res": "δ", "base": 15.0, "scale": 1.4, "unlock": 3.0, "presScale": 1.5, "permScale": 1.6, "presBase": 30.0, "permBase": 100.0}, "αatk": {"label": "α atk trig +1%", "st": "atkTrig", "r": "α", "res": "α", "base": 8.0, "scale": 1.41, "unlock": 0.0, "noPerm": true, "presOnly": true}, "βatk": {"label": "β atk trig +1%", "st": "atkTrig", "r": "β", "res": "β", "base": 10.0, "scale": 1.41, "unlock": 1.0, "noPerm": true, "presOnly": true}, "γatk": {"label": "γ atk trig +1%", "st": "atkTrig", "r": "γ", "res": "γ", "base": 12.0, "scale": 1.41, "unlock": 2.0, "noPerm": true, "presOnly": true}, "δatk": {"label": "δ atk trig +1%", "st": "atkTrig", "r": "δ", "res": "δ", "base": 15.0, "scale": 1.41, "unlock": 3.0, "noPerm": true, "presOnly": true}, "αcr": {"label": "α cost -1", "st": "costReduce", "r": "α", "res": "α", "base": 4.5, "scale": 1.35, "unlock": 0.0, "presOnly": true, "noPerm": true}, "βcr": {"label": "β cost -1", "st": "costReduce", "r": "β", "res": "β", "base": 5.5, "scale": 1.35, "unlock": 1.0, "presOnly": true, "noPerm": true}, "γcr": {"label": "γ cost -1", "st": "costReduce", "r": "γ", "res": "γ", "base": 6.5, "scale": 1.35, "unlock": 3.0, "presOnly": true, "noPerm": true}, "δcr": {"label": "δ cost -1", "st": "costReduce", "r": "δ", "res": "δ", "base": 7.5, "scale": 1.35, "unlock": 4.0, "presOnly": true, "noPerm": true}, "αfc": {"label": "α free +1%", "st": "freeChance", "r": "α", "res": "α", "base": 6.2, "scale": 1.35, "unlock": 1.0, "presOnly": true, "noPerm": true}, "βfc": {"label": "β free +1%", "st": "freeChance", "r": "β", "res": "β", "base": 8.5, "scale": 1.35, "unlock": 2.0, "presOnly": true, "noPerm": true}, "γfc": {"label": "γ free +1%", "st": "freeChance", "r": "γ", "res": "γ", "base": 11.0, "scale": 1.4, "unlock": 4.0, "presOnly": true, "noPerm": true}, "δfc": {"label": "δ free +1%", "st": "freeChance", "r": "δ", "res": "δ", "base": 14.0, "scale": 1.4, "unlock": 5.0, "presOnly": true, "noPerm": true}, "αst": {"label": "α stack +.2", "st": "stackMax", "r": "α", "res": "α", "base": 20.0, "scale": 1.55, "unlock": 3.0, "presBase": 20.0, "presScale": 1.42, "presOnly": true, "noPerm": true}, "βst": {"label": "β stack +.2", "st": "stackMax", "r": "β", "res": "β", "base": 25.0, "scale": 1.6, "unlock": 4.0, "presBase": 23.0, "presScale": 1.42, "presOnly": true, "noPerm": true}, "γst": {"label": "γ stack +.2", "st": "stackMax", "r": "γ", "res": "γ", "base": 30.0, "scale": 1.65, "unlock": 5.0, "presBase": 26.0, "presScale": 1.42, "presOnly": true, "noPerm": true}, "δst": {"label": "δ stack +.2", "st": "stackMax", "r": "δ", "res": "δ", "base": 38.0, "scale": 1.7, "unlock": 6.0, "presBase": 30.0, "presScale": 1.42, "presOnly": true, "noPerm": true}};
-const ENEMIES = [{"qW": [40.0, 40.0, 20.0, 0.0, 0.0, 0.0], "id": 0.0, "maxHp": 500.0, "defMin": 0.0, "defMax": 0.0, "lMin": 1.0, "lMax": 3.0, "pp": 10.0, "maxResIdx": 0.0, "once": true}, {"qW": [55.0, 40.0, 5.0, 0.0, 0.0, 0.0], "unlock": "forge", "id": 1.0, "maxHp": 1500.0, "defMin": 2.0, "defMax": 10.0, "lMin": 1.0, "lMax": 2.0, "pp": 5.0, "maxResIdx": 1.0}, {"qW": [50.0, 39.0, 10.0, 1.0, 0.0, 0.0], "unlock": "buffs", "id": 2.0, "maxHp": 5000.0, "defMin": 5.0, "defMax": 15.0, "lMin": 1.0, "lMax": 2.0, "pp": 15.0, "maxResIdx": 1.0}, {"qW": [46.0, 37.0, 15.0, 2.0, 0.0, 0.0], "unlock": "meld", "id": 3.0, "maxHp": 15000.0, "defMin": 10.0, "defMax": 30.0, "lMin": 1.0, "lMax": 3.0, "pp": 40.0, "maxResIdx": 2.0}, {"qW": [42.0, 33.0, 20.0, 4.9, 0.1, 0.0], "id": 4.0, "maxHp": 45000.0, "defMin": 30.0, "defMax": 60.0, "lMin": 1.0, "lMax": 3.0, "pp": 120.0, "maxResIdx": 3.0}, {"qW": [40.0, 32.5, 20.0, 7.0, 0.5, 0.0], "id": 5.0, "maxHp": 150000.0, "defMin": 70.0, "defMax": 200.0, "lMin": 1.0, "lMax": 3.0, "pp": 450.0, "maxResIdx": 3.0}, {"qW": [40.0, 30.0, 20.0, 9.0, 1.0, 0.0], "unlock": "α/β perma", "id": 6.0, "maxHp": 500000.0, "defMin": 100.0, "defMax": 500.0, "lMin": 1.0, "lMax": 3.0, "pp": 1600.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [9.9, 47.0, 30.0, 11.0, 2.0, 0.1], "unlock": "γ/δ perma", "id": 7.0, "maxHp": 2500000.0, "defMin": 250.0, "defMax": 1200.0, "lMin": 2.0, "lMax": 3.0, "pp": 5000.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [0.0, 15.0, 36.0, 44.5, 4.0, 0.5], "id": 8.0, "maxHp": 10000000.0, "defMin": 500.0, "defMax": 2500.0, "lMin": 2.0, "lMax": 3.0, "pp": 12000.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [0.0, 5.0, 30.0, 58.0, 6.0, 1.0], "id": 9.0, "maxHp": 50000000.0, "defMin": 1000.0, "defMax": 5000.0, "lMin": 2.0, "lMax": 3.0, "pp": 30000.0, "maxResIdx": 3.0, "dcMax": 5.0}, {"qW": [100.0, 0.0, 0.0, 0.0, 0.0, 0.0], "id": 10.0, "maxHp": 1.0, "defMin": 500.0, "defMax": 2500.0, "lMin": 1.0, "lMax": 1.0, "pp": 0.0, "maxResIdx": 3.0, "omega": true}];
+const UPG = {"dm": {"label": "dmg.min +1", "st": "dMin", "res": "α", "base": 6.0}, "dx": {"label": "dmg.max +1", "st": "dMax", "res": "α", "base": 3.5, "scale": 1.25}, "acd": {"label": "atk.cd  /1.05", "st": "atkCd", "res": "α", "base": 13.5, "scale": 1.35, "permScale": 1.7}, "mm": {"label": "mult.min +.05", "st": "mMin", "res": "β", "base": 5.5, "scale": 1.33, "presBase": 7.0}, "mx": {"label": "mult.max +.05", "st": "mMax", "res": "β", "base": 4.0, "scale": 1.3, "presBase": 5.0}, "pen": {"label": "⛨ pierce +1", "st": "armorPierce", "res": "β", "base": 11.1, "scale": 1.1, "presBase": 10.0, "presScale": 1.25}, "βpenx": {"label": "⛨ pierce ×.1", "st": "armorPierceMulti", "res": "β", "base": 22.0, "scale": 1.35, "unlock": 5.0, "noPerm": true}, "αm": {"label": "α.min +1", "st": "rMin", "r": "α", "res": "α", "base": 6.0, "scale": 1.25, "presBase": 10.0, "permBase": 30.0}, "αx": {"label": "α.max +1", "st": "rMax", "r": "α", "res": "α", "base": 4.5, "scale": 1.21}, "αcd": {"label": "α.cd  -5%", "st": "resCd", "r": "α", "res": "α", "base": 10.0, "scale": 1.32, "presScale": 1.4, "permBase": 50.0, "permScale": 1.6, "presBase": 20.0}, "βm": {"label": "β.min +1", "st": "rMin", "r": "β", "res": "β", "base": 7.0, "scale": 1.25, "presBase": 13.0, "permBase": 40.0}, "βx": {"label": "β.max +1", "st": "rMax", "r": "β", "res": "β", "base": 6.0, "scale": 1.21}, "βcd": {"label": "β.cd  -5%", "st": "resCd", "r": "β", "res": "β", "base": 13.0, "scale": 1.31, "presScale": 1.4, "permBase": 60.0, "permScale": 1.6, "presBase": 23.0}, "γm": {"label": "γ.min +1", "st": "rMin", "r": "γ", "res": "γ", "base": 8.0, "scale": 1.24, "presBase": 16.0, "permBase": 55.0}, "γx": {"label": "γ.max +1", "st": "rMax", "r": "γ", "res": "γ", "base": 7.0, "scale": 1.2}, "γcd": {"label": "γ.cd  -5%", "st": "resCd", "r": "γ", "res": "γ", "base": 16.0, "scale": 1.3, "presScale": 1.4, "permBase": 70.0, "permScale": 1.6, "presBase": 26.0}, "γcrit": {"label": "crit chance +2%", "st": "critChance", "res": "γ", "base": 6.6, "scale": 1.3}, "γcritdmg": {"label": "crit dmg +.2x", "st": "critDmg", "res": "γ", "base": 12.5, "scale": 1.27}, "γsupercrit": {"label": "super crit +1%", "st": "superCritChance", "res": "γ", "base": 15.0, "scale": 1.4, "unlock": 4.0}, "γsupercritdmg": {"label": "super crit dmg +.1x", "st": "superCritDmg", "res": "γ", "base": 28.0, "scale": 1.35, "unlock": 4.0}, "δm": {"label": "δ.min +1", "st": "rMin", "r": "δ", "res": "δ", "base": 9.0, "scale": 1.24, "presBase": 20.0, "permBase": 70.0}, "δx": {"label": "δ.max +1", "st": "rMax", "r": "δ", "res": "δ", "base": 10.0, "scale": 1.2}, "δcd": {"label": "δ.cd  -5%", "st": "resCd", "r": "δ", "res": "δ", "base": 20.0, "scale": 1.29, "presScale": 1.4, "permBase": 80.0, "permScale": 1.6, "presBase": 30.0}, "δdmgexpMin": {"label": "dmg exp min +.01", "st": "dmgExpMin", "res": "δ", "base": 8.0, "scale": 1.55, "permBase": 80.0, "presBase": 25.0, "presScale": 1.55}, "δdmgexpMax": {"label": "dmg exp max +.01", "st": "dmgExpMax", "res": "δ", "base": 6.0, "scale": 1.4, "permBase": 50.0, "presBase": 15.0, "presScale": 1.5}, "δppx": {"label": "prestige +.1", "st": "ppMulti", "res": "δ", "base": 15.0, "scale": 1.4, "unlock": 3.0, "presScale": 1.5, "permScale": 1.6, "presBase": 30.0, "permBase": 100.0}, "αatk": {"label": "α atk trig +1%", "st": "atkTrig", "r": "α", "res": "α", "base": 8.0, "scale": 1.41, "unlock": 0.0, "noPerm": true, "presOnly": true}, "βatk": {"label": "β atk trig +1%", "st": "atkTrig", "r": "β", "res": "β", "base": 10.0, "scale": 1.41, "unlock": 1.0, "noPerm": true, "presOnly": true}, "γatk": {"label": "γ atk trig +1%", "st": "atkTrig", "r": "γ", "res": "γ", "base": 12.0, "scale": 1.41, "unlock": 2.0, "noPerm": true, "presOnly": true}, "δatk": {"label": "δ atk trig +1%", "st": "atkTrig", "r": "δ", "res": "δ", "base": 15.0, "scale": 1.41, "unlock": 3.0, "noPerm": true, "presOnly": true}, "αcr": {"label": "α cost -1", "st": "costReduce", "r": "α", "res": "α", "base": 4.5, "scale": 1.35, "unlock": 0.0, "presOnly": true}, "βcr": {"label": "β cost -1", "st": "costReduce", "r": "β", "res": "β", "base": 5.5, "scale": 1.35, "unlock": 1.0, "presOnly": true}, "γcr": {"label": "γ cost -1", "st": "costReduce", "r": "γ", "res": "γ", "base": 6.5, "scale": 1.35, "unlock": 3.0, "presOnly": true}, "δcr": {"label": "δ cost -1", "st": "costReduce", "r": "δ", "res": "δ", "base": 7.5, "scale": 1.35, "unlock": 4.0, "presOnly": true}, "αfc": {"label": "α free +1%", "st": "freeChance", "r": "α", "res": "α", "base": 6.2, "scale": 1.35, "unlock": 1.0, "presOnly": true}, "βfc": {"label": "β free +1%", "st": "freeChance", "r": "β", "res": "β", "base": 8.5, "scale": 1.35, "unlock": 2.0, "presOnly": true}, "γfc": {"label": "γ free +1%", "st": "freeChance", "r": "γ", "res": "γ", "base": 11.0, "scale": 1.4, "unlock": 4.0, "presOnly": true}, "δfc": {"label": "δ free +1%", "st": "freeChance", "r": "δ", "res": "δ", "base": 14.0, "scale": 1.4, "unlock": 5.0, "presOnly": true}, "αst": {"label": "α stack +.2", "st": "stackMax", "r": "α", "res": "α", "base": 20.0, "scale": 1.55, "unlock": 3.0, "presBase": 20.0, "presScale": 1.42, "presOnly": true}, "βst": {"label": "β stack +.2", "st": "stackMax", "r": "β", "res": "β", "base": 25.0, "scale": 1.6, "unlock": 4.0, "presBase": 23.0, "presScale": 1.42, "presOnly": true}, "γst": {"label": "γ stack +.2", "st": "stackMax", "r": "γ", "res": "γ", "base": 30.0, "scale": 1.65, "unlock": 5.0, "presBase": 26.0, "presScale": 1.42, "presOnly": true}, "δst": {"label": "δ stack +.2", "st": "stackMax", "r": "δ", "res": "δ", "base": 38.0, "scale": 1.7, "unlock": 6.0, "presBase": 30.0, "presScale": 1.42, "presOnly": true}};
+const ENEMIES = [{"qW": [40.0, 40.0, 20.0, 0.0, 0.0, 0.0], "id": 0.0, "maxHp": 500.0, "defMin": 0.0, "defMax": 0.0, "lMin": 1.0, "lMax": 3.0, "pp": 10.0, "maxResIdx": 0.0, "once": true}, {"qW": [55.0, 40.0, 5.0, 0.0, 0.0, 0.0], "unlock": "forge", "id": 1.0, "maxHp": 1500.0, "defMin": 2.0, "defMax": 10.0, "lMin": 1.0, "lMax": 2.0, "pp": 5.0, "maxResIdx": 1.0}, {"qW": [50.0, 39.0, 10.0, 1.0, 0.0, 0.0], "unlock": "buffs", "id": 2.0, "maxHp": 5000.0, "defMin": 5.0, "defMax": 15.0, "lMin": 1.0, "lMax": 2.0, "pp": 15.0, "maxResIdx": 1.0}, {"qW": [46.0, 37.0, 15.0, 2.0, 0.0, 0.0], "unlock": "meld", "id": 3.0, "maxHp": 15000.0, "defMin": 10.0, "defMax": 30.0, "lMin": 1.0, "lMax": 3.0, "pp": 40.0, "maxResIdx": 2.0}, {"qW": [42.0, 33.0, 20.0, 4.9, 0.1, 0.0], "id": 4.0, "maxHp": 45000.0, "defMin": 30.0, "defMax": 60.0, "lMin": 1.0, "lMax": 3.0, "pp": 120.0, "maxResIdx": 3.0}, {"qW": [40.0, 32.5, 20.0, 7.0, 0.5, 0.0], "id": 5.0, "maxHp": 150000.0, "defMin": 70.0, "defMax": 200.0, "lMin": 1.0, "lMax": 3.0, "pp": 450.0, "maxResIdx": 3.0}, {"qW": [40.0, 30.0, 20.0, 9.0, 1.0, 0.0], "id": 6.0, "maxHp": 500000.0, "defMin": 100.0, "defMax": 500.0, "lMin": 1.0, "lMax": 3.0, "pp": 1600.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [9.9, 47.0, 30.0, 11.0, 2.0, 0.1], "id": 7.0, "maxHp": 2500000.0, "defMin": 250.0, "defMax": 1200.0, "lMin": 2.0, "lMax": 3.0, "pp": 5000.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [0.0, 15.0, 36.0, 44.5, 4.0, 0.5], "id": 8.0, "maxHp": 10000000.0, "defMin": 500.0, "defMax": 2500.0, "lMin": 2.0, "lMax": 3.0, "pp": 12000.0, "maxResIdx": 3.0, "dcMax": 4.0}, {"qW": [0.0, 5.0, 30.0, 58.0, 6.0, 1.0], "id": 9.0, "maxHp": 50000000.0, "defMin": 1000.0, "defMax": 5000.0, "lMin": 2.0, "lMax": 3.0, "pp": 30000.0, "maxResIdx": 3.0, "dcMax": 5.0}, {"qW": [100.0, 0.0, 0.0, 0.0, 0.0, 0.0], "id": 10.0, "maxHp": 1.0, "defMin": 500.0, "defMax": 2500.0, "lMin": 1.0, "lMax": 1.0, "pp": 0.0, "maxResIdx": 3.0, "omega": true}];
 const MODS = {"dMin": {"label": "dmg.min", "type": "stat", "stat": "dMin", "base": 2.0, "perLvl": 1.0}, "dMax": {"label": "dmg.max", "type": "stat", "stat": "dMax", "base": 3.0, "perLvl": 2.0}, "mMin": {"label": "mlt.min", "type": "stat", "stat": "mMin", "base": 0.1, "perLvl": 0.05}, "mMax": {"label": "mlt.max", "type": "stat", "stat": "mMax", "base": 0.15, "perLvl": 0.1}, "dmgMulti": {"label": "dmg.mult", "type": "proc", "effect": "dmgMulti", "minQ": 3.0, "base": 7.0, "perLvl": 0.5}, "armorShrink": {"label": "⛨.ease", "type": "proc", "effect": "armShrink", "minQ": 2.0, "base": 15.0, "perLvl": 1.5, "multPerLvl": 0.02, "minEnemy": 1.0}, "armorMulti": {"label": "⛨.mult", "type": "proc", "effect": "armMulti", "minQ": 2.0, "base": 15.0, "perLvl": 1.5, "minEnemy": 1.0, "disabled": true}, "αMin": {"label": "α.min", "type": "stat", "stat": "αMin", "base": 3.0, "perLvl": 1.0}, "αMax": {"label": "α.max", "type": "stat", "stat": "αMax", "base": 4.0, "perLvl": 2.0}, "βMin": {"label": "β.min", "type": "stat", "stat": "βMin", "base": 5.0, "perLvl": 1.3, "minEnemy": 1.0}, "βMax": {"label": "β.max", "type": "stat", "stat": "βMax", "base": 7.0, "perLvl": 2.8, "minEnemy": 1.0}, "γMin": {"label": "γ.min", "type": "stat", "stat": "γMin", "base": 7.0, "perLvl": 1.8, "minEnemy": 3.0}, "γMax": {"label": "γ.max", "type": "stat", "stat": "γMax", "base": 10.0, "perLvl": 3.3, "minEnemy": 3.0}, "δMin": {"label": "δ.min", "type": "stat", "stat": "δMin", "base": 10.0, "perLvl": 2.3, "minEnemy": 4.0}, "δMax": {"label": "δ.max", "type": "stat", "stat": "δMax", "base": 13.0, "perLvl": 4.1, "minEnemy": 4.0}, "αx": {"label": "α.mult", "type": "proc", "res": "α", "minQ": 3.0, "base": 4.5, "perLvl": 0.5}, "βx": {"label": "β.mult", "type": "proc", "res": "β", "minQ": 3.0, "base": 6.0, "perLvl": 0.5, "minEnemy": 1.0, "scale": 1.21}, "γx": {"label": "γ.mult", "type": "proc", "res": "γ", "minQ": 3.0, "base": 7.0, "perLvl": 0.5, "minEnemy": 3.0}, "δx": {"label": "δ.mult", "type": "proc", "res": "δ", "minQ": 3.0, "base": 10.0, "perLvl": 0.5, "minEnemy": 4.0}, "γcrt": {"label": "crit%", "type": "stat", "stat": "critChance", "base": 2.0, "perLvl": 1.0, "minEnemy": 3.0}, "γcrd": {"label": "crit.mult", "type": "stat", "stat": "critDmg", "base": 0.15, "perLvl": 0.05, "minEnemy": 3.0}, "γscc": {"label": "scrit%", "type": "stat", "stat": "superCritChance", "base": 1.0, "perLvl": 0.5, "minEnemy": 3.0}, "γscd": {"label": "scrit.mult", "type": "stat", "stat": "superCritDmg", "base": 0.075, "perLvl": 0.025, "minEnemy": 3.0}, "δexm": {"label": "exp.min", "type": "stat", "stat": "dmgExpMin", "base": 0.012, "perLvl": 0.006, "minEnemy": 4.0}, "δexx": {"label": "exp.max", "type": "stat", "stat": "dmgExpMax", "base": 0.01, "perLvl": 0.005, "minEnemy": 4.0}, "δppx": {"label": "ꖜ.mult", "type": "stat", "stat": "ppMulti", "base": 0.2, "perLvl": 0.05, "minEnemy": 4.0, "presScale": 1.5, "permScale": 1.6, "scale": 1.4, "presBase": 30.0, "permBase": 100.0}, "αchain": {"label": "α.chain", "type": "proc", "effect": "chain", "res": "α", "minQ": 2.0, "base": 7.0, "perLvl": 1.0}, "βchain": {"label": "β.chain", "type": "proc", "effect": "chain", "res": "β", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 1.0}, "γchain": {"label": "γ.chain", "type": "proc", "effect": "chain", "res": "γ", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 3.0}, "δchain": {"label": "δ.chain", "type": "proc", "effect": "chain", "res": "δ", "minQ": 2.0, "base": 7.0, "perLvl": 1.0, "minEnemy": 4.0}, "αecho": {"label": "α.echo", "type": "proc", "effect": "echo", "res": "α", "minQ": 3.0, "base": 12.0, "perLvl": 0.7}, "βecho": {"label": "β.echo", "type": "proc", "effect": "echo", "res": "β", "minQ": 3.0, "base": 12.0, "perLvl": 0.7, "minEnemy": 1.0}, "γecho": {"label": "γ.echo", "type": "proc", "effect": "echo", "res": "γ", "minQ": 3.0, "base": 12.0, "perLvl": 0.75, "minEnemy": 3.0}, "δecho": {"label": "δ.echo", "type": "proc", "effect": "echo", "res": "δ", "minQ": 3.0, "base": 12.0, "perLvl": 0.75, "minEnemy": 4.0}, "αbonk": {"label": "α.bonk", "type": "proc", "effect": "bonk", "res": "α", "minQ": 2.0, "base": 10.0, "perLvl": 1.0}, "βbonk": {"label": "β.bonk", "type": "proc", "effect": "bonk", "res": "β", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 1.0}, "γbonk": {"label": "γ.bonk", "type": "proc", "effect": "bonk", "res": "γ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 3.0}, "δbonk": {"label": "δ.bonk", "type": "proc", "effect": "bonk", "res": "δ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "minEnemy": 4.0}, "αharvest": {"label": "α.harvest", "type": "proc", "effect": "harvest", "res": "α", "minQ": 4.0, "base": 4.0, "perLvl": 0.5}, "βharvest": {"label": "β.harvest", "type": "proc", "effect": "harvest", "res": "β", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 1.0}, "γharvest": {"label": "γ.harvest", "type": "proc", "effect": "harvest", "res": "γ", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 3.0}, "δharvest": {"label": "δ.harvest", "type": "proc", "effect": "harvest", "res": "δ", "minQ": 4.0, "base": 4.0, "perLvl": 0.5, "minEnemy": 4.0}, "αlayers": {"label": "α.layers", "type": "stat", "stat": "αLayersPct", "res": "α", "base": 8.0, "perLvl": 2.0, "showPct": true, "minEnemy": 7.0}, "βlayers": {"label": "β.layers", "type": "stat", "stat": "βLayersPct", "res": "β", "base": 9.0, "perLvl": 2.1, "showPct": true, "minEnemy": 7.0}, "γlayers": {"label": "γ.layers", "type": "stat", "stat": "γLayersPct", "res": "γ", "base": 10.0, "perLvl": 2.2, "showPct": true, "minEnemy": 7.0}, "δlayers": {"label": "δ.layers", "type": "stat", "stat": "δLayersPct", "res": "δ", "base": 12.0, "perLvl": 2.4, "showPct": true, "minEnemy": 7.0}, "αtempo": {"label": "α.tempo", "type": "proc", "effect": "tempo", "res": "α", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "secsBase": 2.0, "secsPerLvl": 0.3, "minEnemy": 5.0}, "βtempo": {"label": "β.tempo", "type": "proc", "effect": "tempo", "res": "β", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "secsBase": 3.0, "secsPerLvl": 0.4, "minEnemy": 5.0}, "γtempo": {"label": "γ.tempo", "type": "proc", "effect": "tempo", "res": "γ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "secsBase": 5.0, "secsPerLvl": 0.6, "minEnemy": 5.0}, "δtempo": {"label": "δ.tempo", "type": "proc", "effect": "tempo", "res": "δ", "minQ": 2.0, "base": 10.0, "perLvl": 1.0, "secsBase": 8.0, "secsPerLvl": 1.0, "minEnemy": 5.0}, "dmgCd": {"label": "dmg.cd", "type": "stat", "stat": "atkCdBonus", "base": 7.0, "perLvl": 1.2, "pct": true, "additive": true}, "αCd": {"label": "α.cd", "type": "stat", "stat": "αCdBonus", "base": 8.0, "perLvl": 1.3, "pct": true, "additive": true}, "βCd": {"label": "β.cd", "type": "stat", "stat": "βCdBonus", "base": 10.0, "perLvl": 1.3, "pct": true, "additive": true, "minEnemy": 1.0}, "γCd": {"label": "γ.cd", "type": "stat", "stat": "γCdBonus", "base": 12.0, "perLvl": 1.3, "pct": true, "additive": true, "minEnemy": 3.0}, "δCd": {"label": "δ.cd", "type": "stat", "stat": "δCdBonus", "base": 14.0, "perLvl": 1.3, "pct": true, "additive": true, "minEnemy": 4.0}, "armor.pierce": {"label": "⛨.pierce", "type": "stat", "stat": "armorPierce", "base": 9.0, "perLvl": 2.5, "minEnemy": 1.0}};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────────────
@@ -216,10 +215,8 @@ function fmtN(n) {
 }
 function upgCost(k, lv)   { const u=UPG[k]; return Math.max(1,Math.floor(u.base*Math.pow(u.scale||DEFAULT_SCALE,lv))); }
 function presCost(k, lv)  { const u=UPG[k]; return Math.max(1,Math.floor((u.presBase||u.base)*Math.pow(u.presScale||u.scale||DEFAULT_SCALE,lv))); }
-function permCostFn(k,lv) { const u=UPG[k]; return Math.floor((u.permBase||u.base)*4*Math.pow(u.permScale||(u.scale||DEFAULT_SCALE)+0.15,lv)); }
 function forgeCostFn(lv,q){ return Math.max(1,Math.floor(FORGE_BASE_COSTS[q-1]*Math.pow(FORGE_SCALE_BY_Q[q-1],lv))); }
 function bagCostFn(lv)    { return Math.floor(BAG_BASE_COST*Math.pow(1.5,lv)); }
-function hasPerm(k)       { return 'res' in UPG[k] && !UPG[k].noPerm && !!PERM_RES_UNLOCK[UPG[k].res]; }
 
 // ─── MYTHIC SECRET TOGGLE ────────────────────────────────────
 
@@ -380,21 +377,15 @@ function buildUpgradesHTML() {
   const sc = col => s.sc===col ? (s.sd>0?' class="sa"':' class="sd"') : '';
   let data = Object.keys(UPG).map(k => {
     const u = UPG[k];
-    const pu = hasPerm(k) ? PERM_RES_UNLOCK[u.res] : '';
     const effScale = u.scale||DEFAULT_SCALE;
     return { key:k, st:u.st||'', label:u.label||'', res:u.res||u.r||'',
-      hasReg:'res' in u && !u.presOnly, noPerm:!!u.noPerm,
+      hasReg:'res' in u && !u.presOnly,
       base:u.base||0, scale:effScale, scaleSet:u.scale!==undefined,
       presBase:u.presBase!==undefined ? u.presBase : u.base||0,
       presScale:u.presScale!==undefined ? u.presScale : effScale,
       presBaseSet:u.presBase!==undefined,
       presScaleSet:u.presScale!==undefined,
-      permBase:u.permBase!==undefined ? u.permBase : (pu!=='' ? +(u.base*4).toFixed(1) : ''),
-      permScale:u.permScale!==undefined ? u.permScale : (pu!=='' ? +((effScale)+0.15).toFixed(2) : ''),
-      permBaseSet:u.permBase!==undefined,
-      permScaleSet:u.permScale!==undefined,
-      unlock: u.unlock!==undefined ? u.unlock : '',
-      permUnlock: pu };
+      unlock: u.unlock!==undefined ? u.unlock : '' };
   });
   if (s.fr) data = data.filter(r => r.res===s.fr);
   if (s.fs==='atk') data = data.filter(r => ATK_STATS.some(x => r.st.includes(x)));
@@ -418,14 +409,6 @@ function buildUpgradesHTML() {
     const scaleCell = r.hasReg ? (r.scaleSet ? `<td style="color:#e5e5e5">${r.scale}</td>` : `<td style="color:#777">${r.scale}</td>`) : '<td style="color:#3a3a3a;text-align:center">×</td>';
     const presB = r.presBaseSet ? `<span style="color:#e5e5e5">${r.presBase}</span>` : `<span class="dim">${r.presBase}</span>`;
     const presS = r.presScaleSet ? `<span style="color:#e5e5e5">${r.presScale}</span>` : `<span class="dim">${r.presScale}</span>`;
-    const permB = r.permUnlock === '' ? '<span style="color:#3a3a3a">×</span>'
-      : (r.permBaseSet ? `<span style="color:#e5e5e5">${r.permBase}</span>`
-        : `<span class="dim">${+(r.base*4).toFixed(1)}</span>`);
-    const permS = r.permUnlock === '' ? '<span style="color:#3a3a3a">×</span>'
-      : (r.permScaleSet ? `<span style="color:#e5e5e5">${r.permScale}</span>`
-        : `<span class="dim">${+((r.scale||DEFAULT_SCALE)+0.15).toFixed(2)}</span>`);
-    const unlk = r.unlock !== '' ? `<span class="muted" style="font-size:11px">E${r.unlock}</span>` : '<span class="dim">—</span>';
-    const pumk = r.permUnlock !== '' ? `<span style="color:#a78bfa;font-size:11px">E${r.permUnlock}</span>` : '<span class="dim">—</span>';
     const sel  = (selTab==='upgrades'&&selKey===r.key)?' sel':'';
     const cmpSel = (cmpTab==='upgrades'&&cmpKey===r.key)?' cmp-sel':'';
     const dim  = gSearch && !(r.key.toLowerCase().includes(gSearch)||r.label.toLowerCase().includes(gSearch)||r.st.toLowerCase().includes(gSearch)) ? ' sdim' : '';
@@ -435,8 +418,7 @@ function buildUpgradesHTML() {
       ${baseCell}
       ${scaleCell}
       <td>${presB}</td><td>${presS}</td>
-      <td>${permB}</td><td>${permS}</td>
-      <td>${unlk}</td><td>${pumk}</td>
+      <td>${r.unlock!==''?r.unlock:'—'}</td>
     </tr>`;
   }).join('');
 
@@ -462,10 +444,8 @@ function buildUpgradesHTML() {
   <th onclick="sortU('scale')"${sc('scale')} title="exponential cost multiplier per level">SCALE</th>
   <th onclick="sortU('presBase')"${sc('presBase')} title="prestige ꖜ base cost">PRES BASE</th>
   <th onclick="sortU('presScale')"${sc('presScale')} title="prestige ꖜ scale">PRES SCALE</th>
-  <th onclick="sortU('permBase')"${sc('permBase')} title="permanent ꖜ base cost">PERM BASE</th>
-  <th onclick="sortU('permScale')"${sc('permScale')} title="permanent ꖜ scale">PERM SCALE</th>
   <th onclick="sortU('unlock')"${sc('unlock')} title="enemy id required">UNLOCK</th>
-  <th onclick="sortU('permUnlock')"${sc('permUnlock')} title="enemy id for permanent">PERM UNLK</th>
+
 </tr></thead>
 <tbody>${rows}</tbody>
 </table>
@@ -488,8 +468,6 @@ function buildEnemiesHTML() {
     if (e.unlock==='forge') flags.push(`<span style="color:#4ade80;font-size:10px">⊕ forge</span>`);
     if (e.unlock==='buffs') flags.push(`<span style="color:#fb923c;font-size:10px">⊕ buffs</span>`);
     if (e.unlock==='meld')  flags.push(`<span style="color:#c084fc;font-size:10px">⊕ meld</span>`);
-    if (e.unlock==='α/β perma') flags.push(`<span style="color:#a78bfa;font-size:10px">⊕ α/β perma</span>`);
-    if (e.unlock==='γ/δ perma') flags.push(`<span style="color:#a78bfa;font-size:10px">⊕ γ/δ perma</span>`);
     const qCells = getQNames().map((qn,i)=>{
       const w = e.qW[i];
       return w>0
@@ -929,14 +907,13 @@ function sbUpgrade(body, title) {
   const u = UPG[k];
   if (!u) return;
   title.textContent = u.label;
-  const hp = hasPerm(k);
   const hasReg = !u.presOnly;
   const hasPres = u.presBase !== undefined || !!u.presOnly;
-  const modes = [...(hasReg?['reg']:[]), ...(hasPres?['pres']:[]), ...(hp?['perm']:[])];
+  const modes = [...(hasReg?['reg']:[]), ...(hasPres?['pres']:[])];
   if (!modes.includes(sbMode)) sbMode = modes[0];
   const modeBtns = modes.map(m=>{
     const ac = sbMode===m?' active':'';
-    const labels = {reg:'REG',pres:'PRES',perm:'PERM'};
+    const labels = {reg:'REG',pres:'PRES'};
     return `<button class="lvl-btn${ac}" onclick="setSbMode('${m}')">${labels[m]}</button>`;
   }).join('');
   const N = 99;
@@ -955,18 +932,11 @@ function sbUpgrade(body, title) {
       costStr  = `<span style="color:#fcd34d">${fmtN(cost)} ꖜ</span>`;
       cumul += cost;
       cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
-    } else {
-      if (!hp) break;
-      cost = permCostFn(k, lv);
-      costStr  = `<span style="color:#a78bfa">${fmtN(cost)} ꖜ</span>`;
-      cumul += cost;
-      cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
     }
     rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
   }
 
-  const resLabel = sbMode==='reg' ? (RES_COL[u.res||u.r] ? (u.res||u.r) : '?') : (sbMode==='pres'?'ꖜ':'perm ꖜ');
-  const permStr = hp ? ` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>` : '';
+  const resLabel = sbMode==='reg' ? (RES_COL[u.res||u.r] ? (u.res||u.r) : '?') : 'ꖜ';
   const scaleVal = u.scale || DEFAULT_SCALE;
   const lvlBtns = [5,10,25,50].map(n => {
     const ac = n===wikiUpgLevels ? ' active' : '';
@@ -975,7 +945,7 @@ function sbUpgrade(body, title) {
   }).join('');
   body.innerHTML = `
     <div class="sb-modes">${modeBtns}</div>
-    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span>${permStr}</div>
+    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span></div>
     <div class="sb-scroll">
       <table class="ct">
         <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
@@ -1016,10 +986,7 @@ function drawWikiUpgChart() {
   const u = UPG[k];
   if (!u) return;
   let costFn, barColor;
-  if (sbMode === 'perm') {
-    if (!hasPerm(k)) { drawCostBars('wiki-upg-chart', null, '', fmtN, k); return; }
-    costFn = i => permCostFn(k, i); barColor = '#a78bfaaa';
-  } else if (sbMode === 'pres') {
+  if (sbMode === 'pres') {
     costFn = i => presCost(k, i); barColor = '#fbbf24aa';
   } else {
     costFn = i => upgCost(k, i); barColor = (RES_COL[u.res||u.r] || '#888') + 'aa';
@@ -1238,7 +1205,7 @@ function drawForgeCostBar(canvasId, q, lv, fmt) {
 
 // ── Generic upgrade / cost bar chart ─────────────────────────────────
 // costs: pre-computed array; barColor: rgba string; fmt: number formatter
-// title: optional string shown at top; label 'no perm' shown if costs is null
+// title: optional string shown at top
 function drawCostBars(canvasId, costs, barColor, fmt, title) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -1249,7 +1216,7 @@ function drawCostBars(canvasId, costs, barColor, fmt, title) {
   if (!costs) {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#444'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('no permanent upgrade', W/2, H/2); return;
+    ctx.fillText('n/a', W/2, H/2); return;
   }
   const n = costs.length;
   const mx = Math.max(...costs, 1);
@@ -1645,14 +1612,13 @@ function cmpRenderUpgrade(body, title, tag) {
   if (!u) return;
   title.textContent = u.label;
   tag.textContent = 'CMP';
-  const hp = hasPerm(k);
   const hasReg = !u.presOnly;
   const hasPres = u.presBase !== undefined || !!u.presOnly;
-  const modes = [...(hasReg?['reg']:[]), ...(hasPres?['pres']:[]), ...(hp?['perm']:[])];
+  const modes = [...(hasReg?['reg']:[]), ...(hasPres?['pres']:[])];
   if (!modes.includes(cmpSbMode)) cmpSbMode = modes[0];
   const modeBtns = modes.map(m=>{
     const ac = cmpSbMode===m?' active':'';
-    const labels = {reg:'REG',pres:'PRES',perm:'PERM'};
+    const labels = {reg:'REG',pres:'PRES'};
     return `<button class="lvl-btn${ac}" onclick="setCmpSbMode('${m}')">${labels[m]}</button>`;
   }).join('');
   const N = 15;
@@ -1671,17 +1637,10 @@ function cmpRenderUpgrade(body, title, tag) {
       costStr  = `<span style="color:#fcd34d">${fmtN(cost)} ꖜ</span>`;
       cumul += cost;
       cumulStr = `<span style="color:#fcd34d;opacity:.5">${fmtN(cumul)}</span>`;
-    } else {
-      if (!hp) break;
-      cost = permCostFn(k, lv);
-      costStr  = `<span style="color:#a78bfa">${fmtN(cost)} ꖜ</span>`;
-      cumul += cost;
-      cumulStr = `<span style="color:#a78bfa;opacity:.5">${fmtN(cumul)}</span>`;
     }
     rows.push(`<tr><td class="muted">${lv}</td><td>${costStr}</td><td style="color:#555">${cumulStr}</td></tr>`);
   }
-  const resLabel = cmpSbMode==='reg' ? (RES_COL[u.res||u.r] ? (u.res||u.r) : '?') : (cmpSbMode==='pres'?'ꖜ':'perm ꖜ');
-  const permStr = hp ? ` · perm at <span style="color:#a78bfa">E${PERM_RES_UNLOCK[u.res]}</span>` : '';
+  const resLabel = cmpSbMode==='reg' ? (RES_COL[u.res||u.r] ? (u.res||u.r) : '?') : 'ꖜ';
   const scaleVal = u.scale || DEFAULT_SCALE;
   const lvlBtns = [5,10,25,50].map(n => {
     const ac = n===wikiCmpUpgLevels ? ' active' : '';
@@ -1690,7 +1649,7 @@ function cmpRenderUpgrade(body, title, tag) {
   }).join('');
   body.innerHTML = `
     <div class="sb-modes">${modeBtns}</div>
-    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span>${permStr}</div>
+    <div class="sb-info">base: <span style="color:#aaa">${u.base}</span> · scale: <span style="color:#aaa">×${scaleVal}</span></div>
     <div class="sb-scroll">
       <table class="ct">
         <thead><tr><th>LVL</th><th>COST (${resLabel})</th><th>CUMUL.</th></tr></thead>
@@ -1722,10 +1681,7 @@ function drawCmpUpgChart() {
   const u = UPG[k];
   if (!u) return;
   let costFn, barColor;
-  if (cmpSbMode === 'perm') {
-    if (!hasPerm(k)) { drawCostBars('cmp-upg-chart', null, '', fmtN, k); return; }
-    costFn = i => permCostFn(k, i); barColor = '#a78bfaaa';
-  } else if (cmpSbMode === 'pres') {
+  if (cmpSbMode === 'pres') {
     costFn = i => presCost(k, i); barColor = '#fbbf24aa';
   } else {
     costFn = i => upgCost(k, i); barColor = (RES_COL[u.res||u.r] || '#888') + 'aa';
