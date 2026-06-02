@@ -50,7 +50,7 @@ const FRICTION = 0.927;
 const DRIFT_MIN = 0.05;
 const LOW_SPEED_BOOST_THRESHOLD = 3;
 const AY_W = 0.0567, AY_CW = 0.998, AY_SW = 0.056, AY_AMP = 378, AY_MID = 540;
-const HALO_DURATION = 18000;
+const HALO_DURATION = 1005;
 const TICK_MS = 20;
 const BEAM_K = 26, BEAM_SEG = 6, BEAM_ROUNDS = 7;
 const BEAM_CENTER_W = 0.7496, BEAM_WALLTIME_W = 0.3221;
@@ -1613,11 +1613,16 @@ c.addEventListener('mousemove', e => {
     nonchalance = Math.max(0, Math.min(1, (mouseLx - _nonchalanceSliderRect.x) / _nonchalanceSliderRect.w));
     try { localStorage.setItem('angel.nonchalance.v1', nonchalance.toFixed(3)); } catch {}
   }
-  let over = state === 'playing' && (
+  const overCredit = showInfo && (
+    (_creditBrlkaRect && _hit(mouseLx, mouseLy, _creditBrlkaRect.x, _creditBrlkaRect.y, _creditBrlkaRect.w, _creditBrlkaRect.h)) ||
+    (_creditKordaRect && _hit(mouseLx, mouseLy, _creditKordaRect.x, _creditKordaRect.y, _creditKordaRect.w, _creditKordaRect.h))
+  );
+  const overClear = showStats && _hit(mouseLx, mouseLy, _clearHistoryRect.x, _clearHistoryRect.y, _clearHistoryRect.w, _clearHistoryRect.h);
+  let over = overCredit || overClear || (state === 'playing' && (
     _hit(mouseLx, mouseLy, 20, 20, 200, 42) ||
     (!screensaver && bestTime > 0 && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42)) ||
     (energizeMode && _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42))
-  );
+  ));
   c.style.cursor = over ? 'pointer' : 'default';
 });
 
@@ -1643,12 +1648,44 @@ c.addEventListener('click', e => {
   const lx = (e.clientX - _appOx) / scale;
   const ly = (e.clientY - _appOy) / scale;
   if (state !== 'playing') return;
-  
+
+  // Stats overlay: handle clear-history btn, side-click to close (no info open)
+  if (showStats) {
+    const r = _clearHistoryRect;
+    if (_hit(lx, ly, r.x, r.y, r.w, r.h)) {
+      if (_clearHistoryStage === 0) { _clearHistoryStage = 1; return; }
+      if (energizeMode) { runsEnergize = []; bestEnergizeScore = 0; }
+      else              { runs = []; bestTime = 0; }
+      saveRuns();
+      _clearHistoryStage = 0;
+      return;
+    }
+    if (_clearHistoryStage === 1) { _clearHistoryStage = 0; return; }
+    showStats = false; _clearHistoryStage = 0;
+    return;
+  }
+
   // Info button top-left
   if (_hit(lx, ly, 20, 20, 200, 42)) { showInfo = true; showInfoOpenedAt = performance.now(); _btnFlash.info = performance.now(); return; }
+
+  // Best score top-right → open history
+  if (!screensaver && (bestTime > 0 || (energizeMode && bestEnergizeScore > 0)) &&
+      _hit(lx, ly, LW - 240, 20, 220, 42)) {
+    showStats = true; _clearHistoryStage = 0; return;
+  }
   
   // If info panel open: handle internal interactions
   if (showInfo) {
+    // Credit link clicks
+    if (_creditBrlkaRect && _hit(lx, ly, _creditBrlkaRect.x, _creditBrlkaRect.y, _creditBrlkaRect.w, _creditBrlkaRect.h)) {
+      window.open('https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire', '_blank', 'noopener');
+      return;
+    }
+    if (_creditKordaRect && _hit(lx, ly, _creditKordaRect.x, _creditKordaRect.y, _creditKordaRect.w, _creditKordaRect.h)) {
+      window.open('https://chriskorda.com/', '_blank', 'noopener');
+      return;
+    }
+
     // Check for toggle button clicks (X, Z)
     for (const rect of _infoToggleRects) {
       if (_hit(lx, ly, rect.x, rect.y, rect.w, rect.h)) {
@@ -1741,6 +1778,17 @@ document.addEventListener('touchstart', e => {
       continue;
     }
 
+    // Bot mode: first tap activates halo without movement
+    if (state === 'playing' && screensaver && !haloUsedThisLife && !_isScreensaverInQuietPeriod()) {
+      haloActive = true;
+      haloUsedThisLife = true;
+      haloStartTs = performance.now();
+      haloTrailHue = Math.random() * 360;
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: false });
+      shouldPrevent = true;
+      continue;
+    }
+
     // Movement: left half = left, right half = right
     if (state === 'playing') {
       const dir = lx < LW / 2 ? -1 : 1;
@@ -1806,7 +1854,12 @@ document.addEventListener('touchcancel', e => {
 // UI rendering - full implementation from working prebuild
 
 const creditLink = document.getElementById('creditLink');
+creditLink.style.display = 'none'; // rendered on canvas instead
 let _sliderDrag = false;
+let _creditBrlkaRect = null;
+let _creditKordaRect = null;
+let _clearHistoryStage = 0;  // 0 = idle, 1 = armed/confirm
+const _clearHistoryRect = { x: 0, y: 0, w: 0, h: 0 };
 const _profBuf = new Float32Array(120);
 let _profIdx = 0, _profCount = 0, _profWorst = 0;
 const _profScratch = new Float32Array(120);
@@ -2045,6 +2098,24 @@ function drawUI(ts, now2) {
       ctx.fillText(`best:  ${isEnergizeStats ? bestt.score : (bestt.ms/1000).toFixed(1)}`, statX, statLine1);
       ctx.fillText(`avg:   ${isEnergizeStats ? Math.round(avg) : (avg/1000).toFixed(1)}`, statX, statLine1 + 20);
     }
+
+    // clear-history button (bottom-right, two-stage confirm)
+    {
+      ctx.font = FONT_INFO_XS;
+      ctx.textAlign = 'right';
+      const label = _clearHistoryStage === 1 ? 'really delete?' : 'clear history';
+      const tw = ctx.measureText(label).width;
+      const bx = LW * 0.93, by = LH * 0.92;
+      const hitX = bx - tw - 8, hitY = by - 18, hitW = tw + 16, hitH = 26;
+      const hover = _hit(mouseLx, mouseLy, hitX, hitY, hitW, hitH);
+      const armed = _clearHistoryStage === 1;
+      const a = armed ? (hover ? 1 : 0.85) : (hover ? 0.7 : 0.3);
+      ctx.fillStyle = armed ? `rgba(255,140,140,${a})` : `rgba(255,255,255,${a})`;
+      ctx.fillText(label, bx, by);
+      _clearHistoryRect.x = hitX; _clearHistoryRect.y = hitY;
+      _clearHistoryRect.w = hitW; _clearHistoryRect.h = hitH;
+    }
+
     ctx.restore();
   }
 
@@ -2174,6 +2245,37 @@ function drawUI(ts, now2) {
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillText('click edges to close · center to focus', LW/2, LH*0.84);
+
+    // Credit line at bottom of info panel
+    {
+      const creditY = LH * 0.924;
+      ctx.font = FONT_INFO_XS;
+      const p1 = 'original game by ';
+      const p2 = 'brlka';
+      const p3 = '  |  sounds inspired by ';
+      const p4 = 'chris korda';
+      const fullW = ctx.measureText(p1 + p2 + p3 + p4).width;
+      const cx0 = LW / 2 - fullW / 2;
+      const w1 = ctx.measureText(p1).width;
+      const w2 = ctx.measureText(p2).width;
+      const w3 = ctx.measureText(p3).width;
+      const w4 = ctx.measureText(p4).width;
+      const lineH = 18;
+      const brlkaHover = _hit(mouseLx, mouseLy, cx0 + w1, creditY - lineH, w2, lineH);
+      const kordaHover = _hit(mouseLx, mouseLy, cx0 + w1 + w2 + w3, creditY - lineH, w4, lineH);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(255,200,100,0.38)';
+      ctx.fillText(p1, cx0, creditY);
+      ctx.fillStyle = brlkaHover ? 'rgba(255,220,140,1)' : 'rgba(255,200,100,0.65)';
+      ctx.fillText(p2, cx0 + w1, creditY);
+      ctx.fillStyle = 'rgba(255,200,100,0.38)';
+      ctx.fillText(p3, cx0 + w1 + w2, creditY);
+      ctx.fillStyle = kordaHover ? 'rgba(255,220,140,1)' : 'rgba(255,200,100,0.65)';
+      ctx.fillText(p4, cx0 + w1 + w2 + w3, creditY);
+      _creditBrlkaRect = { x: cx0 + w1, y: creditY - lineH, w: w2, h: lineH };
+      _creditKordaRect = { x: cx0 + w1 + w2 + w3, y: creditY - lineH, w: w4, h: lineH };
+    }
+
     ctx.restore();
   }
 }
@@ -3112,8 +3214,7 @@ function draw(ts) {
   }
 
   resetTransform();
-  const _wantCredit = showInfo ? 'block' : 'none';
-  if (creditLink.style.display !== _wantCredit) creditLink.style.display = _wantCredit;
+  // creditLink is rendered on canvas; DOM element kept hidden
 
   // Profile
   const _dt = performance.now() - _frameStart;
