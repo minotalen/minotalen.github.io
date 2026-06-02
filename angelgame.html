@@ -4,35 +4,100 @@
   <meta charset="UTF-8">
   <title>an angel dances in the sparks of a bonfire</title>
   <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
-    canvas { display: block; }
-    #creditLink {
-      position: fixed;
-      bottom: 7%;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,200,100,0.62);
-      text-decoration: none;
-      font-family: monospace;
-      font-size: 14px;
-      display: none;
-      z-index: 1000;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color 120ms ease;
-      padding: 8px 12px;
-      letter-spacing: 0.5px;
-      line-height: 1.4;
-    }
-    #creditLink:hover {
-      color: rgba(255,220,140,1);
-    }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
+canvas { display: block; }
+
+/* Mobile navbar */
+.mobile-navbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to bottom, rgba(7, 16, 42, 0.95), rgba(7, 16, 42, 0.85));
+  border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+  z-index: 900;
+  padding: 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-height: 900px) or (max-width: 768px) {
+  .mobile-navbar { display: flex !important; }
+}
+
+.nav-btn {
+  background: rgba(100, 150, 200, 0.15);
+  border: 1px solid rgba(100, 150, 200, 0.4);
+  color: rgba(150, 200, 255, 0.8);
+  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: 'Courier Prime', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nav-btn:active {
+  background: rgba(100, 150, 200, 0.35);
+  border-color: rgba(100, 150, 200, 0.7);
+  color: rgba(200, 230, 255, 1);
+  transform: scale(0.95);
+}
+
+.nav-btn-left {
+  order: 1;
+}
+
+.nav-btn-right {
+  order: 2;
+  margin-left: auto;
+}
+
+#creditLink {
+  position: fixed;
+  bottom: 95px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,200,100,0.62);
+  text-decoration: none;
+  font-family: 'Courier Prime', monospace;
+  font-size: 14px;
+  display: none;
+  z-index: 1000;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 120ms ease;
+  padding: 8px 12px;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+}
+#creditLink:hover {
+  color: rgba(255,220,140,1);
+  text-decoration: underline;
+}
+
   </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<nav id="mobileNavbar" class="mobile-navbar">
+  <button id="navInfoBtn" class="nav-btn nav-btn-left" aria-label="Info">ℹ</button>
+  <button id="navScoresBtn" class="nav-btn nav-btn-right" aria-label="Scores">📊</button>
+</nav>
 <a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">original game by brlka</a>
 <script>
 
@@ -51,8 +116,8 @@ const LOW_SPEED_BOOST_THRESHOLD = 3;
 const AY_W = 0.0567, AY_CW = 0.998, AY_SW = 0.056, AY_AMP = 378, AY_MID = 540;
 const HALO_DURATION = 18000;
 const TICK_MS = 20;
-const BEAM_K = 46, BEAM_SEG = 6, BEAM_ROUNDS = 22;
-const BEAM_CENTER_W = 0.8056, BEAM_WALLTIME_W = 0.8172;
+const BEAM_K = 26, BEAM_SEG = 6, BEAM_ROUNDS = 7;
+const BEAM_CENTER_W = 0.7496, BEAM_WALLTIME_W = 0.3221;
 
 // ===== constants.js =====
 // Core numeric constants are injected by build.js from constants.json
@@ -70,12 +135,12 @@ window.LEFT_KEYS = new Set(['ArrowLeft', 'a', 'A']);
 window.RIGHT_KEYS = new Set(['ArrowRight', 'd', 'D']);
 
 // Fonts (computed from LH which is injected)
-window.FONT_HIT = `${Math.round(LH*0.22)}px monospace`;
-window.FONT_BASE = `${Math.round(LH*0.022)}px monospace`;
-window.FONT_INFO_H = `${Math.round(LH*0.038)}px monospace`;
-window.FONT_INFO_S = `${Math.round(LH*0.024)}px monospace`;
-window.FONT_INFO_XS= `${Math.round(LH*0.019)}px monospace`;
-window.FONT_INFO_TN= `${Math.round(LH*0.018)}px monospace`;
+window.FONT_HIT = `${Math.round(LH*0.22)}px 'Courier Prime', monospace`;
+window.FONT_BASE = `${Math.round(LH*0.022)}px 'Courier Prime', monospace`;
+window.FONT_INFO_H = `${Math.round(LH*0.038)}px 'Courier Prime', monospace`;
+window.FONT_INFO_S = `${Math.round(LH*0.024)}px 'Courier Prime', monospace`;
+window.FONT_INFO_XS= `${Math.round(LH*0.019)}px 'Courier Prime', monospace`;
+window.FONT_INFO_TN= `${Math.round(LH*0.018)}px 'Courier Prime', monospace`;
 
 // Storage keys
 const HALO_KEY = 'angel.halo.deaths.v1';
@@ -138,7 +203,7 @@ window.aiInputHeldFor = 0;
 window.showUI = false;
 window.energizeMode = false;
 window.nonchalance = 0.0;
-window.danceMode = 0;
+window.danceMode = Math.floor(Math.random() * 8);  // Start on random mood
 window.moodLocked = false;  // click active mood to lock, prevents auto-cycle in AI mode
 window.energizeScore = 0;
 window.mouseLx = -1; window.mouseLy = -1;
@@ -169,6 +234,7 @@ window.trailHue = Math.random() * 360;
 window.trailHueSpeed = 0;
 window.trailTinted = false;
 window.wingScaleFrame = 0;
+window.screensaverStartTs = 0;  // Track when screensaver mode started
 window.lastDingMinute = 0;
 window.zoneBonuses = [0,0,0,0,0];
 window.targetZoneIdx = 2; window.zoneArrivalFrames = 0;
@@ -461,29 +527,54 @@ function drawStars() {
 'use strict';
 
 // =====================================================================
-// audio.js — stable engine version
-// - keeps the existing engine character: bed + octave + draft
-// - removes key/steer transient perturbations that caused jitter
-// - ignores brief movement gaps before fading
-// - engine pans from movement direction
-// - sparks pan from position relative to angel
+// audio.js — polymeter / rules-based engine (Korda-inspired)
+// - Treats engine + sparks as a small generative instrument
+// - Abstract pitch sets (MOOD_BANKS) instead of fixed chords
+// - Explicit polymeter pattern engine for the hum
+// - Slow harmonic orbit over mood banks
+// - Breath: noise voice with polyphasic drift tied to angel motion
+// - Public API compatible with existing angel game
 // =====================================================================
 
+// ---------------------------------------------------------------------
+// globals / master
+// ---------------------------------------------------------------------
 let audioCtx = null;
 let audioUnlocked = false;
 let masterGain = null;
 let masterLimiter = null;
 
-// runtime toggles
+// runtime toggles (bound from input.js / UI)
 let sfxSparkOn = true;
 let sfxEngineOn = true;
 let sfxBreathOn = true;
 
-// tuning
+// ---------------------------------------------------------------------
+// tuning and theory
+// ---------------------------------------------------------------------
 const FUND = 55;
 const PHI = (1 + Math.sqrt(5)) / 2;
 const SCALE_PULL = 1 / PHI;
 
+// polymetric clocks (conceptual meters in seconds)
+const POLY_METERS = [3, 5, 7, 11];
+const POLY_FREQS = POLY_METERS.map(m => 1 / m);
+
+// engine polymeter step patterns
+const ENG_RHYTHM = [0.2, 0.4, 1.0, 0.6, 0.8];                 // 5-step
+const ENG_BRIGHT = [0.0, 0.6, 0.2, 0.9, 0.3, 0.8, 0.5];       // 7-step
+const ENG_NOISE  = [0.1, 0.3, 0.0, 0.9, 0.4, 0.2, 0.7, 0.5,
+                    0.8, 0.6, 1.0];                           // 11-step
+
+let _engRhythmIdx = 0;
+let _engBrightIdx = 0;
+let _engNoiseIdx = 0;
+let _engLastStepT = 0;
+
+// base slow drift rates for other processes
+const DRIFT_BASES = [1 / 37, 1 / 61, 1 / 89];
+
+// ratio to Hz
 function hz(ratio, oct) {
   return FUND * ratio * Math.pow(2, oct);
 }
@@ -495,45 +586,73 @@ const _BPH = [
   Math.random() * Math.PI * 2
 ];
 
-// mood banks
+// ---------------------------------------------------------------------
+// abstract pitch sets (mood banks)
+// ---------------------------------------------------------------------
 const MOOD_BANKS = [
   {
-    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2),
+      hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)
+    ],
     q: 1.0, lpWarm: 1300, lpCold: 3000, hpWarm: 35, hpCold: 260, toneGain: 0.78
   },
   {
-    notes: [hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2), hz(1,3), hz(6/5,3), hz(4/3,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2),
+      hz(1,3), hz(6/5,3), hz(4/3,3), hz(3/2,3)
+    ],
     q: 1.3, lpWarm: 1000, lpCold: 2200, hpWarm: 30, hpCold: 220, toneGain: 0.88
   },
   {
-    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2),
+      hz(1,3), hz(9/8,3), hz(5/4,3), hz(3/2,3)
+    ],
     q: 0.95, lpWarm: 1200, lpCold: 2600, hpWarm: 35, hpCold: 230, toneGain: 0.80
   },
   {
-    notes: [hz(1,2), hz(9/8,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(9/8,2), hz(3/2,2),
+      hz(1,3), hz(9/8,3), hz(3/2,3)
+    ],
     q: 0.85, lpWarm: 900, lpCold: 1800, hpWarm: 25, hpCold: 180, toneGain: 0.68
   },
   {
-    notes: [hz(5/4,2), hz(3/2,2), hz(15/8,2), hz(1,3), hz(5/4,3), hz(3/2,3)],
+    notes: [
+      hz(5/4,2), hz(3/2,2), hz(15/8,2),
+      hz(1,3), hz(5/4,3), hz(3/2,3)
+    ],
     q: 1.45, lpWarm: 1400, lpCold: 3400, hpWarm: 45, hpCold: 320, toneGain: 0.74
   },
   {
-    notes: [hz(1,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(5/4,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(5/4,2), hz(3/2,2),
+      hz(1,3), hz(5/4,3), hz(3/2,3)
+    ],
     q: 1.10, lpWarm: 1150, lpCold: 2200, hpWarm: 30, hpCold: 200, toneGain: 0.90
   },
   {
-    notes: [hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2), hz(1,3), hz(9/8,3), hz(5/4,3)],
+    notes: [
+      hz(1,2), hz(9/8,2), hz(5/4,2), hz(3/2,2),
+      hz(1,3), hz(9/8,3), hz(5/4,3)
+    ],
     q: 1.20, lpWarm: 1200, lpCold: 2800, hpWarm: 35, hpCold: 250, toneGain: 0.76
   },
   {
-    notes: [hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2), hz(9/5,2), hz(1,3), hz(6/5,3), hz(3/2,3)],
+    notes: [
+      hz(1,2), hz(6/5,2), hz(4/3,2), hz(3/2,2), hz(9/5,2),
+      hz(1,3), hz(6/5,3), hz(3/2,3)
+    ],
     q: 1.55, lpWarm: 1350, lpCold: 3600, hpWarm: 55, hpCold: 380, toneGain: 0.72
   }
 ];
 
 const MOOD_SCALES = MOOD_BANKS.map(b => b.notes.slice().sort((a, b) => a - b));
 
-// keepers
+// ---------------------------------------------------------------------
+// shared state
+// ---------------------------------------------------------------------
 let lastBreathGains = [];
 let lastEngineDir = 0;
 let clickVolumeStack = [];
@@ -550,7 +669,7 @@ const DOUBLE_CLICK_THRESHOLD = 300;
 let engine = null;
 const sparkOscs = new Map();
 
-// external fallbacks
+// external fallbacks from angelgame
 const MAX_SPEED_REF =
   (typeof MAX_SPEED !== 'undefined') ? MAX_SPEED :
   (typeof MAXSPEED !== 'undefined') ? MAXSPEED : 35;
@@ -559,17 +678,17 @@ const AY_AMP_FALLBACK =
   (typeof AY_AMP !== 'undefined') ? AY_AMP :
   (typeof AYAMP !== 'undefined') ? AYAMP : 378;
 
-const EMBER_RANGE = AY_AMP_FALLBACK * 3;
-const MAX_CONCURRENT_SPARKS = 18;
-const SPARK_MIN_GAIN = 0.12;
+const EMBER_RANGE = AY_AMP_FALLBACK * 1;
+const MAX_CONCURRENT_SPARKS = 50;
+const SPARK_MIN_GAIN = 0.08;
 const ENGINE_DIR_PAN_WIDTH = 0.88;
 const SPARK_PAN_WIDTH = 0.82;
 
-// engine smoothing state
-const ENGINE_GAP_HOLD_MS = 40;
-const ENGINE_SPEED_TAU = 0.085;
-const ENGINE_DIR_TAU = 0.110;
-const ENGINE_PAN_DEADZONE = 0.06;
+// engine smoothing
+const ENGINE_GAP_HOLD_MS = 20;
+const ENGINE_SPEED_TAU = 0.11;   // was 0.185 — tighter for immediacy
+const ENGINE_DIR_TAU  = 0.16;   // was 0.210 — tighter for immediacy
+const ENGINE_PAN_DEADZONE = 0.04;
 
 let _noiseBuffer = null;
 let _lastEngineUpdateT = 0;
@@ -580,6 +699,9 @@ let _engineTargetPan = 0;
 let _engineSmoothPan = 0;
 let _engineHeldDir = 0;
 
+// slow harmonic orbit
+let _harmOrbitPhase = 0;
+
 // ---------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------
@@ -589,6 +711,15 @@ function _clamp(v, lo, hi) {
 
 function _lerp(a, b, t) {
   return a + (b - a) * t;
+}
+
+function _shouldSuppressAudio() {
+  // Suppress audio only for first ~100ms of screensaver startup (not entire screensaver duration)
+  if ((typeof screensaver !== 'undefined') && screensaver && screensaverStartTs) {
+    const elapsedMs = performance.now() - screensaverStartTs;
+    return elapsedMs < 100;  // Only mute for first 100ms of bot mode
+  }
+  return false;
 }
 
 function _hash01(v) {
@@ -626,20 +757,56 @@ function _currentMoodIndex() {
   return _clamp(raw | 0, 0, MOOD_BANKS.length - 1);
 }
 
+function _updateHarmOrbit(t) {
+  // very slow orbit; a full cycle takes many minutes
+  _harmOrbitPhase = (t * 0.003) % (Math.PI * 2);
+}
+
+function _currentOrbitMoodIndex() {
+  const base = _currentMoodIndex();
+  const offset = Math.round(Math.sin(_harmOrbitPhase) * 1.5); // -1..1
+  return _clamp(base + offset, 0, MOOD_BANKS.length - 1);
+}
+
 function _moodBank() {
-  return MOOD_BANKS[_currentMoodIndex()];
+  return MOOD_BANKS[_currentOrbitMoodIndex()];
+}
+
+// polymetric phase LFO
+function _polyPhase(t) {
+  const p0 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[0] * t + _BPH[0]);
+  const p1 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[1] * t + _BPH[1]);
+  const p2 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[2] * t + _BPH[2]);
+  return { p0, p1, p2, sum: (p0 + p1 + p2) / 3 };
+}
+
+// advance engine polymeter patterns
+function _advanceEnginePatterns(t, activity) {
+  const baseRate = 0.7 + activity * 1.3;
+  if (_engLastStepT === 0) {
+    _engLastStepT = t;
+    return;
+  }
+  const dt = t - _engLastStepT;
+  if (dt <= 0) return;
+  const steps = dt * baseRate;
+
+  if (steps >= (1 / 5)) {
+    _engRhythmIdx = (_engRhythmIdx + 1) % ENG_RHYTHM.length;
+  }
+  if (steps >= (1 / 7)) {
+    _engBrightIdx = (_engBrightIdx + 1) % ENG_BRIGHT.length;
+  }
+  if (steps >= (1 / 11)) {
+    _engNoiseIdx = (_engNoiseIdx + 1) % ENG_NOISE.length;
+  }
+
+  _engLastStepT = t;
 }
 
 function _ramp(ac, param, target, atk = 0.015, rel = 0.10) {
   const tc = target >= param.value ? atk : rel;
   param.setTargetAtTime(target, ac.currentTime, tc);
-}
-
-function _equalPowerLR(pan) {
-  const p = _clamp(pan, -1, 1);
-  const t = (p + 1) * 0.5;
-  const ang = t * Math.PI * 0.5;
-  return { l: Math.cos(ang), r: Math.sin(ang) };
 }
 
 function _expSmooth(curr, target, dt, tau) {
@@ -649,18 +816,15 @@ function _expSmooth(curr, target, dt, tau) {
 
 function _ensureNoise(ac) {
   if (_noiseBuffer && _noiseBuffer.sampleRate === ac.sampleRate) return _noiseBuffer;
-
   const len = ac.sampleRate * 2;
   const buf = ac.createBuffer(1, len, ac.sampleRate);
   const d = buf.getChannelData(0);
   let lp = 0;
-
   for (let i = 0; i < len; i++) {
     const w = Math.random() * 2 - 1;
     lp = lp * 0.985 + w * 0.015;
     d[i] = lp * 1.5;
   }
-
   _noiseBuffer = buf;
   return buf;
 }
@@ -736,36 +900,39 @@ function getAudio() {
 
     masterGain.connect(masterLimiter);
     masterLimiter.connect(audioCtx.destination);
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!audioCtx) return;
+      if (document.hidden) {
+        try {
+          if (engine) {
+            engine.bedGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            engine.octGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            engine.draftGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            sparkOscs.forEach(v => {
+              try {
+                v.voiceGain.gain.setValueAtTime(0, audioCtx.currentTime);
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
+        audioCtx.suspend().catch(() => {});
+      } else if (audioUnlocked) {
+        audioCtx.resume().catch(() => {});
+      }
+    });
   }
 
-  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   return audioCtx;
 }
 
 function toMaster(node) {
   if (masterGain) node.connect(masterGain);
 }
-
-document.addEventListener('visibilitychange', () => {
-  if (!audioCtx) return;
-
-  if (document.hidden) {
-    try {
-      if (engine) {
-        engine.bedGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        engine.octGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        engine.draftGain.gain.setValueAtTime(0, audioCtx.currentTime);
-      }
-      sparkOscs.forEach(v => {
-        try { v.voiceGain.gain.setValueAtTime(0, audioCtx.currentTime); } catch (e) {}
-      });
-    } catch (e) {}
-
-    audioCtx.suspend().catch(() => {});
-  } else if (audioUnlocked) {
-    audioCtx.resume().catch(() => {});
-  }
-});
 
 // ---------------------------------------------------------------------
 // engine
@@ -864,6 +1031,7 @@ function initEngine(ac) {
 
 function updateEngineHum(dir = 0, velocity = 0) {
   try {
+    if (_shouldSuppressAudio()) return;
     const ac = getAudio();
     if (!ac || document.hidden) return;
     if (!engine) initEngine(ac);
@@ -880,22 +1048,21 @@ function updateEngineHum(dir = 0, velocity = 0) {
       return;
     }
 
+    _updateHarmOrbit(t);
+
     let rawSpeed = _clamp(Math.abs(velocity) / MAX_SPEED_REF, 0, 1);
     let rawDir = dir < 0 ? -1 : dir > 0 ? 1 : 0;
 
     if (rawSpeed > 0.0001) {
       _engineTargetSpeed = rawSpeed;
       _engineHoldUntilMs = nowMs + ENGINE_GAP_HOLD_MS;
-    }
-
-    if (rawDir !== 0) {
-      _engineHeldDir = rawDir;
-      _engineHoldUntilMs = nowMs + ENGINE_GAP_HOLD_MS;
-    }
-
-    if (nowMs >= _engineHoldUntilMs) {
-      _engineTargetSpeed = rawSpeed;
-      if (rawDir !== 0) _engineHeldDir = rawDir;
+      if (rawDir !== 0) {
+        _engineHeldDir = rawDir;
+        _engineHoldUntilMs = nowMs + ENGINE_GAP_HOLD_MS;
+      }
+    } else if (nowMs < _engineHoldUntilMs) {
+      rawSpeed = _engineTargetSpeed;
+      rawDir = _engineHeldDir;
     }
 
     const stableDir = rawDir !== 0 ? rawDir : _engineHeldDir;
@@ -903,7 +1070,6 @@ function updateEngineHum(dir = 0, velocity = 0) {
 
     _engineSmoothSpeed = _expSmooth(_engineSmoothSpeed, _engineTargetSpeed, dt, ENGINE_SPEED_TAU);
     _engineSmoothPan = _expSmooth(_engineSmoothPan, _engineTargetPan, dt, ENGINE_DIR_TAU);
-
     if (Math.abs(_engineSmoothPan) < ENGINE_PAN_DEADZONE) _engineSmoothPan = 0;
 
     const s = _engineSmoothSpeed * _engineSmoothSpeed;
@@ -913,27 +1079,45 @@ function updateEngineHum(dir = 0, velocity = 0) {
     const recency = sinceInput > 1200 ? 0 : Math.exp(-sinceInput / 700);
     const activity = Math.min(1, s + recency * 0.18);
 
-    const bedTarget = activity < 0.003 ? 0 : 0.020 + activity * 0.060;
-    const octTarget = activity < 0.003 ? 0 : 0.004 + activity * 0.026;
-    const draftTarget = s < 0.003 ? 0 : 0.010 + s * 0.070;
+    _advanceEnginePatterns(t, activity);
+    const patRh = ENG_RHYTHM[_engRhythmIdx];
+    const patBr = ENG_BRIGHT[_engBrightIdx];
+    const patNo = ENG_NOISE[_engNoiseIdx];
 
-    engine.bedFilter.frequency.setTargetAtTime(160 + activity * 900, t, 0.10);
-    _ramp(ac, engine.bedGain.gain, bedTarget, 0.05, 0.18);
+    const poly = _polyPhase(t);
+    const polyBright = poly.sum;
 
-    const beat = 0.18 + activity * 0.28;
+    const bedTarget = activity < 0.003 ? 0
+      : (0.012 + activity * 0.05 * (0.5 + 0.5 * patRh));
+    const octTarget = activity < 0.003 ? 0
+      : (0.002 + activity * 0.03 * (0.4 + 0.6 * patRh));
+    const draftTarget = s < 0.003 ? 0
+      : (0.007 + s * 0.06 * (0.4 + 0.6 * patNo));
+
+    const brightFactor = 0.5 + 0.5 * (0.6 * patBr + 0.4 * polyBright);
+    engine.bedFilter.frequency.setTargetAtTime(
+      140 + brightFactor * (160 + activity * 900),
+      t, 0.10
+    );
+
+    _ramp(ac, engine.bedGain.gain, bedTarget, 0.018, 0.18);  // faster attack
+
+    const beat = 0.18 + activity * 0.28 * (0.6 + 0.4 * patBr);
     engine.octL.frequency.setTargetAtTime(FUND * 2 - beat, t, 0.10);
     engine.octR.frequency.setTargetAtTime(FUND * 2 + beat, t, 0.10);
-    _ramp(ac, engine.octGain.gain, octTarget, 0.06, 0.18);
+    _ramp(ac, engine.octGain.gain, octTarget, 0.020, 0.18);  // faster attack
 
-    engine.draftFilter.frequency.setTargetAtTime(360 + s * 900, t, 0.12);
-    _ramp(ac, engine.draftGain.gain, draftTarget, 0.06, 0.20);
-    engine.draftPan.pan.setTargetAtTime(_engineSmoothPan, t, 0.12);
+    engine.draftFilter.frequency.setTargetAtTime(
+      320 + s * 900 * (0.5 + 0.5 * poly.p0),
+      t, 0.12
+    );
+    _ramp(ac, engine.draftGain.gain, draftTarget, 0.022, 0.20);  // faster attack
+    engine.draftPan.pan.setTargetAtTime(_engineSmoothPan * (0.5 + 0.5 * poly.p2), t, 0.12);
 
     lastEngineDir = stableDir || lastEngineDir;
   } catch (e) {}
 }
 
-// no transient engine perturbation anymore
 function playKeyClick(dir = 0, warm = 0.5, keyHoldMs = 0) {
   try {
     if (!sfxEngineOn) return;
@@ -958,8 +1142,7 @@ function getBreathSineModulations(elapsed) {
 
 function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#ffffff') {
   try {
-    if (!sfxBreathOn) return;
-
+    if (!sfxBreathOn || _shouldSuppressAudio()) return;
     const ac = getAudio();
     if (!ac || document.hidden) return;
 
@@ -1001,7 +1184,10 @@ function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#
       bp.frequency.linearRampToValueAtTime(820 + colorShift + fMod, t0 + dur * 0.8);
     } else {
       bp.frequency.setValueAtTime(640 + colorShift + fMod, t0);
-      bp.frequency.exponentialRampToValueAtTime(280 + colorShift * 0.35 + fMod * 0.35, t0 + dur);
+      bp.frequency.exponentialRampToValueAtTime(
+        280 + colorShift * 0.35 + fMod * 0.35,
+        t0 + dur
+      );
     }
 
     bp.Q.value = 2.6 + mod2 * 0.7;
@@ -1028,7 +1214,6 @@ function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#
     airHP.connect(g);
     g.connect(tap);
     tap.connect(tapGain);
-
     toMaster(g);
     toMaster(tapGain);
 
@@ -1044,13 +1229,13 @@ function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#
 // ---------------------------------------------------------------------
 function createSparkHum(sparkId, x, y, w, h) {
   try {
+    if (_shouldSuppressAudio()) return;
     const ac = getAudio();
     if (!ac || sparkOscs.has(sparkId)) return;
 
     if (sparkOscs.size >= MAX_CONCURRENT_SPARKS) {
       let worstId;
       let worstP = Infinity;
-
       sparkOscs.forEach((v, id) => {
         const pr = _sparkMetrics(v.lastX, v.lastY, v.lastW, v.lastH).p;
         if (pr < worstP) {
@@ -1060,8 +1245,11 @@ function createSparkHum(sparkId, x, y, w, h) {
       });
 
       const newP = _sparkMetrics(x, y, w, h).p;
-      if (worstId !== undefined && newP >= worstP) removeSparkHum(worstId);
-      else return;
+      if (worstId !== undefined && newP >= worstP) {
+        removeSparkHum(worstId);
+      } else {
+        return;
+      }
     }
 
     const bank = _moodBank();
@@ -1114,7 +1302,8 @@ function createSparkHum(sparkId, x, y, w, h) {
       lastX: x,
       lastY: y,
       lastW: w,
-      lastH: h
+      lastH: h,
+      lastPercussive: 0
     });
 
     updateSparkHum(sparkId, x, y, w, h);
@@ -1134,6 +1323,8 @@ function updateSparkHum(sparkId, x, y, w, h) {
       return;
     }
 
+    _updateHarmOrbit(t0);
+
     data.lastX = x;
     data.lastY = y;
     data.lastW = w;
@@ -1145,63 +1336,118 @@ function updateSparkHum(sparkId, x, y, w, h) {
     const baseVol = _emberBaseVolume(y, w, h);
     const distGain = SPARK_MIN_GAIN + p * (1 - SPARK_MIN_GAIN);
 
-    const flick1 = 0.5 + 0.5 * Math.sin(t0 * (1.1 + data.seed * 0.8) + data.seed * 6.28318);
-    const flick2 = 0.5 + 0.5 * Math.sin(t0 * (2.0 + data.seed * 1.1) + data.seed * 9.42477);
-    const shimmer = 0.95 + p * 0.08 * (0.7 * flick1 + 0.3 * flick2);
+    // 0 = far/ambient  ->  1 = close/percussive  (squared: late onset)
+    // close-range percussive factor: 0 below ~0.55, 1 at contact
+    let percussive = _clamp((p - 0.55) / 0.45, 0, 1);
+    percussive = percussive * percussive;
 
-    const targetGain = baseVol * distGain * bank.toneGain * shimmer;
-    const toneCenter = tone.tunedFreq * (0.99 + 0.02 * flick2 + p * 0.02);
+    const poly    = _polyPhase(t0 + data.seed * 10.0);
+    const shimmer = 0.9 + 0.1 * (0.6 * poly.p1 + 0.4 * poly.p2);
+
+    let targetGain = baseVol * distGain * bank.toneGain * shimmer;
+    // duck sustain slightly when very close so click does not mask the hum
+    targetGain *= (1.0 - 0.35 * percussive);
+
+    // slight pitch snap when close
+    const snapDetune = percussive * 0.02;
+    const toneCenter = tone.tunedFreq *
+      (0.99 + 0.02 * (poly.p0 - 0.5) + p * 0.02 + snapDetune);
 
     data.baseFreq = tone.tunedFreq;
     data.osc.frequency.setTargetAtTime(data.baseFreq, t0, 0.20);
-    data.toneBP.frequency.setTargetAtTime(toneCenter, t0, 0.16);
-    data.toneBP.Q.setTargetAtTime(bank.q * (0.96 + flick1 * 0.08), t0, 0.16);
-    data.warmthLP.frequency.setTargetAtTime(_lerp(bank.lpWarm, bank.lpCold, cold), t0, 0.16);
-    data.coldHP.frequency.setTargetAtTime(_lerp(bank.hpWarm, bank.hpCold, cold), t0, 0.16);
 
-    _ramp(ac, data.voiceGain.gain, targetGain, 0.04, 0.16);
-    data.pan.pan.setTargetAtTime(relPan, t0, 0.08);
+    // tighter Q when close -> more pitched/percussive character
+    const qTarget = bank.q * (1.0 + percussive * 0.3);
+    data.toneBP.frequency.setTargetAtTime(toneCenter, t0, 0.16);
+    data.toneBP.Q.setTargetAtTime(qTarget, t0, 0.16);
+
+    data.warmthLP.frequency.setTargetAtTime(_lerp(bank.lpWarm, bank.lpCold, cold), t0, 0.16);
+
+    // raise HP cutoff when close -> removes mud, exposes transient
+    const hpTarget = _lerp(bank.hpWarm, bank.hpCold * 1.2, percussive);
+    data.coldHP.frequency.setTargetAtTime(hpTarget, t0, 0.16);
+
+    // attack 40ms (far) -> 6ms (close);  release 160ms -> 80ms
+    const atk = _lerp(0.04,  0.006, percussive);
+    const rel = _lerp(0.16,  0.08,  percussive);
+    _ramp(ac, data.voiceGain.gain, targetGain, atk, rel);
+
+    data.pan.pan.setTargetAtTime(relPan * (0.6 + 0.4 * poly.p2), t0, 0.08);
+
+    // one-shot noise click on upward crossing into very-close zone
+    if (percussive > 0.65 && data.lastPercussive <= 0.65) {
+      const clickFreq = tone.tunedFreq * 2.0;
+      const clickPeak = Math.min(targetGain * 2.5, 0.06);
+      _sparkClick(ac, clickFreq, t0, clickPeak);
+    }
+    data.lastPercussive = percussive;
   } catch (e) {}
 }
 
 function removeSparkHum(sparkId) {
   try {
     if (!sparkOscs.has(sparkId)) return;
-
     const data = sparkOscs.get(sparkId);
     const ac = getAudio();
-
     if (ac) {
       const t0 = ac.currentTime;
       data.voiceGain.gain.cancelScheduledValues(t0);
       data.voiceGain.gain.setTargetAtTime(0, t0, 0.08);
       try { data.osc.stop(t0 + 0.22); } catch (e) {}
     }
-
     sparkOscs.delete(sparkId);
   } catch (e) {}
 }
+
+
+// very short bandpassed noise transient for percussive spark clicks
+function _sparkClick(ac, centerFreq, t0, peak) {
+  try {
+    if (_shouldSuppressAudio()) return;
+    const src = ac.createBufferSource();
+    src.buffer = _ensureNoise(ac);
+    src.loop = false;
+
+    const bp = ac.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = centerFreq;
+    bp.Q.value = 4.0;
+
+    const hp = ac.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1800;
+
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+
+    src.connect(bp);
+    bp.connect(hp);
+    hp.connect(g);
+    toMaster(g);
+
+    src.start(t0);
+    src.stop(t0 + 0.06);
+  } catch (e) {}
+}
+
 
 // ---------------------------------------------------------------------
 // one-shots
 // ---------------------------------------------------------------------
 function _simpleTone(freq, t0, attack, release, peak, type = 'sine') {
   const ac = getAudio();
-  if (!ac || document.hidden) return;
-
+  if (!ac || document.hidden || _shouldSuppressAudio()) return;
   const osc = ac.createOscillator();
   const g = ac.createGain();
-
   osc.type = type;
   osc.frequency.value = freq;
-
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(peak, t0 + attack);
   g.gain.exponentialRampToValueAtTime(0.0006, t0 + release);
-
   osc.connect(g);
   toMaster(g);
-
   osc.start(t0);
   osc.stop(t0 + release + 0.05);
 }
@@ -1236,33 +1482,29 @@ function playDing() {
 function playDeath() {
   try {
     const ac = getAudio();
-    if (!ac || document.hidden) return;
+    if (!ac || document.hidden || _shouldSuppressAudio()) return;
     const t0 = ac.currentTime;
-
     const osc = ac.createOscillator();
     const g = ac.createGain();
-
     osc.type = 'sine';
     osc.frequency.setValueAtTime(165, t0);
     osc.frequency.exponentialRampToValueAtTime(FUND, t0 + 0.7);
-
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(0.20, t0 + 0.03);
     g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.8);
-
     osc.connect(g);
     toMaster(g);
-
     osc.start(t0);
     osc.stop(t0 + 0.85);
   } catch (e) {}
 }
 
-// intentionally no transient wobble
-function playSteer(intensity = 0.5) {}
+function playSteer(intensity = 0.5) {
+  // intentionally no transient wobble; engine already reflects steering
+}
 
 // ---------------------------------------------------------------------
-// keepers
+// keepers / UI hooks
 // ---------------------------------------------------------------------
 function updateClickVolume() {
   const now = performance.now();
@@ -1283,8 +1525,33 @@ function toggleMoodLock(moodName) {
 }
 
 function getMoodDisplayAlpha() {
-  return 1.0 - ((typeof nonchalance !== 'undefined' ? nonchalance : 0) * 0.5);
+  const nc = (typeof nonchalance !== 'undefined') ? nonchalance : 0;
+  return 1.0 - nc * 0.5;
 }
+
+// ---------------------------------------------------------------------
+// exports to angel game
+// ---------------------------------------------------------------------
+window.sfxSparkOn = sfxSparkOn;
+window.sfxEngineOn = sfxEngineOn;
+window.sfxBreathOn = sfxBreathOn;
+
+window.getAudio = getAudio;
+window.updateEngineHum = updateEngineHum;
+window.playKeyClick = playKeyClick;
+window.getBreathSineModulations = getBreathSineModulations;
+window.playBreath = playBreath;
+window.createSparkHum = createSparkHum;
+window.updateSparkHum = updateSparkHum;
+window.removeSparkHum = removeSparkHum;
+window.playStart = playStart;
+window.playEnergize = playEnergize;
+window.playDing = playDing;
+window.playDeath = playDeath;
+window.playSteer = playSteer;
+window.updateClickVolume = updateClickVolume;
+window.toggleMoodLock = toggleMoodLock;
+window.getMoodDisplayAlpha = getMoodDisplayAlpha;
 
 // ===== input.js =====
 // Input handling
@@ -1297,6 +1564,13 @@ function moveDirOf(key) {
 function anyKeyDown(set) {
   for (const k of set) if (keys[k]) return true;
   return false;
+}
+
+function _isScreensaverInQuietPeriod() {
+  // Ignore clicks/inputs in first 50ms of screensaver mode
+  if (!screensaver || !screensaverStartTs) return false;
+  const elapsed = performance.now() - screensaverStartTs;
+  return elapsed < 50;
 }
 
 function takeoverFromAI() {
@@ -1370,6 +1644,7 @@ document.addEventListener('keydown', e => {
   audioUnlocked = true;
   const moveDir = moveDirOf(e.key);
   if (moveDir !== 0) {
+    if (_isScreensaverInQuietPeriod()) return;  // Ignore inputs in first 50ms of screensaver
     if (screensaver && state === 'playing') {
       takeoverFromAI();
     }
@@ -1377,7 +1652,6 @@ document.addEventListener('keydown', e => {
     lastDir = moveDir;
     lastMoveInputTs = performance.now();
     hadInputSinceDeath = true;
-    console.log(`[INPUT] Key '${e.key}' → lastDir=${lastDir}, screensaver=${screensaver}`);
     // Play steering input SFX with intensity based on current speed
     const speedIntensity = Math.min(1.0, Math.abs(angelSpeed) / MAX_SPEED);
     playSteer(0.3 + speedIntensity * 0.7);  // 30-100% intensity
@@ -1429,6 +1703,7 @@ document.addEventListener('mouseup', () => { _sliderDrag = false; });
 c.addEventListener('click', e => {
   if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; return; }
   audioUnlocked = true;
+  if (_isScreensaverInQuietPeriod()) return;  // Ignore clicks in first 50ms of screensaver
   const lx = (e.clientX - _appOx) / scale;
   const ly = (e.clientY - _appOy) / scale;
   if (state !== 'playing') return;
@@ -1474,6 +1749,103 @@ c.addEventListener('click', e => {
   showInfo = true;
   showInfoOpenedAt = performance.now();
 });
+
+// =====================================================================
+// Mobile touch controls
+// =====================================================================
+let _touchStartX = 0;
+let _touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+  if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
+  audioUnlocked = true;
+  
+  // Store touch start position
+  _touchStartX = e.touches[0].clientX;
+  _touchStartY = e.touches[0].clientY;
+  
+  // Prevent default to avoid scrolling
+  if (showInfo) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+  // If info is open, prevent scrolling
+  if (showInfo) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', e => {
+  if (_isScreensaverInQuietPeriod()) return;  // Ignore touches in first 50ms of screensaver
+  
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+  
+  // Convert to canvas coordinates
+  const lx = (touchEndX - _appOx) / scale;
+  const ly = (touchEndY - _appOy) / scale;
+  
+  if (state !== 'playing') return;
+  
+  // If info panel is open, handle close
+  if (showInfo) {
+    // Center third prevents close (visual focus area)
+    if (lx >= LW / 3 && lx <= 2 * LW / 3) return;
+    
+    // Close by tapping outside center third
+    showInfo = false;
+    return;
+  }
+  
+  // Game is playing: check for left/right half tap for movement
+  const midX = LW / 2;
+  
+  if (lx < midX) {
+    // Left half tapped: move left
+    if (screensaver) takeoverFromAI();
+    lastDir = -1;
+    lastMoveInputTs = performance.now();
+    hadInputSinceDeath = true;
+    const speedIntensity = Math.min(1.0, Math.abs(angelSpeed) / MAX_SPEED_REF);
+    playSteer(0.3 + speedIntensity * 0.7);
+  } else if (lx >= midX) {
+    // Right half tapped: move right
+    if (screensaver) takeoverFromAI();
+    lastDir = 1;
+    lastMoveInputTs = performance.now();
+    hadInputSinceDeath = true;
+    const speedIntensity = Math.min(1.0, Math.abs(angelSpeed) / MAX_SPEED_REF);
+    playSteer(0.3 + speedIntensity * 0.7);
+  }
+});
+
+// Navbar button handlers
+const navInfoBtn = document.getElementById('navInfoBtn');
+const navScoresBtn = document.getElementById('navScoresBtn');
+
+if (navInfoBtn) {
+  navInfoBtn.addEventListener('click', () => {
+    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
+    audioUnlocked = true;
+    if (state === 'playing') {
+      showInfo = true;
+      showInfoOpenedAt = performance.now();
+    }
+  });
+}
+
+if (navScoresBtn) {
+  navScoresBtn.addEventListener('click', () => {
+    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
+    audioUnlocked = true;
+    if (state === 'playing') {
+      showStats = true;
+      _clearHistoryStage = 0;
+    }
+  });
+}
 
 
 // ===== ui.js =====
@@ -2012,7 +2384,11 @@ function planBeam() {
       const left = _ns * wt.left * Math.max(0, 1 - b.X2[i] / (LW / 2));
       const ctr = -(1 - _n) * Math.abs(b.X2[i] - LWmid) * BEAM_CENTER_W;
       const wll = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall2[i];
-      b.Score2[i] = (b.Depth2[i] / (BEAM_SEG * BEAM_ROUNDS)) * (10000 - _ns * 3000) + disp + smth + mom + still + trace + prox + left + ctr + wll;
+      // Per-frame depth weight: 10000 at pragmatism (n=0, depth strictly
+      // dominates → optimal survival), compressing to (10000-_ns*3000)/CAP at
+      // nonchalance (n=1) so style terms can override survival for flair.
+      const wDepth = (1 - _n) * 10000 + _n * ((10000 - _ns * 3000) / CAP);
+      b.Score2[i] = b.Depth2[i] * wDepth + disp + smth + mom + still + trace + prox + left + ctr + wll;
       b.Order[i] = i;
     }
     const keep = Math.min(BEAM_K, m);
@@ -2058,7 +2434,9 @@ function planBeam() {
     const left = _ns * wt.left * Math.max(0, 1 - b.X[i] / (LW / 2));
     const ctr = -(1 - _n) * Math.abs(b.X[i] - LWmid) * BEAM_CENTER_W;
     const wll = -(BEAM_WALLTIME_W * (1 - _n) + 200 * _n) * b.Wall[i];
-    const score = (b.Depth[i] / CAP) * (10000 - _ns * 3000) + disp + smth + mom + still + left + ctr + wll + gapThreadBonus(b.X[i]);
+    const wDepth = (1 - _n) * 10000 + _n * ((10000 - _ns * 3000) / CAP);
+    const gap = _n > 0 ? gapThreadBonus(b.X[i]) : 0;
+    const score = b.Depth[i] * wDepth + disp + smth + mom + still + left + ctr + wll + gap;
     if (score > bestScore) { bestScore = score; bestFirst = b.First[i]; }
   }
   return bestFirst;
@@ -2228,7 +2606,6 @@ function planBeamEnergize() {
   return bestFirst;
 }
 
-
 // ===== angel.js =====
 // Angel drawing and basic movement logic
 function drawAngel(ax,ay,inputDir) {
@@ -2313,9 +2690,9 @@ document.addEventListener('visibilitychange', () => {
 function onHit() {
   if (!screensaver && elapsed > bestTime) bestTime = elapsed;
   if (energizeMode && !screensaver && energizeScore > bestEnergizeScore) bestEnergizeScore = energizeScore;
-  recordRun(elapsed, screensaver);
+  recordRun(Math.max(0, elapsed), screensaver);
   const who = screensaver ? 'BOT' : 'PLAYER';
-  console.log(`[${who} DEATH] survived ${(elapsed / 1000).toFixed(3)}s`);
+  console.log(`[${who} DEATH] survived ${(Math.max(0, elapsed) / 1000).toFixed(3)}s`);
   hitFlashes.push({ ts: performance.now(), elapsed, score: energizeScore, energize: energizeMode });
   sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); removeSparkHum(s._id); });
   deathTrail = angelTrail;
@@ -2390,6 +2767,7 @@ function start(isAI) {
   hadInputSinceDeath = false;  // Allow AI to start without waiting for player input
   lastMoveInputTs = performance.now();  // Reset timer so AI waits 3s from mode switch
   screensaver = isAI;
+  screensaverStartTs = isAI ? performance.now() : 0;  // Track screensaver start
   state = 'playing';
   accumulator = TICK_MS;  // Force first frame to tick immediately
   lastDrawTs = null;
@@ -2521,6 +2899,7 @@ function draw(ts) {
 
       if (!screensaver && !hadInputSinceDeath && performance.now() - lastMoveInputTs >= 3000) {
         screensaver = true;
+        screensaverStartTs = performance.now();  // Track screensaver start
         aiVelocity = angelSpeed;
         aiCommitFrames = 0;
       }
