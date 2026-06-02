@@ -6,98 +6,34 @@
   <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=">
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
-canvas { display: block; }
-
-/* Mobile navbar */
-.mobile-navbar {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50px;
-  background: linear-gradient(to bottom, rgba(7, 16, 42, 0.95), rgba(7, 16, 42, 0.85));
-  border-bottom: 1px solid rgba(100, 150, 200, 0.3);
-  z-index: 900;
-  padding: 0 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-@media (max-height: 900px) or (max-width: 768px) {
-  .mobile-navbar { display: flex !important; }
-}
-
-.nav-btn {
-  background: rgba(100, 150, 200, 0.15);
-  border: 1px solid rgba(100, 150, 200, 0.4);
-  color: rgba(150, 200, 255, 0.8);
-  font-size: 18px;
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 150ms ease;
-  font-family: 'Courier Prime', monospace;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nav-btn:active {
-  background: rgba(100, 150, 200, 0.35);
-  border-color: rgba(100, 150, 200, 0.7);
-  color: rgba(200, 230, 255, 1);
-  transform: scale(0.95);
-}
-
-.nav-btn-left {
-  order: 1;
-}
-
-.nav-btn-right {
-  order: 2;
-  margin-left: auto;
-}
-
-#creditLink {
-  position: fixed;
-  bottom: 95px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(255,200,100,0.62);
-  text-decoration: none;
-  font-family: 'Courier Prime', monospace;
-  font-size: 14px;
-  display: none;
-  z-index: 1000;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 120ms ease;
-  padding: 8px 12px;
-  letter-spacing: 0.5px;
-  line-height: 1.4;
-}
-#creditLink:hover {
-  color: rgba(255,220,140,1);
-  text-decoration: underline;
-}
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #07102a; overflow: hidden; }
+    canvas { display: block; }
+    #creditLink {
+      position: fixed;
+      bottom: 7%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,200,100,0.62);
+      text-decoration: none;
+      font-family: 'Courier Prime', monospace;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 120ms ease;
+      padding: 8px 12px;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+    }
+    #creditLink:hover {
+      color: rgba(255,220,140,1);
+    }
   </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<nav id="mobileNavbar" class="mobile-navbar">
-  <button id="navInfoBtn" class="nav-btn nav-btn-left" aria-label="Info">ℹ</button>
-  <button id="navScoresBtn" class="nav-btn nav-btn-right" aria-label="Scores">📊</button>
-</nav>
 <a id="creditLink" href="https://brlka.itch.io/an-angel-dances-in-the-sparks-of-a-bonfire" target="_blank">original game by brlka</a>
 <script>
 
@@ -343,8 +279,8 @@ function updateParticles() {
       const acc = 22 / dist;
       p.vx += acc * dx / dist;
       p.vy += acc * dy / dist;
-      p.vx *= 0.97;
-      p.vy *= 0.97;
+      p.vx *= 0.975;
+      p.vy *= 0.975;
       p.x += p.vx; p.y += p.vy;
       p.life -= p.decay;
       if (p.life > 0) particles[w++] = p;
@@ -1750,102 +1686,120 @@ c.addEventListener('click', e => {
   showInfoOpenedAt = performance.now();
 });
 
-// =====================================================================
-// Mobile touch controls
-// =====================================================================
-let _touchStartX = 0;
-let _touchStartY = 0;
+// ─── Mobile touch controls ────────────────────────────────────────────────────
+// Left half tap → move left; right half tap → move right.
+// Tapping top-left navbar → opens info panel.
+// Tapping top-right navbar (scores area) → toggles stats/history screen.
+// Neither navbar tap moves the angel.
+
+const _activeTouches = new Map(); // identifier → { dir, isNav, navSide?, closeStats? }
+
+function _touchToLogical(touch) {
+  const lx = (touch.clientX - _appOx) / scale;
+  const ly = (touch.clientY - _appOy) / scale;
+  return { lx, ly };
+}
 
 document.addEventListener('touchstart', e => {
-  if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
+  // First touch: unlock and return (no accidental action)
+  if (!firstInteraction) {
+    firstInteraction = true; showUI = true; audioUnlocked = true;
+    e.preventDefault();
+    return;
+  }
   audioUnlocked = true;
-  
-  // Store touch start position
-  _touchStartX = e.touches[0].clientX;
-  _touchStartY = e.touches[0].clientY;
-  
-  // Prevent default to avoid scrolling
-  if (showInfo) {
-    e.preventDefault();
-  }
-}, { passive: false });
 
-document.addEventListener('touchmove', e => {
-  // If info is open, prevent scrolling
-  if (showInfo) {
-    e.preventDefault();
+  let shouldPrevent = false;
+
+  for (const touch of e.changedTouches) {
+    const { lx, ly } = _touchToLogical(touch);
+
+    // Navbar top-left — info panel
+    if (_hit(lx, ly, 20, 20, 200, 42)) {
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: true, navSide: 'left' });
+      shouldPrevent = true;
+      continue;
+    }
+
+    // Navbar top-right — scores/stats
+    if (_hit(lx, ly, LW - 240, 20, 220, 42)) {
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: true, navSide: 'right' });
+      shouldPrevent = true;
+      continue;
+    }
+
+    // Stats overlay open: any non-nav touch closes it
+    if (showStats) {
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: false, closeStats: true });
+      shouldPrevent = true;
+      continue;
+    }
+
+    // Info panel open: let existing click handler deal with it
+    if (showInfo) {
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: false });
+      continue;
+    }
+
+    // Movement: left half = left, right half = right
+    if (state === 'playing') {
+      const dir = lx < LW / 2 ? -1 : 1;
+      _activeTouches.set(touch.identifier, { dir, isNav: false });
+      shouldPrevent = true;
+      if (_isScreensaverInQuietPeriod()) continue;
+      if (screensaver) takeoverFromAI();
+      if (dir === -1) keys['ArrowLeft'] = true;
+      else           keys['ArrowRight'] = true;
+      lastDir = dir;
+      lastMoveInputTs = performance.now();
+      hadInputSinceDeath = true;
+    } else {
+      _activeTouches.set(touch.identifier, { dir: 0, isNav: false });
+    }
   }
+
+  if (shouldPrevent) e.preventDefault();
 }, { passive: false });
 
 document.addEventListener('touchend', e => {
-  if (_isScreensaverInQuietPeriod()) return;  // Ignore touches in first 50ms of screensaver
-  
-  const touchEndX = e.changedTouches[0].clientX;
-  const touchEndY = e.changedTouches[0].clientY;
-  
-  // Convert to canvas coordinates
-  const lx = (touchEndX - _appOx) / scale;
-  const ly = (touchEndY - _appOy) / scale;
-  
-  if (state !== 'playing') return;
-  
-  // If info panel is open, handle close
-  if (showInfo) {
-    // Center third prevents close (visual focus area)
-    if (lx >= LW / 3 && lx <= 2 * LW / 3) return;
-    
-    // Close by tapping outside center third
-    showInfo = false;
-    return;
-  }
-  
-  // Game is playing: check for left/right half tap for movement
-  const midX = LW / 2;
-  
-  if (lx < midX) {
-    // Left half tapped: move left
-    if (screensaver) takeoverFromAI();
-    lastDir = -1;
-    lastMoveInputTs = performance.now();
-    hadInputSinceDeath = true;
-    const speedIntensity = Math.min(1.0, Math.abs(angelSpeed) / MAX_SPEED_REF);
-    playSteer(0.3 + speedIntensity * 0.7);
-  } else if (lx >= midX) {
-    // Right half tapped: move right
-    if (screensaver) takeoverFromAI();
-    lastDir = 1;
-    lastMoveInputTs = performance.now();
-    hadInputSinceDeath = true;
-    const speedIntensity = Math.min(1.0, Math.abs(angelSpeed) / MAX_SPEED_REF);
-    playSteer(0.3 + speedIntensity * 0.7);
-  }
-});
+  for (const touch of e.changedTouches) {
+    const data = _activeTouches.get(touch.identifier);
+    if (!data) continue;
 
-// Navbar button handlers
-const navInfoBtn = document.getElementById('navInfoBtn');
-const navScoresBtn = document.getElementById('navScoresBtn');
-
-if (navInfoBtn) {
-  navInfoBtn.addEventListener('click', () => {
-    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
-    audioUnlocked = true;
-    if (state === 'playing') {
-      showInfo = true;
-      showInfoOpenedAt = performance.now();
-    }
-  });
-}
-
-if (navScoresBtn) {
-  navScoresBtn.addEventListener('click', () => {
-    if (!firstInteraction) { firstInteraction = true; showUI = true; audioUnlocked = true; }
-    audioUnlocked = true;
-    if (state === 'playing') {
-      showStats = true;
+    if (data.isNav) {
+      if (data.navSide === 'left') {
+        if (!showInfo) { showInfo = true; showInfoOpenedAt = performance.now(); _btnFlash.info = performance.now(); }
+      } else {
+        showStats = !showStats;
+        _clearHistoryStage = 0;
+      }
+    } else if (data.closeStats) {
+      showStats = false;
       _clearHistoryStage = 0;
+    } else if (data.dir !== 0) {
+      if (data.dir === -1) keys['ArrowLeft'] = false;
+      else                 keys['ArrowRight'] = false;
+      const lh = anyKeyDown(LEFT_KEYS), rh = anyKeyDown(RIGHT_KEYS);
+      lastDir = rh && !lh ? 1 : lh && !rh ? -1 : 0;
+      lastMoveInputTs = performance.now();
     }
-  });
-}
+
+    _activeTouches.delete(touch.identifier);
+  }
+}, { passive: false });
+
+document.addEventListener('touchcancel', e => {
+  for (const touch of e.changedTouches) {
+    const data = _activeTouches.get(touch.identifier);
+    if (data && !data.isNav && data.dir !== 0) {
+      if (data.dir === -1) keys['ArrowLeft'] = false;
+      else                 keys['ArrowRight'] = false;
+      const lh = anyKeyDown(LEFT_KEYS), rh = anyKeyDown(RIGHT_KEYS);
+      lastDir = rh && !lh ? 1 : lh && !rh ? -1 : 0;
+    }
+    _activeTouches.delete(touch.identifier);
+  }
+}, { passive: false });
 
 
 // ===== ui.js =====
@@ -3086,7 +3040,7 @@ function draw(ts) {
   if (state==='playing') {
     const ax=angelX, ay=angelY();
     haloPosBuf.push({x:ax, y:ay});
-    if (haloPosBuf.length > 3) haloPosBuf.shift();
+    if (haloPosBuf.length > 2) haloPosBuf.shift();
     if (doTick) {
       if (trailT % 2 === 0) angelTrail.push({x:ax, y:ay, ts:trailT, color: haloActive ? `hsl(${haloTrailHue|0},80%,85%)` : (trailTinted ? `hsl(${trailHue|0},52%,92%)` : null)});
       while (angelTrail.length > 0 && trailT - angelTrail[0].ts > 2520) angelTrail.shift();
@@ -3106,16 +3060,16 @@ function draw(ts) {
           if (dx*dx + dy*dy < 18000) {
             const sx = s.x + s.w * 0.5, sy = s.y + s.h * 0.5;
             const baseAng = Math.atan2(sy - ay, sx - ax);
-            for (let k = 0; k < 2; k++) {
-              const spread = (Math.random() - 0.5) * Math.PI * 1.5;
-              const sp = 1.5 + Math.random() * 6;
+            for (let k = 0; k < 3; k++) {
+              const spread = (Math.random() - 0.5) * Math.PI * 1.6;
+              const sp = 1.2 + Math.random() * 12;
               const _bvx = Math.cos(baseAng + spread) * sp;
               const _bvy = Math.sin(baseAng + spread) * sp;
               particles.push({
                 x: ax, y: ay,
                 vx: _bvx + (Math.random() - 0.5) * 2,
                 vy: _bvy + (Math.random() - 0.5) * 2,
-                life: 1, decay: 0.003 + Math.random() * 0.003,
+                life: 1, decay: 0.002 + Math.random() * 0.0015,
                 size: 1.5 + Math.random() * 2.0,
                 color: COLORS[Math.floor(Math.random() * COLORS.length)],
                 grav: false,
