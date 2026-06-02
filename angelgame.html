@@ -123,7 +123,7 @@ function darkenForEnergize(hex) {
 // Game state - all state variables (assigned to window for global access)
 window.state = 'idle';
 window.screensaver = false;
-window.t = 0; window.startTime = 0; window.elapsed = 0;
+window.t = 0; window.startTime = 0; window.elapsed = 0; window.heat = 0;
 window.sparks = []; window.spawnAccum = 0; window.spawnPause = 0; window._sparkIdCounter = 0;
 window.particles = [];
 window.keys = {};
@@ -472,6 +472,7 @@ function drawStars() {
 // - Public API compatible with existing angel game
 // =====================================================================
 
+
 // ---------------------------------------------------------------------
 // globals / master
 // ---------------------------------------------------------------------
@@ -480,10 +481,12 @@ let audioUnlocked = false;
 let masterGain = null;
 let masterLimiter = null;
 
+
 // runtime toggles (bound from input.js / UI)
 let sfxSparkOn = true;
 let sfxEngineOn = true;
 let sfxBreathOn = true;
+
 
 // ---------------------------------------------------------------------
 // tuning and theory
@@ -492,9 +495,20 @@ const FUND = 55;
 const PHI = (1 + Math.sqrt(5)) / 2;
 const SCALE_PULL = 1 / PHI;
 
+
 // polymetric clocks (conceptual meters in seconds)
 const POLY_METERS = [3, 5, 7, 11];
 const POLY_FREQS = POLY_METERS.map(m => 1 / m);
+
+// discrete polymetric tick grid (Korda-style timebase)
+const POLY_TICK_SEC = 0.25; // ~quarter-second base tick
+
+// discrete polymeter patterns (all prime lengths)
+// more assertive so the polymeter is clearly audible
+const MOOD_MOD_PATTERN   = [0, 2, -1, 3, -2];                 // len 5
+const SCALE_DEGREE_MOD   = [0, 3, -2, 4, 0, -3, 2];           // len 7
+const SPARK_MUTE_PATTERN = [1,0,1,0,1,0,0,1,0,0,1];           // len 11
+
 
 // engine polymeter step patterns
 const ENG_RHYTHM = [0.2, 0.4, 1.0, 0.6, 0.8];                 // 5-step
@@ -502,18 +516,22 @@ const ENG_BRIGHT = [0.0, 0.6, 0.2, 0.9, 0.3, 0.8, 0.5];       // 7-step
 const ENG_NOISE  = [0.1, 0.3, 0.0, 0.9, 0.4, 0.2, 0.7, 0.5,
                     0.8, 0.6, 1.0];                           // 11-step
 
+
 let _engRhythmIdx = 0;
 let _engBrightIdx = 0;
 let _engNoiseIdx = 0;
 let _engLastStepT = 0;
 
+
 // base slow drift rates for other processes
 const DRIFT_BASES = [1 / 37, 1 / 61, 1 / 89];
+
 
 // ratio to Hz
 function hz(ratio, oct) {
   return FUND * ratio * Math.pow(2, oct);
 }
+
 
 // breath phase offsets
 const _BPH = [
@@ -521,6 +539,7 @@ const _BPH = [
   Math.random() * Math.PI * 2,
   Math.random() * Math.PI * 2
 ];
+
 
 // ---------------------------------------------------------------------
 // abstract pitch sets (mood banks)
@@ -584,7 +603,9 @@ const MOOD_BANKS = [
   }
 ];
 
+
 const MOOD_SCALES = MOOD_BANKS.map(b => b.notes.slice().sort((a, b) => a - b));
+
 
 // ---------------------------------------------------------------------
 // shared state
@@ -601,30 +622,37 @@ let lastMoodClickTime = 0;
 let lastMoodClicked = null;
 const DOUBLE_CLICK_THRESHOLD = 300;
 
+
 // engine + sparks
 let engine = null;
 const sparkOscs = new Map();
+
 
 // external fallbacks from angelgame
 const MAX_SPEED_REF =
   (typeof MAX_SPEED !== 'undefined') ? MAX_SPEED :
   (typeof MAXSPEED !== 'undefined') ? MAXSPEED : 35;
 
+
 const AY_AMP_FALLBACK =
   (typeof AY_AMP !== 'undefined') ? AY_AMP :
   (typeof AYAMP !== 'undefined') ? AYAMP : 378;
 
-const EMBER_RANGE = AY_AMP_FALLBACK * 1;
+
+// tighter ember range and more concurrent sparks
+const EMBER_RANGE = AY_AMP_FALLBACK * 2.1;
 const MAX_CONCURRENT_SPARKS = 50;
-const SPARK_MIN_GAIN = 0.08;
+const SPARK_MIN_GAIN = 0.22;       // no floor: mute pattern has real silences
 const ENGINE_DIR_PAN_WIDTH = 0.88;
 const SPARK_PAN_WIDTH = 0.82;
+
 
 // engine smoothing
 const ENGINE_GAP_HOLD_MS = 20;
 const ENGINE_SPEED_TAU = 0.11;   // was 0.185 — tighter for immediacy
-const ENGINE_DIR_TAU  = 0.16;   // was 0.210 — tighter for immediacy
+const ENGINE_DIR_TAU  = 0.16;    // was 0.210 — tighter for immediacy
 const ENGINE_PAN_DEADZONE = 0.04;
+
 
 let _noiseBuffer = null;
 let _lastEngineUpdateT = 0;
@@ -635,8 +663,10 @@ let _engineTargetPan = 0;
 let _engineSmoothPan = 0;
 let _engineHeldDir = 0;
 
+
 // slow harmonic orbit
 let _harmOrbitPhase = 0;
+
 
 // ---------------------------------------------------------------------
 // helpers
@@ -650,10 +680,9 @@ function _lerp(a, b, t) {
 }
 
 function _shouldSuppressAudio() {
-  // Suppress audio only for first ~100ms of screensaver startup (not entire screensaver duration)
   if ((typeof screensaver !== 'undefined') && screensaver && screensaverStartTs) {
     const elapsedMs = performance.now() - screensaverStartTs;
-    return elapsedMs < 100;  // Only mute for first 100ms of bot mode
+    return elapsedMs < 100;
   }
   return false;
 }
@@ -688,33 +717,57 @@ function _nowMs(ac) {
   return (typeof performance !== 'undefined') ? performance.now() : ac.currentTime * 1000;
 }
 
+// logical time for polymeter tick
+function _logicalTime() {
+  if (audioCtx) return audioCtx.currentTime;
+  if (typeof performance !== 'undefined') return performance.now() / 1000;
+  return 0;
+}
+
+// polymetric tick and index helpers
+function _polyTick() {
+  return Math.floor(_logicalTime() / POLY_TICK_SEC);
+}
+
+function _polyIndex(len, phaseOffset = 0) {
+  if (len <= 0) return 0;
+  const tick = _polyTick() + phaseOffset;
+  const m = tick % len;
+  return m < 0 ? m + len : m;
+}
+
 function _currentMoodIndex() {
   const raw = (typeof danceMode !== 'undefined') ? danceMode : 0;
   return _clamp(raw | 0, 0, MOOD_BANKS.length - 1);
 }
 
 function _updateHarmOrbit(t) {
-  // very slow orbit; a full cycle takes many minutes
   _harmOrbitPhase = (t * 0.003) % (Math.PI * 2);
 }
 
 function _currentOrbitMoodIndex() {
   const base = _currentMoodIndex();
   const offset = Math.round(Math.sin(_harmOrbitPhase) * 1.5); // -1..1
-  return _clamp(base + offset, 0, MOOD_BANKS.length - 1);
+
+  // discrete polymeter modulation of mood index (5-step)
+  const moodStep = MOOD_MOD_PATTERN[_polyIndex(MOOD_MOD_PATTERN.length, 0)];
+
+  return _clamp(base + offset + moodStep, 0, MOOD_BANKS.length - 1);
 }
 
 function _moodBank() {
   return MOOD_BANKS[_currentOrbitMoodIndex()];
 }
 
-// polymetric phase LFO
+
+// polymetric phase LFO for timbral motion
 function _polyPhase(t) {
   const p0 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[0] * t + _BPH[0]);
   const p1 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[1] * t + _BPH[1]);
   const p2 = 0.5 + 0.5 * Math.sin(2 * Math.PI * POLY_FREQS[2] * t + _BPH[2]);
   return { p0, p1, p2, sum: (p0 + p1 + p2) / 3 };
 }
+
 
 // advance engine polymeter patterns
 function _advanceEnginePatterns(t, activity) {
@@ -788,6 +841,19 @@ function _emberBaseVolume(y, w, h) {
   return base + sizeV;
 }
 
+function _nearestScaleIndex(notes, f) {
+  let bestIdx = 0;
+  let bestD = Math.abs(notes[0] - f);
+  for (let i = 1; i < notes.length; i++) {
+    const d = Math.abs(notes[i] - f);
+    if (d < bestD) {
+      bestD = d;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
 function _nearestScaleFreq(notes, f) {
   let best = notes[0];
   let bestD = Math.abs(best - f);
@@ -814,6 +880,7 @@ function _heightTunedFreq(y, h, bank) {
 
   return { rawFreq, scaleFreq, tunedFreq, up };
 }
+
 
 // ---------------------------------------------------------------------
 // audio context + master
@@ -869,6 +936,7 @@ function getAudio() {
 function toMaster(node) {
   if (masterGain) node.connect(masterGain);
 }
+
 
 // ---------------------------------------------------------------------
 // engine
@@ -965,6 +1033,7 @@ function initEngine(ac) {
   };
 }
 
+
 function updateEngineHum(dir = 0, velocity = 0) {
   try {
     if (_shouldSuppressAudio()) return;
@@ -1036,23 +1105,24 @@ function updateEngineHum(dir = 0, velocity = 0) {
       t, 0.10
     );
 
-    _ramp(ac, engine.bedGain.gain, bedTarget, 0.018, 0.18);  // faster attack
+    _ramp(ac, engine.bedGain.gain, bedTarget, 0.018, 0.18);
 
     const beat = 0.18 + activity * 0.28 * (0.6 + 0.4 * patBr);
     engine.octL.frequency.setTargetAtTime(FUND * 2 - beat, t, 0.10);
     engine.octR.frequency.setTargetAtTime(FUND * 2 + beat, t, 0.10);
-    _ramp(ac, engine.octGain.gain, octTarget, 0.020, 0.18);  // faster attack
+    _ramp(ac, engine.octGain.gain, octTarget, 0.020, 0.18);
 
     engine.draftFilter.frequency.setTargetAtTime(
       320 + s * 900 * (0.5 + 0.5 * poly.p0),
       t, 0.12
     );
-    _ramp(ac, engine.draftGain.gain, draftTarget, 0.022, 0.20);  // faster attack
+    _ramp(ac, engine.draftGain.gain, draftTarget, 0.022, 0.20);
     engine.draftPan.pan.setTargetAtTime(_engineSmoothPan * (0.5 + 0.5 * poly.p2), t, 0.12);
 
     lastEngineDir = stableDir || lastEngineDir;
   } catch (e) {}
 }
+
 
 function playKeyClick(dir = 0, warm = 0.5, keyHoldMs = 0) {
   try {
@@ -1066,6 +1136,7 @@ function playKeyClick(dir = 0, warm = 0.5, keyHoldMs = 0) {
   } catch (e) {}
 }
 
+
 // ---------------------------------------------------------------------
 // breath
 // ---------------------------------------------------------------------
@@ -1075,6 +1146,7 @@ function getBreathSineModulations(elapsed) {
   const mod3 = Math.sin(elapsed / 5701 + _BPH[2]) * 0.5 + 0.5;
   return { mod1, mod2, mod3 };
 }
+
 
 function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#ffffff') {
   try {
@@ -1159,6 +1231,7 @@ function playBreath(isInhale, mod1 = 0.5, mod2 = 0.5, mod3 = 0.5, moodColor = '#
     lastBreathGains = [g.gain];
   } catch (e) {}
 }
+
 
 // ---------------------------------------------------------------------
 // sparks
@@ -1246,6 +1319,7 @@ function createSparkHum(sparkId, x, y, w, h) {
   } catch (e) {}
 }
 
+
 function updateSparkHum(sparkId, x, y, w, h) {
   try {
     const ac = getAudio();
@@ -1270,12 +1344,32 @@ function updateSparkHum(sparkId, x, y, w, h) {
     const tone = _heightTunedFreq(y, h, bank);
     const { p, cold, relPan } = _sparkMetrics(x, y, w, h);
     const baseVol = _emberBaseVolume(y, w, h);
-    const distGain = SPARK_MIN_GAIN + p * (1 - SPARK_MIN_GAIN);
 
-    // 0 = far/ambient  ->  1 = close/percussive  (squared: late onset)
-    // close-range percussive factor: 0 below ~0.55, 1 at contact
+    // polymetric discrete scale-degree modulation (7-step loop, per-spark phase)
+    const baseScale = bank.notes;
+    const baseIdx = _nearestScaleIndex(baseScale, tone.tunedFreq);
+    const degPhase = Math.floor(data.seed * 13);
+    const degStep = SCALE_DEGREE_MOD[_polyIndex(SCALE_DEGREE_MOD.length, degPhase)];
+    const noteIdx = _clamp(baseIdx + degStep, 0, baseScale.length - 1);
+    const noteFreq = baseScale[noteIdx];
+
+    // close-range percussive factor (0 below ~0.55, 1 at contact)
     let percussive = _clamp((p - 0.55) / 0.45, 0, 1);
     percussive = percussive * percussive;
+
+    // polymetric mute pattern (11-step), per-spark phase
+    const gatePhase = Math.floor(data.seed * 31);
+    const gateIdx = _polyIndex(SPARK_MUTE_PATTERN.length, gatePhase);
+    const gate = SPARK_MUTE_PATTERN[gateIdx];
+
+    if (!gate) {
+      // hard mute in this polymeter step
+      data.voiceGain.gain.setTargetAtTime(0, t0, 0.04);
+      data.lastPercussive = percussive;
+      return;
+    }
+
+    const distGain = p; // pure distance; SPARK_MIN_GAIN = 0, so silence is real
 
     const poly    = _polyPhase(t0 + data.seed * 10.0);
     const shimmer = 0.9 + 0.1 * (0.6 * poly.p1 + 0.4 * poly.p2);
@@ -1286,13 +1380,13 @@ function updateSparkHum(sparkId, x, y, w, h) {
 
     // slight pitch snap when close
     const snapDetune = percussive * 0.02;
-    const toneCenter = tone.tunedFreq *
+    const toneCenter = noteFreq *
       (0.99 + 0.02 * (poly.p0 - 0.5) + p * 0.02 + snapDetune);
 
-    data.baseFreq = tone.tunedFreq;
+    data.baseFreq = noteFreq;
     data.osc.frequency.setTargetAtTime(data.baseFreq, t0, 0.20);
 
-    // tighter Q when close -> more pitched/percussive character
+    // tighter Q when close -> more pitched/percussive character (moderated)
     const qTarget = bank.q * (1.0 + percussive * 0.3);
     data.toneBP.frequency.setTargetAtTime(toneCenter, t0, 0.16);
     data.toneBP.Q.setTargetAtTime(qTarget, t0, 0.16);
@@ -1312,13 +1406,14 @@ function updateSparkHum(sparkId, x, y, w, h) {
 
     // one-shot noise click on upward crossing into very-close zone
     if (percussive > 0.65 && data.lastPercussive <= 0.65) {
-      const clickFreq = tone.tunedFreq * 2.0;
+      const clickFreq = noteFreq * 2.0;
       const clickPeak = Math.min(targetGain * 2.5, 0.06);
       _sparkClick(ac, clickFreq, t0, clickPeak);
     }
     data.lastPercussive = percussive;
   } catch (e) {}
 }
+
 
 function removeSparkHum(sparkId) {
   try {
@@ -1388,6 +1483,7 @@ function _simpleTone(freq, t0, attack, release, peak, type = 'sine') {
   osc.stop(t0 + release + 0.05);
 }
 
+
 function playStart() {
   try {
     const ac = getAudio();
@@ -1396,6 +1492,7 @@ function playStart() {
     [220, 275, 330].forEach((f, i) => _simpleTone(f, t0 + i * 0.08, 0.04, 0.60, 0.05));
   } catch (e) {}
 }
+
 
 function playEnergize() {
   try {
@@ -1406,6 +1503,7 @@ function playEnergize() {
   } catch (e) {}
 }
 
+
 function playDing() {
   try {
     const ac = getAudio();
@@ -1414,6 +1512,7 @@ function playDing() {
     [660, 990].forEach((f, i) => _simpleTone(f, t0 + i * 0.05, 0.006, 0.60, 0.05));
   } catch (e) {}
 }
+
 
 function playDeath() {
   try {
@@ -1435,9 +1534,11 @@ function playDeath() {
   } catch (e) {}
 }
 
+
 function playSteer(intensity = 0.5) {
   // intentionally no transient wobble; engine already reflects steering
 }
+
 
 // ---------------------------------------------------------------------
 // keepers / UI hooks
@@ -1448,6 +1549,7 @@ function updateClickVolume() {
   clickVolumeStack.forEach(v => { v.vol = Math.min(1.0, v.vol * 1.1); });
   rippleStack = rippleStack.filter(r => r.age < r.duration);
 }
+
 
 function toggleMoodLock(moodName) {
   const now = performance.now();
@@ -1460,10 +1562,12 @@ function toggleMoodLock(moodName) {
   }
 }
 
+
 function getMoodDisplayAlpha() {
   const nc = (typeof nonchalance !== 'undefined') ? nonchalance : 0;
   return 1.0 - nc * 0.5;
 }
+
 
 // ---------------------------------------------------------------------
 // exports to angel game
@@ -2762,7 +2866,7 @@ function onHit() {
   const savedAiVel = _preclampSpeed !== undefined ? _preclampSpeed : aiVelocity;
   const savedDir = screensaver ? aiInputDir : 0;  // Preserve bot direction, reset player direction
   
-  elapsed = 0;
+  elapsed = 0; heat = 0;
   startTime = performance.now();
   pausedDuration = 0; _hiddenAt = null;
   spawnAccum = 0;
@@ -2804,7 +2908,7 @@ function start(isAI) {
   deathTrail.length = 0;
   deathTrailBorn = 0;
   t = 0; spawnAccum = 0; spawnPause = 0;
-  elapsed = 0; startTime = performance.now();
+  elapsed = 0; heat = 0; startTime = performance.now();
   pausedDuration = 0; _hiddenAt = null;
   // Preserve angel position and velocity across mode switches/resets (don't reset to center)
   // angelX and angelSpeed already initialized in game-state.js, keep them
@@ -2867,13 +2971,17 @@ function draw(ts) {
       t++;
       trailT++;
 
+      // Advance heat only while the player is actively steering
+      const acting = !screensaver && (anyKeyDown(LEFT_KEYS) || anyKeyDown(RIGHT_KEYS));
+      if (acting) heat += 2 * TICK_MS;
+
       // Spawn and advance sparks
-      const ramp = Math.min(elapsed / 180000, 1);
-      const spawnChance = 0.15 + Math.min(elapsed/12000000, 1) * 0.8 + Math.max(0, 35 - sparks.length) * 0.02;
+      const ramp = Math.min(heat / 180000, 1);
+      const spawnChance = 0.15 + Math.min(heat/12000000, 1) * 0.8 + Math.max(0, 35 - sparks.length) * 0.02;
       if (spawnPause > 0) {
         spawnPause--;
       } else {
-        spawnAccum += (1.0 + ramp * 4.0) * 3 / 60 * (1 + Math.max(0, 0.30 - elapsed / 10000));
+        spawnAccum += (1.0 + ramp * 4.0) * 3 / 60 * (1 + Math.max(0, 0.30 - heat / 10000));
         if (spawnAccum >= 1) {
           spawnAccum = 0;
           if (Math.random() < spawnChance) {
