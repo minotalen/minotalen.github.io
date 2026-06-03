@@ -52,8 +52,8 @@ const LOW_SPEED_BOOST_THRESHOLD = 3;
 const AY_W = 0.0567, AY_CW = 0.998, AY_SW = 0.056, AY_AMP = 378, AY_MID = 540;
 const HALO_DURATION = 1005;
 const TICK_MS = 20;
-const BEAM_K = 26, BEAM_SEG = 6, BEAM_ROUNDS = 7;
-const BEAM_CENTER_W = 0.7496, BEAM_WALLTIME_W = 0.3221;
+const BEAM_K = 40, BEAM_SEG = 6, BEAM_ROUNDS = 20;
+const BEAM_CENTER_W = 0.0001, BEAM_WALLTIME_W = 0.4675;
 
 // ===== constants.js =====
 // Core numeric constants are injected by build.js from constants.json
@@ -136,6 +136,7 @@ window.angelLean = 0;
 window.aiVelocity = 0;
 window.aiInputDir = 0;
 window.aiInputHeldFor = 0;
+window._deathScreenshotPending = null;  // {elapsed, isBot} to capture next frame with particles
 window.showUI = false;
 window.energizeMode = false;
 window.nonchalance = 0.0;
@@ -169,6 +170,8 @@ window.runsEnergize = [];
 window.trailHue = Math.random() * 360;
 window.trailHueSpeed = 0;
 window.trailTinted = false;
+window.takeoverTrailBorn = 0;  // timestamp of takeover (player ↔ bot)
+window.takeoverTrailRGB = [0, 0, 0];  // RGB: green [0,200,100] for player, blue [100,160,255] for bot
 window.wingScaleFrame = 0;
 window.screensaverStartTs = 0;  // Track when screensaver mode started
 window.lastDingMinute = 0;
@@ -326,11 +329,11 @@ function drawParticles() {
 }
 
 function explode(x, y) {
-  for (let i = 0; i < 55; i++) {
-    const angle = Math.random() * Math.PI * 2, speed = 1.5 + Math.random() * 7;
+  for (let i = 0; i < (50+Math.random() * 105); i++) {
+    const angle = Math.random() * Math.PI * 2, speed = 0.02 + Math.random() * 8;
     particles.push({
       x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-      life: 1, decay: 0.014 + Math.random() * 0.022, size: 2 + Math.random() * 5,
+      life: 1, decay: 0.01 + Math.random() * 0.034, size: 2 + Math.random() * 3,
       color: Math.random() < 0.3 ? '#fff' : COLORS[Math.floor(Math.random() * COLORS.length)]
     });
   }
@@ -419,6 +422,9 @@ function drawTrails(now2) {
   ctx.lineWidth = 4; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
   const dtFade = deathTrailBorn > 0 ? Math.max(0, 1 - (now2 - deathTrailBorn) / 1500) : 0;
   _drawTrail(deathTrail, [255, 136, 187], dtFade);
+  // Takeover trail: fades over 800ms like death trail
+  const ttFade = takeoverTrailBorn > 0 ? Math.max(0, 1 - (now2 - takeoverTrailBorn) / 800) : 0;
+  if (ttFade > 0) _drawTrail(angelTrail, takeoverTrailRGB, ttFade);
   _drawTrail(angelTrail, null, 1.0);
 }
 
@@ -1593,6 +1599,185 @@ window.updateClickVolume = updateClickVolume;
 window.toggleMoodLock = toggleMoodLock;
 window.getMoodDisplayAlpha = getMoodDisplayAlpha;
 
+// ===== gallery.js =====
+// Gallery: screenshot storage and display (toggle with G)
+
+let galleryOpen = false;
+let galleryScreenshots = [];  // array of {timestamp, dataUrl, elapsed, isBot}
+let _galleryImages = [];      // cached Image objects
+const GALLERY_MAX = 10;
+const GALLERY_COLS = 5;
+const GALLERY_ROWS = 2;
+
+function captureScreenshot(elapsedMs, isBot) {
+  try {
+    const canvas = document.getElementById('c');
+    if (!canvas) return;
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    galleryScreenshots.unshift({
+      timestamp: performance.now(),
+      dataUrl: dataUrl,
+      elapsed: elapsedMs || 0,
+      isBot: isBot || false
+    });
+    
+    // Pre-load image
+    const img = new Image();
+    img.src = dataUrl;
+    _galleryImages.unshift(img);
+    
+    if (galleryScreenshots.length > GALLERY_MAX) {
+      galleryScreenshots.pop();
+      _galleryImages.pop();
+    }
+  } catch (e) {
+    console.warn('Failed to capture screenshot:', e);
+  }
+}
+
+function toggleGallery() {
+  galleryOpen = !galleryOpen;
+}
+
+function downloadScreenshot(index) {
+  if (index < 0 || index >= galleryScreenshots.length) return;
+  
+  const shot = galleryScreenshots[index];
+  const link = document.createElement('a');
+  link.href = shot.dataUrl;
+  
+  const timestamp = new Date(shot.timestamp).toISOString().replace(/[:.]/g, '-');
+  link.download = `angel-${timestamp}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function drawGallery() {
+  if (!galleryOpen || galleryScreenshots.length === 0) return;
+  
+  // Full-screen overlay like history (not modal)
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = 'rgba(7, 16, 42, 0.96)';
+  ctx.fillRect(0, 0, c.width, c.height);
+  applyLogical();
+  
+  // Title
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+  ctx.font = FONT_INFO_H;
+  ctx.textAlign = 'center';
+  ctx.fillText('gallery', LW / 2, LH * 0.12);
+  
+  // Grid layout - use most of screen width
+  const gridX0 = LW * 0.05;
+  const gridX1 = LW * 0.95;
+  const gridW = gridX1 - gridX0;
+  const gridY0 = LH * 0.22;
+  const gridY1 = LH * 0.82;
+  const gridH = gridY1 - gridY0;
+  
+  // Compute cell dimensions
+  const gap = LW * 0.01;
+  const thumbW = (gridW - (GALLERY_COLS - 1) * gap) / GALLERY_COLS;
+  const thumbH = thumbW * 0.5625;  // 16:9 aspect ratio
+  
+  // Draw grid
+  let idx = 0;
+  for (let row = 0; row < GALLERY_ROWS && idx < galleryScreenshots.length; row++) {
+    for (let col = 0; col < GALLERY_COLS && idx < galleryScreenshots.length; col++) {
+      const thumbX = gridX0 + col * (thumbW + gap);
+      const thumbY = gridY0 + row * (thumbH + gap);
+      
+      const shot = galleryScreenshots[idx];
+      const img = _galleryImages[idx];
+      
+      // Draw frame
+      ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(thumbX, thumbY, thumbW, thumbH);
+      
+      // Draw image
+      if (img && img.complete) {
+        ctx.drawImage(img, thumbX, thumbY, thumbW, thumbH);
+      } else {
+        ctx.fillStyle = 'rgba(50, 70, 120, 0.3)';
+        ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
+      }
+      
+      // Time label (top-right of thumb) - only show if > 0
+      if (shot.elapsed > 0) {
+        const secs = shot.elapsed / 1000;
+        const timeStr = secs.toFixed(1);
+        const label = shot.isBot ? `BOT ${timeStr}` : timeStr;
+        ctx.fillStyle = shot.isBot ? 'rgba(100, 160, 255, 0.9)' : 'rgba(200, 220, 255, 0.9)';
+        ctx.font = FONT_INFO_S;
+        ctx.textAlign = 'right';
+        ctx.fillText(label, thumbX + thumbW - 6, thumbY + 18);
+      }
+      
+      // Index (bottom-right)
+      ctx.fillStyle = 'rgba(100, 150, 200, 0.6)';
+      ctx.font = FONT_INFO_XS;
+      ctx.fillText(`${idx + 1}`, thumbX + thumbW - 6, thumbY + thumbH - 4);
+      
+      idx++;
+    }
+  }
+  
+  // Instructions
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.font = FONT_INFO_TN;
+  ctx.textAlign = 'center';
+  ctx.fillText('Press G to close • click to download', LW / 2, LH * 0.92);
+  
+  ctx.restore();
+}
+
+// Store gallery state for hitbox detection
+let _galleryRects = [];
+
+function getGalleryRects() {
+  if (!galleryOpen) return [];
+  
+  _galleryRects.length = 0;
+  
+  // Grid layout - use most of screen width
+  const gridX0 = LW * 0.05;
+  const gridX1 = LW * 0.95;
+  const gridW = gridX1 - gridX0;
+  const gridY0 = LH * 0.22;
+  const gridY1 = LH * 0.82;
+  const gridH = gridY1 - gridY0;
+  
+  // Compute cell dimensions
+  const gap = LW * 0.01;
+  const thumbW = (gridW - (GALLERY_COLS - 1) * gap) / GALLERY_COLS;
+  const thumbH = thumbW * 0.5625;  // 16:9 aspect ratio
+  
+  let idx = 0;
+  for (let row = 0; row < GALLERY_ROWS && idx < galleryScreenshots.length; row++) {
+    for (let col = 0; col < GALLERY_COLS && idx < galleryScreenshots.length; col++) {
+      const thumbX = gridX0 + col * (thumbW + gap);
+      const thumbY = gridY0 + row * (thumbH + gap);
+      
+      _galleryRects.push({
+        x: thumbX,
+        y: thumbY,
+        w: thumbW,
+        h: thumbH,
+        idx: idx
+      });
+      
+      idx++;
+    }
+  }
+  
+  return _galleryRects;
+}
+
+
 // ===== input.js =====
 // Input handling
 function moveDirOf(key) {
@@ -1667,6 +1852,15 @@ document.addEventListener('keydown', e => {
   if (e.key === 'v' || e.key === 'V') {
     cycleBreathMode();
     audioUnlocked = true;
+    return;
+  }
+  if (e.key === 'g' || e.key === 'G') {
+    if (!galleryOpen) {
+      showInfo = false;
+      showStats = false;
+      _clearHistoryStage = 0;
+    }
+    toggleGallery();
     return;
   }
   if (e.key === ' ') {
@@ -1753,6 +1947,19 @@ c.addEventListener('click', e => {
   const ly = (e.clientY - _appOy) / scale;
   if (state !== 'playing') return;
 
+  // Gallery: handle thumbnail clicks
+  if (galleryOpen) {
+    const rects = getGalleryRects();
+    for (const rect of rects) {
+      if (_hit(lx, ly, rect.x, rect.y, rect.w, rect.h)) {
+        downloadScreenshot(rect.idx);
+        return;
+      }
+    }
+    // Close gallery on click outside thumbnails, then check other overlays
+    galleryOpen = false;
+  }
+
   // Stats overlay: handle clear-history btn, side-click to close (no info open)
   if (showStats) {
     const r = _clearHistoryRect;
@@ -1765,17 +1972,32 @@ c.addEventListener('click', e => {
       return;
     }
     if (_clearHistoryStage === 1) { _clearHistoryStage = 0; return; }
-    showStats = false; _clearHistoryStage = 0;
+    galleryOpen = false;
+    showInfo = false;
+    showStats = false;
+    _clearHistoryStage = 0;
     return;
   }
 
   // Info button top-left
-  if (_hit(lx, ly, 20, 20, 200, 42)) { showInfo = true; showInfoOpenedAt = performance.now(); _btnFlash.info = performance.now(); return; }
+  if (_hit(lx, ly, 20, 20, 200, 42)) {
+    galleryOpen = false;
+    showStats = false;
+    _clearHistoryStage = 0;
+    showInfo = true;
+    showInfoOpenedAt = performance.now();
+    _btnFlash.info = performance.now();
+    return;
+  }
 
   // Best score top-right → open history
   if (!screensaver && (bestTime > 0 || (energizeMode && bestEnergizeScore > 0)) &&
       _hit(lx, ly, LW - 240, 20, 220, 42)) {
-    showStats = true; _clearHistoryStage = 0; return;
+    galleryOpen = false;
+    showInfo = false;
+    showStats = true;
+    _clearHistoryStage = 0;
+    return;
   }
   
   // If info panel open: handle internal interactions
@@ -2002,7 +2224,8 @@ function drawUI(ts, now2) {
 
   // hit flash: large time at center, fades over 1.5s. Compact always so the
   // array doesn't grow while the UI is hidden; only render when showUI.
-  {
+  // Skip rendering if pending screenshot capture (death just happened)
+  if (_deathScreenshotPending === null) {
     let w = 0;
     for (let i = 0; i < hitFlashes.length; i++) {
       const f = hitFlashes[i];
@@ -2013,7 +2236,8 @@ function drawUI(ts, now2) {
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffffff';
         ctx.font = FONT_HIT;
-        ctx.fillText(f.energize ? String(f.score) : (f.elapsed / 1000).toFixed(1), LW / 2, LH * 0.55);
+        const displayVal = f.energize ? String(f.score) : (Math.max(0, f.elapsed) / 1000).toFixed(1);
+        ctx.fillText(displayVal, LW / 2, LH * 0.55);
         ctx.globalAlpha = 1;
       }
       hitFlashes[w++] = f;
@@ -2030,27 +2254,33 @@ function drawUI(ts, now2) {
   const _toastActive = _energizeFlashAge < 1 || _modeFlashAge < 1 || _sparkFlashAge < 1 || _engineFlashAge < 1 || _breathFlashAge < 1;
 
   if (showUI) {
-    // top-right toast — newest (smallest age) always wins
-    const toasts = [
-      { age: _energizeFlashAge, label: energizeMode ? 'energize' : 'avoidance', color: energizeMode ? '#ffc864' : '#96c8ff' },
-      { age: _modeFlashAge, label: DANCE_MODES[danceMode].name, color: danceModeFlashColor },
-      { age: _sparkFlashAge, label: sfxSparkOn ? 'sparks on' : 'sparks off', color: sfxSparkOn ? '#e88ad9' : '#888888' },
-      { age: _engineFlashAge, label: sfxEngineOn ? 'engine on' : 'engine off', color: sfxEngineOn ? '#a8d9ff' : '#888888' },
-      { age: _breathFlashAge, label: sfxBreathOn ? 'breath on' : 'breath off', color: sfxBreathOn ? '#b3ffb3' : '#888888' }
-    ];
-    const activeToast = toasts.filter(t => t.age < 1).sort((a, b) => a.age - b.age)[0];
-    if (activeToast) {
-      ctx.save();
-      ctx.globalAlpha = activeToast.age < 0.5 ? 1 : Math.pow(1 - (activeToast.age - 0.5) / 0.5, 2);
-      ctx.textAlign = 'right';
-      ctx.font = FONT_BASE;
-      ctx.fillStyle = activeToast.color;
-      ctx.fillText(activeToast.label, LW - 40, 44);
-      ctx.restore();
+    // top-right toast — newest (smallest age) always wins (skip if capturing screenshot)
+    if (_deathScreenshotPending === null) {
+      const toasts = [
+        { age: _energizeFlashAge, label: energizeMode ? 'energize' : 'avoidance', color: energizeMode ? '#ffc864' : '#96c8ff' },
+        { age: _modeFlashAge, label: DANCE_MODES[danceMode].name, color: danceModeFlashColor },
+        { age: _sparkFlashAge, label: sfxSparkOn ? 'sparks on' : 'sparks off', color: sfxSparkOn ? '#e88ad9' : '#888888' },
+        { age: _engineFlashAge, label: sfxEngineOn ? 'engine on' : 'engine off', color: sfxEngineOn ? '#a8d9ff' : '#888888' },
+        { age: _breathFlashAge, label: sfxBreathOn ? 'breath on' : 'breath off', color: sfxBreathOn ? '#b3ffb3' : '#888888' }
+      ];
+      const activeToast = toasts.filter(t => t.age < 1).sort((a, b) => a.age - b.age)[0];
+      // Only show mode toast when bot is in control (screensaver mode)
+      if (activeToast) {
+        const isModeFlash = activeToast.age === _modeFlashAge;
+        if (!isModeFlash || screensaver) {
+          ctx.save();
+          ctx.globalAlpha = activeToast.age < 0.5 ? 1 : Math.pow(1 - (activeToast.age - 0.5) / 0.5, 2);
+          ctx.textAlign = 'right';
+          ctx.font = FONT_BASE;
+          ctx.fillStyle = activeToast.color;
+          ctx.fillText(activeToast.label, LW - 40, 44);
+          ctx.restore();
+        }
+      }
     }
 
-    // top-right score (hidden while toast active)
-    if (!_toastActive) {
+    // top-right score (hidden while toast active or screenshot pending)
+    if (!_toastActive && _deathScreenshotPending === null) {
       if (energizeMode) {
         if (!screensaver && bestEnergizeScore > 0) {
           const hoverBest = _hit(mouseLx, mouseLy, LW - 240, 20, 220, 42);
@@ -2853,7 +3083,7 @@ function onHit() {
   recordRun(Math.max(0, elapsed), screensaver);
   const who = screensaver ? 'BOT' : 'PLAYER';
   console.log(`[${who} DEATH] survived ${(Math.max(0, elapsed) / 1000).toFixed(3)}s`);
-  hitFlashes.push({ ts: performance.now(), elapsed, score: energizeScore, energize: energizeMode });
+  hitFlashes.push({ ts: performance.now(), elapsed: Math.max(0, elapsed), score: energizeScore, energize: energizeMode });
   sparks.forEach(s => { s.fading = true; s.fadeStart = performance.now(); removeSparkHum(s._id); });
   deathTrail = angelTrail;
   angelTrail = [];
@@ -2894,6 +3124,7 @@ function onHit() {
   haloActive = false;
   haloUsedThisLife = false;
   trailTinted = false;
+  _deathScreenshotPending = { elapsed: Math.max(0, elapsed), isBot: screensaver };  // Capture next frame (with particles)
   explode(angelX, angelY());
   if (!screensaver) hadInputSinceDeath = false;
 }
@@ -2926,8 +3157,16 @@ function start(isAI) {
   _botClickSilentFrames = 0;
   hadInputSinceDeath = false;  // Allow AI to start without waiting for player input
   lastMoveInputTs = performance.now();  // Reset timer so AI waits 3s from mode switch
+  // Takeover: show last survivor's time, add colored trail (green=player, blue=bot)
+  const wasScreensaver = screensaver;
   screensaver = isAI;
   screensaverStartTs = isAI ? performance.now() : 0;  // Track screensaver start
+  if (wasScreensaver !== screensaver && state === 'playing') {
+    // Mode switch occurred during play
+    hitFlashes.push({ ts: performance.now(), elapsed: Math.max(0, elapsed), score: energizeScore, energize: energizeMode });
+    takeoverTrailBorn = performance.now();
+    takeoverTrailRGB = isAI ? [100, 160, 255] : [0, 200, 100];  // blue if switching to bot, green if switching to player
+  }
   state = 'playing';
   accumulator = TICK_MS;  // Force first frame to tick immediately
   lastDrawTs = null;
@@ -3019,6 +3258,11 @@ function draw(ts) {
       // Movement
       playerKeyPressCooldown = Math.max(0, playerKeyPressCooldown - 1);
       aiInputCooldown = Math.max(0, aiInputCooldown - 1);
+
+      // Clear takeover trail after it fades
+      if (takeoverTrailBorn > 0 && performance.now() - takeoverTrailBorn > 800) {
+        takeoverTrailBorn = 0;
+      }
 
       if (screensaver) {
         aiInputDir = planBeam();
@@ -3319,10 +3563,25 @@ function draw(ts) {
     }
 
     drawUI(ts, now2);
+    drawGallery();
   }
 
   resetTransform();
   // creditLink is rendered on canvas; DOM element kept hidden
+
+  // Capture screenshot after particles drawn (if pending from death)
+  if (_deathScreenshotPending !== null) {
+    // Render elapsed time at top-right before capturing
+    applyLogical();
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.font = FONT_BASE;
+    const displayTime = (_deathScreenshotPending.elapsed / 1000).toFixed(1);
+    ctx.fillText(displayTime, LW - 40, 44);
+    
+    captureScreenshot(_deathScreenshotPending.elapsed, _deathScreenshotPending.isBot);
+    _deathScreenshotPending = null;
+  }
 
   // Profile
   const _dt = performance.now() - _frameStart;
