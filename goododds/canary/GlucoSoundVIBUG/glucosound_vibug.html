@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlucoSound — VIBUG June 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:  #000000;
+    --white:  #FFFFFF;
+    --green:  #34C759;
+    --red:    #FF3B30;
+    --orange: #FF9500;
+    --dim:    #CCCCCC;
+    --muted:  #DDDDDD;
+    --panel:  #111111;
+    --fs: 1;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    overflow: hidden;
+  }
+
+  /* Screen-reader only utility */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  #deck { width: 100vw; height: 100vh; position: relative; }
+
+  /* Each slide is a region so screen readers can navigate by landmark */
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 6vw 8vw;
+    opacity: 0;
+    /* Hidden from AT when not active */
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
+  }
+
+  /* Fixed chrome */
+  .slide-num {
+    position: fixed; bottom: 2.5vh; right: 3.5vw;
+    font-size: calc(1rem * var(--fs));
+    color: var(--dim); z-index: 100;
+    /* readable by screen reader when focused */
+  }
+  #progress {
+    position: fixed; bottom: 0; left: 0;
+    height: 3px; background: var(--green);
+    transition: width 0.2s ease; z-index: 100;
+  }
+  #nav-hint {
+    position: fixed; bottom: 2.5vh; left: 3.5vw;
+    font-size: calc(0.9rem * var(--fs));
+    color: #888; z-index: 100; transition: opacity 0.5s;
+  }
+
+  /* Icon */
+  #app-icon {
+    width: clamp(5rem, 9vw, 8rem);
+    height: clamp(5rem, 9vw, 8rem);
+    border-radius: 22%;
+    margin-bottom: 1.6rem;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* Type scale */
+  .eyebrow {
+    font-size: calc(clamp(1.05rem, 1.6vw, 1.5rem) * var(--fs));
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 1.2rem;
+  }
+  h1 {
+    font-size: calc(clamp(3.2rem, 7.5vw, 7rem) * var(--fs));
+    font-weight: 700; line-height: 1.0;
+    letter-spacing: -0.02em; color: var(--white);
+    margin-bottom: 1.2rem;
+  }
+  h2 {
+    font-size: calc(clamp(2.1rem, 4.8vw, 4.4rem) * var(--fs));
+    font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.02em; color: var(--white);
+    margin-bottom: 1.2rem;
+  }
+  .subtitle {
+    font-size: calc(clamp(1.2rem, 2.1vw, 1.75rem) * var(--fs));
+    color: var(--muted); line-height: 1.5; max-width: 58ch;
+  }
+  .body-large {
+    font-size: calc(clamp(1.4rem, 2.6vw, 2.1rem) * var(--fs));
+    line-height: 1.5; max-width: 52ch;
+  }
+  .accent { color: var(--green); }
+  .muted  { color: var(--muted); }
+
+  /* Slide 2 hook table */
+  .hook-table { border-collapse: collapse; }
+  .hook-table td {
+    font-size: calc(clamp(1.3rem, 2.4vw, 2rem) * var(--fs));
+    line-height: 1.4;
+    padding: 0.3em 0;
+  }
+  .hook-table .hook-label {
+    color: var(--dim);
+    font-weight: 700;
+    padding-right: 2.5rem;
+    white-space: nowrap;
+  }
+  .hook-table .hook-val { color: var(--white); }
+
+  /* Slide 6 pitch table */
+  .pitch-table { border-collapse: collapse; margin: 0.1em 0; }
+  .pitch-table td {
+    font-size: calc(clamp(1.25rem, 2.3vw, 1.9rem) * var(--fs));
+    line-height: 1.5;
+    padding: 0 0;
+  }
+  .pitch-val   { font-weight: 700; white-space: nowrap; }
+  .pitch-arrow { padding: 0 0.8rem; color: var(--dim); }
+  .pitch-desc  { color: var(--white); white-space: nowrap; }
+
+  .big-quote {
+    font-size: calc(clamp(2.8rem, 6.5vw, 6rem) * var(--fs));
+    font-weight: 700; line-height: 1.1; color: var(--white);
+    position: relative; padding-left: 3.2rem; letter-spacing: -0.02em;
+  }
+  .big-quote::before {
+    content: '\201C'; position: absolute; left: -0em; top: -0.05em;
+    font-size: 0.85em; color: var(--green); line-height: 1;
+  }
+
+  .point-list {
+    list-style: none;
+    display: flex; flex-direction: column;
+    gap: 1rem; margin-top: 0.4rem;
+  }
+  .point-list li {
+    font-size: calc(clamp(1.25rem, 2.3vw, 1.9rem) * var(--fs));
+    line-height: 1.45;
+    display: flex; align-items: baseline; gap: 0.9rem;
+    color: var(--white);
+  }
+  .point-list li.muted { color: var(--muted); }
+  .point-list li::before {
+    content: '\2014'; color: var(--green);
+    flex-shrink: 0; font-weight: 700;
+  }
+
+  .timeline { display: flex; flex-direction: column; gap: 1.6rem; margin-top: 0.4rem; }
+  .tl-row   { display: flex; align-items: flex-start; gap: 2rem; }
+  .tl-year  {
+    font-size: calc(clamp(1.05rem, 1.9vw, 1.5rem) * var(--fs));
+    font-weight: 700; color: var(--green);
+    min-width: 9.5rem; flex-shrink: 0;
+  }
+  .tl-text  {
+    font-size: calc(clamp(1.25rem, 2.3vw, 1.9rem) * var(--fs));
+    line-height: 1.45; color: var(--white);
+  }
+
+  .spec-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.3rem 3.5rem; margin-top: 0.4rem;
+  }
+  .spec-label {
+    font-size: calc(clamp(0.85rem, 1.1vw, 1rem) * var(--fs));
+    font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 0.25rem;
+  }
+  .spec-value {
+    font-size: calc(clamp(1.15rem, 2.1vw, 1.7rem) * var(--fs));
+    font-weight: 500; line-height: 1.3; color: var(--white);
+    padding-bottom: 0.8rem;
+  }
+
+  .bitright { padding-left: 4rem; position: relative; }
+
+  /* Video slides override the default slide padding so the inner grid fills fully */
+  .slide.video-slide {
+    padding: 0;
+    justify-content: stretch;
+    align-items: stretch;
+  }
+
+  .video-slide-inner {
+    width: 100%; height: 100%;
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: center; gap: 4vw;
+    padding: 5vh 5vw; box-sizing: border-box;
+  }
+  .video-text { display: flex; flex-direction: column; justify-content: center; }
+  .video-text h2 { margin-bottom: 0.7rem; }
+  .video-text .lead {
+    font-size: calc(clamp(1.15rem, 2vw, 1.6rem) * var(--fs));
+    color: var(--muted); line-height: 1.45; margin-bottom: 1rem;
+  }
+  .video-text .point-list li {
+    font-size: calc(clamp(1.05rem, 1.8vw, 1.5rem) * var(--fs));
+  }
+
+  .video-area {
+    border-radius: 10px;
+    height: calc(100vh - 13vh);
+    aspect-ratio: 9/16;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    justify-self: end; align-self: center; flex-shrink: 0;
+  }
+  .video-area video { width: 100%; height: 100%; object-fit: contain; display: block; cursor: pointer; }
+  .video-area video::-webkit-media-controls { display: none; }
+  .video-area.video-paused::after {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.02);
+    pointer-events: none; border-radius: 10px;
+  }
+  .video-area video:hover::-webkit-media-controls { display: block; }  .video-area.video-at-start video:hover::-webkit-media-controls { display: none; }
+  .video-area video { --webkit-media-controls-fullscreen-background: transparent; }
+  .video-placeholder {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1rem; width: 100%; height: 100%;
+    padding: 2rem; text-align: center;
+  }
+  .video-placeholder .icon {
+    width: 4rem; height: 4rem; border: 2px solid var(--dim);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  }
+  .video-placeholder .icon svg { fill: var(--dim); width: 1.6rem; height: 1.6rem; margin-left: 0.2rem; }
+  .video-placeholder .filename {
+    font-size: calc(clamp(0.85rem, 1.2vw, 1.05rem) * var(--fs));
+    color: var(--dim); word-break: break-all;
+  }
+  .video-ready .video-placeholder { display: none; }
+
+  /* Ask slide */
+  .ask-list { list-style: none; display: flex; flex-direction: column; gap: 1.6rem; margin-top: 0.4rem; }
+  .ask-item { display: flex; align-items: flex-start; gap: 1.5rem; }
+  .ask-num  {
+    font-size: calc(clamp(1.9rem, 3.6vw, 3.1rem) * var(--fs));
+    font-weight: 700; color: var(--green); line-height: 1;
+    min-width: 2.5rem; flex-shrink: 0;
+    /* hide decorative number from screen reader — text has it in context */
+    aria-hidden: true;
+  }
+  .ask-text {
+    font-size: calc(clamp(1.15rem, 2.1vw, 1.75rem) * var(--fs));
+    line-height: 1.4; color: var(--white);
+  }
+  .ask-sub {
+    display: block;
+    font-size: calc(clamp(0.95rem, 1.5vw, 1.25rem) * var(--fs));
+    color: var(--dim); margin-top: 0.3rem;
+  }
+
+  /* Final slide links */
+  .link-block { margin-top: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+  .link-row   { display: flex; align-items: baseline; gap: 1.4rem; }
+  .link-label {
+    font-size: calc(clamp(0.85rem, 1.1vw, 1rem) * var(--fs));
+    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--dim); min-width: 11rem;
+  }
+  .link-value {
+    font-size: calc(clamp(1.25rem, 2.3vw, 1.9rem) * var(--fs));
+    font-weight: 700; color: var(--green);
+  }
+
+  /* Sine wave */
+  #sine-canvas {
+    position: absolute; right: 0; top: 0;
+    width: 45%; height: 100%; opacity: 0.12; pointer-events: none;
+  }
+
+  /* Font scale menu */
+  #fs-menu {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.5rem; z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  #fs-menu.open { opacity: 1; pointer-events: all; }
+  #fs-menu h3 {
+    font-size: 1.1rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 0.5rem;
+  }
+  .fs-options { display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center; }
+  .setting-row {
+    display: flex; align-items: center; gap: 1rem;
+    font-size: 1rem; color: var(--dim);
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+  }
+  .setting-row label { cursor: pointer; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  /* Toggle switch */
+  .toggle-wrap { position: relative; display: inline-block; width: 3rem; height: 1.6rem; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: #333; border-radius: 1rem;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute;
+    width: 1.1rem; height: 1.1rem;
+    background: #888; border-radius: 50%;
+    top: 0.25rem; left: 0.25rem;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle-wrap input:checked + .toggle-track { background: var(--green); }
+  .toggle-wrap input:checked + .toggle-track::after { transform: translateX(1.4rem); background: #000; }
+  .toggle-wrap input:focus-visible + .toggle-track { outline: 3px solid var(--green); outline-offset: 2px; }
+
+  /* Light mode */
+  html.light {
+    --black:  #F2F2F2;
+    --white:  #111111;
+    --green:  #1A7A32;
+    --red:    #C0281E;
+    --orange: #B86A00;
+    --dim:    #444444;
+    --muted:  #333333;
+    --panel:  #E0E0E0;
+  }
+  html.light #fs-menu { background: rgba(255,255,255,0.92); }
+  html.light .fs-btn  { background: #E8E8E8; border-color: #CCCCCC; color: #111; }
+  html.light .toggle-track { background: #BBBBBB; }
+
+  .fs-btn {
+    background: #1a1a1a; border: 2px solid #333;
+    color: var(--white); border-radius: 8px;
+    padding: 1rem 1.6rem; cursor: pointer;
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    transition: border-color 0.1s, color 0.1s;
+  }
+  .fs-btn:hover    { border-color: var(--green); color: var(--green); }
+  .fs-btn.active   { border-color: var(--green); color: var(--green); }
+  .fs-btn:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+  #fs-menu .close-hint { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+
+  /* Focus ring: visible only for keyboard nav, never for programmatic .focus() calls */
+  :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+  /* Suppress ring on headings that receive programmatic focus for SR routing */
+  h1:focus, h2:focus, [role="text"]:focus { outline: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide, #fs-menu { transition: none; }
+    #progress { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Skip link for keyboard users -->
+<a href="#slide-1" class="sr-only" style="position:fixed;top:0;left:0;z-index:999;
+  background:var(--green);color:#000;padding:0.5rem 1rem;font-weight:700;
+  border-radius:0 0 6px 0;" onblur="this.style.opacity='0'"
+  onfocus="this.style.opacity='1'" style="opacity:0">Skip to content</a>
+
+<!-- Live region: announces slide changes to screen readers -->
+<div id="slide-announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+<main id="deck" aria-label="GlucoSound presentation">
+
+  <!-- Slide 1 -->
+  <section class="slide active" id="slide-1"
+    role="region" aria-label="Title slide, slide 1 of 13">
+    <img id="app-icon" src="icon.png" alt="GlucoSound app icon"
+         onerror="this.style.display='none'">
+    <div class="eyebrow" aria-hidden="true">VIBUG &middot; June 13, 2026</div>
+    <h1>Gluco<span class="accent">Sound</span></h1>
+    <p class="subtitle" style="color:var(--dim);">Mon Spelly (they/them)</p>
+  </section>
+
+  <!-- Slide 2 -->
+  <section class="slide" id="slide-2"
+    role="region" aria-label="The hook, slide 2 of 13">
+    <div class="eyebrow" aria-hidden="true">2017</div>
+    <div class="big-quote bitright" role="text">Twin graph.</div>
+    <p class="body-large" style="margin-top:2rem;">
+      My roommate's brand-new Dexcom G6.<br>
+      Six hours of his blood sugar on screen.<br>
+      VoiceOver's entire description:
+      <span class="accent">two words</span>.
+    </p>
+  </section>
+
+  <!-- Slide 3 -->
+  <section class="slide" id="slide-3"
+    role="region" aria-label="The problem, slide 3 of 13">
+    <div class="eyebrow">Problem</div>
+    <h2>The data is there.<br>VoiceOver hits a wall.</h2>
+    <ul class="point-list">
+      <li>The trend chart is what keeps you safe.<br>Where is your glucose heading?</li>
+      <li>That chart is invisible to VoiceOver.<br>The tools to fix it have existed since 2021.</li>
+      <li class="muted">Diabetic retinopathy is the leading cause of blindness.<br>CGM users and blind users are often the same people.</li>
+    </ul>
+  </section>
+
+  <!-- Slide 4 -->
+  <section class="slide" id="slide-4"
+    role="region" aria-label="Why now, slide 4 of 13">
+    <div class="eyebrow">Why now</div>
+    <h2>New G7 still lacking.<br>AI + anger enable me.</h2>
+    <div class="timeline" role="list">
+      <div class="tl-row" role="listitem">
+        <span class="tl-year">2017</span>
+        <span class="tl-text">Started working on this for my roommate.<br>Never got past the concept stage.</span>
+      </div>
+      <div class="tl-row" role="listitem">
+        <span class="tl-year">Feb 2026</span>
+        <span class="tl-text">A friend gets the new Dexcom G7.<br>The chart is still not accessible.</span>
+      </div>
+      <div class="tl-row" role="listitem">
+        <span class="tl-year">Mar 2026</span>
+        <span class="tl-text accent">A few weeks of active work.<br><strong>A working prototype.</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5 -->
+  <section class="slide" id="slide-5"
+    role="region" aria-label="The app overview, slide 5 of 13">
+    <div class="eyebrow">GlucoSound</div>
+    <h2>Accessible sonified charts</h2>
+    <dl class="spec-grid">
+      <div class="spec-item">
+        <dt class="spec-label">Platform</dt>
+        <dd class="spec-value">iPhone &middot; iOS 17+</dd>
+      </div>
+      <div class="spec-item">
+        <dt class="spec-label">Data source</dt>
+        <dd class="spec-value">Apple Health or Dexcom Share</dd>
+      </div>
+      <div class="spec-item">
+        <dt class="spec-label">Screens</dt>
+        <dd class="spec-value">Chart &middot; Explore<br>Summary &middot; Settings</dd>
+      </div>
+      <div class="spec-item">
+        <dt class="spec-label">Cost</dt>
+        <dd class="spec-value accent">Free</dd>
+      </div>
+      <div class="spec-item" style="grid-column: 1 / -1;">
+        <dt class="spec-label">Design principle</dt>
+        <dd class="spec-value">Every element labeled. No information locked behind vision.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Slide 6: Sonification explainer -->
+  <section class="slide" id="slide-6"
+    role="region" aria-label="How sonification works, slide 6 of 13">
+    <div class="eyebrow">How it works</div>
+    <h2>Data becomes sound.</h2>
+    <ul class="point-list">
+      <li>Sonification: mapping data to audio instead of visuals</li>
+      <li>Drag a finger across the chart. </br>Pitch follows your glucose in real time.</li>
+      <li>Pitch is mapped directly to glucose value.</li>
+      <li>Below range: tremolo. Above range: vibrato.</li>
+      <li>Lift your finger: VoiceOver speaks value and time.</li>
+    </ul>
+  </section>
+
+  <!-- Slide 7: Chart View video -->
+  <section class="slide video-slide" id="slide-7"
+    role="region" aria-label="Chart View demo, slide 7 of 13">
+    <div class="video-slide-inner">
+      <div class="video-text">
+        <h2>Chart View</h2>
+        <p class="lead">The home screen. Glucose history, spoken.</p>
+        <ul class="point-list">
+          <li>12 columns, each announces time, values, and direction</li>
+          <li>Select time range, check past values </li>
+          <li>Custom logic for chart labels</li>
+        </ul>
+      </div>
+      <div class="video-area" id="va-7" role="img" aria-label="Screen recording of Chart View with VoiceOver">
+        <div class="video-placeholder">
+          <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <span class="filename">video_1_chart_view.mov</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Explore video -->
+  <section class="slide video-slide" id="slide-8"
+    role="region" aria-label="Explore mode demo, slide 8 of 13">
+    <canvas id="sine-canvas" aria-hidden="true"></canvas>
+    <div class="video-slide-inner">
+      <div class="video-text">
+        <h2>Explore</h2>
+        <p class="lead">Scrub chart to hear glucose as sound.</p>
+        <ul class="point-list">
+          <li>High sugar, high pitch</li>
+          <li>Out of range sounds noticeably different</li>
+          <li>Lift your finger: value and time, spoken</li>
+          <li>Six instruments, made to sound good in public</li>
+        </ul>
+      </div>
+      <div class="video-area" id="va-8" role="img" aria-label="Screen recording of Explore mode with sonification audio">
+        <div class="video-placeholder">
+          <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <span class="filename">video_2_explore_view.mov</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Summary video -->
+  <section class="slide video-slide" id="slide-9"
+    role="region" aria-label="Summary screen demo, slide 9 of 13">
+    <div class="video-slide-inner">
+      <div class="video-text">
+        <h2>Summary</h2>
+        <p class="lead">Your numbers, in plain sentences.</p>
+        <ul class="point-list">
+          <li>Average, time in range, highs and lows</li>
+          <li>What happened, what to watch, what went well</li>
+          <li>No AI. Rule-based logic to prevent false statements.</li>
+        </ul>
+      </div>
+      <div class="video-area" id="va-9" role="img" aria-label="Screen recording of Summary screen">
+        <div class="video-placeholder">
+          <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <span class="filename">video_3_summary.mov</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Settings video -->
+  <section class="slide video-slide" id="slide-10"
+    role="region" aria-label="Settings screen demo, slide 10 of 13">
+    <div class="video-slide-inner">
+      <div class="video-text">
+        <h2>Settings</h2>
+        <p class="lead">Customizable sound to increase access.</p>
+        <ul class="point-list">
+          <li>Low and high thresholds, with clinical defaults</li>
+          <li>Adjust instrument sound, preview it live</li>
+          <li>Speech, haptics, volume, default time range</li>
+        </ul>
+      </div>
+      <div class="video-area" id="va-10" role="img" aria-label="Screen recording of Settings screen">
+        <div class="video-placeholder">
+          <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <span class="filename">video_4_settings.mov</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 11: Status -->
+  <section class="slide" id="slide-11"
+    role="region" aria-label="Where things stand, slide 11 of 13">
+    <div class="eyebrow">Where things stand</div>
+    <h2>Launch blocked.</h2>
+    <p class="body-large">
+      Since the app touches health data,<br>I need to go about this carefully.<br>
+      It needs real testing by blind CGM users<br>before I feel confident releasing it.
+    </p>
+  </section>
+
+  <!-- Slide 12: Ask -->
+  <section class="slide" id="slide-12"
+    role="region" aria-label="How you can help, slide 12 of 13">
+    <div class="eyebrow">How you can help</div>
+    <h2>Four things</h2>
+    <ol class="ask-list">
+      <li class="ask-item">
+        <span class="ask-num" aria-hidden="true">1</span>
+        <span class="ask-text">
+          <strong>Test it.</strong> Join the TestFlight beta.
+          <span class="ask-sub">Link in the Zoom chat now, and on the VIBUG mailing list after.</span>
+        </span>
+      </li>
+      <li class="ask-item">
+        <span class="ask-num" aria-hidden="true">2</span>
+        <span class="ask-text">
+          <strong>Know a blind CGM user?</strong> Send them my way.
+          <span class="ask-sub">Word of mouth helps a lot, not easy to reach testers.</span>
+        </span>
+      </li>
+      <li class="ask-item">
+        <span class="ask-num" aria-hidden="true">3</span>
+        <span class="ask-text">
+          <strong>Have a clue how I can fund my work?</strong> Let me know.
+          <span class="ask-sub">I want GlucoSound to remain free, but would also love to be able to sustain development.</span>
+        </span>
+      </li>
+      <li class="ask-item">
+        <span class="ask-num" aria-hidden="true">4</span>
+        <span class="ask-text">
+          <strong>Know medical device law or regulation?</strong> I could use guidance.
+          <span class="ask-sub">Not sure where this app sits legally. Any intro helps!</span>
+        </span>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Slide 13: Thank you -->
+  <section class="slide" id="slide-13"
+    role="region" aria-label="Thank you, slide 13 of 13">
+    <div class="eyebrow">Thank you</div>
+    <h1>Gluco<span class="accent">Sound</span></h1>
+    <p class="subtitle">Making blood glucose audible.</p>
+    <div class="link-block">
+      <div class="link-row">
+        <span class="link-label">TestFlight</span>
+        <a class="link-value" href="https://testflight.apple.com/join/1Ng5FNJY"
+           aria-label="TestFlight beta link">testflight.apple.com/join/1Ng5FNJY</a>
+      </div>
+      <div class="link-row">
+        <span class="link-label">Email</span>
+        <a class="link-value" href="mailto:konformitaet@gmail.com"
+           aria-label="Email Mon Spelly">konformitaet+vibug@gmail.com</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Settings menu -->
+<div id="fs-menu" role="dialog" aria-modal="true" aria-labelledby="fs-menu-label">
+  <h3 id="fs-menu-label">Presentation settings</h3>
+  <div class="fs-options" role="group" aria-label="Font size">
+    <button class="fs-btn" data-scale="0.85" aria-pressed="false">A&minus;</button>
+    <button class="fs-btn active" data-scale="1" aria-pressed="true">A</button>
+    <button class="fs-btn" data-scale="1.2" aria-pressed="false">A+</button>
+    <button class="fs-btn" data-scale="1.45" aria-pressed="false">A++</button>
+  </div>
+  <div class="setting-row">
+    <label for="light-toggle">Light mode</label>
+    <span class="toggle-wrap">
+      <input type="checkbox" id="light-toggle" role="switch" aria-checked="false">
+      <span class="toggle-track" aria-hidden="true"></span>
+    </span>
+  </div>
+  <p class="close-hint">Period key, Escape, or click outside to close</p>
+</div>
+
+<div id="progress" role="progressbar"
+     aria-valuemin="1" aria-valuemax="13" aria-valuenow="1"
+     aria-label="Slide progress"></div>
+<div class="slide-num" id="slide-num" aria-hidden="true">1 / 13</div>
+<div id="nav-hint" aria-hidden="true">
+  space &middot; 
+  click &middot; 
+  arrows  &middot; 
+  <!-- . (dot key) for larger text and light mode &middot; -->
+  questions welcome any time
+</div>
+
+<script>
+  const TOTAL = 13;
+
+  const VIDEO_SLIDES = {
+    7:  { file: 'video_1_chart_view.mov'  },
+    8:  { file: 'video_2_explore_view.mov' },
+    9:  { file: 'video_3_summary.mov'      },
+    10: { file: 'video_4_settings.mov'     },
+  };
+
+  let current = 1;
+  let arrivedOnVideoSlide = false;
+  const videoState = {};
+  const videoEls   = {};
+
+  // ── LocalStorage ───────────────────────────
+  const STORAGE_KEY_SLIDE = 'glucosound-active-slide';
+  const STORAGE_KEY_SCALE = 'glucosound-font-scale';
+  const STORAGE_KEY_LIGHT = 'glucosound-light-mode';
+
+  function saveActiveSlide(n) {
+    localStorage.setItem(STORAGE_KEY_SLIDE, n.toString());
+  }
+
+  function restoreActiveSlide() {
+    const saved = localStorage.getItem(STORAGE_KEY_SLIDE);
+    return saved ? Math.max(1, Math.min(TOTAL, parseInt(saved))) : 1;
+  }
+
+  function saveFontScale(v) {
+    localStorage.setItem(STORAGE_KEY_SCALE, v.toString());
+  }
+
+  function restoreFontScale() {
+    const saved = localStorage.getItem(STORAGE_KEY_SCALE);
+    return saved ? parseFloat(saved) : 1;
+  }
+
+  function saveLightMode(on) {
+    localStorage.setItem(STORAGE_KEY_LIGHT, on ? 'true' : 'false');
+  }
+
+  function restoreLightMode() {
+    const saved = localStorage.getItem(STORAGE_KEY_LIGHT);
+    return saved === 'true';
+  }
+
+  // ── Video setup ────────────────────────────
+  function buildVideoSlides() {
+    for (const [idx, cfg] of Object.entries(VIDEO_SLIDES)) {
+      const n    = parseInt(idx);
+      const area = document.getElementById('va-' + n);
+      if (!area) continue;
+
+      const vid       = document.createElement('video');
+      vid.src         = cfg.file;
+      vid.controls    = true;
+      vid.playsInline = true;
+      vid.preload     = 'metadata';
+      vid.style.display = 'none';
+      // Descriptive label for screen readers
+      vid.setAttribute('aria-label', area.getAttribute('aria-label') || 'Demo video');
+
+      vid.addEventListener('canplay', () => {
+        if (videoState[n] === 'idle') {
+          videoState[n] = 'ready';
+          area.classList.add('video-ready');
+          vid.style.display = 'block';
+          area.classList.add('video-paused');
+        }
+      });
+      vid.addEventListener('play', () => {
+        area.classList.remove('video-paused');
+      });
+      vid.addEventListener('pause', () => {
+        area.classList.add('video-paused');
+      });
+      vid.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (vid.paused) vid.play();
+        else vid.pause();
+      });
+      vid.addEventListener('ended', () => {
+        videoState[n] = 'ready';
+        area.classList.remove('video-playing');
+        area.classList.add('video-paused');
+        announce('Video ended');
+      });
+      vid.addEventListener('error', () => { videoState[n] = 'missing'; });
+
+      area.appendChild(vid);
+      videoEls[n]   = vid;
+      videoState[n] = 'idle';
+      vid.load();
+    }
+  }
+
+  function triggerVideo(n) {
+    const vid = videoEls[n];
+    if (!vid || videoState[n] === 'missing') { goTo(n + 1); return; }
+    const area = document.getElementById('va-' + n);
+    if (videoState[n] === 'playing') return;
+    vid.style.display = 'block';
+    if (videoState[n] === 'ready') {
+      vid.currentTime = 0;
+      area.classList.add('video-at-start');
+    }
+    vid.play().then(() => {
+      videoState[n] = 'playing';
+      area.classList.add('video-ready', 'video-playing');
+      area.classList.remove('video-at-start');
+      announce('Video playing');
+    }).catch(() => {
+      vid.style.display = 'none';
+      videoState[n] = 'missing';
+      goTo(n + 1);
+    });
+  }
+
+  // ── Announce to screen reader ──────────────
+  function announce(text) {
+    const el = document.getElementById('slide-announcer');
+    // Toggle content to force re-announcement
+    el.textContent = '';
+    requestAnimationFrame(() => { el.textContent = text; });
+  }
+
+  // ── Navigation ─────────────────────────────
+  function goTo(n) {
+    if (n < 1 || n > TOTAL) return;
+    if (VIDEO_SLIDES[current] && videoEls[current]) {
+      videoEls[current].pause();
+      videoEls[current].currentTime = 0;
+      videoEls[current].style.display = 'none';
+      if (videoState[current] === 'playing') videoState[current] = 'ready';
+      document.getElementById('va-' + current)?.classList.remove('video-playing');
+    }
+    document.getElementById('slide-' + current).classList.remove('active');
+    current = n;
+    saveActiveSlide(current);
+    const slideEl = document.getElementById('slide-' + current);
+    slideEl.classList.add('active');
+
+    // Update progress indicators (slides 2-12 are numbered 1/11 to 11/11)
+    const slideNumEl = document.getElementById('slide-num');
+    if (current >= 2 && current <= 12) {
+      slideNumEl.textContent = (current - 1) + ' / 11';
+      slideNumEl.style.opacity = '1';
+    } else {
+      slideNumEl.style.opacity = '0';
+    }
+    
+    const prog = document.getElementById('progress');
+    prog.style.width     = ((current / TOTAL) * 100) + '%';
+    prog.setAttribute('aria-valuenow', current);
+
+    if (current > 1) document.getElementById('nav-hint').style.opacity = '0';
+
+    arrivedOnVideoSlide = false;
+    if (current === 8) startSine(); else stopSine();
+
+    // For video slides that are already loaded, restore display
+    if (VIDEO_SLIDES[current] && videoEls[current] && videoState[current] !== 'idle') {
+      videoEls[current].style.display = 'block';
+    }
+
+    // Announce slide to screen reader
+    const label = slideEl.getAttribute('aria-label') || ('Slide ' + current);
+    announce(label);
+
+    // Move focus to the slide heading for keyboard/SR users
+    const heading = slideEl.querySelector('h1, h2, .big-quote');
+    if (heading) {
+      if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+      heading.focus({ preventScroll: true });
+    }
+  }
+
+  function advance() {
+    if (fsMenuOpen()) return;
+    if (VIDEO_SLIDES[current]) {
+      const s = videoState[current];
+      if (s === 'missing') { goTo(current + 1); return; }
+      if (!arrivedOnVideoSlide) { arrivedOnVideoSlide = true; return; }
+      triggerVideo(current);
+      arrivedOnVideoSlide = false;
+      return;
+    }
+    goTo(current + 1);
+  }
+
+  // ── Font scale menu ────────────────────────
+  const fsMenu = document.getElementById('fs-menu');
+  let _fsOpen  = false;
+  let _prevFocus = null;
+
+  function fsMenuOpen() { return _fsOpen; }
+
+  function openFsMenu() {
+    _fsOpen = true;
+    _prevFocus = document.activeElement;
+    fsMenu.classList.add('open');
+    fsMenu.removeAttribute('aria-hidden');
+    // Focus first button
+    fsMenu.querySelector('.fs-btn').focus();
+  }
+  function closeFsMenu() {
+    _fsOpen = false;
+    fsMenu.classList.remove('open');
+    fsMenu.setAttribute('aria-hidden', 'true');
+    if (_prevFocus) _prevFocus.focus();
+  }
+
+  function setScale(v) {
+    document.documentElement.style.setProperty('--fs', v);
+    saveFontScale(v);
+    document.querySelectorAll('.fs-btn').forEach(b => {
+      const active = parseFloat(b.dataset.scale) === v;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    announce('Font size changed');
+  }
+
+  // Init fs-menu aria-hidden
+  fsMenu.setAttribute('aria-hidden', 'true');
+
+  document.querySelectorAll('.fs-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      setScale(parseFloat(btn.dataset.scale));
+    });
+  });
+
+  // Light mode toggle
+  const lightToggle = document.getElementById('light-toggle');
+  lightToggle.addEventListener('change', () => {
+    const on = lightToggle.checked;
+    document.documentElement.classList.toggle('light', on);
+    saveLightMode(on);
+    lightToggle.setAttribute('aria-checked', on ? 'true' : 'false');
+    announce(on ? 'Light mode on' : 'Dark mode on');
+  });
+  lightToggle.addEventListener('click', e => e.stopPropagation());
+
+  fsMenu.addEventListener('click', e => {
+    if (e.target === fsMenu) closeFsMenu();
+  });
+
+  // ── Input ──────────────────────────────────
+  document.addEventListener('keydown', e => {
+    // Font menu
+    if (e.key === '.') {
+      e.preventDefault();
+      _fsOpen ? closeFsMenu() : openFsMenu();
+      return;
+    }
+    if (e.key === 'Escape' && _fsOpen) { closeFsMenu(); return; }
+    // Trap Tab inside fs-menu
+    if (_fsOpen && e.key === 'Tab') {
+      const focusable = [...fsMenu.querySelectorAll('.fs-btn, #light-toggle')];
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+      return;
+    }
+    if (_fsOpen) return;
+
+    // Direct slide navigation: 0→slide1, 1→slide2 (1/11), 2→slide3 (2/11), ..., 9→slide10 (9/11)
+    if (e.key === '0') { e.preventDefault(); goTo(1); return; }
+    if (e.key === '1') { e.preventDefault(); goTo(2); return; }
+    if (e.key === '2') { e.preventDefault(); goTo(3); return; }
+    if (e.key === '3') { e.preventDefault(); goTo(4); return; }
+    if (e.key === '4') { e.preventDefault(); goTo(5); return; }
+    if (e.key === '5') { e.preventDefault(); goTo(6); return; }
+    if (e.key === '6') { e.preventDefault(); goTo(7); return; }
+    if (e.key === '7') { e.preventDefault(); goTo(8); return; }
+    if (e.key === '8') { e.preventDefault(); goTo(9); return; }
+    if (e.key === '9') { e.preventDefault(); goTo(10); return; }
+
+    if (e.key === ' ') {
+      e.preventDefault();
+      const vid = videoEls[current];
+      if (vid && VIDEO_SLIDES[current]) {
+        vid.paused ? vid.play() : vid.pause();
+      } else {
+        advance();
+      }
+    }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault(); goTo(current + 1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault(); goTo(current - 1);
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (_fsOpen) { closeFsMenu(); return; }
+    // Don't advance if clicking a link
+    if (e.target.closest('a, button')) return;
+    const vid = videoEls[current];
+    if (vid && VIDEO_SLIDES[current]) {
+      vid.paused ? vid.play() : vid.pause();
+    } else {
+      advance();
+    }
+  });
+
+  // ── Sine wave ──────────────────────────────
+  let sineRAF = null, sinePhase = 0;
+
+  function startSine() {
+    const canvas = document.getElementById('sine-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    function draw() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const waves = [
+        { freq: 0.018, amp: 0.12, speed: 0.012, color: '#34C759' },
+        { freq: 0.010, amp: 0.08, speed: 0.007, color: '#34C759' },
+        { freq: 0.030, amp: 0.05, speed: 0.020, color: '#FF9500' },
+      ];
+      for (const w of waves) {
+        ctx.beginPath(); ctx.strokeStyle = w.color;
+        ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6;
+        for (let y = 0; y < H; y++) {
+          const x = W * 0.5 + Math.sin(y * w.freq + sinePhase * w.speed * 60) * W * w.amp;
+          y === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      sinePhase++;
+      sineRAF = requestAnimationFrame(draw);
+    }
+    if (!sineRAF) draw();
+  }
+
+  function stopSine() {
+    if (sineRAF) { cancelAnimationFrame(sineRAF); sineRAF = null; }
+  }
+
+  // ── Init ───────────────────────────────────
+  buildVideoSlides();
+
+  // Restore settings from localStorage
+  const savedScale = restoreFontScale();
+  const savedLight = restoreLightMode();
+
+  // Apply font scale
+  if (savedScale !== 1) {
+    setScale(savedScale);
+  }
+
+  // Apply light mode
+  if (savedLight) {
+    lightToggle.checked = true;
+    document.documentElement.classList.add('light');
+    lightToggle.setAttribute('aria-checked', 'true');
+  }
+
+  // Restore active slide and navigate to it
+  const savedSlide = restoreActiveSlide();
+  if (savedSlide !== 1) {
+    goTo(savedSlide);
+  }
+
+  document.getElementById('progress').style.width = ((1 / TOTAL) * 100) + '%';
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) startSine = () => {};
+</script>
+</body>
+</html>
