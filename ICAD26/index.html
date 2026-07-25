@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mon spelly — GlucoSound</title>
+<meta name="description" content="Auditory blood glucose graphs for blind people with diabetes. / Akustische Blutzuckergraphen für blinde Diabetiker:innen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper: #FCFBF8;
+    --ink:   #101010;
+    --dim:   #63635E;
+    --line:  #E4E2DB;
+    --green: #1A7A32;
+    --red:   #C0281E;
+    --amber: #B86A00;
+    --maxw: 42rem;
+  }
+
+  body {
+    font-family: 'Atkinson Hyperlegible Next', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 1.0625rem;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .skip-link {
+    position: fixed; top: 0; left: 0; z-index: 99;
+    background: var(--ink); color: var(--paper);
+    padding: 0.6rem 1rem; font-weight: 700;
+    transform: translateY(-120%);
+  }
+  .skip-link:focus { transform: none; }
+
+  :focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+
+  /* ── Language toggle ─────────────────────── */
+  .lang-switch {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    display: flex; gap: 2px;
+    border: 1.5px solid var(--ink); border-radius: 999px;
+    overflow: hidden;
+  }
+  .lang-switch button {
+    font: inherit; font-weight: 700; font-size: 0.85rem;
+    background: transparent; color: var(--ink);
+    border: 0; padding: 0.35rem 0.85rem; cursor: pointer;
+  }
+  .lang-switch button[aria-pressed="true"] {
+    background: var(--ink); color: var(--paper);
+  }
+
+  html.de [data-l="en"] { display: none; }
+  html:not(.de) [data-l="de"] { display: none; }
+
+  /* ── Layout ──────────────────────────────── */
+  main { max-width: var(--maxw); margin: 0 auto; padding: 0 1.5rem 4rem; }
+  header.hero { padding-top: 7rem; padding-bottom: 4rem; position: relative; }
+  section { padding: 3rem 0 3.5rem; }
+
+  .wave-sep {
+    display: block; width: 100%; height: 30px;
+    color: var(--line);
+  }
+
+  .eyebrow {
+    font-size: 0.78rem; font-weight: 800;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 0.9rem;
+  }
+  h2 {
+    font-size: clamp(1.55rem, 4.5vw, 2rem);
+    font-weight: 800; letter-spacing: -0.015em;
+    line-height: 1.15; margin-bottom: 1.1rem;
+    text-wrap: balance;
+  }
+  p { max-width: 60ch; }
+  p + p { margin-top: 0.9rem; }
+  .dim { color: var(--dim); }
+  a { color: var(--green); font-weight: 700; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  strong { font-weight: 700; }
+
+  /* ── Wordmark (recreation of monspelly.svg) ──
+     Atkinson Hyperlegible Next Bold @ 27.8372 units.
+     Baseline gap 15.6668 / 27.8372 = 0.5628 em; dx offsets in em. */
+  .wordmark {
+    font-weight: 700;
+    font-size: clamp(3.4rem, 13vw, 6rem);
+    line-height: 1;
+    white-space: pre;
+    user-select: none;
+  }
+  .wordmark .wl { display: block; height: 0.5628em; }
+  .wordmark .wl:last-child { height: auto; }
+  .wm-n  { margin-left: 0.016948em; }
+  .wm-s  { margin-left: 0.062173em; }
+  .wm-p  { margin-left: -0.0048964em; }
+  .wm-e  { margin-left: -0.0022596em; }
+  .wm-l1 { margin-left: 0.0048964em; }
+  .wm-letter { display: inline-block; }
+
+  .hero .claim {
+    margin-top: 2.2rem;
+    font-size: clamp(1.15rem, 3vw, 1.4rem);
+    font-weight: 500;
+    max-width: 32ch;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+  .hero .claim em { font-style: normal; color: var(--green); font-weight: 700; }
+  .hero .sub { margin-top: 0.9rem; color: var(--dim); font-size: 1rem; }
+
+  /* ── Placeholders ────────────────────────── */
+  .ph {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    background: #F6F5F0;
+    color: var(--dim);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.4rem; text-align: center;
+    padding: 1.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  .ph .ph-tag {
+    font-weight: 800; font-size: 0.72rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .shots {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1rem; margin-top: 1.8rem;
+  }
+  .shots .ph { aspect-ratio: 9 / 17; }
+  .shot {
+    margin: 0; border-radius: 12px; overflow: hidden;
+    border: 1.5px solid var(--line); background: #F6F5F0;
+    line-height: 0;
+  }
+  .shot img { display: block; width: 100%; height: auto; }
+  @media (max-width: 560px) {
+    .shots { grid-template-columns: 1fr 1fr; }
+    .shots .ph:nth-child(3) { grid-column: 1 / -1; aspect-ratio: 16/9; }
+    .shots .shot:nth-child(3) { grid-column: 1 / -1; }
+  }
+
+  /* ── References ──────────────────────────── */
+  .refs {
+    margin-top: 0.9rem; padding-left: 1.2rem;
+    color: var(--dim); font-size: 0.82rem; line-height: 1.55;
+    display: flex; flex-direction: column; gap: 0.35rem;
+  }
+  .refs a { color: var(--dim); font-weight: 500; text-decoration-thickness: 1px; }
+  .refs a:hover, .refs a:focus-visible { color: var(--green); }
+  sup a { color: var(--green); font-weight: 700; text-decoration: none; }
+  sup a:hover { text-decoration: underline; }
+
+  /* ── Facts ───────────────────────────────── */
+  .facts {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem 2.5rem; margin-top: 1.8rem;
+    border-top: 1px solid var(--line); padding-top: 1.5rem;
+  }
+  .fact dt {
+    font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 0.15rem;
+  }
+  .fact dd { font-weight: 500; }
+
+  /* ── Demo ────────────────────────────────── */
+  .demo-wrap { margin-top: 1.8rem; }
+  .demo-chart {
+    position: relative;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: #FFFFFF;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .demo-chart canvas { display: block; width: 100%; height: 16rem; }
+  .demo-surface {
+    position: absolute; inset: 0;
+    cursor: crosshair;
+    border-radius: 12px;
+    /* touch-action is NOT inherited, so it must be set on the element that
+       actually receives the pointer events. Without this, Android claims the
+       touch as a scroll gesture and fires pointercancel mid-drag. */
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .demo-readout {
+    display: flex; align-items: baseline; gap: 1rem;
+    margin-top: 0.8rem; min-height: 1.8rem;
+    flex-wrap: wrap;
+  }
+  .demo-value {
+    font-weight: 800; font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .demo-time { color: var(--dim); font-variant-numeric: tabular-nums; }
+  .demo-zone { font-weight: 700; font-size: 0.85rem; }
+  .demo-zone.z-low  { color: var(--red); }
+  .demo-zone.z-high { color: var(--amber); }
+  .demo-zone.z-in   { color: var(--green); }
+  .demo-hint { margin-top: 0.5rem; color: var(--dim); font-size: 0.9rem; }
+  .demo-hint[hidden] { display: none; }
+
+  .notes { list-style: none; margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .notes li {
+    display: flex; gap: 0.8rem; align-items: baseline;
+    font-size: 0.95rem; color: var(--dim); max-width: 62ch; line-height: 1.5;
+  }
+  .notes li::before { content: '\2014'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .notes strong { color: var(--ink); }
+
+  /* ── Asks ────────────────────────────────── */
+  .asks { list-style: none; margin-top: 1.6rem; display: flex; flex-direction: column; }
+  .asks li { border-top: 1px solid var(--line); padding: 1.15rem 0; }
+  .asks li:last-child { border-bottom: 1px solid var(--line); }
+  .asks .ask-title { font-weight: 700; font-size: 1.1rem; }
+  .asks .ask-body { color: var(--dim); margin-top: 0.2rem; max-width: 55ch; }
+
+  /* ── Contact ─────────────────────────────── */
+  .contact-block { margin-top: 1.6rem; display: flex; flex-direction: column; gap: 0.8rem; }
+  .contact-row { display: flex; align-items: baseline; gap: 1.2rem; }
+  .contact-label {
+    font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim); min-width: 6.5rem;
+  }
+  .contact-val { font-size: 1.05rem; overflow-wrap: anywhere; }
+
+  footer {
+    max-width: var(--maxw); margin: 0 auto;
+    padding: 1.5rem 1.5rem 3rem;
+    color: var(--dim); font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#content" data-l="en">Skip to content</a>
+<a class="skip-link" href="#content" data-l="de">Zum Inhalt springen</a>
+
+<main id="content">
+
+  <header class="hero">
+    <div class="lang-switch" role="group" aria-label="Language / Sprache">
+      <button type="button" id="btn-en" aria-pressed="true" lang="en">EN</button>
+      <button type="button" id="btn-de" aria-pressed="false" lang="de">DE</button>
+    </div>
+
+    <h1>
+      <span class="sr-only">mon spelly</span>
+      <span class="wordmark" aria-hidden="true"
+        ><span class="wl">mo<span class="wm-letter wm-n">n</span></span
+        ><span class="wl"> <span class="wm-letter wm-s">s</span><span class="wm-letter wm-p">p</span><span class="wm-letter wm-e">e</span><span class="wm-letter wm-l1">l</span>ly</span
+      ></span>
+    </h1>
+
+    <p class="claim" data-l="en">I build <em>auditory blood glucose graphs</em> for blind people with diabetes.</p>
+    <p class="claim" data-l="de">Ich arbeite an <em>akustischen Blutzuckergraphen</em> für blinde Diabetiker:innen.</p>
+  </header>
+
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+
+  <!-- ── GlucoSound ─────────────────────────── -->
+  <section aria-labelledby="h-app">
+    <p class="eyebrow" data-l="en">The project</p>
+    <p class="eyebrow" data-l="de">Das Projekt</p>
+
+    <h2 id="h-app" data-l="en">GlucoSound: hear your blood sugar.</h2>
+    <h2 data-l="de" hidden>GlucoSound: den Blutzucker hören.</h2>
+
+    <div data-l="en">
+      <p>CGM sensors report blood glucose every five minutes. A single reading already matters, but the trend adds something a single value can't: seeing glucose patterns over time is how people and clinicians see the effect of meals and behavior, and it forms the basis for individually optimized treatment.<sup><a href="#ref1" id="cite1">[1]</a></sup> That kind of pattern view is also linked to less time in hypoglycemia and better long-term control.<sup><a href="#ref2" id="cite2">[2]</a></sup> In the manufacturers' apps, that trend chart is essentially invisible to screen readers. The accessibility APIs that could fix it have existed since 2021. An estimated one in three to four people with diabetes has some degree of diabetic retinopathy<sup><a href="#ref1">[1]</a></sup>, exactly the population CGM is built for.</p>
+      <p>GlucoSound is a free iOS app that closes this gap with interactive sonification. A finger on the chart produces a continuous tone whose pitch follows the glucose value. Out-of-range values are unmistakably marked in the sound itself. On release, the app speaks value and time. Alongside the sonified view: a fully labeled VoiceOver bar chart and a rule-based text summary.</p>
+    </div>
+    <div data-l="de">
+      <p>CGM-Sensoren liefern alle fünf Minuten einen Blutzuckerwert. Auch der einzelne Wert ist schon wertvoll, aber der Trend liefert einen weiteren Wert: Wer sich Verläufe über die Zeit ansieht, erkennt, wie Mahlzeiten und Verhalten den Blutzucker beeinflussen, und das bildet die Grundlage für eine individuell optimierte Behandlung.<sup><a href="#ref1-de">[1]</a></sup> Dieser Blick auf Muster ist außerdem mit weniger Zeit in Unterzuckerung und besserer langfristiger Einstellung verbunden.<sup><a href="#ref2-de">[2]</a></sup> Genau diese Trendkurve ist in den Apps der Hersteller für Screenreader praktisch unsichtbar. Die Schnittstellen, mit denen sich das beheben ließe, gibt es seit 2021. Schätzungsweise jede:r dritte bis vierte Mensch mit Diabetes hat einen gewissen Grad an diabetischer Retinopathie<sup><a href="#ref1-de">[1]</a></sup>, also genau in der Gruppe, für die CGM gemacht ist.</p>
+      <p>GlucoSound ist eine kostenlose iOS-App, die diese Lücke mit interaktiver Sonifikation schließt. Ein Finger auf der Kurve erzeugt einen durchgehenden Ton, dessen Tonhöhe dem Blutzucker folgt. Werte außerhalb des Zielbereichs sind im Klang selbst unmissverständlich markiert. Beim Loslassen spricht die App Wert und Uhrzeit. Dazu kommen ein vollständig beschriftetes Balkendiagramm für VoiceOver und eine regelbasierte Textzusammenfassung.</p>
+    </div>
+
+    <dl class="facts">
+      <div class="fact">
+        <dt data-l="en">Platform</dt><dt data-l="de">Plattform</dt>
+        <dd>iPhone · iOS 17+</dd>
+      </div>
+      <div class="fact">
+        <dt data-l="en">Data source</dt><dt data-l="de">Datenquelle</dt>
+        <dd>Apple Health · Dexcom Share</dd>
+      </div>
+    </dl>
+
+    <ol class="refs" data-l="en">
+      <li id="ref1">Heinemann, L., Drossel, D., Freckmann, G. & Kulzer, B. <em>Usability of Medical Devices for Patients With Diabetes Who Are Visually Impaired or Blind.</em> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5094343/" target="_blank" rel="noopener">J Diabetes Sci Technol, 2016</a>.</li>
+      <li id="ref2">Wright, E.E. & Kerr, M.S.D. <em>Utilizing the New Glucometrics: A Practical Guide to Ambulatory Glucose Profile Interpretation.</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9354515/" target="_blank" rel="noopener">Clin Diabetes Endocrinol, 2022</a>; Cleveland Clinic Journal of Medicine, <a href="https://www.ccjm.org/content/91/10/611" target="_blank" rel="noopener">"Using continuous glucose monitoring data in daily clinical practice," 2024</a>.</li>
+    </ol>
+    <ol class="refs" data-l="de">
+      <li id="ref1-de">Heinemann, L., Drossel, D., Freckmann, G. & Kulzer, B. <em>Usability of Medical Devices for Patients With Diabetes Who Are Visually Impaired or Blind.</em> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5094343/" target="_blank" rel="noopener">J Diabetes Sci Technol, 2016</a>.</li>
+      <li id="ref2-de">Wright, E.E. & Kerr, M.S.D. <em>Utilizing the New Glucometrics: A Practical Guide to Ambulatory Glucose Profile Interpretation.</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9354515/" target="_blank" rel="noopener">Clin Diabetes Endocrinol, 2022</a>; Cleveland Clinic Journal of Medicine, <a href="https://www.ccjm.org/content/91/10/611" target="_blank" rel="noopener">„Using continuous glucose monitoring data in daily clinical practice", 2024</a>.</li>
+    </ol>
+
+    <div class="shots" data-l="en" role="group" aria-label="Screenshots">
+      <figure class="shot"><img src="chart.png" alt="Chart view: a twelve-hour glucose curve from 10:00 to 22:00, with green in-range, orange high, and red low bands. Stats above read average 134, minimum 89, maximum 216, 88% time in range. Below the chart, a time-range picker, date navigation, and buttons for Explore and Stats."></figure>
+      <figure class="shot"><img src="explore.png" alt="Explore mode on the same chart, six-hour range. A cursor sits on the curve at 17:54, reading 177 mg/dL. Below, the time-range picker, date navigation, and Back and Play Sweep buttons."></figure>
+      <figure class="shot"><img src="summary.png" alt="Summary screen for Sunday, 16:00 to 22:00. Stats: average 149 mg/dL, 75% time in range, 0% lows, 25% highs, stable variability at 25%. A written summary explains glucose moved toward range over the six hours. Under &quot;What to watch&quot;: no single dominant risk, and the low side stayed protected at 0%, well under the 4% limit."></figure>
+    </div>
+    <div class="shots" data-l="de" role="group" aria-label="Screenshots">
+      <figure class="shot"><img src="chart.png" alt="Chart-Ansicht: eine Zwölf-Stunden-Kurve von 10 bis 22 Uhr, mit grünem Zielbereich, orangem Hoch- und rotem Tiefbereich. Die Werte darüber zeigen Durchschnitt 134, Minimum 89, Maximum 216, 88 % Zeit im Zielbereich. Darunter die Zeitraum-Auswahl, Datumsnavigation und die Schaltflächen Explore und Stats."></figure>
+      <figure class="shot"><img src="explore.png" alt="Explore-Modus auf derselben Kurve, Sechs-Stunden-Bereich. Ein Cursor steht auf der Kurve bei 17:54 Uhr, Wert 177 mg/dL. Darunter die Zeitraum-Auswahl, Datumsnavigation sowie die Schaltflächen Back und Play Sweep."></figure>
+      <figure class="shot"><img src="summary.png" alt="Zusammenfassung für Sonntag, 16 bis 22 Uhr. Werte: Durchschnitt 149 mg/dL, 75 % Zeit im Zielbereich, 0 % Unterzuckerungen, 25 % Überzuckerungen, stabile Variabilität bei 25 %. Ein geschriebener Text erklärt, dass sich der Blutzucker über die sechs Stunden dem Zielbereich angenähert hat. Unter &quot;What to watch&quot;: kein einzelnes dominantes Risiko, und die Unterzuckerungsseite blieb bei 0 % geschützt, deutlich unter der 4-%-Grenze."></figure>
+    </div>
+  </section>
+
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+
+  <!-- ── Soft Chime demo ────────────────────── -->
+  <section aria-labelledby="h-demo">
+    <p class="eyebrow" data-l="en">Concept demo</p>
+    <p class="eyebrow" data-l="de">Konzept-Demo</p>
+
+    <h2 id="h-demo" data-l="en">This is what blood sugar sounds like.</h2>
+    <h2 data-l="de" hidden>So klingt Blutzucker.</h2>
+
+    <p data-l="en">A browser recreation of the app's Soft Chime instrument, running on six hours of example data. It is a concept demo: close to the real engine, not identical to it. Drag across the curve, or click it once and scrub with the arrow keys. When you let go, value and time are spoken, as in the app.</p>
+    <p data-l="de">Eine Browser-Nachbildung des Soft-Chime-Instruments aus der App, mit sechs Stunden Beispieldaten. Es ist eine Konzept-Demo: nah an der echten Engine, aber nicht identisch. Zieh über die Kurve, oder klick sie einmal an und taste dich mit den Pfeiltasten durch. Beim Loslassen werden Wert und Uhrzeit gesprochen, wie in der App.</p>
+
+    <div class="demo-wrap">
+      <div class="demo-chart">
+        <canvas id="demo-canvas" aria-hidden="true"></canvas>
+        <div class="demo-surface" id="demo-surface"
+             tabindex="0" role="slider"
+             aria-orientation="horizontal"
+             aria-valuemin="0" aria-valuemax="71" aria-valuenow="36"
+             aria-label="Blood glucose, six hours of example data"
+             aria-valuetext=""></div>
+      </div>
+      <div class="demo-readout" aria-hidden="true">
+        <span class="demo-value" id="demo-value">—</span>
+        <span class="demo-time" id="demo-time"></span>
+        <span class="demo-zone" id="demo-zone"></span>
+      </div>
+      <p class="demo-hint" id="hint-keys" hidden>
+        <span data-l="en">Arrow keys step 5 minutes, Page Up/Down one hour, Home/End to the edges.</span>
+        <span data-l="de">Pfeiltasten: 5 Minuten. Bild auf/ab: eine Stunde. Pos1/Ende: an die Ränder.</span>
+      </p>
+      <p class="demo-hint" id="hint-ringer" hidden>
+        <span data-l="en">No sound? Check the ringer switch on the side of your iPhone is not set to silent.</span>
+        <span data-l="de">Kein Ton? Prüf den seitlichen Schalter am iPhone, er darf nicht auf lautlos stehen.</span>
+      </p>
+    </div>
+
+    <ul class="notes" data-l="en">
+      <li><span><strong>Linear pitch mapping,</strong> 130–784 Hz across 40–300 mg/dL. A pure bijection: the same value always sounds the same.</span></li>
+      <li><span><strong>Built to sound pleasant,</strong> not just informative. The goal is a tone people want to check regularly, including in public. A pure sine wave, what <a href="https://youtu.be/NSCn30SQOAk?t=214" target="_blank" rel="noopener">Apple's Audio Graph</a> uses, can sound harsh and fatiguing with repeated listening.</span></li>
+      <li><span><strong>Categorical zone cues:</strong> tremolo below range, vibrato above, at full depth from the first sample.</span></li>
+      <li><span><strong>Hour boundaries as click transients,</strong> temporal landmarks while scrubbing.</span></li>
+      <li><span><strong>Base pitch and pitch span are fully adjustable</strong> in the app itself. Diabetes is also disproportionately associated with hearing impairment, and a fixed mapping would leave some listeners with less of the range to hear.</span></li>
+    </ul>
+    <ul class="notes" data-l="de">
+      <li><span><strong>Lineares Pitch-Mapping,</strong> 130 bis 784 Hz über 40 bis 300 mg/dL. Eine reine Bijektion: derselbe Wert klingt immer gleich.</span></li>
+      <li><span><strong>Auf angenehmen Klang ausgelegt,</strong> nicht nur auf Information. Ziel ist ein Ton, den man sich gerne regelmäßig anhört, auch in der Öffentlichkeit. Ein reiner Sinuston, wie ihn <a href="https://youtu.be/NSCn30SQOAk?t=214" target="_blank" rel="noopener">Apples Audio Graph</a> verwendet, kann bei wiederholtem Hören schnell schrill und ermüdend wirken.</span></li>
+      <li><span><strong>Kategoriale Zonen-Cues:</strong> Tremolo unterhalb, Vibrato oberhalb des Zielbereichs, ab dem ersten Wert in voller Tiefe.</span></li>
+      <li><span><strong>Kurze Klicks an den Stundengrenzen,</strong> zeitliche Orientierungspunkte beim Abtasten.</span></li>
+      <li><span><strong>Grundtonhöhe und Tonhöhenspanne sind in der App frei einstellbar.</strong> Diabetes geht überdurchschnittlich häufig mit Hörbeeinträchtigungen einher, und ein festes Mapping würde manchen Hörer:innen einen Teil des Bereichs vorenthalten.</span></li>
+    </ul>
+  </section>
+
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+
+  <!-- ── Who ────────────────────────────────── -->
+  <section aria-labelledby="h-who">
+    <p class="eyebrow" data-l="en">Who I am</p>
+    <p class="eyebrow" data-l="de">Wer ich bin</p>
+
+    <h2 id="h-who" data-l="en">Nine years of run-up.</h2>
+    <h2 data-l="de" hidden>Neun Jahre Anlauf.</h2>
+
+    <div data-l="en">
+      <p>I'm Mon Spelly (they/them), a designer and developer from Bremen. In 2017 my blind roommate got his first Dexcom sensor. VoiceOver's complete description of his six-hour glucose chart: <strong>"Twin graph."</strong> Two words. I prototyped a sonification back then, but never got past the concept.</p>
+      <p>Early 2026, that same friend got the new Dexcom G7. Same chart, still inaccessible. This time, a few weeks of focused work were enough for a working app. I've been developing GlucoSound since, and I'm here to connect it with the people who understand this problem best.</p>
+    </div>
+    <div data-l="de">
+      <p>Ich bin Mon Spelly (they/them), Designer:in und Entwickler:in aus Bremen. 2017 bekam mein blinder Mitbewohner seinen ersten Dexcom-Sensor. VoiceOvers vollständige Beschreibung seiner Sechs-Stunden-Kurve: <strong>„Twin graph."</strong> Zwei Wörter. Ich habe damals an einer Sonifikation gebastelt, bin aber nicht über das Konzept hinausgekommen.</p>
+      <p>Anfang 2026 bekam derselbe Freund den neuen Dexcom G7. Dieselbe Kurve, immer noch unzugänglich. Diesmal haben ein paar Wochen konzentrierter Arbeit für eine funktionierende App gereicht. Seitdem entwickle ich GlucoSound weiter, und ich bin hier, um mit den Menschen ins Gespräch zu kommen, die dieses Problem am besten verstehen.</p>
+    </div>
+  </section>
+
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+
+  <!-- ── Asks ───────────────────────────────── -->
+  <section aria-labelledby="h-help">
+    <p class="eyebrow" data-l="en">Looking for</p>
+    <p class="eyebrow" data-l="de">Gesucht</p>
+
+    <h2 id="h-help" data-l="en">How you can help.</h2>
+    <h2 data-l="de" hidden>Wobei du helfen kannst.</h2>
+
+    <ul class="asks" data-l="en">
+      <li>
+        <p class="ask-title">Academic mentoring and study support</p>
+        <p class="ask-body">I want to evaluate the sonification properly: study design, methodology, perhaps a publication. If you supervise students, review papers, or have run a study with blind participants yourself, your experience would help me enormously.</p>
+      </li>
+      <li>
+        <p class="ask-title">Reaching blind CGM users, and staying in touch with them</p>
+        <p class="ask-body">I'm in contact with first organisations and testers, but the need is far from covered. And beyond first contact, keeping an accessible feedback channel open with blind users is a challenge of its own. Introductions and practical advice are equally welcome.</p>
+      </li>
+      <li>
+        <p class="ask-title">Experience with medical device regulation</p>
+        <p class="ask-body">GlucoSound handles health data, and I want to release it responsibly. Even after a fair amount of research, I still can't say for sure whether this counts as an accessibility tool or a medical device. If you know your way around MDR or that distinction in general: I have questions.</p>
+      </li>
+    </ul>
+    <ul class="asks" data-l="de">
+      <li>
+        <p class="ask-title">Akademisches Mentoring und Studienbegleitung</p>
+        <p class="ask-body">Ich möchte die Sonifikation sauber evaluieren: Studiendesign, Methodik, vielleicht eine Publikation. Wer Studierende betreut, Paper reviewt oder selbst schon eine Studie mit blinden Teilnehmenden durchgeführt hat, kann mir enorm helfen.</p>
+      </li>
+      <li>
+        <p class="ask-title">Blinde CGM-Nutzer:innen erreichen und mit ihnen in Kontakt bleiben</p>
+        <p class="ask-body">Mit ersten Organisationen und Tester:innen bin ich im Gespräch, aber der Bedarf ist längst nicht gedeckt. Und über den Erstkontakt hinaus ist ein barrierefreier Feedback-Kanal eine eigene Herausforderung. Ich freue mich über Kontakte genauso wie über praktischen Rat.</p>
+      </li>
+      <li>
+        <p class="ask-title">Erfahrung mit Medizinprodukte-Regulierung</p>
+        <p class="ask-body">GlucoSound arbeitet mit Gesundheitsdaten, und ich will es verantwortungsvoll veröffentlichen. Ob das ein Hilfsmittel oder ein Medizinprodukt ist, kann ich auch nach ausführlicher Recherche noch nicht sicher sagen. Wer sich mit MDR oder dieser Abgrenzung generell auskennt: Ich hätte Fragen.</p>
+      </li>
+    </ul>
+  </section>
+
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+
+  <!-- ── Contact ────────────────────────────── -->
+  <section aria-labelledby="h-contact">
+    <p class="eyebrow" data-l="en">Contact</p>
+    <p class="eyebrow" data-l="de">Kontakt</p>
+
+    <h2 id="h-contact" data-l="en">Get in touch.</h2>
+    <h2 data-l="de" hidden>Schreib mir.</h2>
+
+    <div class="contact-block">
+      <div class="contact-row">
+        <span class="contact-label">Email</span>
+        <span class="contact-val"><a href="mailto:glucosounds@gmail.com">glucosounds@gmail.com</a></span>
+      </div>
+      <div class="contact-row">
+        <span class="contact-label">TestFlight</span>
+        <span class="contact-val"><a href="https://testflight.apple.com/join/uks5nsqt">testflight.apple.com/join/uks5nsqt</a></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div style="max-width:42rem;margin:0 auto;padding:0 1.5rem;">
+  <canvas class="wave-sep" aria-hidden="true"></canvas>
+</div>
+<footer>
+  <p>mon spelly · 2026</p>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   Language toggle (English default)
+───────────────────────────────────────────── */
+const btnEn = document.getElementById('btn-en');
+const btnDe = document.getElementById('btn-de');
+const langAnnouncer = document.createElement('div');
+langAnnouncer.setAttribute('aria-live', 'polite');
+langAnnouncer.className = 'sr-only';
+document.body.appendChild(langAnnouncer);
+
+let currentLang = 'en';
+
+function setLang(lang) {
+  currentLang = lang;
+  const de = lang === 'de';
+  document.documentElement.classList.toggle('de', de);
+  document.documentElement.lang = lang;
+  btnEn.setAttribute('aria-pressed', String(!de));
+  btnDe.setAttribute('aria-pressed', String(de));
+  document.querySelectorAll('[data-l]').forEach(el => {
+    el.hidden = (el.dataset.l !== lang);
+  });
+  try { localStorage.setItem('lang', lang); } catch (e) {}
+  langAnnouncer.textContent = de ? 'Sprache: Deutsch' : 'Language: English';
+  if (window.__demoRefresh) window.__demoRefresh();
+}
+
+btnEn.addEventListener('click', () => setLang('en'));
+btnDe.addEventListener('click', () => setLang('de'));
+
+/* ─────────────────────────────────────────────
+   Wave separator: a single line, the sum of two
+   slow-drifting sine components (like two voices
+   beating against each other).
+   Decorative; static under prefers-reduced-motion.
+───────────────────────────────────────────── */
+(() => {
+  const seps = [...document.querySelectorAll('canvas.wave-sep')];
+  if (!seps.length) return;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const visible = new Set(reduced ? [] : seps);
+
+  if (!reduced && 'IntersectionObserver' in window) {
+    visible.clear();
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) e.isIntersecting ? visible.add(e.target) : visible.delete(e.target);
+    });
+    seps.forEach(c => io.observe(c));
+  }
+
+  function waveY(x, t, mid, scale) {
+    const a = 6 * Math.sin((x + t * 7)   / (150 * scale) * 2 * Math.PI);
+    const b = 4 * Math.sin((x - t * 4.5) / (95  * scale) * 2 * Math.PI);
+    return mid + a + b;
+  }
+
+  // Distinct phase offset per separator so they don't all move in lockstep.
+  const offsets = new Map(seps.map((c, i) => [c, i * 11.3]));
+
+  // Distinct wavelength per separator, spread 0.8x–1.2x across the set, so no
+  // two separators share the same rhythm even where their phases happen to align.
+  const scales = new Map(seps.map((c, i) => {
+    const t = seps.length > 1 ? i / (seps.length - 1) : 0.5;
+    return [c, 0.8 + t * 0.4];
+  }));
+
+  function paint(c, t) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth, h = c.clientHeight;
+    if (w === 0) return;
+    if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    g.strokeStyle = getComputedStyle(c).color;
+    g.lineWidth = 1.5;
+    g.lineJoin = 'round';
+    const mid = h / 2;
+    const tOff = t + (offsets.get(c) || 0);
+    const scale = scales.get(c) || 1;
+    g.beginPath();
+    for (let x = 0; x <= w; x += 3) {
+      const y = waveY(x, tOff, mid, scale);
+      x === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+
+  const t0 = performance.now();
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    for (const c of visible) paint(c, t);
+    requestAnimationFrame(frame);
+  }
+
+  // Always paint once so waves exist even before scroll / with reduced motion
+  seps.forEach(c => paint(c, 0));
+  if (!reduced) requestAnimationFrame(frame);
+  window.addEventListener('resize', () => seps.forEach(c => paint(c, 0)));
+})();
+
+/* ─────────────────────────────────────────────
+   Soft Chime concept demo
+   Port of SonificationEngine.swift, .softChime, defaults.
+
+   Timbre (invNorm = 1 / (0.91 + 0.06 + 0.03) = 1):
+     fundamental          w 0.910
+     inharmonic 2.756×    w 0.060
+     inharmonic 5.404×    w 0.030
+   Brightness 0.85 folded into the gains:
+     s1  1 + 0.85·(0.91 − 1) = 0.9235
+     i1  0.85·0.060 = 0.0510
+     i2  0.85·0.030 = 0.0255
+   Defaults: glide 12 Hz · vibrato ±35 cents @ 5 Hz (high zone)
+   tremolo depth 0.20 @ 6 Hz (low zone) · pitch span 654 Hz
+   thresholds 70/180 · base amp 0.38
+   loudness comp pow(640/f, 0.55) clamped [0.85, 2.2]
+   low-frequency lift < 350 Hz: h3/h4/h5 = .30/.22/.14,
+   renormalised by 1/(1 + 0.6268·lift)
+   attack 90 Hz pole · on-lift slow fade 4.4 s (app default)
+   hour-boundary click: 700→1200 Hz chirp, 2 ms attack,
+   35 Hz decay pole, ducked against tone level
+───────────────────────────────────────────── */
+
+// ── Example data: 6 h, 5-min samples, one low + one high excursion
+const GLUCOSE = (() => {
+  const waypoints = [
+    [0, 128], [6, 122], [10, 104], [14, 82], [17, 63], [19, 58],
+    [22, 66], [26, 88], [31, 118], [36, 152], [40, 196], [44, 228],
+    [47, 232], [51, 208], [56, 176], [61, 148], [66, 132], [71, 126]
+  ];
+  const out = [];
+  for (let i = 0; i < 72; i++) {
+    let k = 0;
+    while (k < waypoints.length - 2 && waypoints[k + 1][0] < i) k++;
+    const [x0, y0] = waypoints[k], [x1, y1] = waypoints[k + 1];
+    const t = x1 === x0 ? 0 : (i - x0) / (x1 - x0);
+    const s = t * t * (3 - 2 * t); // smoothstep
+    out.push(Math.round(y0 + (y1 - y0) * s));
+  }
+  return out;
+})();
+const N = GLUCOSE.length;
+const LOW = 70, HIGH = 180;
+const PITCH_SPAN = 654;
+
+// Anchor the window to the last 5-minute mark so hour boundaries land on :00
+const nowMs = Math.floor(Date.now() / 300000) * 300000;
+const timeAt = i => new Date(nowMs - (N - 1 - i) * 5 * 60 * 1000);
+const HOUR_IDX = [];
+for (let i = 0; i < N; i++) if (timeAt(i).getMinutes() === 0) HOUR_IDX.push(i);
+
+const freqFor = g => 130 + ((Math.max(40, Math.min(300, g)) - 40) / 260) * PITCH_SPAN;
+const loudnessComp = f => Math.min(2.2, Math.max(0.85, Math.pow(640 / Math.max(60, f), 0.55)));
+
+// ── Audio graph
+let actx = null, nodes = null, playing = false;
+const GLIDE_TC   = 1 / (2 * Math.PI * 12);              // 12 Hz glide pole
+const ZONE_TC    = 1 / (2 * Math.PI * 25);              // ~6 ms zone crossfade
+const ATTACK_TC  = 1 / (2 * Math.PI * 90);              // 90 Hz attack pole
+const RELEASE_TC = 1 / (2 * Math.PI * 10);              // quick stop, ~60 ms
+const SLOWFADE_TC = 4.4 / (2 * Math.PI * 1.0966);       // app-default 4.4 s on-lift fade
+const CLICK_TC   = 1 / (2 * Math.PI * 35);              // click decay pole
+const BASE_AMP = 0.38;
+const LIFT_PEAK = 0.6268;
+
+function buildAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  actx = new AC();
+
+  // iOS: without an explicit playback session, Safari routes Web Audio through
+  // the ambient session, which the hardware ringer switch silences outright.
+  // Safari 16.4+ exposes navigator.audioSession for exactly this.
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) {}
+
+  // iOS: some versions only fully unlock output after a source has actually
+  // run inside the originating gesture. A one-sample silent buffer does that.
+  try {
+    const b = actx.createBuffer(1, 1, actx.sampleRate);
+    const s = actx.createBufferSource();
+    s.buffer = b;
+    s.connect(actx.destination);
+    s.start(0);
+  } catch (e) {}
+
+  const make = (ratio) => {
+    const o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = 220 * ratio;
+    const g = actx.createGain();
+    g.gain.value = 0;
+    o.connect(g);
+    o.start();
+    return { o, g, ratio };
+  };
+
+  // Voice: fundamental, two inharmonic partials, lift harmonics 3/4/5
+  const voices = {
+    s1: make(1),
+    i1: make(2.756),
+    i2: make(5.404),
+    h3: make(3),
+    h4: make(4),
+    h5: make(5),
+  };
+
+  // Tremolo stage: gain = base + depth·sin(6 Hz)
+  const trem = actx.createGain();
+  trem.gain.value = 1;
+  const tremLFO = actx.createOscillator();
+  tremLFO.frequency.value = 6;
+  const tremDepth = actx.createGain();
+  tremDepth.gain.value = 0;
+  tremLFO.connect(tremDepth).connect(trem.gain);
+  tremLFO.start();
+
+  // Vibrato: 5 Hz LFO → gain in cents → every oscillator's detune
+  const vibLFO = actx.createOscillator();
+  vibLFO.frequency.value = 5;
+  const vibDepth = actx.createGain();
+  vibDepth.gain.value = 0;
+  vibLFO.connect(vibDepth);
+  for (const v of Object.values(voices)) vibDepth.connect(v.o.detune);
+  vibLFO.start();
+
+  // Envelope (× loudness compensation) → destination
+  const env = actx.createGain();
+  env.gain.value = 0;
+
+  for (const v of Object.values(voices)) v.g.connect(trem);
+  trem.connect(env).connect(actx.destination);
+
+  nodes = { voices, trem, tremDepth, vibDepth, env };
+  return true;
+}
+
+function setPitch(glucose, snap = false) {
+  const f = freqFor(glucose);
+  const t = actx.currentTime;
+  const { voices, trem, tremDepth, vibDepth, env } = nodes;
+
+  // Low-frequency harmonic lift, renormalised
+  const lift = Math.min(1, Math.max(0, (350 - f) / 220));
+  const invLift = 1 / (1 + LIFT_PEAK * lift);
+
+  const gains = {
+    s1: 0.9235 * invLift,
+    i1: 0.0510 * invLift,
+    i2: 0.0255 * invLift,
+    h3: 0.30 * lift * invLift,
+    h4: 0.22 * lift * invLift,
+    h5: 0.14 * lift * invLift,
+  };
+
+  for (const [k, v] of Object.entries(voices)) {
+    if (snap) {
+      v.o.frequency.setValueAtTime(f * v.ratio, t);
+      v.g.gain.setValueAtTime(gains[k], t);
+    } else {
+      v.o.frequency.setTargetAtTime(f * v.ratio, t, GLIDE_TC);
+      v.g.gain.setTargetAtTime(gains[k], t, GLIDE_TC);
+    }
+  }
+
+  // Zone cues, categorical: full depth or none, ~6 ms crossfade
+  const isLow = glucose < LOW, isHigh = glucose > HIGH;
+  tremDepth.gain.setTargetAtTime(isLow ? 0.20 : 0, t, ZONE_TC);
+  trem.gain.setTargetAtTime(isLow ? 0.80 : 1, t, ZONE_TC);
+  vibDepth.gain.setTargetAtTime(isHigh ? 35 : 0, t, ZONE_TC);
+
+  if (playing) {
+    env.gain.setTargetAtTime(BASE_AMP * loudnessComp(f), t, GLIDE_TC);
+  }
+}
+
+// Mobile browsers hand back a suspended AudioContext, and resume() is async.
+// While suspended, currentTime is frozen at 0 — so a quick tap schedules its
+// attack and its release at the SAME timestamp, the release wins, and the
+// user hears nothing. Everything that touches the graph goes through here:
+// it runs immediately when the context is live, and is otherwise deferred
+// until resume() settles. Only the most recent intent is kept.
+let pendingAudio = null;
+
+function audioReady() {
+  if (!actx && buildAudio() === false) return false;
+  if (!actx) return false;
+  if (actx.state === 'running') return true;
+  // 'suspended' on Android, 'interrupted' on iOS after a call or Siri.
+  const p = actx.resume();
+  if (p && p.then) {
+    p.then(() => {
+      // resume() resolves even when the browser refused to unlock (no user
+      // activation yet). Only consume the queued gesture if audio is genuinely
+      // running — otherwise keep it queued for the next activation attempt.
+      if (!actx || actx.state !== 'running') return;
+      const fn = pendingAudio;
+      pendingAudio = null;
+      if (fn) fn();
+    }).catch(() => {});
+  }
+  return false;
+}
+
+function applyToneOn(glucose, cold) {
+  playing = true;
+  setPitch(glucose, cold); // snap on cold start: no swoop during the attack
+  nodes.env.gain.setTargetAtTime(
+    BASE_AMP * loudnessComp(freqFor(glucose)), actx.currentTime, ATTACK_TC);
+}
+
+function toneOn(glucose) {
+  const cold = !playing;
+  if (!audioReady()) {
+    pendingAudio = () => applyToneOn(glucose, true);
+    return;
+  }
+  applyToneOn(glucose, cold);
+}
+
+// On-lift: the app's default 4.4 s slow fade
+function toneLift() {
+  const wasPlaying = playing;
+  playing = false;
+  if (!actx || !nodes) return;
+  if (actx.state !== 'running') {
+    // Resume is still in flight. Queue the whole gesture — attack, then fade —
+    // so a fast tap on a cold context is still audible once audio comes up.
+    const g = GLUCOSE[cursorIndex];
+    pendingAudio = () => {
+      applyToneOn(g, true);
+      playing = false;
+      nodes.env.gain.setTargetAtTime(0, actx.currentTime + 0.12, SLOWFADE_TC);
+    };
+    return;
+  }
+  if (wasPlaying || nodes.env.gain.value > 0.0001) {
+    nodes.env.gain.setTargetAtTime(0, actx.currentTime, SLOWFADE_TC);
+  }
+}
+
+// Hard stop (blur, backgrounding, leaving the demo)
+function toneStop() {
+  playing = false;
+  pendingAudio = null;
+  if (actx && nodes && actx.state === 'running') {
+    nodes.env.gain.setTargetAtTime(0, actx.currentTime, RELEASE_TC);
+  }
+}
+
+// Hour-boundary click: 700→1200 Hz chirp, ducked against the current tone level
+function playClick() {
+  if (!actx || actx.state !== 'running') return;
+  const t = actx.currentTime;
+  const o = actx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(700, t);
+  o.frequency.linearRampToValueAtTime(1200, t + 0.03);
+  const g = actx.createGain();
+  const duck = 1 - 0.5 * Math.min(1, nodes ? nodes.env.gain.value : 0);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.38 * duck, t + 0.002);
+  g.gain.setTargetAtTime(0, t + 0.002, CLICK_TC);
+  o.connect(g).connect(actx.destination);
+  o.start(t);
+  o.stop(t + 0.15);
+}
+
+// ── Chart with axes
+const canvas = document.getElementById('demo-canvas');
+const surface = document.getElementById('demo-surface');
+const cctx = canvas.getContext('2d');
+const PAD = { l: 44, r: 10, t: 12, b: 24 };
+const G_MIN = 40, G_MAX = 260;
+let cursorIndex = Math.floor(N / 2);
+let cursorVisible = false;
+
+function plotRect() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  return { w, h, pw: w - PAD.l - PAD.r, ph: h - PAD.t - PAD.b };
+}
+const xAt = (i, r) => PAD.l + (i / (N - 1)) * r.pw;
+const yAt = (g, r) => PAD.t + r.ph - ((g - G_MIN) / (G_MAX - G_MIN)) * r.ph;
+
+const fmtTime = d => d.toLocaleTimeString(currentLang === 'de' ? 'de-DE' : 'en-US',
+  { hour: 'numeric', minute: '2-digit' });
+const fmtHour = d => currentLang === 'de'
+  ? String(d.getHours()).padStart(2, '0') + ':00'
+  : d.toLocaleTimeString('en-US', { hour: 'numeric' });
+
+// Spoken form for German TTS: "11 Uhr 50", not "11:50 Uhr" — the colon form
+// gets read inconsistently by German voices, while "Stunde Uhr Minute" is
+// unambiguous. Minute is omitted on the hour ("11 Uhr", not "11 Uhr 0").
+const fmtTimeSpokenDE = d => {
+  const h = d.getHours(), m = d.getMinutes();
+  return m === 0 ? `${h} Uhr` : `${h} Uhr ${m}`;
+};
+
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const r = plotRect();
+  canvas.width = Math.round(r.w * dpr);
+  canvas.height = Math.round(r.h * dpr);
+  cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cctx.clearRect(0, 0, r.w, r.h);
+  cctx.font = '11px "Atkinson Hyperlegible Next", sans-serif';
+
+  // Zone bands
+  cctx.fillStyle = 'rgba(192,40,30,0.07)';
+  cctx.fillRect(PAD.l, yAt(LOW, r), r.pw, PAD.t + r.ph - yAt(LOW, r));
+  cctx.fillStyle = 'rgba(184,106,0,0.07)';
+  cctx.fillRect(PAD.l, PAD.t, r.pw, yAt(HIGH, r) - PAD.t);
+
+  // Hour gridlines + x labels
+  cctx.strokeStyle = '#F0EEE8';
+  cctx.fillStyle = '#63635E';
+  cctx.textAlign = 'center';
+  cctx.textBaseline = 'top';
+  for (const hi of HOUR_IDX) {
+    const x = xAt(hi, r);
+    cctx.beginPath(); cctx.moveTo(x, PAD.t); cctx.lineTo(x, PAD.t + r.ph); cctx.stroke();
+    cctx.fillText(fmtHour(timeAt(hi)), x, PAD.t + r.ph + 6);
+  }
+
+  // Threshold rules + y labels
+  cctx.strokeStyle = '#E4E2DB';
+  cctx.setLineDash([4, 4]);
+  cctx.textAlign = 'right';
+  cctx.textBaseline = 'middle';
+  for (const g of [LOW, HIGH]) {
+    const y = yAt(g, r);
+    cctx.beginPath(); cctx.moveTo(PAD.l, y); cctx.lineTo(PAD.l + r.pw, y); cctx.stroke();
+    cctx.fillText(String(g), PAD.l - 7, y);
+  }
+  cctx.setLineDash([]);
+  cctx.textAlign = 'left';
+  cctx.textBaseline = 'top';
+  cctx.fillText('mg/dL', 6, 6);
+
+  // Curve
+  cctx.strokeStyle = '#101010';
+  cctx.lineWidth = 2.5;
+  cctx.lineJoin = 'round';
+  cctx.beginPath();
+  GLUCOSE.forEach((g, i) =>
+    i === 0 ? cctx.moveTo(xAt(i, r), yAt(g, r)) : cctx.lineTo(xAt(i, r), yAt(g, r)));
+  cctx.stroke();
+
+  // Cursor
+  if (cursorVisible) {
+    const cx = xAt(cursorIndex, r), cy = yAt(GLUCOSE[cursorIndex], r);
+    cctx.strokeStyle = '#1A7A32';
+    cctx.lineWidth = 1.5;
+    cctx.beginPath(); cctx.moveTo(cx, PAD.t); cctx.lineTo(cx, PAD.t + r.ph); cctx.stroke();
+    cctx.fillStyle = '#1A7A32';
+    cctx.beginPath(); cctx.arc(cx, cy, 5, 0, 2 * Math.PI); cctx.fill();
+  }
+}
+
+// ── Readout, valuetext, speech
+const elValue = document.getElementById('demo-value');
+const elTime = document.getElementById('demo-time');
+const elZone = document.getElementById('demo-zone');
+
+function zoneInfo(g) {
+  if (g < LOW)  return { cls: 'z-low',  en: 'low',      de: 'niedrig' };
+  if (g > HIGH) return { cls: 'z-high', en: 'high',     de: 'hoch' };
+  return          { cls: 'z-in',   en: 'in range', de: 'im Zielbereich' };
+}
+
+function updateReadout(i) {
+  const g = GLUCOSE[i];
+  const z = zoneInfo(g);
+  elValue.textContent = g + ' mg/dL';
+  elTime.textContent = fmtTime(timeAt(i));
+  elZone.textContent = currentLang === 'de' ? z.de : z.en;
+  elZone.className = 'demo-zone ' + z.cls;
+  surface.setAttribute('aria-valuenow', i);
+  surface.setAttribute('aria-valuetext',
+    `${g} mg/dL, ${fmtTime(timeAt(i))}, ${currentLang === 'de' ? z.de : z.en}`);
+}
+
+// On-lift speech, mirroring the app: value, then time
+function speakLift(i) {
+  if (!('speechSynthesis' in window)) return;
+  const g = GLUCOSE[i];
+  const text = currentLang === 'de'
+    ? `${g}. ${fmtTimeSpokenDE(timeAt(i))}.`
+    : `${g}. ${fmtTime(timeAt(i))}.`;
+  try {
+    // Android Chrome silently drops an utterance queued immediately after
+    // cancel(), so only cancel when something is actually in the queue.
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = currentLang === 'de' ? 'de-DE' : 'en-US';
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+function moveTo(i, sound = true) {
+  const next = Math.max(0, Math.min(N - 1, i));
+  if (sound && actx && next !== cursorIndex) {
+    const a = Math.min(cursorIndex, next), b = Math.max(cursorIndex, next);
+    if (HOUR_IDX.some(hi => hi > a && hi <= b)) playClick();
+  }
+  cursorIndex = next;
+  cursorVisible = true;
+  updateReadout(cursorIndex);
+  draw();
+  if (sound) toneOn(GLUCOSE[cursorIndex]);
+}
+
+// ── Pointer interaction
+function indexFromEvent(e) {
+  const rect = surface.getBoundingClientRect();
+  const r = plotRect();
+  const t = (e.clientX - rect.left - PAD.l) / r.pw;
+  return Math.round(Math.max(0, Math.min(1, t)) * (N - 1));
+}
+let dragging = false;
+surface.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  surface.focus({ preventScroll: true }); // preventDefault suppresses native focus
+  surface.setPointerCapture(e.pointerId);
+  dragging = true;
+  moveTo(indexFromEvent(e));
+});
+surface.addEventListener('pointermove', e => {
+  if (dragging) moveTo(indexFromEvent(e));
+});
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  // On touch, THIS is the event that grants user activation on Chrome/Android.
+  // If the context is still locked from pointerdown, this is where it opens,
+  // and the queued gesture in pendingAudio fires.
+  audioReady();
+  toneLift();
+  speakLift(cursorIndex);
+}
+surface.addEventListener('pointerup', endDrag);
+surface.addEventListener('pointercancel', endDrag);
+
+// ── Keyboard interaction
+let keyFadeTimer = null;
+surface.addEventListener('keydown', e => {
+  let target = null;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp')   target = cursorIndex + 1;
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowDown') target = cursorIndex - 1;
+  if (e.key === 'PageUp')   target = cursorIndex + 12;
+  if (e.key === 'PageDown') target = cursorIndex - 12;
+  if (e.key === 'Home')     target = 0;
+  if (e.key === 'End')      target = N - 1;
+  if (target === null) return;
+  e.preventDefault();
+  moveTo(target);
+  clearTimeout(keyFadeTimer);
+  keyFadeTimer = setTimeout(() => {
+    toneLift();
+    speakLift(cursorIndex);
+  }, 550);
+});
+surface.addEventListener('blur', () => {
+  clearTimeout(keyFadeTimer);
+  toneStop();
+  try {
+    if ('speechSynthesis' in window &&
+        (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel();
+  } catch (e) {}
+});
+
+// Long-press on the chart shouldn't open the Android/iOS context menu mid-drag
+surface.addEventListener('contextmenu', e => e.preventDefault());
+
+// Warm the audio context on user interaction anywhere on the page.
+//
+// Two things matter here, and the previous version got both wrong:
+//  1. On Chrome for Android a TOUCH does not grant user activation at
+//     pointerdown/touchstart — activation lands on pointerup / touchend / click.
+//     Resuming from pointerdown alone therefore never unlocks audio on a phone,
+//     while it works fine on a desktop (mousedown does grant activation).
+//  2. The listeners must stay attached until the context is genuinely running.
+//     Detaching after the first attempt throws away every later chance.
+(() => {
+  const EVTS = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'];
+  const warm = () => {
+    audioReady();
+    if (actx && actx.state === 'running') {
+      EVTS.forEach(e => document.removeEventListener(e, warm, true));
+    }
+  };
+  EVTS.forEach(e => document.addEventListener(e, warm, true));
+})();
+
+// Backgrounding the tab (or locking the phone) leaves the tone hanging;
+// iOS also moves the context to 'interrupted' behind our back.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    dragging = false;
+    clearTimeout(keyFadeTimer);
+    toneStop();
+    try {
+      if ('speechSynthesis' in window &&
+          (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel();
+    } catch (e) {}
+  }
+});
+
+// ── Contextual hints
+// Each hint is shown only where it actually applies, rather than listing every
+// platform's caveats at everyone.
+(() => {
+  const hintKeys = document.getElementById('hint-keys');
+  const hintRinger = document.getElementById('hint-ringer');
+
+  // Keyboard hint: any-pointer covers a tablet with a mouse or keyboard case,
+  // not just desktops. There is no media query for "a keyboard exists", so the
+  // hint is also revealed the moment real keyboard input appears — which is
+  // what matters for screen reader users tabbing in on any device.
+  if (hintKeys) {
+    const fine = window.matchMedia('(any-pointer: fine)').matches;
+    if (fine) hintKeys.hidden = false;
+    else {
+      const reveal = e => {
+        if (e.key && e.key.length >= 1) {
+          hintKeys.hidden = false;
+          document.removeEventListener('keydown', reveal, true);
+        }
+      };
+      document.addEventListener('keydown', reveal, true);
+    }
+  }
+
+  // Ringer-switch hint: only meaningful on an iOS device too old for
+  // navigator.audioSession (pre-Safari 16.4). Where the API exists we already
+  // request a playback session, which the silent switch no longer overrides,
+  // so showing the hint there would just be noise.
+  if (hintRinger) {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/.test(ua) ||
+      (/Macintosh/.test(ua) && typeof document.ontouchend !== 'undefined');
+    if (isIOS && !('audioSession' in navigator)) hintRinger.hidden = false;
+  }
+})();
+
+// ── Init
+window.__demoRefresh = () => { updateReadout(cursorIndex); draw(); };
+updateReadout(cursorIndex);
+draw();
+window.addEventListener('resize', draw);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+
+// Language: restore saved choice, English default
+let savedLang = null;
+try { savedLang = localStorage.getItem('lang'); } catch (e) {}
+setLang(savedLang === 'de' ? 'de' : 'en');
+</script>
+</body>
+</html>
