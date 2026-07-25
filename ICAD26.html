@@ -186,6 +186,13 @@
     position: absolute; inset: 0;
     cursor: crosshair;
     border-radius: 12px;
+    /* touch-action is NOT inherited, so it must be set on the element that
+       actually receives the pointer events. Without this, Android claims the
+       touch as a scroll gesture and fires pointercancel mid-drag. */
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
   .demo-readout {
     display: flex; align-items: baseline; gap: 1rem;
@@ -202,6 +209,7 @@
   .demo-zone.z-high { color: var(--amber); }
   .demo-zone.z-in   { color: var(--green); }
   .demo-hint { margin-top: 0.5rem; color: var(--dim); font-size: 0.9rem; }
+  .demo-hint[hidden] { display: none; }
 
   .notes { list-style: none; margin-top: 1.4rem; display: flex; flex-direction: column; gap: 0.7rem; }
   .notes li {
@@ -339,8 +347,14 @@
         <span class="demo-time" id="demo-time"></span>
         <span class="demo-zone" id="demo-zone"></span>
       </div>
-      <p class="demo-hint" data-l="en">Arrow keys step 5 minutes, Page Up/Down one hour, Home/End to the edges. Sound needs the phone unmuted.</p>
-      <p class="demo-hint" data-l="de">Pfeiltasten: 5 Minuten. Bild auf/ab: eine Stunde. Pos1/Ende: an die Ränder. Für den Ton muss der Stummschalter aus sein.</p>
+      <p class="demo-hint" id="hint-keys" hidden>
+        <span data-l="en">Arrow keys step 5 minutes, Page Up/Down one hour, Home/End to the edges.</span>
+        <span data-l="de">Pfeiltasten: 5 Minuten. Bild auf/ab: eine Stunde. Pos1/Ende: an die Ränder.</span>
+      </p>
+      <p class="demo-hint" id="hint-ringer" hidden>
+        <span data-l="en">No sound? Check the ringer switch on the side of your iPhone is not set to silent.</span>
+        <span data-l="de">Kein Ton? Prüf den seitlichen Schalter am iPhone, er darf nicht auf lautlos stehen.</span>
+      </p>
     </div>
 
     <ul class="notes" data-l="en">
@@ -618,7 +632,26 @@ const BASE_AMP = 0.38;
 const LIFT_PEAK = 0.6268;
 
 function buildAudio() {
-  actx = new (window.AudioContext || window.webkitAudioContext)();
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  actx = new AC();
+
+  // iOS: without an explicit playback session, Safari routes Web Audio through
+  // the ambient session, which the hardware ringer switch silences outright.
+  // Safari 16.4+ exposes navigator.audioSession for exactly this.
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  } catch (e) {}
+
+  // iOS: some versions only fully unlock output after a source has actually
+  // run inside the originating gesture. A one-sample silent buffer does that.
+  try {
+    const b = actx.createBuffer(1, 1, actx.sampleRate);
+    const s = actx.createBufferSource();
+    s.buffer = b;
+    s.connect(actx.destination);
+    s.start(0);
+  } catch (e) {}
 
   const make = (ratio) => {
     const o = actx.createOscillator();
@@ -668,6 +701,7 @@ function buildAudio() {
   trem.connect(env).connect(actx.destination);
 
   nodes = { voices, trem, tremDepth, vibDepth, env };
+  return true;
 }
 
 function setPitch(glucose, snap = false) {
@@ -709,30 +743,83 @@ function setPitch(glucose, snap = false) {
   }
 }
 
-function toneOn(glucose) {
-  if (!actx) buildAudio();
-  if (actx.state === 'suspended') actx.resume();
-  const cold = !playing;
+// Mobile browsers hand back a suspended AudioContext, and resume() is async.
+// While suspended, currentTime is frozen at 0 — so a quick tap schedules its
+// attack and its release at the SAME timestamp, the release wins, and the
+// user hears nothing. Everything that touches the graph goes through here:
+// it runs immediately when the context is live, and is otherwise deferred
+// until resume() settles. Only the most recent intent is kept.
+let pendingAudio = null;
+
+function audioReady() {
+  if (!actx && buildAudio() === false) return false;
+  if (!actx) return false;
+  if (actx.state === 'running') return true;
+  // 'suspended' on Android, 'interrupted' on iOS after a call or Siri.
+  const p = actx.resume();
+  if (p && p.then) {
+    p.then(() => {
+      // resume() resolves even when the browser refused to unlock (no user
+      // activation yet). Only consume the queued gesture if audio is genuinely
+      // running — otherwise keep it queued for the next activation attempt.
+      if (!actx || actx.state !== 'running') return;
+      const fn = pendingAudio;
+      pendingAudio = null;
+      if (fn) fn();
+    }).catch(() => {});
+  }
+  return false;
+}
+
+function applyToneOn(glucose, cold) {
   playing = true;
   setPitch(glucose, cold); // snap on cold start: no swoop during the attack
   nodes.env.gain.setTargetAtTime(
     BASE_AMP * loudnessComp(freqFor(glucose)), actx.currentTime, ATTACK_TC);
 }
 
+function toneOn(glucose) {
+  const cold = !playing;
+  if (!audioReady()) {
+    pendingAudio = () => applyToneOn(glucose, true);
+    return;
+  }
+  applyToneOn(glucose, cold);
+}
+
 // On-lift: the app's default 4.4 s slow fade
 function toneLift() {
+  const wasPlaying = playing;
   playing = false;
-  if (nodes) nodes.env.gain.setTargetAtTime(0, actx.currentTime, SLOWFADE_TC);
+  if (!actx || !nodes) return;
+  if (actx.state !== 'running') {
+    // Resume is still in flight. Queue the whole gesture — attack, then fade —
+    // so a fast tap on a cold context is still audible once audio comes up.
+    const g = GLUCOSE[cursorIndex];
+    pendingAudio = () => {
+      applyToneOn(g, true);
+      playing = false;
+      nodes.env.gain.setTargetAtTime(0, actx.currentTime + 0.12, SLOWFADE_TC);
+    };
+    return;
+  }
+  if (wasPlaying || nodes.env.gain.value > 0.0001) {
+    nodes.env.gain.setTargetAtTime(0, actx.currentTime, SLOWFADE_TC);
+  }
 }
-// Hard stop (blur / leaving the demo)
+
+// Hard stop (blur, backgrounding, leaving the demo)
 function toneStop() {
   playing = false;
-  if (nodes) nodes.env.gain.setTargetAtTime(0, actx.currentTime, RELEASE_TC);
+  pendingAudio = null;
+  if (actx && nodes && actx.state === 'running') {
+    nodes.env.gain.setTargetAtTime(0, actx.currentTime, RELEASE_TC);
+  }
 }
 
 // Hour-boundary click: 700→1200 Hz chirp, ducked against the current tone level
 function playClick() {
-  if (!actx) return;
+  if (!actx || actx.state !== 'running') return;
   const t = actx.currentTime;
   const o = actx.createOscillator();
   o.type = 'sine';
@@ -869,10 +956,14 @@ function speakLift(i) {
   const text = currentLang === 'de'
     ? `${g}. ${fmtTimeSpokenDE(timeAt(i))}.`
     : `${g}. ${fmtTime(timeAt(i))}.`;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = currentLang === 'de' ? 'de-DE' : 'en-US';
-  speechSynthesis.speak(u);
+  try {
+    // Android Chrome silently drops an utterance queued immediately after
+    // cancel(), so only cancel when something is actually in the queue.
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = currentLang === 'de' ? 'de-DE' : 'en-US';
+    speechSynthesis.speak(u);
+  } catch (e) {}
 }
 
 function moveTo(i, sound = true) {
@@ -909,6 +1000,10 @@ surface.addEventListener('pointermove', e => {
 function endDrag() {
   if (!dragging) return;
   dragging = false;
+  // On touch, THIS is the event that grants user activation on Chrome/Android.
+  // If the context is still locked from pointerdown, this is where it opens,
+  // and the queued gesture in pendingAudio fires.
+  audioReady();
   toneLift();
   speakLift(cursorIndex);
 }
@@ -937,8 +1032,85 @@ surface.addEventListener('keydown', e => {
 surface.addEventListener('blur', () => {
   clearTimeout(keyFadeTimer);
   toneStop();
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  try {
+    if ('speechSynthesis' in window &&
+        (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel();
+  } catch (e) {}
 });
+
+// Long-press on the chart shouldn't open the Android/iOS context menu mid-drag
+surface.addEventListener('contextmenu', e => e.preventDefault());
+
+// Warm the audio context on user interaction anywhere on the page.
+//
+// Two things matter here, and the previous version got both wrong:
+//  1. On Chrome for Android a TOUCH does not grant user activation at
+//     pointerdown/touchstart — activation lands on pointerup / touchend / click.
+//     Resuming from pointerdown alone therefore never unlocks audio on a phone,
+//     while it works fine on a desktop (mousedown does grant activation).
+//  2. The listeners must stay attached until the context is genuinely running.
+//     Detaching after the first attempt throws away every later chance.
+(() => {
+  const EVTS = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'];
+  const warm = () => {
+    audioReady();
+    if (actx && actx.state === 'running') {
+      EVTS.forEach(e => document.removeEventListener(e, warm, true));
+    }
+  };
+  EVTS.forEach(e => document.addEventListener(e, warm, true));
+})();
+
+// Backgrounding the tab (or locking the phone) leaves the tone hanging;
+// iOS also moves the context to 'interrupted' behind our back.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    dragging = false;
+    clearTimeout(keyFadeTimer);
+    toneStop();
+    try {
+      if ('speechSynthesis' in window &&
+          (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel();
+    } catch (e) {}
+  }
+});
+
+// ── Contextual hints
+// Each hint is shown only where it actually applies, rather than listing every
+// platform's caveats at everyone.
+(() => {
+  const hintKeys = document.getElementById('hint-keys');
+  const hintRinger = document.getElementById('hint-ringer');
+
+  // Keyboard hint: any-pointer covers a tablet with a mouse or keyboard case,
+  // not just desktops. There is no media query for "a keyboard exists", so the
+  // hint is also revealed the moment real keyboard input appears — which is
+  // what matters for screen reader users tabbing in on any device.
+  if (hintKeys) {
+    const fine = window.matchMedia('(any-pointer: fine)').matches;
+    if (fine) hintKeys.hidden = false;
+    else {
+      const reveal = e => {
+        if (e.key && e.key.length >= 1) {
+          hintKeys.hidden = false;
+          document.removeEventListener('keydown', reveal, true);
+        }
+      };
+      document.addEventListener('keydown', reveal, true);
+    }
+  }
+
+  // Ringer-switch hint: only meaningful on an iOS device too old for
+  // navigator.audioSession (pre-Safari 16.4). Where the API exists we already
+  // request a playback session, which the silent switch no longer overrides,
+  // so showing the hint there would just be noise.
+  if (hintRinger) {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/.test(ua) ||
+      (/Macintosh/.test(ua) && typeof document.ontouchend !== 'undefined');
+    if (isIOS && !('audioSession' in navigator)) hintRinger.hidden = false;
+  }
+})();
 
 // ── Init
 window.__demoRefresh = () => { updateReadout(cursorIndex); draw(); };
