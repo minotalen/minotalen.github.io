@@ -145,13 +145,53 @@
   .shot {
     margin: 0; border-radius: 12px; overflow: hidden;
     border: 1.5px solid var(--line); background: #F6F5F0;
-    line-height: 0;
+    line-height: 0; padding: 0; cursor: zoom-in;
+    display: block; width: 100%;
   }
-  .shot img { display: block; width: 100%; height: auto; }
+  .shot img { display: block; width: 100%; height: auto; pointer-events: none; }
+  .shot:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
   @media (max-width: 560px) {
-    .shots { grid-template-columns: 1fr 1fr; }
-    .shots .ph:nth-child(3) { grid-column: 1 / -1; aspect-ratio: 16/9; }
-    .shots .shot:nth-child(3) { grid-column: 1 / -1; }
+    .shots { grid-template-columns: 1fr; }
+    .shots .ph:nth-child(3) { aspect-ratio: 16/9; }
+  }
+
+  /* ── Lightbox ────────────────────────────── */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(10, 10, 8, 0.94);
+    display: flex; align-items: center; justify-content: center;
+    padding: 3.5rem 1rem;
+    touch-action: none;
+  }
+  .lightbox[hidden] { display: none; }
+  .lb-img {
+    max-width: min(94vw, 620px); max-height: 78vh;
+    border-radius: 10px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+    user-select: none; -webkit-user-select: none;
+  }
+  .lb-caption {
+    position: absolute; left: 1rem; right: 1rem; bottom: 1.1rem;
+    text-align: center; color: #D8D6CE; font-size: 0.82rem; line-height: 1.5;
+    max-width: 42rem; margin: 0 auto;
+  }
+  .lb-close, .lb-nav {
+    position: fixed; background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    color: #fff; border-radius: 999px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lb-close:hover, .lb-nav:hover { background: rgba(255,255,255,0.18); }
+  .lb-close { top: 1rem; right: 1rem; width: 2.6rem; height: 2.6rem; font-size: 1.1rem; }
+  .lb-close::before { content: '\2715'; }
+  .lb-nav { top: 50%; transform: translateY(-50%); width: 3rem; height: 3rem; font-size: 1.4rem; }
+  .lb-prev { left: 0.75rem; }
+  .lb-prev::before { content: '\2039'; }
+  .lb-next { right: 0.75rem; }
+  .lb-next::before { content: '\203A'; }
+  @media (max-width: 560px) {
+    .lb-close { top: 0.6rem; right: 0.6rem; }
+    .lb-prev { left: 0.4rem; } .lb-next { right: 0.4rem; }
   }
 
   /* ── References ──────────────────────────── */
@@ -286,11 +326,11 @@
     <h2 data-l="de" hidden>GlucoSound: den Blutzucker hören.</h2>
 
     <div data-l="en">
-      <p>CGM sensors report blood glucose every five minutes. A single reading already matters, but the trend adds something a single value can't: seeing glucose patterns over time is how people and clinicians see the effect of meals and behavior, and it forms the basis for individually optimized treatment.<sup><a href="#ref1" id="cite1">[1]</a></sup> That kind of pattern view is also linked to less time in hypoglycemia and better long-term control.<sup><a href="#ref2" id="cite2">[2]</a></sup> In the manufacturers' apps, that trend chart is essentially invisible to screen readers. The accessibility APIs that could fix it have existed since 2021. An estimated one in three to four people with diabetes has some degree of diabetic retinopathy<sup><a href="#ref1">[1]</a></sup>, exactly the population CGM is built for.</p>
+      <p>CGM sensors report blood glucose every five minutes. A single reading already matters, but the trend adds something a single value can't: seeing glucose patterns over time is how people and clinicians see the effect of meals and behavior, and it forms the basis for individually optimized treatment.<sup><a href="#ref1" id="cite1">[1]</a></sup> That kind of pattern view is also linked to less time in hypoglycemia and better long-term control.<sup><a href="#ref2" id="cite2">[2]</a></sup> In the manufacturers' apps, that trend chart is essentially invisible to screen readers, even though the tools to fix it have existed since 2021. Meanwhile, an estimated one in three to four people with diabetes already has some degree of diabetic retinopathy<sup><a href="#ref1">[1]</a></sup>. Blind and low-vision accessibility isn't a fringe concern for CGM — it sits inside the core user base, whether manufacturers have designed for it or not.</p>
       <p>GlucoSound is a free iOS app that closes this gap with interactive sonification. A finger on the chart produces a continuous tone whose pitch follows the glucose value. Out-of-range values are unmistakably marked in the sound itself. On release, the app speaks value and time. Alongside the sonified view: a fully labeled VoiceOver bar chart and a rule-based text summary.</p>
     </div>
     <div data-l="de">
-      <p>CGM-Sensoren liefern alle fünf Minuten einen Blutzuckerwert. Auch der einzelne Wert ist schon wertvoll, aber der Trend liefert einen weiteren Wert: Wer sich Verläufe über die Zeit ansieht, erkennt, wie Mahlzeiten und Verhalten den Blutzucker beeinflussen, und das bildet die Grundlage für eine individuell optimierte Behandlung.<sup><a href="#ref1-de">[1]</a></sup> Dieser Blick auf Muster ist außerdem mit weniger Zeit in Unterzuckerung und besserer langfristiger Einstellung verbunden.<sup><a href="#ref2-de">[2]</a></sup> Genau diese Trendkurve ist in den Apps der Hersteller für Screenreader praktisch unsichtbar. Die Schnittstellen, mit denen sich das beheben ließe, gibt es seit 2021. Schätzungsweise jede:r dritte bis vierte Mensch mit Diabetes hat einen gewissen Grad an diabetischer Retinopathie<sup><a href="#ref1-de">[1]</a></sup>, also genau in der Gruppe, für die CGM gemacht ist.</p>
+      <p>CGM-Sensoren messen den Blutzucker alle fünf Minuten. Eine einzelne Messung hilft akut. Erst der Verlauf über mehrere Stunden zeigt aber, wie Mahlzeiten und Alltag den Blutzucker tatsächlich bewegen, und darauf baut eine individuell angepasste Therapie auf.<sup><a href="#ref1-de">[1]</a></sup> Studien verbinden diesen Blick auf den Verlauf außerdem mit selteneren Unterzuckerungen und einer besseren langfristigen Einstellung.<sup><a href="#ref2-de">[2]</a></sup> Ausgerechnet diese Kurve bleibt Screenreadern in den Apps der Hersteller verschlossen, obwohl die nötigen Schnittstellen seit 2021 bereitstehen. Dabei zeigt schätzungsweise jede:r dritte bis vierte Mensch mit Diabetes Anzeichen einer diabetischen Retinopathie.<sup><a href="#ref1-de">[1]</a></sup> Barrierefreiheit ist bei CGM also kein Sonderfall, sondern betrifft einen erheblichen Teil derer, die diese Geräte längst benutzen. Ob die Hersteller sie mitgedacht haben oder nicht.</p>
       <p>GlucoSound ist eine kostenlose iOS-App, die diese Lücke mit interaktiver Sonifikation schließt. Ein Finger auf der Kurve erzeugt einen durchgehenden Ton, dessen Tonhöhe dem Blutzucker folgt. Werte außerhalb des Zielbereichs sind im Klang selbst unmissverständlich markiert. Beim Loslassen spricht die App Wert und Uhrzeit. Dazu kommen ein vollständig beschriftetes Balkendiagramm für VoiceOver und eine regelbasierte Textzusammenfassung.</p>
     </div>
 
@@ -315,14 +355,22 @@
     </ol>
 
     <div class="shots" data-l="en" role="group" aria-label="Screenshots">
-      <figure class="shot"><img src="chart.png" alt="Chart view: a twelve-hour glucose curve from 10:00 to 22:00, with green in-range, orange high, and red low bands. Stats above read average 134, minimum 89, maximum 216, 88% time in range. Below the chart, a time-range picker, date navigation, and buttons for Explore and Stats."></figure>
-      <figure class="shot"><img src="explore.png" alt="Explore mode on the same chart, six-hour range. A cursor sits on the curve at 17:54, reading 177 mg/dL. Below, the time-range picker, date navigation, and Back and Play Sweep buttons."></figure>
-      <figure class="shot"><img src="summary.png" alt="Summary screen for Sunday, 16:00 to 22:00. Stats: average 149 mg/dL, 75% time in range, 0% lows, 25% highs, stable variability at 25%. A written summary explains glucose moved toward range over the six hours. Under &quot;What to watch&quot;: no single dominant risk, and the low side stayed protected at 0%, well under the 4% limit."></figure>
+      <button type="button" class="shot" data-idx="0" aria-label="Open larger. Chart view: a twelve-hour glucose curve from 10:00 to 22:00, with green in-range, orange high, and red low bands. Stats above read average 134, minimum 89, maximum 216, 88% time in range. Below the chart, a time-range picker, date navigation, and buttons for Explore and Stats."><img src="chart.png" alt="" loading="lazy"></button>
+      <button type="button" class="shot" data-idx="1" aria-label="Open larger. Explore mode on the same chart, six-hour range. A cursor sits on the curve at 17:54, reading 177 mg/dL. Below, the time-range picker, date navigation, and Back and Play Sweep buttons."><img src="explore.png" alt="" loading="lazy"></button>
+      <button type="button" class="shot" data-idx="2" aria-label="Open larger. Summary screen for Sunday, 16:00 to 22:00. Stats: average 149 mg/dL, 75% time in range, 0% lows, 25% highs, stable variability at 25%. A written summary explains glucose moved toward range over the six hours. Under &quot;What to watch&quot;: no single dominant risk, and the low side stayed protected at 0%, well under the 4% limit."><img src="summary.png" alt="" loading="lazy"></button>
     </div>
     <div class="shots" data-l="de" role="group" aria-label="Screenshots">
-      <figure class="shot"><img src="chart.png" alt="Chart-Ansicht: eine Zwölf-Stunden-Kurve von 10 bis 22 Uhr, mit grünem Zielbereich, orangem Hoch- und rotem Tiefbereich. Die Werte darüber zeigen Durchschnitt 134, Minimum 89, Maximum 216, 88 % Zeit im Zielbereich. Darunter die Zeitraum-Auswahl, Datumsnavigation und die Schaltflächen Explore und Stats."></figure>
-      <figure class="shot"><img src="explore.png" alt="Explore-Modus auf derselben Kurve, Sechs-Stunden-Bereich. Ein Cursor steht auf der Kurve bei 17:54 Uhr, Wert 177 mg/dL. Darunter die Zeitraum-Auswahl, Datumsnavigation sowie die Schaltflächen Back und Play Sweep."></figure>
-      <figure class="shot"><img src="summary.png" alt="Zusammenfassung für Sonntag, 16 bis 22 Uhr. Werte: Durchschnitt 149 mg/dL, 75 % Zeit im Zielbereich, 0 % Unterzuckerungen, 25 % Überzuckerungen, stabile Variabilität bei 25 %. Ein geschriebener Text erklärt, dass sich der Blutzucker über die sechs Stunden dem Zielbereich angenähert hat. Unter &quot;What to watch&quot;: kein einzelnes dominantes Risiko, und die Unterzuckerungsseite blieb bei 0 % geschützt, deutlich unter der 4-%-Grenze."></figure>
+      <button type="button" class="shot" data-idx="0" aria-label="Vergrößern. Chart-Ansicht: eine Zwölf-Stunden-Kurve von 10 bis 22 Uhr, mit grünem Zielbereich, orangem Hoch- und rotem Tiefbereich. Die Werte darüber zeigen Durchschnitt 134, Minimum 89, Maximum 216, 88 % Zeit im Zielbereich. Darunter die Zeitraum-Auswahl, Datumsnavigation und die Schaltflächen Explore und Stats."><img src="chart.png" alt="" loading="lazy"></button>
+      <button type="button" class="shot" data-idx="1" aria-label="Vergrößern. Explore-Modus auf derselben Kurve, Sechs-Stunden-Bereich. Ein Cursor steht auf der Kurve bei 17:54 Uhr, Wert 177 mg/dL. Darunter die Zeitraum-Auswahl, Datumsnavigation sowie die Schaltflächen Back und Play Sweep."><img src="explore.png" alt="" loading="lazy"></button>
+      <button type="button" class="shot" data-idx="2" aria-label="Vergrößern. Zusammenfassung für Sonntag, 16 bis 22 Uhr. Werte: Durchschnitt 149 mg/dL, 75 % Zeit im Zielbereich, 0 % Unterzuckerungen, 25 % Überzuckerungen, stabile Variabilität bei 25 %. Ein geschriebener Text erklärt, dass sich der Blutzucker über die sechs Stunden dem Zielbereich angenähert hat. Unter &quot;What to watch&quot;: kein einzelnes dominantes Risiko, und die Unterzuckerungsseite blieb bei 0 % geschützt, deutlich unter der 4-%-Grenze."><img src="summary.png" alt="" loading="lazy"></button>
+    </div>
+
+    <div id="lightbox" class="lightbox" hidden>
+      <button type="button" class="lb-close" id="lb-close"></button>
+      <button type="button" class="lb-nav lb-prev" id="lb-prev"></button>
+      <button type="button" class="lb-nav lb-next" id="lb-next"></button>
+      <img class="lb-img" id="lb-img" src="" alt="">
+      <p class="lb-caption" id="lb-caption"></p>
     </div>
   </section>
 
@@ -497,6 +545,7 @@ function setLang(lang) {
   try { localStorage.setItem('lang', lang); } catch (e) {}
   langAnnouncer.textContent = de ? 'Sprache: Deutsch' : 'Language: English';
   if (window.__demoRefresh) window.__demoRefresh();
+  if (window.__lightboxSyncLang) window.__lightboxSyncLang();
 }
 
 btnEn.addEventListener('click', () => setLang('en'));
@@ -571,6 +620,120 @@ btnDe.addEventListener('click', () => setLang('de'));
   seps.forEach(c => paint(c, 0));
   if (!reduced) requestAnimationFrame(frame);
   window.addEventListener('resize', () => seps.forEach(c => paint(c, 0)));
+})();
+
+/* ─────────────────────────────────────────────
+   Screenshot lightbox: tap a thumbnail to open it
+   full-size, arrow buttons or swipe to move between
+   the three, Escape or a tap outside the image closes.
+───────────────────────────────────────────── */
+(() => {
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lb-img');
+  const lbCaption = document.getElementById('lb-caption');
+  const lbClose = document.getElementById('lb-close');
+  const lbPrev = document.getElementById('lb-prev');
+  const lbNext = document.getElementById('lb-next');
+  if (!lightbox || !lbImg) return;
+
+  const shotsByLang = {
+    en: [...document.querySelectorAll('.shots[data-l="en"] .shot')],
+    de: [...document.querySelectorAll('.shots[data-l="de"] .shot')],
+  };
+  const currentSet = () => shotsByLang[currentLang] || shotsByLang.en;
+  const stripPrefix = s => s.replace(/^(Open larger\.|Vergrößern\.)\s*/, '');
+
+  let lbIndex = 0, lbOpen = false, lbOrigin = null;
+
+  function render(idx) {
+    const set = currentSet();
+    lbIndex = (idx + set.length) % set.length;
+    const btn = set[lbIndex];
+    const img = btn.querySelector('img');
+    const caption = stripPrefix(btn.getAttribute('aria-label') || '');
+    lbImg.src = img.src;
+    lbImg.alt = caption;
+    lbCaption.textContent = caption;
+  }
+
+  function chrome() {
+    const t = currentLang === 'de'
+      ? { close: 'Schließen', prev: 'Vorheriger Screenshot', next: 'Nächster Screenshot', dlg: 'Screenshot-Ansicht' }
+      : { close: 'Close', prev: 'Previous screenshot', next: 'Next screenshot', dlg: 'Screenshot viewer' };
+    lbClose.setAttribute('aria-label', t.close);
+    lbPrev.setAttribute('aria-label', t.prev);
+    lbNext.setAttribute('aria-label', t.next);
+    lightbox.setAttribute('aria-label', t.dlg);
+  }
+
+  function open(idx, origin) {
+    lbOrigin = origin || document.activeElement;
+    chrome();
+    render(idx);
+    lightbox.hidden = false;
+    lbOpen = true;
+    document.body.style.overflow = 'hidden';
+    lbClose.focus();
+    document.addEventListener('keydown', onKey, true);
+  }
+  function close() {
+    if (!lbOpen) return;
+    lbOpen = false;
+    lightbox.hidden = true;
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', onKey, true);
+    if (lbOrigin && lbOrigin.focus) lbOrigin.focus();
+  }
+  const next = () => render(lbIndex + 1);
+  const prev = () => render(lbIndex - 1);
+
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); next(); return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); return; }
+    if (e.key === 'Tab') {
+      const f = [lbClose, lbPrev, lbNext];
+      const i = f.indexOf(document.activeElement);
+      e.preventDefault();
+      const n = e.shiftKey
+        ? (i <= 0 ? f.length - 1 : i - 1)
+        : (i === -1 || i === f.length - 1 ? 0 : i + 1);
+      f[n].focus();
+    }
+  }
+
+  document.querySelectorAll('.shot').forEach(btn => {
+    btn.addEventListener('click', () => open(parseInt(btn.dataset.idx, 10), btn));
+  });
+  lbClose.addEventListener('click', close);
+  lbPrev.addEventListener('click', prev);
+  lbNext.addEventListener('click', next);
+
+  // Tap anywhere that is not the image or the nav/close buttons closes —
+  // "outside the image" includes the caption area and the surrounding backdrop.
+  let suppressClickUntil = 0;
+  lightbox.addEventListener('click', e => {
+    if (Date.now() < suppressClickUntil) return;
+    if (e.target === lbImg || e.target.closest('.lb-close, .lb-nav')) return;
+    close();
+  });
+
+  // Swipe to move between images. A real touch drag suppresses the
+  // trailing click in every mobile browser that matters here, but the
+  // suppression window guards the rare platform that doesn't.
+  let sx = null, sy = null, tracking = false;
+  lightbox.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; tracking = true; });
+  lightbox.addEventListener('pointerup', e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      suppressClickUntil = Date.now() + 300;
+      dx < 0 ? next() : prev();
+    }
+  });
+
+  window.__lightboxSyncLang = () => { chrome(); if (lbOpen) render(lbIndex); };
 })();
 
 /* ─────────────────────────────────────────────
