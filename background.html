@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>BetterQueue - Animated Background</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .halftone-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+        }
+        
+        #halftoneCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .datetime-display {
+            position: fixed;
+            bottom: 8%;
+            right: 8%;
+            z-index: 10;
+            text-align: right;
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Montserrat Alternates', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .datetime-time {
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+            letter-spacing: 0.1em;
+        }
+        
+        .datetime-date {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+        
+        @media (max-width: 768px) {
+            .datetime-time {
+                font-size: 3rem;
+            }
+            .datetime-date {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="halftone-bg" aria-hidden="true">
+        <canvas id="halftoneCanvas"></canvas>
+    </div>
+
+    <div class="datetime-display">
+        <div class="datetime-time" id="currentTime"></div>
+        <div class="datetime-date" id="currentDate"></div>
+    </div>
+
+    <script>
+        const PERLIN_COORD_MASK = 255;
+
+        class PerlinNoise {
+            constructor() {
+                this.gradients = new Map();
+            }
+            randVector() {
+                const theta = Math.random() * Math.PI * 2;
+                return { x: Math.cos(theta), y: Math.sin(theta) };
+            }
+            gradient(ix, iy) {
+                const wrappedX = ix & PERLIN_COORD_MASK;
+                const wrappedY = iy & PERLIN_COORD_MASK;
+                const key = `${wrappedX},${wrappedY}`;
+                if (!this.gradients.has(key)) {
+                    this.gradients.set(key, this.randVector());
+                }
+                return this.gradients.get(key);
+            }
+            dotProduct(x, y, ix, iy) {
+                const gradient = this.gradient(ix, iy);
+                return (x - ix) * gradient.x + (y - iy) * gradient.y;
+            }
+            smootherstep(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+            lerp(t, a, b) {
+                return a + this.smootherstep(t) * (b - a);
+            }
+            get(x, y) {
+                const xf = Math.floor(x);
+                const yf = Math.floor(y);
+
+                const topLeft = this.dotProduct(x, y, xf, yf);
+                const topRight = this.dotProduct(x, y, xf + 1, yf);
+                const bottomLeft = this.dotProduct(x, y, xf, yf + 1);
+                const bottomRight = this.dotProduct(x, y, xf + 1, yf + 1);
+
+                const xt = this.lerp(x - xf, topLeft, topRight);
+                const xb = this.lerp(x - xf, bottomLeft, bottomRight);
+                return this.lerp(y - yf, xt, xb);
+            }
+        }
+
+        const halftoneState = {
+            canvas: null,
+            ctx: null,
+            noise: null,
+            animationId: null,
+            ticking: false,
+            startTime: performance.now(),
+            dotPoints: [],
+            lastActivity: performance.now(),
+            lastFrameTime: 0,
+            frameInterval: 1000 / 30,
+            active: false
+        };
+        
+        const halftoneConfig = {
+            dotSpacing: 65,
+            idleTimeout: 1600
+        };
+
+        function initHalftoneBackground() {
+            const canvas = document.getElementById('halftoneCanvas');
+            if (!canvas) {
+                console.error('Canvas not found');
+                return;
+            }
+
+            halftoneState.canvas = canvas;
+            halftoneState.ctx = canvas.getContext('2d');
+            halftoneState.noise = new PerlinNoise();
+
+            const resize = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                buildHalftoneGrid(canvas.width, canvas.height);
+                markHalftoneActive();
+                requestHalftoneFrame();
+            };
+
+            resize();
+            
+            // Force initial animation
+            halftoneState.active = true;
+            markHalftoneActive();
+            
+            window.addEventListener('resize', resize);
+            window.addEventListener('scroll', () => {
+                markHalftoneActive();
+                requestHalftoneFrame();
+            }, { passive: true });
+
+            // Start animation loop immediately
+            requestHalftoneFrame();
+            
+            // Force first frame immediately as fallback
+            setTimeout(() => {
+                if (!halftoneState.ticking) {
+                    console.log('Forcing first frame');
+                    updateHalftoneFrame();
+                }
+            }, 100);
+            
+            console.log('Halftone background initialized', {
+                canvasWidth: canvas.width,
+                canvasHeight: canvas.height,
+                dotPoints: halftoneState.dotPoints.length
+            });
+        }
+
+        function buildHalftoneGrid(width, height) {
+            const points = [];
+            const spacing = halftoneConfig.dotSpacing;
+            const cols = Math.ceil(width / spacing) + 2;
+            const rows = Math.ceil(height / spacing) + 2;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const maxRadius = Math.hypot(centerX, centerY);
+
+            for (let offsetX = 0; offsetX < 2; offsetX++) {
+                for (let offsetY = 0; offsetY < 2; offsetY++) {
+                    for (let col = 0; col < cols; col++) {
+                        for (let row = 0; row < rows; row++) {
+                            const screenX = col * spacing + offsetX * spacing * 0.5;
+                            const screenY = row * spacing + offsetY * spacing * 0.5;
+                            const radial = 1 - Math.min(1, Math.hypot(screenX - centerX, screenY - centerY) / maxRadius);
+                            points.push({ x: screenX, y: screenY, radial });
+                        }
+                    }
+                }
+            }
+
+            halftoneState.dotPoints = points;
+        }
+
+        function requestHalftoneFrame() {
+            if (!halftoneState.ctx) return;
+            if (halftoneState.ticking) return;
+            halftoneState.ticking = true;
+            if (!halftoneState.active) {
+                halftoneState.active = true;
+            }
+            if (halftoneState.animationId) {
+                cancelAnimationFrame(halftoneState.animationId);
+            }
+            halftoneState.animationId = requestAnimationFrame(updateHalftoneFrame);
+        }
+
+        function updateHalftoneFrame() {
+            const { canvas, ctx, noise } = halftoneState;
+            if (!canvas || !ctx || !noise) {
+                console.error('Missing canvas components', { canvas: !!canvas, ctx: !!ctx, noise: !!noise });
+                return;
+            }
+
+            const now = performance.now();
+            if (now - halftoneState.lastFrameTime < halftoneState.frameInterval) {
+                halftoneState.ticking = false;
+                halftoneState.animationId = requestAnimationFrame(updateHalftoneFrame);
+                return;
+            }
+            halftoneState.lastFrameTime = now;
+            
+            console.log('Rendering frame', { 
+                canvasSize: `${canvas.width}x${canvas.height}`,
+                dotPoints: halftoneState.dotPoints.length 
+            });
+
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+            const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            const scrollRatio = Math.min(1, Math.max(0, scrollTop / maxScroll));
+            const elapsedSeconds = (now - halftoneState.startTime) / 1000;
+
+            // Clear canvas with background color
+            ctx.fillStyle = '#091131';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Test: draw a simple dot to verify rendering works
+            ctx.fillStyle = '#0d0911';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            const largeScale = 0.0022;
+            const smallScale = 0.0045;
+            const scrollOffset = scrollRatio * 1;
+            const timeOffset = elapsedSeconds * 0.35;
+
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'rgba(20, 8, 40, 0.6)';
+            const spacing = halftoneConfig.dotSpacing;
+
+            halftoneState.dotPoints.forEach(point => {
+                const { x: screenX, y: screenY, radial } = point;
+
+                const largeNoise = noise.get(
+                    screenX * largeScale + scrollOffset,
+                    screenY * largeScale + scrollOffset * 0.25
+                );
+                const large01 = (largeNoise + 1) * 0.5;
+
+                const smallNoise = noise.get(
+                    screenX * smallScale + timeOffset,
+                    screenY * smallScale + timeOffset * 0.7
+                );
+                const small01 = (smallNoise + 1) * 0.4;
+
+                const combined = (large01 * 0.6 + small01 * 0.45) * (1.20 - scrollRatio * 0.6) * (0.85 + radial * 0.4);
+                let radius = 0.35 + combined * (spacing * 0.45);
+
+                if (radius > spacing * 0.05) {
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            halftoneState.ticking = false;
+            // Keep animation running continuously for the background page
+            halftoneState.animationId = requestAnimationFrame(updateHalftoneFrame);
+        }
+
+        function markHalftoneActive() {
+            halftoneState.lastActivity = performance.now();
+        }
+
+        // Date and time display
+        function updateDateTime() {
+            const now = new Date();
+            const dateElement = document.getElementById('currentDate');
+            const timeElement = document.getElementById('currentTime');
+
+            if (dateElement && timeElement) {
+                // Format date (e.g., "07.11") - no year
+                const dateOptions = { 
+                    day: '2-digit', 
+                    month: '2-digit'
+                };
+                const formattedDate = now.toLocaleDateString('de-DE', dateOptions);
+
+                // Format time (e.g., "14:30") - no seconds
+                const timeOptions = { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false
+                };
+                const formattedTime = now.toLocaleTimeString('de-DE', timeOptions);
+
+                dateElement.textContent = formattedDate;
+                timeElement.textContent = formattedTime;
+            }
+        }
+
+        // Initialize date/time display
+        function initDateTime() {
+            updateDateTime();
+            // Update every second
+            setInterval(updateDateTime, 1000);
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            initHalftoneBackground();
+            initDateTime();
+        });
+    </script>
+</body>
+</html>
