@@ -179,6 +179,8 @@ function openSet(){
     Tap a charged trick card to arm it. Hold a face-up card for its story.<br>
     Swap, Clip, Ghost, Dredge and Riffle rewrite table values — every rewrite turns back at the shuffle.<br>
     Keys: <b>Space</b> draw · <b>B</b> bank · <b>F</b> hand · <b>D</b> deck · <b>1-6</b> tabs.</div></div></div>
+  <a class="row dscord" href="https://discord.gg/fsRnxAY8d5" target="_blank" rel="noopener">
+    <div class="b"><div class="nm">found a bug? have ideas?</div><div class="ds">join the discord (:</div></div></a>
   </div>
   <div class="scol">
   <div class="ash csnet"><span>CLOUD SAVE</span><b id="csNet"></b></div>
@@ -204,8 +206,7 @@ function openSet(){
     <button class="buy rd" id="csDel">DELETE</button></div>
   </div>
   </div>
-  <button class="close" onclick="closeMo()">CLOSE</button>
-  <p class="dsnote">found a bug? have ideas? <a href="https://discord.gg/fsRnxAY8d5" target="_blank" rel="noopener">join the discord</a> (:</p>`);
+  <button class="close" onclick="closeMo()">CLOSE</button>`);
   $('#sh').classList.add('set');
   $('#sS').onclick=()=>{S.set.sound=!S.set.sound;save(true);openSet();};
   $('#sH').onclick=()=>{S.set.haptic=!S.set.haptic;save(true);openSet();};
