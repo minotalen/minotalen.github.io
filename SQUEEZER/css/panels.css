@@ -1,0 +1,645 @@
+/* ==================================================================
+   panels.css — grouped tab rail with sliding pill, panel components,
+   progress-fill rows, card list + sheet, modal, toasts, fx
+   ================================================================== */
+
+/* ---------- tab rail: one grouped element, sliding stock pill ---------- */
+#tabs{flex:none;margin:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:stretch;
+  border-radius:13px;padding:5px;position:relative;
+  box-shadow:inset 4px 4px 10px rgba(160,150,126,.5),inset -3px -3px 9px var(--hl)}
+#thumb{position:absolute;top:5px;bottom:5px;border-radius:10px;background:var(--grad);
+  box-shadow:2px 3px 7px var(--shs),-2px -2px 6px var(--hl);transition:left .34s var(--sp),width .34s var(--sp)}
+#tabs button{flex:1;min-width:0;border:0;background:none;color:var(--ink3);padding:7px 0 6px;cursor:pointer;
+  font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7.5px;letter-spacing:.09em;
+  position:relative;z-index:1;transition:color .25s;font-family:var(--ui)}
+#tabs button:focus{outline:none}
+/* every tab icon is the same 18px SVG, inked by the button's color */
+#tabs button .i{height:18px;display:grid;place-items:center}
+#tabs button .i svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#tabs button .i svg .fl{fill:currentColor;stroke:none}
+#tabs button.on{color:var(--ink)}
+#tabs button.hid{display:none}
+/* locked tabs ride the rail early: a dim pill filling toward its score
+   req — the tab is the bar too. The fill landing opens it */
+#tabs button.lock{border-radius:10px;opacity:.55;cursor:default;color:var(--ink3);
+  background:linear-gradient(90deg,rgba(42,71,97,.22) var(--p,0%),transparent 0),var(--grad);
+  box-shadow:2px 2px 6px var(--shs),-2px -2px 5px var(--hl);
+  transition:--p .7s var(--sp),opacity .25s,color .25s,box-shadow .25s}
+#tabs .nub{position:absolute;top:3px;right:22%;width:6px;height:6px;border-radius:50%;background:var(--red)}
+
+/* ---------- panel components ---------- */
+h2{font-family:var(--disp);font-size:11px;letter-spacing:.24em;color:var(--ink3);margin:16px 0 9px;font-weight:800}
+h2:first-child{margin-top:6px}
+.note{font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:12px}
+.note b{color:var(--ink)}
+/* countdowns like 5m 51s: unit letters ride the --ui stack's fallback while
+   the digits go Orbit — one face for the whole timer closes the seam */
+.note b.tmr{font-family:var(--disp);font-weight:700}
+
+/* rows sit proud of the stock; `.pf` rows carry their progress as a
+   tinted fill sweeping from the left edge — the row IS the bar */
+.row{display:flex;align-items:center;gap:11px;border-radius:11px;padding:11px;margin-bottom:8px;
+  background:var(--grad);box-shadow:3px 3px 9px var(--shs),-3px -3px 8px var(--hl)}
+/* bought-out stock reads as spent paper: the whole row dims */
+#v-shop .row.sold{filter:brightness(.62) saturate(.8)}
+/* --p registered so it can transition: the fill eases to its value
+   instead of popping (panels.js fillUp re-seats it on each render) */
+@property --p{syntax:'<percentage>';inherits:false;initial-value:0%}
+.row.pf{position:relative;transition:--p .7s var(--sp);
+  background:linear-gradient(90deg,var(--pfc,rgba(42,71,97,.13)) var(--p,0%),transparent 0),var(--grad)}
+/* landing at full: one soft wash of the row's own tint — the goal flows in */
+.row.pf.pfdone::after{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:var(--pfc,rgba(42,71,97,.13));opacity:0;pointer-events:none;animation:pfin .9s var(--sp)}
+@keyframes pfin{20%{opacity:1}100%{opacity:0}}
+.row.pf.pg{--pfc:rgba(44,86,60,.16)}
+.row.pf.pd{--pfc:rgba(138,106,47,.18)}
+.row .b{flex:1;min-width:0}
+.nm{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--ink)}
+.nm .stkicon{width:20.25px;height:20.25px;flex:none}
+/* shop stock rows: the sticker is the product — its vinyl stands as its own
+   column spanning both rows, name and desc both clear it, so the fade and
+   the hue drift read without opening anything */
+#v-shop .row > .stkicon{width:40.5px;height:40.5px;flex:none}
+.stkicon{width:20.25px;height:20.25px;display:inline-block;vertical-align:-2px;
+  filter:drop-shadow(0 .8px .8px rgba(30,25,10,.24)) drop-shadow(-.5px -.5px .5px rgba(255,252,238,.22))}
+.stkicon svg{width:100%;height:100%;display:block}
+.stkicon path,.stkicon circle,.stkicon rect{stroke:#15140E;stroke-width:2;stroke-linejoin:round;paint-order:stroke}
+.ds{font-size:12px;color:var(--ink2);line-height:1.45;margin-top:3px}
+.tag{font-family:var(--nm);font-size:8.5px;color:var(--ink2);padding:2px 5px;border-radius:4px;font-weight:700;
+  box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.tag.t1{color:var(--grn)}.tag.t2{color:var(--blu)}.tag.t3{color:var(--gld)}.tag.t4{color:var(--red)}
+.tag.t5{color:#8E4C6E}
+.tag.shy{color:#15140E;background:linear-gradient(135deg,#FF9AD5,#FFD68A,#9FF2B6,#8FC9FF,#CBA6FF)}
+
+.buy{border:0;border-radius:8px;background:var(--grad);color:var(--ink2);font-family:var(--nm);font-weight:700;
+  font-size:11.5px;padding:11px 9px;min-width:76px;cursor:pointer;transition:box-shadow .12s,background .15s,color .15s;
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl)}
+/* affordable: the price key lights up — tinted wash, colored price, one soft
+   ring. Out of reach: the key sinks, the price grays. No HUD comparing */
+.buy:where(:not(:disabled):not(.g):not(.rd):not(.flat)){color:var(--grn);
+  background:linear-gradient(150deg,rgba(44,86,60,.15),rgba(44,86,60,.04)),var(--grad);
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl),0 0 0 1.5px rgba(44,86,60,.5)}
+.buy.g:where(:not(:disabled)){color:var(--gld);
+  background:linear-gradient(150deg,rgba(138,106,47,.16),rgba(138,106,47,.04)),var(--grad);
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl),0 0 0 1.5px rgba(138,106,47,.55)}
+@media(hover:hover){.buy:where(:not(:disabled)):hover{filter:brightness(1.04)}}
+.buy:active:not(:disabled){background:var(--gradi);box-shadow:inset 3px 3px 6px rgba(160,150,126,.45),inset -2px -2px 5px var(--hl)}
+.buy:disabled{color:var(--ink3);cursor:default;box-shadow:inset 2px 2px 5px rgba(160,150,126,.35),inset -1px -1px 4px var(--hl)}
+.buy.rd{color:var(--red)}
+/* toggles (settings ON/OFF) never pose as purchases */
+.buy.flat{color:var(--ink2)}
+.buy.flat.on{color:var(--grn)}
+
+/* goal + locked-stock status: a sunken counter. DONE (and tier tags)
+   carry a small label beneath. DONE rises back out of the stock in green */
+.gst{flex:none;min-width:76px;text-align:center;border-radius:8px;padding:8px 9px 7px;background:var(--gradi);
+  box-shadow:inset 2px 2px 5px rgba(160,150,126,.35),inset -1px -1px 4px var(--hl)}
+.gst .v{font-family:var(--disp);font-size:13.5px;font-weight:800;color:var(--ink);line-height:1}
+.gst .v i{font-style:normal;font-size:11px;font-weight:600;color:var(--ink3);padding:0 1px}
+.gst .l{font-family:var(--nm);font-size:7.5px;letter-spacing:.13em;font-weight:700;color:var(--ink3);margin-top:3px}
+.gst.done{background:linear-gradient(150deg,rgba(44,86,60,.15),rgba(44,86,60,.04)),var(--grad);
+  box-shadow:2px 2px 6px var(--shs),-2px -2px 6px var(--hl),inset 0 0 0 1.5px rgba(44,86,60,.35)}
+.gst.done .v{color:var(--grn);font-size:13px}
+.gst.done .l{color:var(--grn)}
+/* a claimed goal recedes: slimmer row, one breath of green, tighter chip */
+.row.done{padding:7px 11px;margin-bottom:6px;
+  background:linear-gradient(150deg,rgba(44,86,60,.10),rgba(44,86,60,.03)),var(--grad)}
+.row.done .gst{padding:6px 9px 5px;min-width:64px}
+
+/* ---------- DECK tab: value sets + every card as a tappable row ---------- */
+.mc{width:38px;height:53px;border-radius:4px;margin:0 auto;display:grid;place-items:center;position:relative;overflow:hidden;
+  --cw:38px;
+  background:var(--stock);border:1.2px solid var(--ink);box-shadow:0 2px 5px rgba(30,25,10,.3)}
+.mc b{font-size:20px;font-weight:800;font-family:var(--disp);
+  -webkit-text-stroke:.022em currentcolor}
+/* a borrowed value (Swap, Clip, Ghost, Dredge, Riffle) wears a wavy
+   underline until the card leaves the table and the printed one is back */
+.mc b.tmp,.gface b.tmp{text-decoration:underline wavy currentcolor;text-decoration-thickness:1.3px;
+  text-underline-offset:.14em;text-decoration-skip-ink:none}
+.mc .bar{position:absolute;top:0;left:0;right:0;height:4px;border-bottom:1px solid var(--ink)}
+.mc .r{position:absolute;bottom:1px;right:3px;font-size:6.5px;font-family:var(--nm);color:var(--ink2)}
+.mc .stk{width:20.25px;height:20.25px}
+.row .mc{flex:none}
+/* ---------- DECK tab: every card as a flip grid, 5 columns ----------
+   everything on a card scales with its width via container units */
+#dgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:2px 0 10px}
+.gcard{position:relative;width:100%;max-width:106px;margin:0 auto;aspect-ratio:5/7;
+  perspective:600px;cursor:pointer;container-type:inline-size}
+.ginn{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .42s var(--sp)}
+.gcard.flip .ginn{transform:rotateY(180deg)}
+@media (hover:hover){.gcard:not(.nk):hover .ginn{transform:rotateY(180deg)}}
+.gface{position:absolute;inset:0;border-radius:7cqw;backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;background:var(--stock);border:1.2px solid var(--ink);
+  box-shadow:0 2px 5px rgba(30,25,10,.3);display:grid;place-items:center;overflow:hidden}
+.gf b{font-size:42cqw;font-weight:800;font-family:var(--disp);letter-spacing:-.04em;
+  -webkit-text-stroke:.022em currentcolor}
+.gbar{position:absolute;top:0;left:0;right:0;height:6cqw;border-bottom:1.2px solid var(--ink)}
+.gface .stk{width:45.9cqw;height:45.9cqw}
+.gr{position:absolute;bottom:3cqw;right:5cqw;font-size:8cqw;font-family:var(--nm);color:var(--ink2)}
+/* the back: label at the top, the sticker text vertically centered below */
+.gb{transform:rotateY(180deg);padding:8cqw 6cqw;display:grid;grid-template-rows:auto 1fr;
+  justify-items:center;align-items:start;text-align:center}
+.gb i{font-style:normal;font-family:var(--nm);font-weight:700;font-size:13.5cqw;
+  letter-spacing:.06em;color:var(--ink);text-transform:uppercase}
+.gb span{align-self:center;font-size:14cqw;line-height:1.35;color:var(--ink2)}
+.gbl{color:var(--ink3)}
+/* dimmed: on a table (.gt) or outside the deck (.go) */
+.gcard.gt{opacity:.55;filter:grayscale(.3)}
+.gcard.go{opacity:.3;filter:grayscale(.55)}
+.gcard.gx{opacity:.55;filter:grayscale(.45)}
+/* risky right now: a deck card whose value matches a table. Slight pink
+   wash on the paper and a soft glow, eased in and out as hands move.
+   Both faces carry it so the glow survives the flip; the base shadow
+   stays first in the list so nothing pops */
+#dgrid .gface{transition:background-color .35s var(--sp),box-shadow .35s var(--sp)}
+.gcard.grisk .gface{background-color:color-mix(in srgb,var(--stock) 84%,#ff7291);
+  box-shadow:0 2px 5px rgba(30,25,10,.3),0 0 9px 1px rgba(255,100,135,.45)}
+.sheettop{display:flex;flex-direction:column;align-items:center;gap:8px;margin:2px 0 12px}
+.sheettop .mc{width:88px;height:119px;border-radius:6px;--cw:88px}
+.sheettop .mc b{font-size:44px}
+.sheettop .mc .bar{height:7px}
+.sheettop .mc .stk{width:40.5px;height:40.5px}
+.shv{font-family:var(--nm);font-size:9px;letter-spacing:.26em;font-weight:700;color:var(--ink2)}
+/* sticker showcase: the card big and centered, its sticker slapped on,
+   then the sticker's line below — nothing else on the sheet */
+.stkshow{display:flex;flex-direction:column;align-items:center;margin:6px 0 12px}
+.stkshow .mc{width:118px;height:159px;border-radius:7px;--cw:118px}
+.stkshow .mc b{font-size:58px}
+.stkshow .mc .bar{height:8px}
+.stkshow .mc .r{font-size:10px;bottom:3px;right:5px}
+.stkshow .mc .stk{width:56.7px;height:56.7px;animation:stamp .42s cubic-bezier(.2,1.5,.4,1) both}
+/* bent cards: the fold's sticker clone sits in the tilted strip; only
+   the body's stamp plays (the clone mirror rule lives in table.css) */
+.stkshow .bentin .stk{animation:none}
+.stkline{text-align:center;font-size:13.5px;line-height:1.55;color:var(--ink2);margin:0 4px 2px}
+.stkline b{color:var(--ink)}
+.blank{color:var(--ink3);font-style:italic}
+/* card sheet: the big painted card sits left, its lines, chips and
+   notes ride right. One layout at every width; the text column wraps */
+.cardmo{display:flex;gap:14px;align-items:center;text-align:left}
+.cardmo .stkshow{margin:0}
+.cardmoR{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+.cardmoR .stkline{text-align:left;margin:0;font-size:12.5px}
+/* the sheet's tooltip voice: hairline, then the muted lines, the gold
+   live worth last — the hover tag's structure, moved indoors */
+.cardmoR .cndline{display:block;border-top:1px solid var(--line);margin:2px 0 6px}
+.cardmoR .cndtip{display:block;color:var(--ink2);font-size:12px;line-height:1.55}
+/* sheet header: the name left, the card's whereabouts top right */
+.shead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.shead h3{margin-bottom:0}
+.shead .loc{flex:none;font-size:9.5px;padding:4px 9px;color:var(--ink);letter-spacing:.04em}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:10.5px;color:var(--ink2);border-radius:7px;padding:5px 8px;background:var(--gradi);font-weight:600;
+  box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.chip b{color:var(--ink);font-family:var(--nm)}
+.chip.ok{color:var(--grn)}
+.morechip{display:inline-block;font-family:var(--nm);font-size:9px;font-weight:700;color:var(--blu);
+  border:1px dashed var(--blu);border-radius:4px;padding:2px 6px;margin-top:4px}
+.ok{color:var(--grn)}
+
+/* ---------- modal ---------- */
+#mo{position:fixed;inset:0;background:rgba(60,54,38,.45);backdrop-filter:blur(3px);z-index:200;display:none;
+  align-items:center;justify-content:center;padding:16px}
+#mo.on{display:flex}
+#sh{width:100%;max-width:420px;max-height:86dvh;overflow-y:auto;border-radius:15px;padding:18px;background:var(--stock);
+  box-shadow:0 18px 40px rgba(40,34,20,.35);border:1.2px solid var(--line);animation:po .25s var(--sp) both}
+@keyframes po{from{transform:scale(.93) translateY(14px);opacity:0}}
+#sh h3{font-family:var(--disp);font-size:16px;letter-spacing:.14em;margin-bottom:7px;font-weight:800}
+.close{width:100%;margin-top:10px;padding:13px;border:0;border-radius:10px;background:var(--grad);color:var(--ink);
+  font-size:12.5px;letter-spacing:.1em;font-weight:700;cursor:pointer;
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl)}
+.close:active{background:var(--gradi);box-shadow:inset 3px 3px 6px rgba(160,150,126,.45),inset -2px -2px 5px var(--hl)}
+.close.grn{color:var(--grn)}
+.close.gld{color:var(--gld)}
+.close.rd{color:var(--red)}
+/* ---------- automation sheet: switches, tolerance slider, ledger ---------- */
+/* the switch: a sunken trough, the knob slides onto the green */
+.asw{flex:none;width:46px;height:26px;border:0;border-radius:13px;padding:0;cursor:pointer;position:relative;
+  background:var(--gradi);box-shadow:inset 2px 2px 5px rgba(160,150,126,.5),inset -2px -2px 4px var(--hl);
+  transition:background .25s}
+.asw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--stock);
+  box-shadow:1px 2px 4px var(--shs),inset 0 1px 0 rgba(255,253,244,.6);transition:left .18s var(--sp)}
+.asw.on{background:linear-gradient(160deg,#39684A,#274D35)}
+.asw.on i{left:23px}
+/* section header row: tiny tracked label, the slider's big % rides right */
+.ash{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 8px;
+  font-family:var(--nm);font-size:9px;letter-spacing:.2em;font-weight:700;color:var(--ink3)}
+.ash b{font-family:var(--disp);font-size:20px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+/* cloud save: the key reads as one tracked token on a sunken plaque,
+   selectable whole by tap. NOT Orbit: its digits are smaller than its
+   caps (the Orbit Num slice hides that in game numbers, a mixed key
+   exposes it), so the key wears the mono stack, where every glyph
+   shares one grid and digits fit by definition */
+.csk{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12.5px;font-weight:700;letter-spacing:.08em;white-space:nowrap;
+  color:var(--ink);user-select:all;-webkit-user-select:all;margin:3px 0 5px;cursor:text;
+  padding:10px 11px;border-radius:8px;text-align:center;background:var(--gradi);
+  box-shadow:inset 2px 2px 5px rgba(160,150,126,.4),inset -1px -1px 3px var(--hl)}
+.csnote{margin:0 2px 10px;font-size:11.5px;color:var(--ink3);line-height:1.5}
+/* the discord footer under CLOSE */
+.dsnote{text-align:center;margin:10px 2px 0;font-size:11.5px;color:var(--ink3)}
+.dsnote a{color:var(--gld);text-decoration:underline}
+.csnet b{font-size:10px;letter-spacing:.14em;color:var(--ink3)}
+.ash.dgr span{color:var(--red)}
+.csin{display:flex;gap:8px;margin-top:6px}
+.csin input{flex:1;min-width:0;border:0;border-radius:8px;padding:10px;
+  background:var(--gradi);color:var(--ink);
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  box-shadow:inset 2px 2px 5px rgba(160,150,126,.4),inset -1px -1px 3px var(--hl)}
+.csin input::placeholder{color:var(--ink3);font-weight:400;letter-spacing:.06em;text-transform:none;font-family:var(--ui)}
+.csin input:focus{outline:none;box-shadow:inset 2px 2px 5px rgba(160,150,126,.4),inset -1px -1px 3px var(--hl),0 0 0 2.5px rgba(138,106,47,.4)}
+/* the consent bar: one small paper card pinned over the tab rail, so
+   the first-run choice is made before play continues. Sits under the
+   modal (z 200), above everything else */
+#biBar{position:fixed;left:0;right:0;bottom:0;z-index:150;display:none;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:var(--paper);box-shadow:0 -4px 14px rgba(60,54,38,.28)}
+#biBar.on{display:flex;align-items:center;gap:10px}
+#biBar .bit{flex:1;min-width:0;font-size:11.5px;line-height:1.45;color:var(--ink2)}
+#biBar .bib{flex:none;display:flex;gap:8px}
+#biBar button{border:0;border-radius:9px;padding:11px 15px;cursor:pointer;
+  font-family:var(--nm);font-size:11px;font-weight:700;letter-spacing:.12em;
+  background:var(--grad);color:var(--ink2);
+  box-shadow:2px 3px 7px var(--shs),-2px -2px 6px var(--hl)}
+#biBar button:active{background:var(--gradi);box-shadow:inset 3px 3px 6px rgba(160,150,126,.45),inset -2px -2px 5px var(--hl)}
+#biBar #biOk{color:var(--grn)}
+#biBar #biNo{color:var(--ink3)}
+.ds a,.note a{color:var(--gld);text-decoration:underline}
+/* the session-kick bar: same shape as the consent bar, gold button.
+   A second tab pushing under the same key gets refused until it
+   claims the lock here */
+#kickBar{position:fixed;left:0;right:0;bottom:0;z-index:150;display:none;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:var(--paper);box-shadow:0 -4px 14px rgba(60,54,38,.28)}
+#kickBar.on{display:flex;align-items:center;gap:10px}
+#kickBar .bit{flex:1;min-width:0;font-size:11.5px;line-height:1.45;color:var(--ink2)}
+#kickBar .bib{flex:none;display:flex;gap:8px}
+#kickBar button{border:0;border-radius:9px;padding:11px 15px;cursor:pointer;
+  font-family:var(--nm);font-size:11px;font-weight:700;letter-spacing:.12em;
+  background:var(--grad);color:var(--gld);
+  box-shadow:2px 3px 7px var(--shs),-2px -2px 6px var(--hl)}
+#kickBar button:active{background:var(--gradi);box-shadow:inset 3px 3px 6px rgba(160,150,126,.45),inset -2px -2px 5px var(--hl)}
+/* the tolerance tracks: the RISK gauge itself — same sunken 18px box,
+   the label and value ride inside, and a clipped cream twin of both
+   flips as the fill covers them. The fill edge is the handle */
+.arsl{position:relative;height:18px;border-radius:7px;background:var(--gradi);cursor:pointer;touch-action:none;outline:none;overflow:hidden;
+  box-shadow:inset 3px 3px 6px rgba(160,150,126,.5),inset -2px -2px 5px var(--hl)}
+.arsl .af{position:absolute;top:0;bottom:0;left:0;width:50%;border-radius:7px;background:var(--grn);
+  box-shadow:inset 0 1px 0 rgba(255,253,244,.35),inset 0 -2px 3px rgba(21,20,14,.18);transition:width .12s ease,background .3s}
+/* the locked tail: greyed hatch past the player's unlocked ceiling */
+.arsl .ax{position:absolute;top:0;bottom:0;right:0;pointer-events:none;
+  background:repeating-linear-gradient(135deg,rgba(74,70,56,.18) 0 4px,rgba(74,70,56,.07) 4px 8px)}
+.arsl .al,.arsl b{position:absolute;top:0;bottom:0;display:flex;align-items:center;pointer-events:none}
+.arsl .al{left:9px;font-size:8px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+.arsl b{right:9px;font-family:var(--nm);font-size:11.5px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+.arsl .ac{position:absolute;inset:0;pointer-events:none;clip-path:inset(0 100% 0 0);transition:clip-path .12s ease}
+.arsl .ac .al{color:rgba(241,237,225,.8)}
+.arsl .ac b{color:var(--stock)}
+.arsl.m .af{background:var(--gld)}
+.arsl.h .af{background:#B4551E}
+.arsl.x .af{background:var(--red)}
+.arsl:focus-visible{box-shadow:inset 3px 3px 6px rgba(160,150,126,.5),inset -2px -2px 5px var(--hl),0 0 0 2.5px rgba(138,106,47,.4)}
+.arsl{margin-bottom:6px}
+/* the last-10 strip: one column per hand, oldest left — a tall cell
+   the pay fills from the bottom (green banks, red busts, a dot rides
+   the autos' work) and the hand's pay printed under it at readable size */
+.a10{display:flex;gap:4px}
+.a10 .c{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.a10 .c i{position:relative;height:52px;border-radius:6px;overflow:hidden;
+  background:var(--gradi);box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.a10 .c i b{position:absolute;left:0;right:0;bottom:0;height:0;transition:height .35s var(--sp);
+  box-shadow:inset 0 1px 0 rgba(255,253,244,.3)}
+.a10 .c i.p b{background:var(--grn)}
+.a10 .c i.f b{background:var(--red)}
+.a10 .c i s{display:none;position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:var(--blu)}
+.a10 .c i.a s{display:block}
+.a10 .c em{font-style:normal;text-align:center;font-family:var(--nm);font-size:9.5px;font-weight:700;
+  letter-spacing:.02em;color:var(--ink2);white-space:nowrap;overflow:hidden}
+/* the rate: big and centered, the collect modals' payout treatment */
+.apm{text-align:center;margin:2px 0 10px}
+.apm .v{font-family:var(--disp);font-size:36px;font-weight:800;letter-spacing:-.02em;color:var(--gld)}
+.apm .l{font-family:var(--nm);font-size:8.5px;letter-spacing:.22em;font-weight:700;color:var(--ink3);margin-top:2px}
+/* the ledger: two rows of three gauge tiles */
+.asg{display:flex;gap:7px;margin-bottom:7px}
+.asg .gst{flex:1;min-width:0;padding:9px 6px 8px}
+/* ---------- pick stage: the shop tab becomes the table ----------
+   no modal, no copy: three cards in a row, the paid sticker waits on a
+   raised pad that dips under the cursor. Drag it onto a card — the
+   ghost previews the clamped spot and the placement is permanent.
+   S.pick rides the save, so the stage survives a reload. */
+#pwrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:8px 0 18px}
+#prow{display:flex;justify-content:center;gap:13px;width:100%;perspective:820px}
+/* fewer than three blank cards: the cards grow to keep the stage
+   composed instead of one lonely sliver */
+#prow.n2 .pcard{width:clamp(84px,36%,164px)}
+#prow.n1 .pcard{width:clamp(94px,46%,184px)}
+.pcard{position:relative;width:clamp(74px,27%,148px);aspect-ratio:5/7;container-type:inline-size;
+  display:grid;place-items:center;background:var(--stock);border:1.4px solid var(--ink);border-radius:8px;
+  box-shadow:0 2px 4px rgba(30,25,10,.16);transition:box-shadow .15s,translate .15s var(--sp);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;
+  animation:pcflip .5s cubic-bezier(.35,.1,.28,1) both}
+/* while the peel plays the card lets the sticker and its backing paper
+   fly above it; the clip returns once the sticker has landed */
+.pcard.peeling{overflow:visible}
+/* the reveal: each card flips over face-up, dealt left to right —
+   backface-hidden, so nothing shows until the face swings around */
+.pcard:nth-child(1){animation-delay:.05s}
+.pcard:nth-child(2){animation-delay:.19s}
+.pcard:nth-child(3){animation-delay:.33s}
+@keyframes pcflip{from{transform:rotateY(180deg)}to{transform:rotateY(0deg)}}
+.pcard .pbar{position:absolute;top:0;left:0;right:0;height:9cqw;border-bottom:1.2px solid var(--ink)}
+.pcard b{font-size:46cqw;font-weight:800;font-family:var(--disp);letter-spacing:-.04em;
+  -webkit-text-stroke:.022em currentcolor}
+.pcard .stk{width:45.9cqw;height:45.9cqw}
+/* the placement guide: the sticker itself, gliding to the clamped
+   spot — what you see is exactly what lands */
+.pcard .gstk{opacity:0;left:50%;top:50%;
+  transition:opacity .16s,left .24s var(--sp),top .24s var(--sp)}
+.pcard.hot .gstk{opacity:1}
+.pcard.hot{translate:0 -4px;
+  box-shadow:0 7px 15px rgba(30,25,10,.3),0 0 0 2.5px var(--grn)}
+/* the pad: raised like a .row, sinks like a pressed .buy on hover.
+   The vinyl sits on its backing paper (::before) — peel it off and
+   the emptied paper stays behind on the sunken pad */
+#pped{position:relative;width:100px;height:88px;border-radius:13px;display:grid;place-items:center;cursor:grab;touch-action:none;
+  background:var(--grad);transition:translate .16s var(--sp),box-shadow .16s,background .16s;
+  box-shadow:4px 4px 10px var(--shs),-4px -4px 9px var(--hl)}
+#pped::before{content:'';position:absolute;inset:9px;border-radius:9px;
+  background:linear-gradient(135deg,#DDD5BC,#CBBFA2);border:1px dashed rgba(30,25,10,.3);
+  box-shadow:0 1px 3px rgba(30,25,10,.18)}
+#pped svg{position:relative;z-index:1;width:62.1px;height:62.1px;pointer-events:none;
+  filter:drop-shadow(0 2px 2px rgba(30,25,10,.3)) drop-shadow(-1px -1px .8px rgba(255,252,238,.3));
+  transition:opacity .15s}
+#pped svg path,#pped svg circle,#pped svg rect{stroke:#15140E;stroke-width:2;stroke-linejoin:round;paint-order:stroke}
+@media(hover:hover){#pped:hover{translate:0 5px;background:var(--gradi);
+  box-shadow:inset 4px 4px 8px rgba(160,150,126,.5),inset -2px -2px 6px var(--hl)}}
+#pped:active{cursor:grabbing;translate:0 5px;background:var(--gradi);
+  box-shadow:inset 4px 4px 8px rgba(160,150,126,.5),inset -2px -2px 6px var(--hl)}
+/* the pickup peel: grabbing the vinyl lifts it off its backing paper —
+   hinged at the bottom edge. The first stretch is adhesive resistance:
+   the vinyl creeps up a hair, hangs on, then lets go of the paper in
+   one unhurried swing and fades as the drag ghost springs away with
+   it; the paper stays on the pad */
+#pped.peeloff svg{transform-origin:50% 86%;animation:pedpeel 1.35s cubic-bezier(.3,.6,.4,1) both}
+@keyframes pedpeel{
+  0%{transform:translateY(0) rotate(0) scale(1);opacity:1;
+    animation-timing-function:cubic-bezier(.45,.08,.75,.45)}
+  38%{transform:translateY(-5%) rotate(-3.5deg) scale(1.02);opacity:1;
+    animation-timing-function:cubic-bezier(.22,.55,.35,1)}
+  100%{transform:translateY(-58%) rotate(-24deg) scale(1.09);opacity:0}}
+/* lifted: the sticker is in the hand now — the pad sits sunken, its
+   emptied backing paper showing */
+#pped.lift{translate:0 5px;background:var(--gradi);
+  box-shadow:inset 4px 4px 8px rgba(160,150,126,.5),inset -2px -2px 6px var(--hl)}
+#pped.lift svg{opacity:0}
+/* the sticker in the hand, riding its spring above the finger */
+.pdrag{position:fixed;left:0;top:0;width:78.3px;height:78.3px;z-index:300;pointer-events:none;
+  filter:drop-shadow(0 15px 14px rgba(0,0,0,.33)) drop-shadow(-2px -2px 2px rgba(255,252,238,.28));
+  will-change:transform;
+  transition:opacity .15s}
+.pdrag svg{width:100%;height:100%;display:block}
+.pdrag svg path,.pdrag svg circle,.pdrag svg rect{stroke:#15140E;stroke-width:2;stroke-linejoin:round;paint-order:stroke}
+/* over a card the hand sticker yields to the outline guide */
+.pdrag.hide{opacity:0}
+/* first-time drag nudge: the same ghost body, driven by WAAPI — it
+   repeats the pick move (pad, up onto a card, press, fade) until the
+   pad is grabbed for real */
+.pnudge{position:fixed;left:0;top:0;width:78.3px;height:78.3px;z-index:300;pointer-events:none;
+  filter:drop-shadow(0 15px 14px rgba(0,0,0,.33)) drop-shadow(-2px -2px 2px rgba(255,252,238,.28));
+  will-change:transform,opacity}
+.pnudge svg{width:100%;height:100%;display:block}
+.pnudge svg path,.pnudge svg circle,.pnudge svg rect{stroke:#15140E;stroke-width:2;stroke-linejoin:round;paint-order:stroke}
+
+/* the apply, ON RELEASE: the sticker starts exactly where the guide
+   previewed it — no flight, no teleport. It rises slowly, hangs at the
+   apex a beat (a held breath before the press), then comes down with
+   real weight: deep restrained squash, a small torque that smooths the
+   vinyl into its angle, a long settle. The peel already happened back
+   on the pad; the card itself never moves — a pressure ring (.sring)
+   and a shadow press (.press) ground the contact frame */
+.pcard .stk.apply{animation:apply 2.5s both}
+@keyframes apply{
+  0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);opacity:1;
+    animation-timing-function:cubic-bezier(.22,.68,.35,1)}
+  22%{transform:translate(-50%,-72%) rotate(var(--r)) scale(1.09);
+    filter:drop-shadow(0 12px 10px rgba(30,25,10,.38));
+    animation-timing-function:cubic-bezier(.4,0,.6,1)}
+  32%{transform:translate(-50%,-70%) rotate(calc(var(--r) + .7deg)) scale(1.075);
+    filter:drop-shadow(0 11px 9px rgba(30,25,10,.36));
+    animation-timing-function:cubic-bezier(.55,0,.85,.5)}
+  44%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);
+    filter:drop-shadow(0 1px 1px rgba(30,25,10,.22));
+    animation-timing-function:cubic-bezier(.18,.75,.3,1)}
+  54%{transform:translate(-50%,-50%) rotate(calc(var(--r) - .8deg)) scale(1.17,.87)}
+  66%{transform:translate(-50%,-50%) rotate(calc(var(--r) - 1.1deg)) scale(.96,1.03)}
+  80%{transform:translate(-50%,-50%) rotate(calc(var(--r) + .5deg)) scale(1.012,.992);filter:none}
+  100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);filter:none}}
+/* the one-in-a-hundred tear: the press splits the stock — a jagged
+   pale gash opens beside the sticker and stays for good */
+/* the apply-moment tear flash: torn from the outer edge (inline style
+   anchors its start ON the border, swung inward), the gash wearing the
+   vinyl's neumorphic dual shadows. rtin pops it in off the anchor */
+.pcard .rt{position:absolute;width:34cqw;aspect-ratio:1;pointer-events:none;
+  transform-origin:0 50%;
+  filter:drop-shadow(0 1px 1.1px rgba(30,25,10,.32)) drop-shadow(-.6px -.6px .7px rgba(255,252,238,.26));
+  animation:rtin .55s cubic-bezier(.18,.85,.3,1) both}
+@keyframes rtin{0%{opacity:0;scale:.25}55%{opacity:1;scale:1.15}100%{opacity:1;scale:1}}
+/* the contact frame: a soft ring spreads from the press point and a
+   shadow press grounds the card — the box itself stays put */
+.pcard .sring{position:absolute;width:34cqw;height:34cqw;border-radius:50%;
+  border:3px solid rgba(30,25,10,.34);pointer-events:none;
+  transform:translate(-50%,-50%) scale(.3);opacity:.9;
+  animation:sring .8s cubic-bezier(.2,.7,.4,1) both}
+@keyframes sring{to{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+.pcard.press{box-shadow:0 1px 2px rgba(30,25,10,.3)}
+
+/* ---------- fx ---------- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:150;overflow:hidden}
+.ftx{position:absolute;font-family:var(--disp);font-weight:800;font-size:16px;transform:translate(-50%,-50%);
+  animation:ri 1.05s ease-out forwards;white-space:nowrap;text-shadow:0 1px 0 var(--hl)}
+@keyframes ri{to{transform:translate(-50%,-160%);opacity:0}}
+/* two-line floats: label over amount, both centered */
+.ftx.two{text-align:center;line-height:1.12}
+/* score floats: pop in, hold a beat, then accelerate into the score
+   plaque, shrinking to nothing as they land (--fx/--fy carry the delta) */
+.ftx.fly{animation:fli 1.7s forwards}
+@keyframes fli{
+  0%{transform:translate(-50%,-50%) scale(.55);opacity:0;animation-timing-function:var(--sp)}
+  9%{transform:translate(-50%,-58%) scale(1.07);opacity:1;animation-timing-function:ease-out}
+  46%{transform:translate(-50%,-86%) scale(1);opacity:1;animation-timing-function:cubic-bezier(.55,0,.85,.36)}
+  100%{transform:translate(calc(-50% + var(--fx,0px)),calc(-50% + var(--fy,0px))) scale(.22);opacity:0}}
+/* the slam face of the same handler: one size up, anchored screen center */
+.ftx.big{font-size:38px;letter-spacing:-.02em;animation:sl .78s ease-out forwards}
+@keyframes sl{0%{transform:translate(-50%,-50%) scale(2.4);opacity:0}
+16%{transform:translate(-50%,-50%) scale(1);opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-76%)}}
+.spk{position:absolute;width:5px;height:5px;border-radius:1px;will-change:transform,opacity}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:104px;z-index:210;display:flex;flex-direction:column;
+  gap:6px;align-items:center;pointer-events:none;width:90%;max-width:400px}
+.ts{border-radius:9px;padding:8px 13px;font-size:12px;background:var(--stock);border:1.2px solid var(--line);
+  box-shadow:0 6px 16px rgba(40,34,20,.25);animation:ti .3s var(--sp) both;display:flex;gap:8px;align-items:center;
+  line-height:1.45;color:var(--ink)}
+.ts .tx{display:flex;flex-direction:column;gap:1px;text-align:left;min-width:0}
+.ts .tx i{font-style:normal;font-size:10.5px;line-height:1.35;color:var(--ink2)}
+.ts .e{display:inline-flex}
+.ts .e .gi{width:15px;height:15px}
+@keyframes ti{from{transform:translateY(12px) scale(.92);opacity:0}}
+
+/* ---------- sticker compendium: the HUD ? opens the full-page book.
+   Lives outside #views, so no tab swipe owns it; Escape or the X closes */
+#cmp{position:fixed;inset:0;z-index:220;display:none;flex-direction:column;background:var(--paper)}
+#cmp.on{display:flex;animation:cin .28s var(--sp) both}
+@keyframes cin{from{opacity:0;transform:translateY(16px)}}
+#cmpH{flex:none;display:flex;align-items:center;gap:12px;width:100%;max-width:520px;margin:0 auto;
+  padding:max(12px,env(safe-area-inset-top)) 14px 10px}
+#cmpH .b{flex:1;min-width:0}
+#cmpT{font-family:var(--disp);font-size:15px;font-weight:800;letter-spacing:.16em}
+#cmpS{font-family:var(--nm);font-size:8.5px;letter-spacing:.18em;font-weight:700;color:var(--ink3);margin-top:3px}
+#cmpB{flex:1;overflow-y:auto;width:100%;max-width:520px;margin:0 auto;
+  padding:2px 14px calc(24px + env(safe-area-inset-bottom))}
+#cmpQ{width:100%;border:0;border-radius:9px;padding:11px 13px;margin-bottom:9px;outline:none;
+  font-family:var(--nm);font-size:13px;color:var(--ink);background:var(--gradi);
+  box-shadow:inset 2px 2px 5px rgba(160,150,126,.4),inset -1px -1px 4px var(--hl)}
+#cmpQ::placeholder{color:var(--ink3)}
+.cchips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.cchip{border:0;cursor:pointer;font-family:var(--nm);font-size:9.5px;font-weight:700;letter-spacing:.06em;
+  color:var(--ink2);border-radius:7px;padding:5px 9px;background:var(--grad);white-space:nowrap;
+  box-shadow:2px 2px 5px var(--shs),-2px -2px 4px var(--hl)}
+.cchip .cn{font-size:8px;opacity:.6;margin-left:1px}
+.cchip.on{background:var(--gradi);color:var(--ink);
+  box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.crow .nm{font-size:13px}
+/* the vinyl stands as its own column, the shop's product treatment */
+#cmp .crow>.stkicon{width:40.5px;height:40.5px;flex:none;align-self:center}
+.cpr{margin-left:auto;font-family:var(--disp);font-weight:800;font-size:12.5px;color:var(--gld)}
+.cns{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--ink3)}
+.cmeta{font-family:var(--nm);font-size:8.5px;font-weight:700;letter-spacing:.14em;color:var(--ink3);
+  margin-top:5px;text-transform:uppercase}
+.cgoal{font-size:11px;color:var(--ink3);margin-top:3px}
+.cgoal b{font-family:var(--nm);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink2);margin-right:5px}
+.cfoot{font-family:var(--nm);font-size:8.5px;font-weight:700;letter-spacing:.14em;color:var(--ink3);
+  text-align:center;margin-top:14px}
+/* the lil compendium: the game's words, one line each. It rides below
+   the roster, so search and cards lead on a phone */
+#cmpL{margin:16px 0 4px;border-top:1px solid var(--ink3);padding-top:10px}
+#cmpLT{font-family:var(--nm);font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--ink2);
+  margin-bottom:7px}
+#cmpL .row{padding:5px 0;border-bottom:1px dashed rgba(160,150,126,.35)}
+#cmpL .row:last-child{border-bottom:0}
+#cmpL .nm{font-size:12px}
+#cmpL .ds{font-size:11px}
+/* the books: group labels for the YOUR NUMBERS stats wall */
+.bk{font-family:var(--nm);font-size:8.5px;font-weight:700;letter-spacing:.16em;color:var(--ink3);
+  text-transform:uppercase}
+
+/* ---------- desktop: frame 15% wider (base.css); rows, cards, modals
+   and the compendium step up a size class with it. Sticker vinyl keeps
+   its 1.35x card ratio at 1.15x the phone baseline ---------- */
+@media (min-width:720px){
+  #tabs{margin-left:14px;margin-right:14px}
+  #tabs button{font-size:8.5px}
+  #tabs button .i{height:20px}
+  #tabs button .i svg{width:20px;height:20px}
+  h2{font-size:12.5px}
+  .note{font-size:14px}
+  .row{padding:12px}
+  .row.done{padding:8px 12px}
+  .nm{font-size:15px}
+  .nm .stkicon{width:23.3px;height:23.3px}
+  .stkicon{width:23.3px;height:23.3px}
+  #v-shop .row>.stkicon{width:46.6px;height:46.6px}
+  .ds{font-size:13.5px}
+  .tag{font-size:9.5px}
+  .buy{font-size:13px;min-width:87px}
+  .gst{min-width:87px}
+  .row.done .gst{min-width:74px}
+  .gst .v{font-size:15.5px}
+  .gst .v i{font-size:12.5px}
+  .gst .l{font-size:8.5px}
+  #dgrid{gap:10px}
+  .gcard{max-width:122px}
+  .mc{width:44px;height:61px;--cw:44px}
+  .mc b{font-size:23px}
+  .mc .r{font-size:7.5px}
+  .mc .stk{width:23.3px;height:23.3px}
+  .sheettop .mc{width:101px;height:137px;--cw:101px}
+  .sheettop .mc b{font-size:50px}
+  .sheettop .mc .bar{height:8px}
+  .sheettop .mc .stk{width:46.6px;height:46.6px}
+  .shv{font-size:10px}
+  .stkshow .mc{width:136px;height:183px;--cw:136px}
+  .stkshow .mc b{font-size:66px}
+  .stkshow .mc .bar{height:9px}
+  .stkshow .mc .r{font-size:11.5px}
+  .stkshow .mc .stk{width:65.2px;height:65.2px}
+  .stkline{font-size:15px}
+  .chip{font-size:12px}
+  .morechip{font-size:10px}
+  #sh{max-width:483px}
+  #sh h3{font-size:18px}
+  /* settings sheet on desktop: two columns, no scroll. GAME+CONTROLS
+     left, CLOUD+DANGER right; rows compact so the taller column and
+     the close button fit one viewport. .set phones just stack */
+  #sh.set{max-width:872px;max-height:92dvh;padding-top:14px;padding-bottom:14px}
+  #sh.set h3{margin-bottom:5px}
+  #sh.set .setcols{display:grid;grid-template-columns:1fr 1fr;column-gap:26px;align-items:start}
+  #sh.set .scol>.ash:first-child{margin-top:2px}
+  #sh.set .ash{margin:9px 0 5px}
+  #sh.set .row{padding:7px 11px;margin-bottom:5px}
+  #sh.set .ds{font-size:12.5px;line-height:1.45}
+  #sh.set .csnote{margin:0 2px 6px;font-size:11px;line-height:1.4}
+  #sh.set .csk{padding:7px 10px;margin:1px 0 3px;font-size:11.5px}
+  #sh.set .csin{margin-top:3px}
+  #sh.set .csin input{padding:7px 10px;font-size:11.5px}
+  #sh.set .close{margin-top:8px;padding:10px}
+  #sh.set .dsnote{margin-top:7px}
+  .close{font-size:14px}
+  .pcard{width:clamp(85px,27%,170px)}
+  #prow.n2 .pcard{width:clamp(97px,36%,189px)}
+  #prow.n1 .pcard{width:clamp(108px,46%,212px)}
+  #pped{width:115px;height:101px}
+  #pped svg{width:71.4px;height:71.4px}
+  .pdrag,.pnudge{width:90px;height:90px}
+  .ftx{font-size:18px}
+  .ftx.big{font-size:44px}
+  #toast{max-width:460px;bottom:116px}
+  .ts{font-size:13.5px}
+  .ts .tx i{font-size:12px}
+  .ts .e .gi{width:17px;height:17px}
+  #cmpH,#cmpB{max-width:598px}
+  #cmpT{font-size:17px}
+  #cmpS{font-size:9.5px}
+  #cmpQ{font-size:14.5px}
+  .cchip{font-size:11px}
+  .cchip .cn{font-size:9px}
+  .crow .nm{font-size:14.5px}
+  #cmp .crow>.stkicon{width:46.6px;height:46.6px}
+  .cpr{font-size:14px}
+  .cns{font-size:10.5px}
+  .cmeta{font-size:9.5px}
+  .cgoal{font-size:12.5px}
+  .cgoal b{font-size:9.5px}
+  .cfoot{font-size:9.5px}
+  #cmpLT{font-size:10.5px}
+  #cmpL .nm{font-size:13.5px}
+  #cmpL .ds{font-size:12.5px}
+  .bk{font-size:9.5px}
+}
+
+/* ---------- wide desktop: the rail addresses the panel alone ---------- */
+@media (min-width:1024px){
+  /* TABLE rides .hid from tabs.js — the css belt makes sure */
+  body.wide #tabs button[data-v="play"]{display:none}
+  /* the rail sits under the sidebar (tabs.js moved it into #side):
+     its tray aligns with the panel's padding, pills fill like a phone.
+     Panel rows and rail both hug the lane at 8px so the pane seam is
+     one gutter, not padding+gap+padding stacked */
+  body.wide #sideV .view{padding-left:8px;padding-right:8px}
+  body.wide #tabs{margin-left:8px;margin-right:8px;
+    margin-bottom:calc(12px + env(safe-area-inset-bottom))}
+  /* the compendium opens to the sticker wiki's wide pass */
+  body.wide #cmpH,body.wide #cmpB{max-width:900px}
+}

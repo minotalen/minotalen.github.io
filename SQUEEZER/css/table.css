@@ -1,0 +1,551 @@
+/* ==================================================================
+   table.css — readout, felt tray, cards + stickers, table tokens,
+   risk meter + bank
+   ================================================================== */
+
+/* ---------- views ---------- */
+#views{flex:1;position:relative;min-height:0;touch-action:pan-y;overflow:hidden}
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 14px 18px;display:none;
+  background:var(--paper)}
+/* the drifting sticker teaser lives as a view's first child (z 0) —
+   direct content is lifted above it so the stickers float behind */
+#v-cards>*{position:relative}
+.view.on{display:block;animation:vin .22s ease both}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}}
+.view.slide-in-r{animation:sir .26s var(--sp)}
+.view.slide-in-l{animation:sil .26s var(--sp)}
+/* a tab tap snaps: set by Tabs.go, lifted only by the next animated
+   switch — a timed lift would restart vin on the live view (flash) */
+body.tsnap .view{animation:none!important}
+@keyframes sir{from{transform:translateX(46px);opacity:0}}
+@keyframes sil{from{transform:translateX(-46px);opacity:0}}
+#v-play{padding:0 10px 4px;display:none;flex-direction:column;min-height:0}
+#v-play.on{display:flex;animation:none}
+
+/* ---------- buff bar: active sticker buffs on the felt's top right,
+   RPG style — one plaque, one tight row, icons only. A window of five
+   or more rounds collapses into a number and one icon ---------- */
+#buffW{position:absolute;top:10px;right:12px;z-index:650}
+#buffs{display:flex;flex-wrap:nowrap;align-items:center;gap:2px;border-radius:9px;padding:5px 8px;
+  background:var(--raise);box-shadow:2px 2px 5px var(--sh),-2px -2px 5px var(--hl)}
+#buffs:empty{display:none}
+.bf{display:flex;align-items:center;gap:1px}
+.bf .stkicon{width:20.25px;height:20.25px;vertical-align:baseline}
+.bf b{font-family:var(--nm);font-size:11px;line-height:1;color:var(--ink);padding-right:1px}
+/* the buff tag: the sticker tag's twin — one neumorphic label at one
+   fixed spot under the plaque, whichever icon you point at. width:
+   max-content escapes the plaque's shrink-to-fit — #buffW is only as
+   wide as its icons, and a percentage max-width would wrap the text
+   into a one-word column */
+#buffTip{position:absolute;right:0;top:100%;margin-top:6px;
+  z-index:930;pointer-events:none;opacity:0;transition:opacity .16s;
+  width:max-content;max-width:min(240px,calc(100vw - 56px));padding:7px 11px;border-radius:8px;text-align:center;
+  font-family:var(--nm);font-size:10.5px;line-height:1.45;font-weight:600;color:var(--ink2);
+  background:var(--grad);box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl)}
+#buffTip.on{opacity:1}
+#buffTip b{color:var(--ink)}
+
+/* ---------- readout ---------- */
+#ro{flex:none;padding:0 3px 8px;display:flex;align-items:flex-end;gap:10px}
+#rs{font-family:var(--disp);font-size:36px;font-weight:800;line-height:.94;letter-spacing:-.02em;
+  transition:color .3s}
+/* a fat premium warms the pot: deep amber + a faint aura, nothing more */
+#ro.hot #rs{color:#6E5124;text-shadow:0 0 11px rgba(138,106,47,.30)}
+#rsl{font-size:8.5px;letter-spacing:.22em;color:var(--ink3);margin-bottom:4px;font-weight:700}
+#terms{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:1}
+.tm{font-family:var(--nm);font-size:10px;padding:3px 7px;border-radius:5px;color:var(--ink2);background:var(--raise);
+  box-shadow:inset 2px 2px 4px var(--sh),inset -1px -1px 3px var(--hl);white-space:nowrap;font-weight:600}
+.tm b{color:var(--ink)}
+.tm.h b{color:var(--red)}
+.tm.c b{color:var(--blu)}
+
+/* ---------- hand rail (Split) ---------- */
+#hrow{flex:none;display:flex;gap:5px;padding:0 3px 7px}
+#hrow:empty{display:none}
+.hchip{flex:1;min-width:0;border-radius:8px;padding:5px 6px;font-family:var(--nm);font-size:9.5px;font-weight:700;
+  color:var(--ink2);background:var(--raise);cursor:pointer;white-space:nowrap;overflow:hidden;text-align:center;
+  box-shadow:inset 2px 2px 4px var(--sh),inset -1px -1px 3px var(--hl)}
+.hchip b{color:var(--ink)}
+.hchip.on{color:var(--ink);box-shadow:2px 2px 5px var(--sh),-2px -2px 5px var(--hl),0 0 0 1.5px var(--ink)}
+
+/* ---------- felt ---------- */
+#felt{flex:1;min-height:148px;position:relative;border-radius:14px;overflow:hidden;touch-action:none;
+  background:var(--raise);box-shadow:inset 5px 5px 11px var(--sh),inset -4px -4px 10px var(--hl);perspective:1200px}
+#glow{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:radial-gradient(62% 44% at 50% 36%,rgba(142,43,28,.20),transparent 72%)}
+/* the pulse layer: one swell per heartbeat, in lockstep with the thump —
+   peak set by beatFx via --bi (threat × pool). No text, no slam */
+#glowP{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(62% 44% at 50% 36%,rgba(142,43,28,.16),transparent 72%)}
+#glowP.beat{animation:gp .45s ease-out}
+@keyframes gp{0%{opacity:0}30%{opacity:var(--bi,.5)}100%{opacity:0}}
+/* the edges close in as the gauge climbs */
+#vig{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s;
+  background:radial-gradient(115% 88% at 50% 44%,transparent 52%,rgba(21,20,14,.30))}
+/* the warm bloom that washes the felt when a table pays out */
+#glowG{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:5;
+  background:radial-gradient(60% 42% at 50% 38%,rgba(44,86,60,.18),transparent 70%)}
+#glowG.on{animation:gg .8s ease-out}
+@keyframes gg{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.slot{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:6px;
+  margin-left:calc(var(--cw)/-2);margin-top:calc(var(--ch)/-2);
+  box-shadow:inset 3px 3px 7px rgba(160,150,126,.5),inset -2px -2px 6px var(--hl)}
+/* the cooldown ring hugs the deck; only visible (gray, draining) while busy */
+#ring{position:absolute;left:0;top:0;width:calc(var(--cw) + 10px);height:calc(var(--ch) + 10px);
+  margin:calc(var(--ch)/-2 - 5px) 0 0 calc(var(--cw)/-2 - 5px);border-radius:10px;z-index:4;
+  pointer-events:none;opacity:0}
+#ring.on{opacity:1}
+#ringIn{position:absolute;inset:4px;border-radius:7px;background:var(--raise)}
+/* wards (safe passes): one blue loop per charge, hugging the deck. The
+   rings idle still with a faint glow; a broken one smokes out and fades */
+#wardR{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none;
+  opacity:0;transition:opacity .25s;filter:drop-shadow(0 0 2.5px rgba(42,71,97,.5))}
+#wardR.on{opacity:1}
+#wardR polygon{fill:none;stroke:var(--blu);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+/* the deck count: a letterpress chip pinned to the stack's corner */
+#deckN{position:absolute;left:0;top:0;z-index:640;pointer-events:none;background:var(--ink);
+  color:var(--stock);font-family:var(--nm);font-size:11px;font-weight:700;line-height:1;
+  padding:3px 7px;border-radius:8px;box-shadow:0 2px 5px rgba(30,25,10,.35)}
+#chev{position:absolute;left:0;top:0;z-index:6;pointer-events:none}
+#chev span{display:block;transform:translate(-50%,-50%);color:var(--ink2);font-size:12px;opacity:.75;
+  animation:cv 1.8s ease-in-out infinite}
+/* frame() hides the arrow by opacity; the paused bounce keeps its phase
+   for the re-show instead of ticking under an invisible element */
+#chev.off span{animation-play-state:paused}
+@keyframes cv{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-50%) translateY(-12px);opacity:.2}}
+#dz{position:absolute;left:0;top:0;width:132px;height:150px;margin:-80px 0 0 -66px;z-index:900;touch-action:none}
+
+/* ---------- table tokens: the counters are objects on the table ---------- */
+.tok{position:absolute;left:0;top:0;z-index:8;border-radius:15px;padding:4px 9px;font-family:var(--nm);
+  font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink2);background:var(--raise);white-space:nowrap;
+  box-shadow:2px 2px 5px var(--sh),-2px -2px 5px var(--hl);transition:opacity .25s}
+.tok b{color:var(--ink)}
+.tok.ch{color:var(--blu)}
+.tok.off{opacity:0}
+/* the chain counter's requirement dots: one per card the next tick
+   wants (2, rising at chain 10/20/30), filled by the cards on the
+   table. A short hand presses the chip darker until the bank can tick */
+.tok.ch i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:3px;vertical-align:1px;
+  background:var(--paper);box-shadow:inset 1px 1px 2px var(--sh),inset -1px -1px 2px var(--hl)}
+.tok.ch i.on{background:var(--ink3);box-shadow:1px 1px 2px var(--sh),-1px -1px 2px var(--hl)}
+.tok.ch.short{background:var(--sh);color:var(--ink2);
+  box-shadow:inset 2px 2px 4px var(--shs),inset -2px -2px 4px var(--hl)}
+/* the pile counters: the deck badge's letterpress twin, one bare
+   amount, quiet until a pile holds two or more — a lone card is its
+   own count */
+.tok.cnt{padding:3px 7px;min-width:21px;text-align:center;cursor:pointer;letter-spacing:0;
+  font-size:11px;line-height:1;background:var(--ink);color:var(--stock);z-index:640;
+  box-shadow:0 2px 5px rgba(30,25,10,.35)}
+
+/* ---------- cards ---------- */
+.card{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw)/-2);
+  margin-top:calc(var(--ch)/-2);transform-style:preserve-3d;will-change:transform;
+  transition:transform .36s var(--sp)}
+.card .inn{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.4,.05,.2,1)}
+.card.faceup .inn{transform:rotateY(180deg)}
+.fc{position:absolute;inset:0;border-radius:calc(var(--cw)*.1);backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  display:grid;place-items:center;background:var(--stock);border:1.4px solid var(--ink);
+  box-shadow:0 2px 4px rgba(30,25,10,.16)}
+.fc.bk::after{content:"";position:absolute;inset:calc(var(--cw)*.075);border-radius:2px;border:1px solid rgba(21,20,14,.35);
+  /* the wavy hatch: fx.js's bkWave paints the SVG into --bkpat ONCE,
+     one loop-travel bigger than the box. Motion is background-position
+     quantized by steps() to whole CSS pixels, 1px every 0.2s — every
+     paint is a fresh exact raster, so lines stay crisp at any zoom
+     (GPU-slid frozen layers blur, and unstepped per-frame paints
+     re-alias fine lines into flicker; this threads both). Travel is
+     120px per axis = one 170px wave along the 45deg stripe, where the
+     sine field is periodic, so the loop never pops. Gradient under the
+     var = pre-JS fallback */
+  background:var(--bkpat,repeating-linear-gradient(45deg,rgba(21,20,14,.16) 0 1px,transparent 1px 5px)) no-repeat;
+  background-size:calc(100% + 120px) calc(100% + 120px);
+  background-position:-120px 0;
+  animation:bkflow 24s steps(120) infinite}
+@keyframes bkflow{from{background-position:-120px 0}to{background-position:0 -120px}}
+/* cards buried in the deck drop their borders and shadows — the stack
+   reads as one clean deck instead of ten outlined cards */
+.card.buried .fc{box-shadow:none;border-color:rgba(21,20,14,.20)}
+/* buried backs sit pixel-stacked under the card above (same DX,DY), and
+   the hatch lives inside a 7.5% inset the corner slivers never reach —
+   the wave only needs to run on the top card. The dimmed back a draw
+   lifts away from is frozen for the sub-second flight, unseen */
+.card.buried .bk::after{opacity:.45;animation:none}
+/* a face-down card resting in the deck needs none of the 3D flip
+   machinery — it renders as a flat 2D back, positioned by left/top with
+   no transform and no will-change (see place()'s rest flag): the least
+   machinery a card can render through, immune to compositor mis-scales.
+   layout() adds .flat to resting deck cards, stripStates() drops it the
+   moment a card is placed anywhere else, so the flip still plays */
+.card.flat{transform-style:flat;will-change:auto}
+.card.flat .inn{transform:none;transition:none}
+.card.flat .ft{display:none}
+.card.flat .fc{backface-visibility:visible;-webkit-backface-visibility:visible}
+/* the deck flinches when a card tucks in — each card nudged to its own
+   --jx/--jy (fx.js deckJiggle); translate composes with the inline transform */
+.card.jig{animation:jig .24s cubic-bezier(.3,.9,.4,1)}
+@keyframes jig{0%,100%{translate:0 0}40%{translate:var(--jx) var(--jy)}}
+.ft{transform:rotateY(180deg);overflow:hidden}
+.ft .n{font-size:calc(var(--cw)*.5);font-weight:800;letter-spacing:-.04em;font-family:var(--disp);
+  /* Orbit ships one weight, so 800 is as far as faux bold goes — a
+     whisper of stroke adds the rest; the title's fat is .046em, this
+     stays under half that */
+  -webkit-text-stroke:.022em currentcolor}
+.ft .bar{position:absolute;top:0;left:0;right:0;height:calc(var(--cw)*.09);border-bottom:1.2px solid var(--ink)}
+.ft .r{position:absolute;bottom:calc(var(--cw)*.04);right:calc(var(--cw)*.07);
+  font-size:calc(var(--cw)*.12);font-family:var(--nm);color:var(--ink2)}
+.stk{position:absolute;width:calc(var(--cw)*.4725);height:calc(var(--cw)*.4725);
+  pointer-events:none;
+  filter:drop-shadow(0 1.1px 1.2px rgba(30,25,10,.32)) drop-shadow(-.7px -.7px .7px rgba(255,252,238,.26))}
+.stk path,.stk circle,.stk rect{stroke:#15140E;stroke-width:2;stroke-linejoin:round;paint-order:stroke}
+/* shiny press: a holo sweep fills every glyph (the #holo gradient
+   lives once in index.html); cutouts still show the card inside
+   their ink ring. The outline rides on top as always */
+.stk.shy path,svg.shy path,.stkicon.shy path{fill:url(#holo)}
+.card.faceup .stk{animation:stamp .42s cubic-bezier(.2,1.5,.4,1) both}
+.card.stamped .stk{animation:stamp .42s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes stamp{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(2.6);opacity:0}
+55%{opacity:1}70%{transform:translate(-50%,-50%) rotate(var(--r)) scale(.88)}
+100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1);opacity:1}}
+.card .stk.used{opacity:.28;filter:grayscale(.8)}
+/* Odds' gamble states: the winner wears a green ring, the dud grays out.
+   Before .bust so a bust on the same card keeps the red say */
+.card.boom3 .ft{border-color:var(--grn);box-shadow:0 0 0 2px var(--grn),0 0 18px rgba(44,86,60,.5)}
+.card.dud .ft{filter:grayscale(.85) brightness(.78)}
+.card.bust .ft{border-color:var(--red);box-shadow:0 0 0 2px var(--red),0 0 18px rgba(142,43,28,.5)}
+/* out and benched piles sit opaque: a collapsed stack shows its top
+   card clean, never a ghost of the cards under it */
+.card.out{cursor:pointer}
+.card.pop{animation:pp .5s ease}
+/* the open pile fan: hover eases a card forward — a lift and a deeper
+   shadow, while the z bump brings it above its neighbors */
+.card.fan{cursor:pointer}
+/* piles wear a whisper shadow: leaning fans and collapsed stacks sit on
+   other cards, and a deep lift under every layer turns the pile to mud */
+.card.fan .fc,.card.out .fc{box-shadow:0 1px 2px rgba(30,25,10,.12)}
+.card.fan .fc{transition:box-shadow .25s}
+.card.fan:hover .fc{box-shadow:0 5px 12px rgba(30,25,10,.3)}
+.card.fan.faceup:hover .inn{transform:rotateY(180deg) translateY(-8px) scale(1.08)}
+@keyframes pp{40%{filter:brightness(1.3) saturate(1.4)}}
+.card.live{cursor:pointer}
+.card.live::after{content:"";position:absolute;inset:-4px;border-radius:7px;border:1.5px dashed var(--grn);
+  animation:sc 1.6s ease-in-out infinite;pointer-events:none;
+  will-change:opacity}   /* opacity pulse promoted: no per-frame repaint under a sitting trick */
+@keyframes sc{50%{opacity:.35}}
+.card.armed{cursor:default}
+.card.armed::after{content:"";position:absolute;inset:-4px;border-radius:7px;border:2px solid var(--gld);
+  box-shadow:0 0 9px rgba(138,106,47,.55);pointer-events:none}
+/* Flinch wears the same gold edge as the armed tricks but never the
+   raise: it is not a button, it is a promise — no sway, no cursor,
+   the ring alone, dead the run it catches */
+.card.flx::after{content:"";position:absolute;inset:-4px;border-radius:7px;border:2px solid var(--gld);
+  box-shadow:0 0 9px rgba(138,106,47,.55);pointer-events:none}
+/* charged: the card still holds its trigger — a slight warm halo under
+   it (armed wears the brighter gold edge on top) */
+.card.chg::before{content:"";position:absolute;inset:-3px;border-radius:8px;
+  box-shadow:0 0 9px 1px rgba(138,106,47,.38);pointer-events:none}
+/* value modifiers (Swap, Clip, Ghost, Dredge, Riffle): a borrowed value
+   wears a wavy underline and the printed value sits struck above it —
+   the felt's ink correction, live until the card leaves the table */
+.card.mod .ft .n{text-decoration:underline wavy currentcolor;text-decoration-thickness:1.5px;
+  text-underline-offset:.13em;text-decoration-skip-ink:none}
+/* the struck print: faceOf parks it in free space per card (inline
+   left/top), opposite the sticker, clear of the digit band */
+.card.mod .ft .ov{position:absolute;transform:translate(-50%,-50%);
+  font-family:var(--nm);font-size:calc(var(--cw)*.16);font-weight:700;color:var(--ink2);
+  text-decoration:line-through;text-decoration-thickness:1.5px;opacity:.75;pointer-events:none}
+/* the rewrite is a turn in place: an apply spins the card forward, the
+   shuffle-revert spins it back — the face swaps in the edge-on moment */
+.card.rev .inn{animation:revf .73s cubic-bezier(.5,.05,.35,1) both}
+.card.revb .inn{animation:revb .73s cubic-bezier(.5,.05,.35,1) both}
+@keyframes revf{from{transform:rotateY(180deg)}to{transform:rotateY(540deg)}}
+@keyframes revb{from{transform:rotateY(180deg)}to{transform:rotateY(-180deg)}}
+/* Clip/Ghost asking for a target: the carrier rides a solid blue ring,
+   every other card on its table a dashed one (after armed/live so the
+   aim owns the ::after edge while it waits) */
+.card.aims::after{content:"";position:absolute;inset:-4px;border-radius:7px;border:2px solid var(--blu);
+  box-shadow:0 0 9px rgba(60,124,158,.55);pointer-events:none}
+.card.aim::after{content:"";position:absolute;inset:-4px;border-radius:7px;border:1.6px dashed var(--blu);
+  animation:sc 1.2s ease-in-out infinite;pointer-events:none;
+  will-change:opacity}
+.card.off{filter:brightness(.8) saturate(.82)}
+.card.fl0 .ft{opacity:.55}
+.card.fl0 .ft::before{content:"\d7 0";position:absolute;bottom:2px;left:5px;font-family:var(--nm);
+  font-size:8px;font-weight:700;color:var(--red)}
+/* the sticker tag: one neumorphic label at a fixed spot — centered on
+   the felt, just under the card row (--tipY is set by layout) — so the
+   text always reads from the same place, whichever card you point at.
+   width:max-content keeps short names pill-shaped; long descs wrap,
+   never clamp */
+#stkTip,#pileTip,#chTip{position:absolute;z-index:925;pointer-events:none;opacity:0;transition:opacity .16s;
+  width:max-content;max-width:min(240px,86%);padding:7px 11px;border-radius:8px;text-align:center;
+  font-family:var(--nm);font-size:10.5px;line-height:1.45;font-weight:600;color:var(--ink2);
+  background:var(--grad);box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl)}
+#stkTip{left:50%;top:var(--tipY,58%);transform:translateX(-50%)}
+/* the pile tag hangs beside the set-aside slot, same voice */
+#pileTip{right:76px;bottom:26px}
+/* the chain tag hangs under the chain token, same voice */
+#chTip{left:14px;top:34px}
+#stkTip.on,#pileTip.on,#chTip.on{opacity:1}
+#stkTip b,#pileTip b,#chTip b{color:var(--ink)}
+/* the live bonus line: gold, its own row under the desc */
+#stkTip .now,.stkline .now{color:var(--gld);font-weight:700}
+/* conditions ride under the sticker text, a hairline between */
+#stkTip .cndline{display:block;border-top:1px solid var(--line);margin:4px 0 3px}
+#stkTip .cndtip{display:block;color:var(--ink2)}
+
+/* ---------- risk + bank ---------- */
+#rb{flex:none;padding:9px 3px 0}
+/* the gauge carries its own readout: RISK left, fill behind, % right.
+   #rkc holds cream twins of every label, clipped to the fill edge, so
+   the text flips from ink (trough) to cream (fill) as the bar climbs */
+#rk{height:18px;border-radius:7px;position:relative;overflow:hidden;background:var(--gradi);
+  box-shadow:inset 3px 3px 6px rgba(160,150,126,.5),inset -2px -2px 5px var(--hl)}
+#rkf{height:100%;width:0;border-radius:7px;background:var(--grn);transition:width .22s ease,background .3s;
+  box-shadow:inset 0 1px 0 rgba(255,253,244,.35),inset 0 -2px 3px rgba(21,20,14,.18)}
+#rk.m #rkf{background:var(--gld)}#rk.h #rkf{background:#B4551E}
+#rk.x #rkf{background:var(--red);animation:rkb 1.3s ease-in-out infinite}
+@keyframes rkb{50%{filter:brightness(1.22)}}
+#rkmark{position:absolute;top:0;bottom:0;width:2px;opacity:.6;display:none}
+/* the draw-stop line, in blue: where the deal refuses to continue */
+#stopmark{position:absolute;top:0;bottom:0;width:2px;opacity:.6;display:none}
+#rk .rkl,#rk b{position:absolute;top:0;bottom:0;display:flex;align-items:center;pointer-events:none}
+#rk .rkl{left:9px;font-size:8px;letter-spacing:.18em;color:var(--ink3);font-weight:700}
+#rk b{right:9px;font-family:var(--nm);font-size:11.5px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+#rkc{position:absolute;inset:0;pointer-events:none;clip-path:inset(0 100% 0 0);transition:clip-path .22s ease}
+#rkc .rkl{color:rgba(241,237,225,.8)}
+#rkc b{color:var(--stock)}
+#bank{width:100%;margin-top:10px;height:54px;border:0;border-radius:12px;cursor:pointer;color:var(--stock);
+  font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.14em;display:flex;flex-direction:row;align-items:center;
+  justify-content:center;gap:7px;background:linear-gradient(160deg,#39684A,#274D35);transition:transform .1s;
+  box-shadow:4px 4px 10px var(--shs),-3px -3px 8px var(--hl),inset 0 1px 0 rgba(255,253,244,.22)}
+#bank:disabled{background:var(--gradi);color:var(--ink3);
+  box-shadow:inset 4px 4px 9px rgba(160,150,126,.45),inset -3px -3px 8px var(--hl)}
+#bank:active:not(:disabled){transform:translateY(2px);
+  box-shadow:2px 2px 5px var(--shs),-1px -1px 4px var(--hl),inset 0 1px 0 rgba(255,253,244,.15)}
+/* one line: label, a quiet center dot, then the payout as the hero number */
+#bank .d{font-family:var(--nm);font-weight:700;font-size:14px;line-height:1;opacity:.5}
+#bank .s{font-family:var(--disp);font-size:19px;font-weight:800;line-height:1;letter-spacing:0}
+#bank .s i{font-family:var(--nm);font-style:normal;font-size:10px;font-weight:700;letter-spacing:.02em;opacity:.7}
+/* locked: just the label, dead center */
+#bank:disabled .d,#bank:disabled .s{display:none}
+/* the swipe-down hint is for touch screens only — a mouse never sees it */
+@media (hover:hover) and (pointer:fine){#bank .touch-only{display:none}}
+/* the worth-taking bank: same button, a touch more green and one soft ring */
+#bank.hot:not(:disabled){background:linear-gradient(160deg,#3F7354,#2B5839);
+  box-shadow:4px 4px 10px var(--shs),-3px -3px 8px var(--hl),inset 0 1px 0 rgba(255,253,244,.22),
+    0 0 15px rgba(57,104,74,.38)}
+#autos{display:flex;gap:7px;padding:7px 3px 0;flex:none}
+#autos:empty{padding:0}
+.tg{flex:1;display:flex;align-items:center;gap:6px;border-radius:9px;padding:7px 10px;font-size:10px;
+  letter-spacing:.1em;color:var(--ink3);background:var(--grad);cursor:pointer;font-weight:700;
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl)}
+.tg.on{color:var(--grn);background:var(--gradi);box-shadow:inset 3px 3px 7px rgba(160,150,126,.45),inset -2px -2px 6px var(--hl)}
+.tg .d{width:6px;height:6px;border-radius:50%;background:var(--ink3)}
+.tg.on .d{background:var(--grn)}
+/* the auto refusing a known bust: HELD, in red */
+.tg.held,.tg.on.held{color:var(--red)}
+.tg.held .d,.tg.on.held .d{background:var(--red)}
+/* the tolerance line caught a table mid-fill: the autos stopped, in amber */
+.tg.line,.tg.on.line{color:var(--gld)}
+.tg.line .d,.tg.on.line .d{background:var(--gld)}
+/* the chip's live value and the door chevron: the whole chip opens the
+   AUTOMATION sheet, the chevron says there is more behind it */
+.tg .tv{margin-left:auto;font-family:var(--nm);font-weight:700;font-size:11px;letter-spacing:.02em}
+.tg .tc{width:9px;height:9px;flex:none;fill:none;stroke:currentColor;stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+/* quick toggles: small buttony pads, one beside each chip. Active is
+   pressed into the felt and colored (bank green, draw red), idle sits
+   flat and gray */
+.atg{flex:none;align-self:stretch;width:32px;border-radius:10px;display:grid;place-items:center;cursor:pointer;
+  background:linear-gradient(145deg,#B6B2A4,#C7C3B5);
+  box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl);transition:background .2s,box-shadow .2s}
+.atg i{width:8px;height:8px;border-radius:50%;background:var(--ink3);opacity:.55;transition:background .2s,opacity .2s}
+.atg.on{box-shadow:inset 3px 3px 7px rgba(20,26,21,.5),inset -2px -2px 6px rgba(255,253,244,.28)}
+.atg.on i{background:var(--stock);opacity:.95}
+.atg.bank.on{background:linear-gradient(160deg,#5E9370,#3F6E4E)}
+.atg.draw.on{background:linear-gradient(160deg,#B0604A,#87452F)}
+
+/* ---------- onboarding: the coach lives on the felt and the deck is
+   dealt out face-up — the chain counter sleeps until the real game ---------- */
+#deckN,#chev,#slotD{transition:opacity .3s}
+#felt.pyr #deckN,#felt.pyr #chev,#felt.pyr #slotD{opacity:0}
+#felt.tut :is(#tkC,#chTip){opacity:0}
+
+/* ---------- desktop: frame 15% wider (base.css), felt cards ride
+   table.js's deskK; the readout, gauge, bank and table tags follow at
+   readable size ---------- */
+@media (min-width:720px){
+  .view{padding:4px 16px 18px}
+  #v-play{padding:0 12px 4px}
+  #rs{font-size:40px}
+  #rsl{font-size:9.5px}
+  .tm{font-size:11px}
+  .hchip{font-size:10.5px}
+  #deckN{font-size:12px}
+  .tok{font-size:11px}
+  .tok.cnt{font-size:12px}
+  #stkTip,#pileTip,#chTip{font-size:12px;max-width:min(276px,86%)}
+  #buffTip{font-size:12px;max-width:min(276px,calc(100vw - 56px))}
+  .bf .stkicon{width:23.3px;height:23.3px}
+  .bf b{font-size:12.5px}
+  #rk{height:20px}
+  #rk .rkl{font-size:9px}
+  #rk b{font-size:13px}
+  #bank{height:60px;font-size:17px}
+  #bank .d{font-size:15.5px}
+  #bank .s{font-size:22px}
+  #bank .s i{font-size:11px}
+  .tg{font-size:11.5px;padding:8px 11px}
+  .tg .tv{font-size:12.5px}
+  .tg .tc{width:10px;height:10px}
+}
+
+/* ---------------- card conditions (docs/card-modifiers.md) ----------------
+   The procgen wear layer: seeded per card in paintCondInto, rebuilt on
+   every repaint, permanent per card. The layer sits under the sticker.
+   Same vocabulary as the conditions page */
+.cnd{position:absolute;inset:0;pointer-events:none;z-index:0}
+.cnd>*{position:absolute}
+.cnd .stain{border-radius:50%;
+  background:radial-gradient(closest-side,rgba(88,108,120,.34),transparent)}
+.cnd .mnsh{inset:0;overflow:hidden}
+.cnd .mnsh::after{content:"";position:absolute;top:-30%;left:0;width:55%;height:160%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  /* the sweep as transform, not left: same -60%..115% parent travel
+     (translateX % is of the 55%-wide box: -60/55, 115/55), same
+     translate-before-rotate so the path is horizontal — but the ride is
+     compositor-only, no layout per frame */
+  transform:translateX(-109.091%) rotate(16deg);will-change:transform;
+  animation:gloss 5.2s ease-in-out infinite}
+@keyframes gloss{0%,55%,100%{transform:translateX(-109.091%) rotate(16deg)}
+  25%{transform:translateX(209.091%) rotate(16deg)}}
+.cnd .spk{width:18%;height:14%;
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+  background:#F2CB5C;filter:drop-shadow(0 0 3px rgba(242,203,92,.9));
+  opacity:0;animation:twk 2.6s ease-in-out infinite;
+  will-change:transform,opacity}   /* like the live/aim rings: the twinkle composites, no repaint */
+@keyframes twk{0%,100%{opacity:0;transform:scale(.3) rotate(0deg)}
+  45%{opacity:1;transform:scale(1.1) rotate(40deg)}
+  62%{opacity:.1}}
+.cnd .wear{border-radius:50%;
+  background:radial-gradient(closest-side,rgba(122,98,60,.30),transparent)}
+.cnd .scratch{height:1px;background:rgba(120,105,80,.35)}
+/* the ripped tear: torn from the outer edge (the painter anchors its
+   start point ON the border and swings it inward), small on purpose.
+   The dual shadows give the gash the vinyl's neumorphic lift */
+.cnd .ctear{aspect-ratio:1;pointer-events:none}
+.cnd .ctear svg{width:100%;height:100%;display:block;
+  filter:drop-shadow(0 1.1px 1.2px rgba(30,25,10,.32)) drop-shadow(-.7px -.7px .7px rgba(255,252,238,.26))}
+.cnd .crease{border-radius:50%;
+  background:radial-gradient(closest-side,rgba(122,98,60,.36),rgba(122,98,60,.12) 62%,transparent)}
+/* dog-ear: the shadow the lifted flap casts onto the stock */
+.cnd .deshade{width:36%;height:36%;pointer-events:none}
+.cnd .deshade.tr{right:0;top:0;background:radial-gradient(circle at 100% 0%,rgba(30,25,10,.26),transparent 72%)}
+.cnd .deshade.br{right:0;bottom:0;background:radial-gradient(circle at 100% 100%,rgba(30,25,10,.26),transparent 72%)}
+.cnd .deshade.bl{left:0;bottom:0;background:radial-gradient(circle at 0% 100%,rgba(30,25,10,.26),transparent 72%)}
+.cnd .deshade.tl{left:0;top:0;background:radial-gradient(circle at 0% 0%,rgba(30,25,10,.26),transparent 72%)}
+/* bent: the card bowed along a seeded crease, shade one side, light
+   the other, the inked crease between */
+.cnd .bline{left:50%;top:50%;width:170%;height:170%;pointer-events:none;
+  background:linear-gradient(90deg,rgba(21,20,14,.09),rgba(21,20,14,.09) 49.2%,
+    rgba(21,20,14,.5) 50%,rgba(255,255,255,.45) 50.9%,rgba(255,255,255,0) 68%)}
+.cnd .bshadow{left:50%;top:50%;width:170%;height:170%;pointer-events:none;
+  background:linear-gradient(90deg,rgba(30,25,10,.14),rgba(30,25,10,.02) 46%,transparent 50%)}
+/* bent: the fold is two elements. The wrapper is an UNTRANSFORMED strip
+   box (crisp ink border + overflow clip; WebKit drops the children of
+   any clip-path + 3D-transform combo), the inner layer carries the print
+   and tilts back, gradient-darkening toward the crease, drop shadow =
+   what the fold casts onto the body */
+.ft .benttop,.gf .benttop,.mc .benttop{position:absolute;left:0;right:0;top:0;overflow:hidden;
+  pointer-events:none;
+  border:1.4px solid var(--ink);border-bottom:0;
+  border-radius:calc(var(--cw,54px)*.1) calc(var(--cw,54px)*.1) 0 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(30,25,10,.10) 70%,rgba(30,25,10,.26)),var(--stock);
+  filter:drop-shadow(0 2.5px 2px rgba(30,25,10,.30))}
+.ft .bentin,.gf .bentin,.mc .bentin{position:absolute;left:0;right:0;top:0;pointer-events:none}
+/* the fold's print is a mirror of the body's, not a second sticker: it
+   never stamps, or the entrance plays twice, offset by the fold plane */
+.ft .bentin .stk,.gf .bentin .stk,.mc .bentin .stk{animation:none}
+/* dog-ear: the folded-back paper, mirrored of the clipped-away corner.
+   The flap wears the stock's back side and a shadow under the crease */
+.cnd .deflap{inset:0;pointer-events:none;
+  background:linear-gradient(135deg,#F8F4E8 15%,#D9D2BF 90%);
+  filter:drop-shadow(-1px 1px 1px rgba(30,25,10,.4))}
+/* glass: the stock thinned to a show-through. The felt face and the
+   deck-grid face wear the same classes */
+.ft.cglass,.gf.cglass,.mc.cglass{background:linear-gradient(150deg,rgba(255,255,255,.5),rgba(241,237,225,.14) 52%,rgba(172,196,203,.2));
+  box-shadow:inset 0 0 24px rgba(172,196,203,.3),0 2px 4px rgba(30,25,10,.12)}
+.ft.cglass::after,.gf.cglass::after,.mc.cglass::after{content:"";position:absolute;left:-20%;top:18%;width:140%;height:9%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
+  transform:rotate(-18deg);pointer-events:none}
+.ft.cglass .n,.gf.cglass .n,.mc.cglass b{opacity:.68}
+.ft.cwet,.gf.cwet,.mc.cwet{filter:saturate(.82)}
+/* graded: the MINO slab: the card sits IN a case: a hard translucent
+   frame around the face, a glass sheen over it, a gold label hairline
+   under the tint bar. Reads as plastic, never as dirt */
+.ft.cgraded,.gf.cgraded,.mc.cgraded{background:linear-gradient(150deg,#FCF9F0,#F1EDE1 55%,#E4DEC9)}
+.ft.cgraded::before,.gf.cgraded::before,.mc.cgraded::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  pointer-events:none;border:3px solid rgba(21,20,14,.75);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.8),inset 0 0 14px rgba(255,255,255,.5)}
+.ft.cgraded::after,.gf.cgraded::after,.mc.cgraded::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 36%,rgba(255,255,255,.65) 45%,rgba(255,255,255,.18) 56%,transparent 64%)}
+.ft .minolbl,.gf .minolbl,.mc .minolbl{position:absolute;bottom:5.5%;left:50%;transform:translateX(-50%);z-index:2;
+  background:linear-gradient(180deg,#F3D67E,#C2913A);color:#4A3A14;
+  font-family:var(--nm);font-weight:700;font-size:calc(var(--cw,54px)*.105);
+  letter-spacing:.1em;padding:0 4px;border-radius:3px;white-space:nowrap;
+  border:1px solid rgba(255,252,238,.55);box-shadow:0 1px 2px rgba(30,25,10,.35)}
+/* promo: the holo outline rings the whole face and the tint bar wears
+   the same foil. Every stop mixes halfway into the card's own value
+   color (--holoink / --holotab, set per card), the gradient runs 4x the
+   element so only a narrow band shows at once, and the pan is a slow
+   alternate sway over that band, never a full rainbow lap */
+.ft.cpromo::before,.gf.cpromo::before,.mc.cpromo::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  pointer-events:none;padding:2.5px;opacity:.62;
+  background:linear-gradient(120deg,
+    color-mix(in srgb,#ff2d8c,var(--holotab,#44718e)),
+    color-mix(in srgb,#ffd200,var(--holotab,#44718e)),
+    color-mix(in srgb,#00e6aa,var(--holotab,#44718e)),
+    color-mix(in srgb,#1e8cff,var(--holotab,#44718e)));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude}
+.ft .bar.holo,.gf .gbar.holo,.mc .bar.holo{background-image:linear-gradient(100deg,
+    color-mix(in srgb,#ff2d8c,var(--holotab,#44718e)),
+    color-mix(in srgb,#ffd200,var(--holotab,#44718e)),
+    color-mix(in srgb,#00e6aa,var(--holotab,#44718e)),
+    color-mix(in srgb,#1e8cff,var(--holotab,#44718e)),
+    color-mix(in srgb,#ff2d8c,var(--holotab,#44718e)));
+  background-size:400% 100%;animation:holograd 9s ease-in-out infinite alternate}
+.ft .holonum,.gf .holonum,.cf .holonum,.mc .holonum{color:transparent !important;
+  background-image:linear-gradient(100deg,
+    color-mix(in srgb,#ff2d8c,var(--holoink,#2b4a5e)),
+    color-mix(in srgb,#ffd200,var(--holoink,#2b4a5e)),
+    color-mix(in srgb,#00e6aa,var(--holoink,#2b4a5e)),
+    color-mix(in srgb,#1e8cff,var(--holoink,#2b4a5e)),
+    color-mix(in srgb,#ff2d8c,var(--holoink,#2b4a5e)));
+  background-size:400% 100%;-webkit-background-clip:text;background-clip:text;
+  animation:holograd 9s ease-in-out infinite alternate}
+@keyframes holograd{from{background-position:34% 0}to{background-position:66% 0}}
+/* webkit quirk: children of a backface-hidden face can paint mirrored
+   on a flip unless they carry the hidden themselves */
+.gf>*,.gf::before,.gf::after,.ft>*,.ft::before,.ft::after{
+  backface-visibility:inherit;-webkit-backface-visibility:inherit}
+.gf .cnd{z-index:0}
+
+/* ---------- wide desktop: the table lane ---------- */
+/* >=1024px with body.wide (tabs.js gates the class on a side tab being
+   in sight). The side views and the rail live in tabs.js's #side
+   column; #views keeps only the table. The table view is always on —
+   .on walks the panel alone */
+@media (min-width:1024px){
+  /* the table lane breathes like the rail: matching top padding, and
+     the same calc(8px + safe-area) bottom margin the rail sits on */
+  body.wide #v-play{display:flex;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+  /* the sidebar's scroll host: the panel views keep their phone
+     staging (absolute, inset 0) inside this narrower box */
+  #sideV{flex:1;min-height:0;position:relative}
+  /* one header row: tabs.js moves the readout into the #hud — wallet
+     plaques, the live hand (ON THE TABLE + its terms) and the gear all
+     share a line, and the felt starts that much higher */
+  body.wide #hud #ro{padding:0;margin-left:2px}
+}

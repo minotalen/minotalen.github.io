@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>SQUEEZER</title>
+<meta name="theme-color" content="#E4DFD1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=209">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=209">
+<link rel="manifest" href="manifest.json?v=209">
+<link rel="stylesheet" href="css/base.css?v=209">
+<link rel="stylesheet" href="css/table.css?v=209">
+<link rel="stylesheet" href="css/panels.css?v=209">
+</head>
+<body>
+<!-- the shiny vinyl: one gradient the whole document's stickers reference.
+     Hotter stops than the regular vinyl, and it never sits still: two
+     prime-period sine loops (a 7s Lissajous drift, an 11s roll) drift
+     the sheen so a shine reads alive on the felt -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="holo" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#FF5FA8"/><stop offset=".25" stop-color="#FFC24D"/>
+  <stop offset=".5" stop-color="#6FF2A4"/><stop offset=".72" stop-color="#4FC0FF"/>
+  <stop offset="1" stop-color="#C97CFF"/>
+  <animateTransform attributeName="gradientTransform" type="translate"
+    values="0 0;.21 .22;.3 0;.21 -.22;0 0;-.21 .22;-.3 0;-.21 -.22;0 0"
+    dur="7s" repeatCount="indefinite"/>
+  <animateTransform attributeName="gradientTransform" type="rotate" additive="sum"
+    values="-12 .5 .5;12 .5 .5;-12 .5 .5" keyTimes="0;.5;1"
+    calcMode="spline" keySplines=".37 0 .63 1;.37 0 .63 1"
+    dur="11s" repeatCount="indefinite"/>
+</linearGradient></defs></svg>
+<div id="app">
+  <div id="ttl"><div id="ttlT"><b>S</b><b>Q</b><b>U</b><b>E</b><b>E</b><b>Z</b><b>E</b><b>R</b></div><div id="ttlS">by minotalen</div></div>
+
+  <!-- ============ HUD ============ -->
+  <header id="hud">
+    <div class="mny"><div class="l">SCORE</div><div class="v" id="hSc">0</div></div>
+    <div class="mny s" id="hShW" style="display:none"><div class="l">SHARDS</div><div class="v" id="hSh">0</div></div>
+    <div class="gap"></div>
+    <button class="ic" id="bSet" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </header>
+
+  <!-- ============ views ============ -->
+  <div id="views">
+    <section class="view on" id="v-play">
+      <div id="ro">
+        <div><div id="rsl">ON THE TABLE</div><div id="rs">0</div></div>
+        <div id="terms"></div>
+      </div>
+      <div id="hrow"></div>
+      <div id="felt"><div id="tut" class="off"><div id="tutBox"><div id="tutTx"></div></div></div></div>
+      <div id="autos"></div>
+      <div id="rb">
+        <div id="rk"><div id="rkf"></div><div id="rkmark"></div><div id="stopmark"></div><span class="rkl">RISK</span><b id="rkTx">0%</b><div id="rkc"><span class="rkl">RISK</span><b id="rkTx2">0%</b></div></div>
+        <button id="bank" disabled>BANK<span class="d" aria-hidden="true">·</span><span class="s" id="bankS"></span></button>
+      </div>
+    </section>
+    <section class="view" id="v-cards"></section>
+    <section class="view" id="v-up"></section>
+    <section class="view" id="v-shop"></section>
+    <section class="view" id="v-ach"></section>
+    <section class="view" id="v-pres"></section>
+  </div>
+
+  <!-- ============ grouped tab rail ============ -->
+  <nav id="tabs">
+    <div id="thumb"></div>
+    <button data-v="play" class="on"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="6.3"/><ellipse cx="12" cy="12" rx="5" ry="3"/></svg></span>TABLE</button>
+    <button data-v="cards" class="hid"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="3" width="13" height="18" rx="2.6" fill="var(--stock)"/><path d="M5.5 7.7h13"/><path class="fl" d="M12 10.6l2 2.6-2 2.6-2-2.6z"/></svg></span>DECK</button>
+    <button data-v="up" class="hid"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V4.5M5.3 11.2 12 4.5l6.7 6.7"/></svg></span>UPGRADE</button>
+    <button data-v="shop" class="hid"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 7.1L21 12l-7.1 1.9L12 21l-1.9-7.1L3 12l7.1-1.9z"/></svg></span>STICKER</button>
+    <button data-v="ach" class="hid"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v5a5 5 0 0 1-10 0v-5z"/><path d="M7 5H4.8a1.9 1.9 0 0 0 0 3.8H7"/><path d="M17 5h2.2a1.9 1.9 0 0 1 0 3.8H17"/><path d="M12 13.5v7"/><path d="M8.5 20.5h7"/></svg></span>GOALS</button>
+    <button data-v="pres" class="hid"><span class="i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12c0-2.2 1.8-4 4-4 3 0 5 8 8 8 2.2 0 4-1.8 4-4s-1.8-4-4-4c-3 0-5 8-8 8-2.2 0-4-1.8-4-4z"/></svg></span>ASCEND</button>
+  </nav>
+</div>
+
+<div id="fx"></div>
+<div id="toast"></div>
+<div id="mo"><div id="sh"></div></div>
+<div id="cmp"></div>
+<div id="biBar" role="dialog" aria-label="Anonymous statistics">
+  <div class="bit">Anonymous stats help tune the game. No keys, no personal data.</div>
+  <div class="bib"><button id="biNo">NO</button><button id="biOk">OK</button></div>
+</div>
+<div id="kickBar" role="alertdialog" aria-label="Session takeover">
+  <div class="bit">This save is being played in another session here. Reclaiming hands it to this tab.</div>
+  <div class="bib"><button id="kRe">RECLAIM</button></div>
+</div>
+
+<!-- component scripts: shared top-level scope, load order matters -->
+<script src="js/config.js?v=209"></script>
+<script src="js/icons.js?v=209"></script>
+<script src="js/state.js?v=209"></script>
+<script src="js/cloud.js?v=209"></script>
+<script src="js/economy.js?v=209"></script>
+<script src="js/audio.js?v=209"></script>
+<script src="js/fx.js?v=209"></script>
+<script src="js/stickers.js?v=209"></script>
+<script src="js/table.js?v=209"></script>
+<script src="js/actions.js?v=209"></script>
+<script src="js/gestures.js?v=209"></script>
+<script src="js/tabs.js?v=209"></script>
+<script src="js/panels.js?v=209"></script>
+<script src="js/modals.js?v=209"></script>
+<script src="js/compendium.js?v=209"></script>
+<script src="js/tut.js?v=209"></script>
+<script src="js/telemetry.js?v=209"></script>
+<script src="js/main.js?v=209"></script>
+<script>
+/* PWA: offline shell + install prompt (sw.js). Top-level documents
+   only: the itch embed is a cross-origin iframe that can never own a
+   worker, so there the zip's sw.js just sits unused */
+if('serviceWorker' in navigator&&self===top&&/^https?:$/.test(location.protocol))
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
