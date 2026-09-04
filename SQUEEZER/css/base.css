@@ -51,7 +51,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 /* hidden until boot's first layout is in (main.js adds .rdy): the raw
    HTML would otherwise paint empty HUD/felt for a frame and flash */
 #app{display:flex;flex-direction:column;height:100dvh;max-width:520px;margin:0 auto;position:relative;overflow:hidden;
-  visibility:hidden}
+  padding-bottom:var(--bibH,0px);visibility:hidden}
 #app.rdy{visibility:visible}
 #app.shake{animation:shk .4s cubic-bezier(.36,.07,.19,.97)}
 @keyframes shk{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}

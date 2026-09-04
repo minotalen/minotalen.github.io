@@ -92,6 +92,9 @@ let biFirstRam={};
 function biAnswer(on){
   biSetConsent(on);
   try{const bar=$('#biBar');if(bar)bar.classList.remove('on');}catch(e){}
+  /* give the reserved strip back and re-lay the felt */
+  try{document.body.style.removeProperty('--bibH');}catch(e){}
+  try{dispatchEvent(new Event('resize'));}catch(e){}
   if(on){
     try{
       const c=store.get('bi-aid');
@@ -172,16 +175,34 @@ function biBeat(){
   if(sent)return;
   try{fetch(url,{method:'POST',body:payload,keepalive:true}).catch(()=>{});}catch(e){}}
 /* the consent bar covers the tabs until the player answers */
+/* the consent bar parks at the bottom edge until the player answers;
+   biPad() pads the app for it (--bibH) so it covers nothing — the rail
+   and BANK stay reachable the whole time */
 function biAsk(){
   if(!CLOUD_BASE)return;
   const c=store.get('bi-consent');
   if(c&&c.value!=null)return;   /* asked before: their answer stands */
   const bar=$('#biBar');
-  if(bar)bar.classList.add('on');}
+  if(!bar)return;
+  bar.classList.add('on');
+  biPad();}
+function biPad(){
+  try{requestAnimationFrame(()=>{
+    try{
+      const bar=$('#biBar');
+      const h=bar&&bar.classList.contains('on')
+        ?Math.ceil(bar.getBoundingClientRect().height):0;
+      document.body.style.setProperty('--bibH',h+'px');
+      dispatchEvent(new Event('resize'));
+    }catch(e){}});}catch(e){}}
 (function bindBar(){
   const ok=$('#biOk'),no=$('#biNo');
   if(ok)ok.onclick=()=>biAnswer(true);
-  if(no)no.onclick=()=>biAnswer(false);})();
+  if(no)no.onclick=()=>biAnswer(false);
+  /* rotate mid-ask: the text rewraps, so re-measure the reserve */
+  addEventListener('resize',()=>{try{
+    const b=$('#biBar');
+    if(b&&b.classList.contains('on'))biPad();}catch(e){}});})();
 /* ask once, after boot has settled */
 setTimeout(biAsk,1200);
 /* opportunistic drain on the cloud-push cadence, not just page exit;

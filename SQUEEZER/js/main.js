@@ -233,9 +233,13 @@ window.G={get S(){return S;},get stress(){return stress;},get nextBeat(){return 
   hand:(i)=>S.hands[i==null?S.focus:i],
   split:(n)=>{while(S.hands.length<(n||2))S.hands.push(newHand());layout();paint();}};
 
-/* dev hook: /?demo grants progress so the whole loop can be inspected */
+/* dev hook: /?demo grants progress so the whole loop can be inspected.
+   Local origins only: a shipped page must never run it, and a demo boot
+   must never sit where a real save can be pushed from */
 function demo(){
   if(!/[?&]demo/.test(location.search)||window.__demo)return;
+  if(location.protocol!=='file:'&&
+     !/^(localhost|127\.0\.0\.1|::1|\[::1\])$/.test(location.hostname))return;
   window.__demo=1;
   S.score+=2e5;S.banked+=6e4;S.life+=2e5;S.st.bankSum=(S.st.bankSum||0)+6e4;S.st.busts=26;S.st.inspects=5;
   S.st.zeroed=Math.max(S.st.zeroed||0,1);   /* the rip's gate reads owned progress, demo owns it */

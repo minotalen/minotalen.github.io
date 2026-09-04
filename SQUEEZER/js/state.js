@@ -131,6 +131,11 @@ function save(now){dirty=true;if(now)return flush();if(sT)return;
 async function flush(){
   /* a cloud restore is mid-handoff: the dying page must not write */
   if(!dirty||window.__cloudLoad)return;dirty=false;S.t=Date.now();
+  /* demo mutates the booted save in memory only: landing it in the local
+     slot would boot poisoned under the real key next session, and that
+     session's push is a legitimate-looking cloud save (cloud.js gates
+     the demo page itself, but not this hand-me-down) */
+  if(window.__demo)return;
   try{await store.set(KEY,JSON.stringify(S));}catch(e){}
   /* cloud.js rides flush: it is the one door every save drains through */
   if(typeof cloudOnFlush==='function')cloudOnFlush();}
