@@ -541,6 +541,7 @@ function renderUp(){
     +G('records',[
       C('biggest bank',fmt(n('bestBank')),'The richest single bank, ever.'),
       C('biggest bust',fmt(Math.round(n('bestBust'))),'The most valuable hand you have ever busted.'),
+      C('widest wreck',n('bigBustN'),'The widest hand a bust has ever caught.'),
       C('longest chain',n('bestChainN'),'Most banks in a row on one table, no bust between them.'),
       C('richest chain',fmt(n('bestChain')),'Total score banked across one chain, first bank to last.'),
       C('boldest bank',pct(n('bestRisk')),'The hottest risk gauge you have ever banked at.'),
@@ -562,7 +563,9 @@ function renderUp(){
       C2('risky dodges','deflects','Risky cards that never bust you: slips, wards, guards.'),
       C2('twins slipped','slips','Would-be busters that slipped back into the deck: Marked Deck dodges and Anchor guards.'),
       C2('cards sent out','outed','Cards put OUT, your own plays only. The buster seat counts for nothing.'),
-      C2('cards discarded','discarded','Cards sent to the discard.')])
+      C2('cards discarded','discarded','Cards sent to the discard.'),
+      C2('safe cards benched','safeDisc','Blank cards sent to the discard: Whip\'s cuts and every safe cut the other cutters make.'),
+      C2('wards lost','wardLost','Wards spent holding a bust back: Grace, Ward\'s rider, Rip scars, Strip.')])
     +G('stickers',[
       C2('stickers placed','placed','Stickers slapped onto cards.'),
       C2('shinies placed','shinyPlaced','Holo vinyl that landed on a card.'),

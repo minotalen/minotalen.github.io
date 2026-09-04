@@ -40,7 +40,7 @@ body.tsnap .view{animation:none!important}
 #buffTip{position:absolute;right:0;top:100%;margin-top:6px;
   z-index:930;pointer-events:none;opacity:0;transition:opacity .16s;
   width:max-content;max-width:min(240px,calc(100vw - 56px));padding:7px 11px;border-radius:8px;text-align:center;
-  font-family:var(--nm);font-size:10.5px;line-height:1.45;font-weight:600;color:var(--ink2);
+  font-family:var(--mono);font-size:10.5px;line-height:1.45;font-weight:600;color:var(--ink2);
   background:var(--grad);box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl)}
 #buffTip.on{opacity:1}
 #buffTip b{color:var(--ink)}
@@ -53,7 +53,7 @@ body.tsnap .view{animation:none!important}
 #ro.hot #rs{color:#6E5124;text-shadow:0 0 11px rgba(138,106,47,.30)}
 #rsl{font-size:8.5px;letter-spacing:.22em;color:var(--ink3);margin-bottom:4px;font-weight:700}
 #terms{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:1}
-.tm{font-family:var(--nm);font-size:10px;padding:3px 7px;border-radius:5px;color:var(--ink2);background:var(--raise);
+.tm{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:5px;color:var(--ink2);background:var(--raise);
   box-shadow:inset 2px 2px 4px var(--sh),inset -1px -1px 3px var(--hl);white-space:nowrap;font-weight:600}
 .tm b{color:var(--ink)}
 .tm.h b{color:var(--red)}
@@ -62,7 +62,7 @@ body.tsnap .view{animation:none!important}
 /* ---------- hand rail (Split) ---------- */
 #hrow{flex:none;display:flex;gap:5px;padding:0 3px 7px}
 #hrow:empty{display:none}
-.hchip{flex:1;min-width:0;border-radius:8px;padding:5px 6px;font-family:var(--nm);font-size:9.5px;font-weight:700;
+.hchip{flex:1;min-width:0;border-radius:8px;padding:5px 6px;font-family:var(--mono);font-size:9.5px;font-weight:700;
   color:var(--ink2);background:var(--raise);cursor:pointer;white-space:nowrap;overflow:hidden;text-align:center;
   box-shadow:inset 2px 2px 4px var(--sh),inset -1px -1px 3px var(--hl)}
 .hchip b{color:var(--ink)}
@@ -116,7 +116,7 @@ body.tsnap .view{animation:none!important}
 #dz{position:absolute;left:0;top:0;width:132px;height:150px;margin:-80px 0 0 -66px;z-index:900;touch-action:none}
 
 /* ---------- table tokens: the counters are objects on the table ---------- */
-.tok{position:absolute;left:0;top:0;z-index:8;border-radius:15px;padding:4px 9px;font-family:var(--nm);
+.tok{position:absolute;left:0;top:0;z-index:8;border-radius:15px;padding:4px 9px;font-family:var(--mono);
   font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink2);background:var(--raise);white-space:nowrap;
   box-shadow:2px 2px 5px var(--sh),-2px -2px 5px var(--hl);transition:opacity .25s}
 .tok b{color:var(--ink)}
@@ -325,7 +325,7 @@ body.tsnap .view{animation:none!important}
 /* one line: label, a quiet center dot, then the payout as the hero number */
 #bank .d{font-family:var(--nm);font-weight:700;font-size:14px;line-height:1;opacity:.5}
 #bank .s{font-family:var(--disp);font-size:19px;font-weight:800;line-height:1;letter-spacing:0}
-#bank .s i{font-family:var(--nm);font-style:normal;font-size:10px;font-weight:700;letter-spacing:.02em;opacity:.7}
+#bank .s i{font-family:var(--mono);font-style:normal;font-size:10px;font-weight:700;letter-spacing:.02em;opacity:.7}
 /* locked: just the label, dead center */
 #bank:disabled .d,#bank:disabled .s{display:none}
 /* the swipe-down hint is for touch screens only — a mouse never sees it */
@@ -350,7 +350,7 @@ body.tsnap .view{animation:none!important}
 .tg.line .d,.tg.on.line .d{background:var(--gld)}
 /* the chip's live value and the door chevron: the whole chip opens the
    AUTOMATION sheet, the chevron says there is more behind it */
-.tg .tv{margin-left:auto;font-family:var(--nm);font-weight:700;font-size:11px;letter-spacing:.02em}
+.tg .tv{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.02em}
 .tg .tc{width:9px;height:9px;flex:none;fill:none;stroke:currentColor;stroke-width:2.6;
   stroke-linecap:round;stroke-linejoin:round;opacity:.5}
 /* quick toggles: small buttony pads, one beside each chip. Active is
@@ -491,7 +491,7 @@ body.tsnap .view{animation:none!important}
   background:linear-gradient(115deg,transparent 36%,rgba(255,255,255,.65) 45%,rgba(255,255,255,.18) 56%,transparent 64%)}
 .ft .minolbl,.gf .minolbl,.mc .minolbl{position:absolute;bottom:5.5%;left:50%;transform:translateX(-50%);z-index:2;
   background:linear-gradient(180deg,#F3D67E,#C2913A);color:#4A3A14;
-  font-family:var(--nm);font-weight:700;font-size:calc(var(--cw,54px)*.105);
+  font-family:var(--mono);font-weight:700;font-size:calc(var(--cw,54px)*.105);
   letter-spacing:.1em;padding:0 4px;border-radius:3px;white-space:nowrap;
   border:1px solid rgba(255,252,238,.55);box-shadow:0 1px 2px rgba(30,25,10,.35)}
 /* promo: the holo outline rings the whole face and the tint bar wears

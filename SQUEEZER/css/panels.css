@@ -20,6 +20,14 @@
 #tabs button .i svg .fl{fill:currentColor;stroke:none}
 #tabs button.on{color:var(--ink)}
 #tabs button.hid{display:none}
+/* onboarding phantom: the table tab hides but keeps its box, so the rail
+   never changes height when it fills (mobile; the desktop rail lets go) */
+#tabs button.ph{visibility:hidden}
+/* solo rail: nothing to highlight while the phantom rides alone */
+#tabs.solo #thumb{display:none}
+/* desktop onboarding: the whole track lets go — the wide lane
+   rearranges the moment it would fill anyway */
+@media(min-width:1024px){#tabs.solo{display:none}}
 /* locked tabs ride the rail early: a dim pill filling toward its score
    req — the tab is the bar too. The fill landing opens it */
 #tabs button.lock{border-radius:10px;opacity:.55;cursor:default;color:var(--ink3);
@@ -243,6 +251,7 @@ h2:first-child{margin-top:6px}
    desktop so it meets the right column's last row */
 #sh a.dscord{text-decoration:none;color:inherit;text-align:center}
 #sh a.dscord .b{flex:1}
+#sh a.dscord .nm{justify-content:center}
 @media(hover:hover){#sh a.dscord:hover{filter:brightness(1.03)}}
 .csnet b{font-size:10px;letter-spacing:.14em;color:var(--ink3)}
 .ash.dgr span{color:var(--red)}

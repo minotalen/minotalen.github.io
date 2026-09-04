@@ -110,7 +110,13 @@ const STK = {
   sub:    {n:'Sub',      t:2, pm:1.35, st:'sub', d:'Arm: this card waits in the discard and a random card OUT takes its seat.'},
   exit:   {n:'Exit',     t:2, pm:1, st:'exit', d:'On bank: 2% of the discard\'s total value pays to score.',
            cur:(c,h)=>{const d=S.disc?S.disc.reduce((a,id)=>a+cval(byId(id)),0):0;
-             return d?`now +${fmt(d*ECO.EXIT_PER*valueMult())} a bank`:''}}
+             return d?`now +${fmt(d*ECO.EXIT_PER*valueMult())} a bank`:''}},
+  /* the squeeze batch (2026-09-04): the deck is the victim — Whip
+     strips its blanks away, Squeeze reads its pressure into a value,
+     Strip trades the table's floor for a ward */
+  whip:   {n:'Whip',    t:3, pm:1.35, st:'whip',  d:'On draw and on arm: the deck\'s first safe card goes to the discard.'},
+  strip:  {n:'Strip',   t:4, pm:2.2,  st:'strip', d:'Arm: the table\'s lowest card leaves to the discard; gain 1 ward.'},
+  squeeze:{n:'Squeeze', t:5, pm:5.6,  st:'squeeze', d:'Arm: peeks at 5 deck cards, becomes the sum of the risky ones.'}
 };
 for(const k in STK) STK[k].c = TIERC[STK[k].t];
 const STKKEYS = Object.keys(STK);
@@ -130,7 +136,7 @@ const STK_OFF = {gild:1, float:1, bail:1, fallout:1};
 const TRICK = {cull:1, stakes:1, float:1, defuse:1, scrap:1, tell:1,
                swap:1, clip:1, ghost:1, dredge:1, riffle:1, patch:1,
                fetch:1, bail:1, draft:1, engrave:1, echo:1, twin:1,
-               offering:1, sub:1};
+               offering:1, sub:1, squeeze:1, whip:1, strip:1};
 /* auras that apply once no matter how many copies sit on the tables */
 const NONSTACK = {beacon:1, haste:1, guardian:1};
 /* the in-game sticker compendium (compendium.js) opens once this many
@@ -151,10 +157,11 @@ const STKTYPE = {
   rake:'out-pay',   /* +2 a card per OUT — Tab and Ledger's little sibling */
   ledger:'out-pay', tab:'out-pay',
   ward:'insurance', anchor:'insurance', purify:'insurance',
+  strip:'insurance',   /* the point is the ward it stands; the bench is the price */
   haste:'aura', beacon:'aura',
   cull:'trick', stakes:'trick', float:'trick',
   /* type = engine, not trigger: the rewriter tricks (Swap/Clip/Ghost/
-     Patch/Dredge/Riffle/Engrave) only rewrite what a table card is
+     Patch/Dredge/Riffle/Engrave/Squeeze) only rewrite what a table card is
      worth, while Scrap/Fetch/Defuse work the deck and its piles — cuts
      to OUT, a discard rider, and the tap-time bank when both cuts came
      back safe. Dredge reads OUT but moves nothing, so it stays a
@@ -162,7 +169,7 @@ const STKTYPE = {
   defuse:'out', scrap:'out', tell:'trick', fetch:'out', bail:'trick',
   draft:'trick', engrave:'trick',
   swap:'trick', clip:'trick', ghost:'trick', patch:'trick',
-  dredge:'trick', riffle:'trick',
+  dredge:'trick', riffle:'trick', squeeze:'trick',
   /* pile engines split by pile: OUT exile vs the discard bench.
      Straddlers file by payload — Defuse's point is the OUT exile (the
      mate's bench ride is the side effect), Sub's payload is the OUT
@@ -170,7 +177,7 @@ const STKTYPE = {
      nearest pile. The payoffs split the same way: out-pay reads OUT,
      disc-pay reads the bench */
   snip:'discard', burn:'discard', echo:'discard', reverb:'discard',
-  purge:'discard', encore:'discard',
+  whip:'discard', purge:'discard', encore:'discard',
   scrap:'out', vanish:'out', defuse:'out', fetch:'out',
   offering:'out', sub:'out', recycle:'out', flinch:'out', fallout:'out',
   remnant:'disc-pay', exit:'disc-pay', layaway:'disc-pay',
@@ -197,6 +204,7 @@ const STKTRIG = {
   remnant:'on bank', guardian:'1/3 on bust', flinch:'on draw, value match',
   offering:'arm → instant', recycle:'on bank', sub:'arm → swap from OUT',
   exit:'on bank',
+  squeeze:'arm → scan 5', whip:'on draw + arm', strip:'arm → instant',
 };
 
 /* the lil compendium: the game's own words, one line each. It renders
@@ -226,7 +234,7 @@ const LINGO=[
   ['The gauge','Risky cards ÷ deck size. It shows the danger and pays the premium.'],
   ['Premium','Extra pay for danger: the hotter the gauge at a bank, the more the table pays. Under 40% risk the table pays 60% to 100%. At 100% risk it pays double.'],
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
-  ['Discard',"A Ward save, Snip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
+  ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
   ['OUT','The exile pile. Scrap, Defuse, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
   ['Set aside',"Cull's catch: the card waits out your next bank, then shuffles back. Feeds nothing."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it.'],
@@ -320,7 +328,12 @@ const META = {
    counts for nothing),
    discards (rake 8 → snip 15 → purge 500; ward saves and cuts feed
    them), discard depth (remnant 4 → layaway 8 in the discard at
-   once; exit's fed benches ride the same cutters), cold busts
+   once; exit's fed benches ride the same cutters), safe cuts (whip
+   50: Burn's pairs, Draft's spares, Defuse's second, Reverb's take
+   and Snip's blind cut all feed it — a cut counts only while the
+   card was a blank), wards lost (strip 100: every ward a bust
+   spends — Ward's rider, Grace and Rip scars feed it), bust width
+   (squeeze 12: a 12-card hand dies), cold busts
    (flinch: a landing at the 5% gauge or less), ones out (offering:
    a worth-1 card sits OUT), full-ink banks (guardian: 5+ cards,
    banked lifetime), early stickered busts (recycle: a 2-card
@@ -454,6 +467,14 @@ const ACH = [
   A('g73','Rain Check','Bank 5 runs with 3 cards in the discard','exit',()=>S.st.benchBanks||0,5),
   /* Layaway: the bench-depth rung, one ladder above Remnant's shelf */
   A('g74','Will Call','Have 8 cards in the discard at once','layaway',()=>S.st.maxDisc||0,8),
+  /* the squeeze batch: the gates read what the deck and the shields
+     already do — Cold Cuts counts blanks any cutter benches (never
+     Whip alone), Broken Guards counts every ward a bust spends
+     (Ward's rider and Grace feed it without Strip), Pileup reads the
+     hand as it died */
+  A('g75','Cold Cuts','Send 50 safe cards to the discard','whip',()=>S.st.safeDisc||0,50),
+  A('g76','Broken Guards','Lose 100 wards','strip',()=>S.st.wardLost||0,100),
+  A('g77','Pileup','Bust a hand of 12 cards or more','squeeze',()=>S.st.bigBustN||0,12),
   /* upgrade gates, in UPG order — each a rung below its sticker ladder;
      Split can't ask for tables (it deals the second one), so it asks for banks */
   U('u1','No Touching','Bank 3 cards or more, every pair 2+ apart','mult',()=>S.st.spread||0,3),

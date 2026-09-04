@@ -31,6 +31,9 @@
   --red:#8E2B1C; --grn:#2C563C; --gld:#8A6A2F; --blu:#2A4761;
   --cw:54px; --ch:76px;
   --nm:"Orbit Num",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  /* mixed letter+digit tokens (chips, tags, the cloud key): one face for
+     the whole token — Orbit digits beside mono letters read as two weights */
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --disp:"Orbit","Avenir Next","Segoe UI",system-ui,sans-serif;
   --ui:"Orbit Num",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,sans-serif;
   --sp:cubic-bezier(.2,1.02,.32,1.04);
@@ -99,16 +102,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .hid *,.hid *::before,.hid *::after{animation-play-state:paused!important}
 
 /* ---------- the title screen: SQUEEZER over the whole app on every
-   load, again after an idle minute, gone at its click. The tutorial's
-   opening passes clicks through to the felt (pyrTap); every other
-   showing captures its own dismissal (.live) ---------- */
+   load, again after an idle minute, gone at its click. The box is
+   pointer-through everywhere: dismissal rides a document-capture tap
+   (fx.js), so the click that hides it still plays ---------- */
 #ttl{position:absolute;inset:0;z-index:940;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:12px;pointer-events:none;
   text-align:center;transition:opacity .55s var(--sp);
   translate:0 -12dvh}   /* the pair sits a touch above center */
 #ttl.on{display:flex}
 #ttl.gone{opacity:0}
-#ttl.live{pointer-events:auto;cursor:pointer}
 /* the sticker drift: one layer in the felt, bound to the card table —
    under the text and under the cards. Each flyer is a real 3D slab —
    glyph front, vinyl backing, thin edge gap — driven as a velocity

@@ -41,8 +41,16 @@ function float(t,x,y,c,o){
   FTX.push({x,y,w,h,until:now+life});
   setTimeout(()=>d.remove(),life+40);
 }
-/* the slam is the same system's big face: one anchor at screen center */
-function slam(t,c){float(t,innerWidth/2,innerHeight*.34,c,{big:1});}
+/* the slam is the same system's big face: one anchor at screen center —
+   at wide the table is the stage, so it centers on the felt instead
+   (where the BUST spray already anchors) */
+function slam(t,c){
+  let x=innerWidth/2,y=innerHeight*.34;
+  if(WIDE_Q&&WIDE_Q.matches&&document.body.classList.contains('wide')){
+    const p=feltPt(FW/2,FH*.34);x=p[0];y=p[1];
+  }
+  float(t,x,y,c,{big:1});
+}
 /* spray: confetti with real physics — launched hot, pulled down by
    gravity, bouncing off the frame's walls, shrinking and fading as they
    age. One shared rAF loop tends every particle on screen */
@@ -535,14 +543,11 @@ function ttlOn(pass){
   ttlT0=performance.now();ttlKill=0;ttlUp=1;
   box.classList.remove('gone');
   box.classList.add('out');   /* the pads start dropped, lift below with the letters */
-  /* the tutorial's opening passes clicks through to the felt (pyrTap);
-     every other showing captures its own dismissal */
-  box.classList.toggle('live',!ttlPass);
-  box.onpointerdown=()=>{if(!ttlPass)ttlClick();};
-  /* the box is absolute inside #app, so on desktop it only spans the
-     column and taps on the letterboxed paper die on body. Dismissal
-     also rides a document-capture tap; pass mode never arms it (the
-     felt's pyrTap owns those). Capture beats any stopPropagation */
+  /* the title never eats a click: the box is pointer-through, and the
+     dismissal rides a document-capture tap — so the pointerdown that
+     hides the letters still plays (draws, taps a tab, opens the sheet).
+     Pass mode (the tutorial's opening) arms nothing here: the felt's
+     pyrTap owns those, taps anywhere else included */
   if(ttlDoc)document.removeEventListener('pointerdown',ttlDoc,true);
   ttlDoc=ttlPass?null:()=>ttlClick();
   if(ttlDoc)document.addEventListener('pointerdown',ttlDoc,true);
@@ -587,7 +592,6 @@ function ttlOff(){
   ttlKillT=setTimeout(()=>{
     const b=$('#ttl');if(!b)return;
     ttlUp=0;   /* gates lift at once: the deal runs under the letter fade */
-    b.classList.remove('live');b.onpointerdown=null;
     if(ttlDoc){document.removeEventListener('pointerdown',ttlDoc,true);ttlDoc=null;}
     $('#felt').classList.remove('ttl');   /* the table returns with the fade */
     /* the letters fade out as the finished ink glyph, left to right,

@@ -222,6 +222,7 @@ function resolve(id,h,auto,fresh){
     pop();}
   if(c.stk==='snip')doSnip(c);
   if(c.stk==='burn')doBurn();
+  if(c.stk==='whip')doWhip();
   if(c.stk==='encore')doEncore(c);
   if(c.stk==='rake'){
     const g=ECO.RAKE_PER*outCount()*valueMult();S.score+=g;S.life+=g;
@@ -250,6 +251,7 @@ function resolve(id,h,auto,fresh){
       const h2=S.hands[eh];
       if(!h2||frozen||!S.deck.length)return;
       const tid=S.deck.pop();
+      benchSafe(tid);
       const hit=cval(byId(tid))===cval(c);
       wardFlight(tid);
       if(hit){h2.run.grace++;
@@ -302,9 +304,11 @@ function wardFlight(id){
   setTimeout(()=>{fanBusy.delete(id);e.style.transition='';
     e.style.zIndex='';layout();},640);
 }
-/* a ward save under the cold line feeds Grace's level-2 gate. Ward's
-   rider and Grace count alike; dodges and Defuse are not wards */
-const noteWard=pre=>{if(pre<ECO.COLD_AT)S.st.coldWards=(S.st.coldWards||0)+1;};
+/* a ward save under the cold line feeds Grace's level-2 gate, and every
+   spent shield counts as lost (Broken Guards). Ward's rider and Grace
+   count alike; dodges and Defuse are not wards */
+const noteWard=pre=>{S.st.wardLost=(S.st.wardLost||0)+1;
+  if(pre<ECO.COLD_AT)S.st.coldWards=(S.st.coldWards||0)+1;};
 function deflect(id,label,disc){
   S.st.deflects=(S.st.deflects||0)+1;
   /* the slips are the shuffle-backs: a Marked dodge or an Anchor guard
@@ -389,6 +393,9 @@ function bust(c,twinId,h,preTh){
   /* Paper Cut: the bust caught a 2-card hand, both cards papered */
   if(h.ids.length===2&&h.ids.every(x=>byId(x).stk))
     S.st.twoStkBusts=(S.st.twoStkBusts||0)+1;
+  /* Pileup: the widest hand a bust ever caught — read before the
+     buster joins it, the standing table as it died */
+  if(h.ids.length>(S.st.bigBustN||0))S.st.bigBustN=h.ids.length;
   h.ids.push(c.id);bustPair=[c.id,twinId];
   for(const id of h.ids){const k=byId(id);if(k.stk==='siphon')keep+=cval(k)*ECO.SIPHON_X*valueMult();}
   const siph=keep-salv-silver-guard;
@@ -738,7 +745,7 @@ function doSnip(c){
   let i=S.deck.findIndex(id=>byId(id).v===c.v);
   if(i<0&&S.deck.length)i=rndi(S.deck.length);
   if(i<0)return;
-  const id=S.deck.splice(i,1)[0];toDisc(id);
+  const id=S.deck.splice(i,1)[0];benchSafe(id);toDisc(id);
   const[x,y]=feltPt(OX,OY);float('SNIPPED A '+byId(id).v,x,y-16,'#46422F');
   SFX.burn();SFX.stk('snip','act',byId(id).v);layout();
 }
@@ -754,8 +761,29 @@ function doBurn(){
   const ids=[];
   for(let i=0;i<2;i++)ids.push(pool.splice(rndi(pool.length),1)[0]);
   const[x,y]=feltPt(FW/2,FH*.5);
-  ids.forEach(id=>{S.deck.splice(S.deck.indexOf(id),1);toDisc(id);});
+  ids.forEach(id=>{S.deck.splice(S.deck.indexOf(id),1);benchSafe(id);toDisc(id);});
   float('BURNED A PAIR OF '+v+'S',x,y-14,'#8E2B1C');spray(x,y,'#8E2B1C',14);SFX.burn();SFX.stk('burn','act',v);layout();
+}
+/* Whip: the blank hunt — the deck's first card that busts nobody (top
+   down) benches to the discard. Two triggers, one cut: the landing
+   fires it free, the arm fires it on your timing. A deck of nothing
+   but threats denies the arm, unspent */
+/* a blank reads against every standing table at once — Burn's cut has
+   no hand of its own, so the cutters share the one global read */
+const safeVal=v=>!S.hands.some(h=>h.ids.some(x=>cval(byId(x))===v)&&!pureVals(h).has(v));
+/* Cold Cuts: a blank benched on purpose counts, whatever cut it rode */
+const benchSafe=id=>{if(safeVal(cval(byId(id))))S.st.safeDisc=(S.st.safeDisc||0)+1;};
+function doWhip(){
+  for(let i=S.deck.length-1;i>=0;i--){
+    const id=S.deck[i];
+    if(!safeVal(cval(byId(id))))continue;
+    S.deck.splice(i,1);
+    benchSafe(id);toDisc(id);
+    const[x,y]=feltPt(OX,OY);float('WHIPPED A '+byId(id).v,x,y-16,'#46422F');
+    SFX.burn();SFX.stk('whip','act',byId(id).v);buzz(12);layout();
+    return true;}
+  const[x,y]=feltPt(FW/2,FH*.3);float('WHIP\nNO SAFE CARD',x,y,'#4A5A66');
+  return false;
 }
 
 /* ---------------- value modifiers ----------------
@@ -933,6 +961,27 @@ function fireRiffle(c){
   SFX.stk('riffle','act',cval(c));buzz(10);
   return true;
 }
+/* Squeeze: five from the deck, and the risky ones set the worth — the
+   gauge made solid, till the card leaves the table. A clean peek (no
+   risky card in the five) denies, unspent: there is no count to read */
+function fireSqueeze(c,h){
+  if(!S.deck.length){SFX.deny();return false;}
+  const five=[...S.deck].sort(()=>Math.random()-.5).slice(0,5);
+  const p=pureVals(h);
+  const rk=five.filter(id=>{const v=cval(byId(id));
+    return h.ids.some(x=>cval(byId(x))===v)&&!p.has(v);});
+  if(!rk.length){SFX.deny();return false;}
+  const vs=rk.map(id=>cval(byId(id))),sum=vs.reduce((a,b)=>a+b,0);
+  c.cv=Math.max(ECO.CVAL_MIN,Math.min(MAXV,sum));bumpRewrite(c);
+  flipCard(c);
+  openMo(`<h3>SQUEEZE</h3><p class="note">Five from the deck — the risky ones set this card's worth, till it leaves the table.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin:14px 0">
+      ${five.map(id=>`<span${rk.indexOf(id)>=0?'':' style="opacity:.35"'}>${mini(cval(byId(id)),byId(id).stk,byId(id).r,id,byId(id))}</span>`).join('')}</div>
+    <p class="stkline">risky ${vs.join(' + ')} = ${c.cv}${sum>MAXV?' · capped':''}</p>
+    <button class="close" onclick="closeMo()">CLOSE</button>`);
+  SFX.stk('squeeze','act',cval(c));buzz(10);
+  return true;
+}
 
 /* ---------------- armed tricks ---------------- */
 /* tap a charged trick on the table: arm it. One arm per card per run;
@@ -965,11 +1014,12 @@ function armTrick(id){
     toast('Tell\nThe top card shows its face','eye');
     SFX.detent();SFX.stk('tell','arm',cval(byId(S.showTop)));buzz(10);layout();paint();save(true);
     return;}
-  /* the value modifiers: Swap and Riffle fire on the tap, Dredge deals
-     its two picks from OUT, and the aim tricks wait for a target.
-     Denials (empty deck / OUT pile, no floor to copy) never spend */
-  if(c.stk==='swap'||c.stk==='riffle'){
-    const fired=c.stk==='swap'?fireSwap(c):fireRiffle(c);
+  /* the value modifiers: Swap, Riffle and Squeeze fire on the tap,
+     Dredge deals its two picks from OUT, and the aim tricks wait for a
+     target. Denials (empty deck / OUT pile, no floor to copy, no risky
+     card in the peek) never spend */
+  if(c.stk==='swap'||c.stk==='riffle'||c.stk==='squeeze'){
+    const fired=c.stk==='swap'?fireSwap(c):c.stk==='riffle'?fireRiffle(c):fireSqueeze(c,h);
     if(!fired)return;
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
@@ -1080,7 +1130,7 @@ function armTrick(id){
     const peek=[];
     for(let i=0;i<3&&i<S.deck.length;i++)peek.push(S.deck[S.deck.length-1-i]);
     const cut=peek.filter(cid=>cval(byId(cid))===cval(c));
-    cut.forEach(cid=>{S.deck.splice(S.deck.indexOf(cid),1);toDisc(cid);});
+    cut.forEach(cid=>{S.deck.splice(S.deck.indexOf(cid),1);benchSafe(cid);toDisc(cid);});
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
     const[x,y]=feltPt(FW/2,FH*.3);
@@ -1098,6 +1148,34 @@ function armTrick(id){
         :`no twin of the ${cval(c)} up top`}</p>
       <button class="close" onclick="closeMo()">CLOSE</button>`);
     return;}
+  /* Whip's arm: the second trigger, the same cut the landing makes.
+     No blank in the deck denies, unspent */
+  if(c.stk==='whip'){
+    const cut=S.deck.length&&doWhip();
+    if(!cut){SFX.deny();}
+    else{r.spent.push(id);S.st.arms=(S.st.arms||0)+1;}
+    layout();paint();save();
+    checkFloatAll();
+    return;}
+  /* Strip: the floor pays the shield — the table's cheapest card
+     benches and a ward stands in its place. The carrier may be the
+     lowest: the arm spends before the bench */
+  if(c.stk==='strip'){
+    if(!h.ids.length){SFX.deny();return;}
+    let low=h.ids[0];
+    for(const x of h.ids)if(cval(byId(x))<cval(byId(low)))low=x;
+    const lv=cval(byId(low));
+    h.ids.splice(h.ids.indexOf(low),1);
+    revertLeaving([low]);
+    toDisc(low);
+    r.grace++;
+    r.spent.push(id);
+    S.st.arms=(S.st.arms||0)+1;
+    const[x,y]=feltPt(FW/2,FH*.3);
+    float('STRIP\nA '+lv+' FOR 1 WARD',x,y,'#3E7A5E');
+    SFX.stk('strip','act',lv);buzz(14);layout();paint();save();
+    checkFloatAll();
+    return;}
   /* Ward is a passive sticker now: nothing to arm, the rider fires
      on its own draw */
   /* Defuse: the tap cuts into the deck — the top card is exiled OUT,
@@ -1109,7 +1187,7 @@ function armTrick(id){
     const mate=S.deck.length?S.deck.pop():null;
     if(cut1===S.showTop||mate===S.showTop)S.showTop=null;
     toOut(cut1);
-    if(mate!=null)wardFlight(mate);
+    if(mate!=null){benchSafe(mate);wardFlight(mate);}
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
     const p=pureVals(h);
@@ -1253,7 +1331,7 @@ function pickDraft(i){
   draftCtx=null;
   const keep=d.ids[i],drop=d.ids[1-i];
   closeMo();
-  toDisc(drop);
+  benchSafe(drop);toDisc(drop);
   S.st.drafted=(S.st.drafted||0)+1;S.st.stkDraws=(S.st.stkDraws||0)+1;
   const[x,y]=feltPt(FW/2,FH*.44);float('DRAFTED',x,y,'#3C7C9E');
   SFX.stk('draft','act',byId(keep).v);buzz(12);

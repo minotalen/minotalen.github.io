@@ -60,6 +60,9 @@ const SHP = {
   chevron: '<path d="M12 6.2L21.6 17.2H16.7L12 11.5L7.3 17.2H2.4Z"/>',
   pyrite: '<path d="M7.2 3.4L12 8.2 16.8 3.4 20.6 7.2 15.8 12 20.6 16.8 16.8 20.6 12 15.8 7.2 20.6 3.4 16.8 8.2 12 3.4 7.2Z"/>',
   crown: '<path d="M12 2.8L20.4 6V12.4C20.4 17 16.8 20.3 12 21.6C7.2 20.3 3.6 17 3.6 12.4V6Z"/>',
+  /* Whip: the lash — a tapered crescent, thick at the handle, thin at
+     the crack (2026-09-04 squeeze batch) */
+  whip: '<path d="M3.2 20.8Q4.6 11.8 11 6.6Q15 3.4 20.8 3.2Q20.4 5.4 14.6 9.4Q8.8 13.6 8.4 20.8Z"/>',
   /* --- t4 · red, the danger --- */
   megaphone: '<path d="M6.2 17.8V5.8A12 12 0 0 1 18.2 17.8Z"/>',
   bin: '<path d="M7 3.8H17A2.4 2.4 0 0 1 19.4 6.2V17.8A2.4 2.4 0 0 1 17 20.2H7A2.4 2.4 0 0 1 4.6 17.8V6.2A2.4 2.4 0 0 1 7 3.8ZM14.4 10.6H9.6A1.4 1.4 0 0 0 8.2 12A1.4 1.4 0 0 0 9.6 13.4H14.4A1.4 1.4 0 0 0 15.8 12A1.4 1.4 0 0 0 14.4 10.6Z"/>',
@@ -68,6 +71,9 @@ const SHP = {
   bucket: '<path d="M7.4 6.8A4.6 4.6 0 0 1 16.6 6.8H13.6A1.6 1.6 0 0 0 10.4 6.8ZM4.6 10.4H19.4L16.2 20.2H7.8Z"/>',
   arrow: '<path d="M3.8 12 9.4 6.4V10H20.2V14H9.4V17.6z"/>',
   cherries: '<path d="M3.2 5.2V18.8L10.4 12ZM20.8 5.2V18.8L13.6 12Z"/>',
+  /* Strip: the peeled band — a slanted ribbon torn off the stock
+     (2026-09-04 squeeze batch) */
+  strip: '<path d="M3.4 10.4L9.4 6.4L20.6 9.2L20.6 13.6L14.6 17.6L3.4 14.8Z"/>',
   /* --- t5 · violet, the arcane --- */
   crystal: '<path d="M12 2.6L17.2 8.2V15.8L12 21.4 6.8 15.8V8.2Z"/>',
   trophy: '<path d="M12 2.6L21.4 12 12 21.4 2.6 12ZM12 8.2L8.2 12 12 15.8 15.8 12Z"/>',
@@ -76,6 +82,9 @@ const SHP = {
   orb: '<path d="M12 9.6V2.6A9.4 9.4 0 0 1 21.2 10L14.3 11.5A2.4 2.4 0 0 0 12 9.6ZM14.1 13.2L20.1 16.7A9.4 9.4 0 0 1 9.1 20.9L11.3 14.3A2.4 2.4 0 0 0 14.1 13.2ZM9.9 13.2L3.9 16.7A9.4 9.4 0 0 1 5.7 5L10.4 10.2A2.4 2.4 0 0 0 9.9 13.2Z"/>',
   plate: '<path d="M12 2.8L20.5 7.4V16.6L12 21.2 3.5 16.6V7.4Z"/>',
   comet: '<path d="M3.6 18.8Q5.6 10.8 10 6.4A5.4 5.4 0 1 1 16.7 13.9Q11.2 17.6 3.6 18.8Z"/>',
+  /* Squeeze: the vise — two jaws meeting at a waist, the count made
+     solid (2026-09-04 squeeze batch) */
+  squeeze: '<path d="M4.6 3.4H19.4L12 12L19.4 20.6H4.6Z"/>',
   /* the discard/OUT batch: pie, bell, escape dart, anvil, return
      arrow, hourglass — sampler-clean, no seams, in the RINK envelope */
   remnant: '<path d="M12 2.6A9.4 9.4 0 1 1 2.6 12L12 12Z"/>',

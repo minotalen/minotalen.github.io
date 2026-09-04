@@ -314,7 +314,12 @@ function openSet(){
        and the old copy retires on the server, kept but unreachable */
     await cloudRotate();
     await flush();closeMo();layout();paint();renderAll();
-    $$('#tabs button').forEach((b,i)=>{if(i)b.classList.add('hid');});Tabs.thumb();toast('Save wiped\nA fresh key is in the menu','trash');};
+    /* the wipe is a return to onboarding: syncWide re-applies the rail
+       gate (and unwides), and the fresh table takes the stage — a side
+       view would strand the player on a phantom rail */
+    $$('#tabs button').forEach((b,i)=>{if(i)b.classList.add('hid');});
+    syncWide();Tabs.go('play',null,true);
+    toast('Save wiped\nA fresh key is in the menu','trash');};
 }
 function openWelcome(o){
   const hh=Math.floor(o.t/3600),m=Math.floor(o.t%3600/60);
@@ -398,7 +403,6 @@ function openCardSheet(id){
       ${lines.length?`<span class="cndline"></span><span class="cndtip">${lines.join('<br>')}</span>`:''}
       ${hi>=0?`<div class="stkline"><span class="now">NOW WORTH <b>${fmt(worthOf(c,S.hands[hi]))}</b> ${MID} after every mult</span></div>`:''}
       ${live||purified||(a&&NONSTACK[c.stk])?`<div class="chips">
-        ${live?'<span class="chip" style="color:var(--red)">risky cards in the deck</span>':''}
         ${purified?'<span class="chip ok">purified '+D+' cannot bust you</span>':''}
         ${a&&NONSTACK[c.stk]?'<span class="chip">unique · only one, ever</span>':''}</div>`:''}
     </div></div>

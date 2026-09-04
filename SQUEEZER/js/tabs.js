@@ -106,16 +106,26 @@ function syncWide(){
   if(want!==wide){
     document.body.classList.toggle('wide',want);
     wideLanes(want);
-    /* TABLE rides .hid while wide: the rail's digits, flings and thumb
-       address the panel alone */
-    const pb=$('#tabs button[data-v="play"]');
-    if(pb)pb.classList.toggle('hid',want);
     /* a swipe caught mid-cross leaves dragging transforms pinned on the
        views — inside the sidebar they would sit off-lane */
     $$('.view').forEach(v=>{if(v.style.transform)v.style.cssText='';});
     /* the felt re-measures into its new lane; the thumb re-seats on the
        reshaped rail */
     requestAnimationFrame(()=>{layout();Tabs.thumb();});
+  }
+  /* TABLE rides .hid while wide: the rail's digits, flings and thumb
+     address the panel alone. Onboarding keeps it off the rail too —
+     while it rides alone there is nothing to switch to. The desktop
+     lets the pill go outright (the wide lane rearranges the moment a
+     side tab births anyway); mobile keeps its box as a phantom so the
+     rows above never shift when the rail fills. .solo sinks the thumb:
+     nothing to highlight while the phantom rides alone */
+  const pb=$('#tabs button[data-v="play"]');
+  if(pb){
+    const solo=!any;
+    pb.classList.toggle('hid',want||(solo&&WIDE_Q.matches));
+    pb.classList.toggle('ph',solo&&!WIDE_Q.matches);
+    $('#tabs').classList.toggle('solo',solo);
   }
   /* invariant, re-checked every pass: while wide, .on never rests on
      the table — the panel needs a view to show. fixTab, not go — the
