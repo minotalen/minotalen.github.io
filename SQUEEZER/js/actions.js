@@ -1305,7 +1305,10 @@ function autoPlay(h){
     if(id==null||armed(id))return;armTrick(id);};
   skill('tell',S.showTop==null);
   skill('defuse',th>=A.defuse||held);
-  skill('cull',th>=A.cull||held);
+  /* Cull spends the card itself, so the autos play it only on a read:
+     a revealed bust incoming with no shield standing. Any earlier arm
+     just burns the ward at the next bank */
+  skill('cull',held);
   skill('float',th>=A.float);
   skill('stakes',th>=A.stakes);
   /* a blind cut only when blind: skip it while a Tell has the top read —

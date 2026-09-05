@@ -570,8 +570,10 @@ const ECO = {
   OVER_AT:10, OVER_PER:.08, HOUSE_X:1.25,
   STREAK_AT:1e5, // Hot Streak row: banks at or above this, five in a row, feed Encore's gate
   /* the auto plays its own tricks: arm at this much threat —
-     Odds is the mirror image, armed only when the draw is near-safe */
-  AUTO_SKILL:{defuse:.28, cull:.35, float:.45, stakes:.30, scrap:.50},
+     Odds is the mirror image, armed only when the draw is near-safe.
+     Cull is not here: its arm spends the card itself, so the autos
+     hold it for a read (autoHolds) and the tap stays the player's */
+  AUTO_SKILL:{defuse:.28, float:.45, stakes:.30, scrap:.50},
   /* Draw Stop: how deep the stop-drawing dial may be set, per level */
   GUARD_AT:[.25,.45,.70,.95],
   /* the reliable/gamble pairs: each pair shares a job, one pays small

@@ -426,7 +426,9 @@ function initViewSwipe(){
      one tab over — taps still tap */
   const rail=$('#tabs');let rOn=false,rFired=false,rsx=0,rsy=0;
   eatClicks(rail);
-  rail.addEventListener('pointerdown',e=>{rOn=true;rFired=false;rsx=e.clientX;rsy=e.clientY;});
+  rail.addEventListener('pointerdown',e=>{
+    ate=false;   /* a finished swipe or fling never eats the next tap's click */
+    rOn=true;rFired=false;rsx=e.clientX;rsy=e.clientY;});
   rail.addEventListener('pointermove',e=>{
     if(!rOn||rFired)return;
     const dx2=e.clientX-rsx;
