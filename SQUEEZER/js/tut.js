@@ -2,12 +2,14 @@
    tut.js — the onboarding, poster edition. One beat, one poster: a
    loud line, an optional gold action line, nothing else. No small
    text, no illustrations: the felt is the picture, the ring is the
-   pointer. The coached verbs, in order:
+   pointer. The swipe beats lead their action line with a gold
+   chevron that walks the gesture's direction — the posters' one
+   motion. The coached verbs, in order:
    pyramid → gather  the deck dealt face-up, tap sweeps it home
-   card    → draw    CARD = SCORE
+   card    → draw    CARD = SCORE, a swipe up anywhere draws
    risk    → deepen  MORE CARDS, MORE RISK → HIGHER MULTI. draw until
                      the twin lands (a bank skips ahead)
-   bust    → lose    TWIN = BUST, then the safe road: DRAW, THEN BANK
+   bust    → lose    TWIN = BUST, then the safe road: SWIPE DOWN TO BANK
    wages   → fund    grow score until the DECK tab opens
    buy     → card    buy the first card
    upg     → grind   BUY ANOTHER CARD, shown only once the wallet can:
@@ -27,12 +29,15 @@
    dr/bn/bu (draws / banks / busts counted during the run).
    ================================================================== */
 let tutHiEls=[],tutHiSig='';
-/* the poster: h = the loud line, p2 = the gold action line, bad = red */
+/* the poster: h = the loud line, p2 = the gold action line, bad = red.
+   arr leads the action line with a chevron that walks the gesture's
+   direction: the swipe beats are taught by motion, not by more words */
+const SAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15 12 8l7 7"/></svg>';
 const TUT_TXT={
   pyramid:()=>({h:'YOUR DECK',p2:'TAP ANYWHERE'}),
-  card:()=>({h:'CARD = SCORE',p2:'TAP THE DECK'}),
+  card:()=>({h:'CARD = SCORE',p2:'SWIPE UP TO DRAW',arr:'up'}),
   risk:()=>({h:'MORE CARDS, MORE RISK',p2:'→ HIGHER MULTI'}),
-  bust:()=>({h:'TWIN = BUST',p2:'DRAW, THEN BANK',bad:1}),
+  bust:()=>({h:'TWIN = BUST',p2:'SWIPE DOWN TO BANK',arr:'dn',bad:1}),
   wages:()=>({h:`BANK ${TAB_GATE.cards.req} SCORE`}),
   buy:()=>({h:'BUY A CARD'}),
   upg:()=>({h:'BUY ANOTHER CARD'}),
@@ -188,8 +193,9 @@ function tutPaint(){
      at the text's end, except on the last bubble, where GOT IT already
      closes the run */
   const o=TUT_TXT[s]?TUT_TXT[s]():null;
+  const p2=o&&o.p2?(o.arr?`<span class="sar ${o.arr}">${SAR}</span>`:'')+o.p2:'';
   const html=o?`<div class="ph${o.bad?' bad':''}">${o.h}`+
-    (o.p2?`<span class="p2">${o.p2}</span>`:'')+'</div>'+
+    (p2?`<span class="p2">${p2}</span>`:'')+'</div>'+
     (o.g?`<div class="pg">${o.g}</div>`:''):'';
   if(box.dataset.h!==html){box.dataset.h=html;
     const tx=$('#tutTx');

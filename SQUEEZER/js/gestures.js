@@ -13,11 +13,17 @@
    kill any hold (bank-all, card inspect) the finger may have started */
 let killHolds=null;
 
+/* the release velocity a manual flick hands its landing: set around a
+   drawCard() call and read synchronously by resolve's landing (the same
+   tick), so rider pulls, autos and the pre-drop payouts never inherit a
+   stale flick. Carries px/s plus the pose the card was released from */
+let relV=null;
+
 /* the pre-flick, swipe form (Pre-Flick): an upward flick while the
    ring runs pulls the deck's next card out face-down to wait on the
    felt — the drag lift without the grab. The shuffled deck is the
    source, even while the last bank or bust is still flying home */
-function flickUp(x,y){
+function flickUp(x,y,vx,vy){
   if(!L('flick')||frozen||boardDealing||pyrUndealt.length)return false;
   if(preDrops.length>=flickCap())return false;
   const c=deckTop();if(c==null)return false;
@@ -29,7 +35,9 @@ function flickUp(x,y){
         px=Math.min(FW-cw/2-8,Math.max(cw/2+8,x)),
         py=Math.min(FH-ch/2-8,Math.max(ch/2+8,y));
   /* rest pose hands its spot to a frozen transform first (geometry
-     armor), then the park transform glides the card out of the stack */
+     armor), then the park transform glides the card out of the stack.
+     A real flick lets it slide the momentum off over the felt before
+     the settle seats it on its spot; a dead one just eases across */
   el.style.transition='none';
   el.style.left='0px';el.style.top='0px';
   el.style.transform=`translate(${DX}px,${DY}px)`;
@@ -38,10 +46,10 @@ function flickUp(x,y){
   el.classList.remove('buried');
   el.classList.remove('faceup');   /* a card yielded mid-flight flies face-up; the park waits blind */
   el.style.zIndex=500;
-  el.style.transform=`translate(${px.toFixed(1)}px,${py.toFixed(1)}px) rotate(${(byId(c).j*3).toFixed(1)}deg)`;
   el._pkx=px;el._pky=py;   /* the pose a carry-drag starts from */
   preDrops.push(c);
   SFX.detent();buzz(6);
+  releaseGlide(c,DX,DY,vx||0,vy||0,px,py,byId(c).j*3,layout);
   return true;
 }
 
@@ -62,12 +70,16 @@ function returnPark(id){
 
 function initInput(){
   const z=$('#dz');
-  let id=null,el=null,sx=0,sy=0,st=0,ly=0,lt=0,vy=0,moved=false,held=null,heldFired=false,cdL=false;
+  let id=null,el=null,sx=0,sy=0,st=0,ly=0,lt=0,vy=0,lx=0,vx=0,moved=false,held=null,heldFired=false,cdL=false;
   const top=deckTop;   /* a lift grabs the deck's next card, parked ones sit out */
 
   /* park a lifted deck card on the felt: face-down where it landed,
-     clamped inside the felt, pinned there until the cooldown clears */
-  const dropEarly=(cid,ce,x,y)=>{
+     clamped inside the felt, pinned there until the cooldown clears.
+     Mid-cooldown the park lasts, so the release slides the drag's
+     momentum off before the settle seats it; on a cool deck the park is
+     a one-frame waypoint (the payout deals it next tick) and the plain
+     transition stands */
+  const dropEarly=(cid,ce,x,y,vx,vy)=>{
     const cw=CUR_CW,ch=CUR_CH,
           cx=Math.min(FW-cw/2-8,Math.max(cw/2+8,x)),
           cy=Math.min(FH-ch/2-8,Math.max(ch/2+8,y));
@@ -75,17 +87,18 @@ function initInput(){
     ce.classList.remove('buried');
     ce.classList.remove('faceup');   /* same as flickUp: the park waits blind */
     ce.style.zIndex=500;
-    ce.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px) rotate(${(byId(cid).j*3).toFixed(1)}deg)`;
     ce._pkx=cx;ce._pky=cy;   /* the pose a carry-drag starts from */
     preDrops.push(cid);
     SFX.detent();buzz(6);
+    if(cdL)releaseGlide(cid,x,y,vx||0,vy||0,cx,cy,byId(cid).j*3,layout);
+    else ce.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px) rotate(${(byId(cid).j*3).toFixed(1)}deg)`;
   };
 
   z.addEventListener('pointerdown',e=>{
     if(frozen)return;
     const c=top();if(c==null)return;
     z.setPointerCapture(e.pointerId);
-    sx=e.clientX;sy=e.clientY;ly=e.clientY;st=lt=performance.now();vy=0;moved=false;heldFired=false;
+    sx=e.clientX;sy=e.clientY;ly=e.clientY;lx=e.clientX;st=lt=performance.now();vy=0;vx=0;moved=false;heldFired=false;
     cdL=performance.now()<cdEnd;deckHold=true;
     if(preDrops.length>=flickCap()){id=null;el=null;}   /* every seat is spoken for */
     else{id=c;el=els[c];el.style.transition='none';el.style.zIndex=960;liftGrab=c;
@@ -101,6 +114,7 @@ function initInput(){
     if(held==null&&!id)return;
     const t=performance.now(),dt=Math.max(1,t-lt);
     vy=(e.clientY-ly)/dt;ly=e.clientY;lt=t;
+    vx=(e.clientX-lx)/dt;lx=e.clientX;
     const dx=e.clientX-sx,dy=Math.min(6,e.clientY-sy);
     if(Math.abs(dx)>7||Math.abs(e.clientY-sy)>7){moved=true;if(held){clearTimeout(held);held=null;}}
     if(id==null)return;                     /* a waiting early-lift owns the top seat */
@@ -135,12 +149,21 @@ function initInput(){
           onTable=moved&&Math.hypot(fx-DX,fy-DY)>24&&inR(fr)&&!inR(dr);
     if(cdL){  /* grabbed mid-cooldown: drop on the felt, else back it goes */
       if(onTable){
-        if(preDrops.length<flickCap()){dropEarly(grab,ge,fx,fy);return;}
+        if(preDrops.length<flickCap()){dropEarly(grab,ge,fx,fy,vx*1000,vy*1000);return;}
         SFX.deny();layout();return;}
       layout();if(!moved&&quick)SFX.deny();return;}
     const wants=dy<-26||vy<-.45||(!moved&&quick);
-    if(wants)drawCard();
-    else if(onTable){dropEarly(grab,ge,fx,fy);return;}
+    if(wants){
+      /* the flick hands its momentum to the landing: the card slides
+         over the felt before the slot flight seats it (resolve reads
+         relV in the same tick, then it dies) */
+      /* the fling originates at the deck's center even on a drag: the
+         card reads as shot out of the stack, not off the finger */
+      relV={x:DX,y:DY,vx:vx*1000,vy:vy*1000};
+      drawCard();
+      relV=null;
+    }
+    else if(onTable){dropEarly(grab,ge,fx,fy,vx*1000,vy*1000);return;}
     else{layout();if(wants)SFX.deny();}
   });
   z.addEventListener('pointercancel',cancel);
@@ -152,11 +175,13 @@ function initInput(){
      (or right-click) opens the sticker card, right-click on the bare
      felt ends the turn. A hold never banks — the sheet swallows it; a
      horizontal drag belongs to the tab swipe, not the felt. */
-  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null;
+  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null,
+        fvx=0,fvy=0,flx=0,fly=0,flt=0;   /* the swipe's live velocity, px/ms */
   Fd.addEventListener('pointerdown',e=>{
     if(e.target.closest('#dz'))return;
     stkTipHide();
     by=e.clientY;bx=e.clientX;bt=performance.now();infoFired=false;
+    flx=e.clientX;fly=e.clientY;flt=performance.now();fvx=0;fvy=0;
     const ce=e.target.closest('.card');
     /* a parked early lift: the finger can carry it — drop it on the
        deck to put it back, anywhere else re-parks it */
@@ -174,6 +199,9 @@ function initInput(){
       infoFired=true;openStkCard(cardP.id);},350);
   });
   Fd.addEventListener('pointermove',e=>{
+    const fdt=Math.max(1,performance.now()-flt);
+    fvx=fvx*.5+((e.clientX-flx)/fdt)*.5;fvy=fvy*.5+((e.clientY-fly)/fdt)*.5;
+    flx=e.clientX;fly=e.clientY;flt=performance.now();
     if(parkP){
       const dx=e.clientX-parkP.x,dy=e.clientY-parkP.y,
             px=parkP.px+dx,py=parkP.py+dy;
@@ -216,14 +244,25 @@ function initInput(){
     if(!held&&aim&&Math.hypot(e.clientX-bx,d)<8&&!Views.swiping){cancelAim();return;}
     if(!held&&fanZone&&!infoFired&&Math.hypot(e.clientX-bx,d)<8&&!Views.swiping&&fast
       &&!e.target.closest('.tok.cnt')){setFan(null);return;}
-    if(d>44&&fast&&!Views.swiping&&!infoFired)bank(S.hands[S.focus]);
+    if(d>44&&fast&&!Views.swiping&&!infoFired){
+      /* the BANK button's "swipe down" hint teaches one lesson: the
+         first swipe-down bank retires it for the save's life */
+      if(canBank(S.hands[S.focus]))S.seen.swd=1;
+      bank(S.hands[S.focus]);}
     /* the felt's other half: a swipe up anywhere off the deck draws.
        Mid-cooldown the Pre-Flick catches it: the next card pulls out
        face-down to wait for the ring (silent without the upgrade, the
-       same nothing a swipe has always done on a cooling deck) */
+       same nothing a swipe has always done on a cooling deck). Either
+       way the release carries the swipe's momentum onto the felt */
     else if(d<-44&&fast&&!Views.swiping&&!infoFired){
-      const fr=Fd.getBoundingClientRect();
-      if(!drawCard())flickUp(e.clientX-fr.left,e.clientY-fr.top);
+      const fr=Fd.getBoundingClientRect(),tnow=performance.now(),
+            fresh=tnow-flt<120,
+            rvx=(fresh?fvx:(e.clientX-bx)/Math.max(1,tnow-bt))*1000,
+            rvy=(fresh?fvy:d/Math.max(1,tnow-bt))*1000;
+      relV={x:DX,y:DY,vx:rvx,vy:rvy};
+      const ok=drawCard();
+      relV=null;
+      if(!ok)flickUp(e.clientX-fr.left,e.clientY-fr.top,rvx,rvy);
     }
   });
   Fd.addEventListener('pointercancel',()=>{
@@ -423,12 +462,16 @@ function initViewSwipe(){
   });
 
   /* the rail itself: a short horizontal fling across the buttons moves
-     one tab over — taps still tap */
-  const rail=$('#tabs');let rOn=false,rFired=false,rsx=0,rsy=0;
+     one tab over — and the tap is settled HERE, not by the click: a
+     press and release on the same button is a tap unless the fling
+     fired, so eaten clicks and capture quirks never drop a switch. The
+     synthetic go arms the eater, standing the native click down */
+  const rail=$('#tabs');let rOn=false,rFired=false,rsx=0,rsy=0,rBtn=null;
   eatClicks(rail);
   rail.addEventListener('pointerdown',e=>{
-    ate=false;   /* a finished swipe or fling never eats the next tap's click */
-    rOn=true;rFired=false;rsx=e.clientX;rsy=e.clientY;});
+    ate=false;   /* a finished swipe or fling never eats the next tap */
+    rOn=true;rFired=false;rsx=e.clientX;rsy=e.clientY;
+    rBtn=e.target.closest?e.target.closest('#tabs button'):null;});
   rail.addEventListener('pointermove',e=>{
     if(!rOn||rFired)return;
     const dx2=e.clientX-rsx;
@@ -440,6 +483,14 @@ function initViewSwipe(){
       if(t)Tabs.go(t,null,true);
     }
   });
-  rail.addEventListener('pointerup',()=>{rOn=false;});
-  rail.addEventListener('pointercancel',()=>{rOn=false;});
+  rail.addEventListener('pointerup',e=>{
+    rOn=false;
+    if(rFired)return;   /* the fling was the action; its release is not a tap */
+    const up=e.target&&e.target.closest?e.target.closest('#tabs button'):null;
+    if(rBtn&&up===rBtn){
+      ate=true;   /* the trailing click belongs to the eater, not the button */
+      Tabs.go(rBtn.dataset.v,null,true);
+    }
+    rBtn=null;});
+  rail.addEventListener('pointercancel',()=>{rOn=false;rBtn=null;});
 }

@@ -94,12 +94,12 @@ function drawCard(hi,free,auto){
   return ok;
 }
 /* the pre-flick tick, one beat a frame: cards pulled mid-cooldown wait
-   face-down on the felt until the ring clears, then land as real draws
-   — one per beat, the last one stamps the ring, the rest land free (a
-   whole parked burst drains on one cooldown). A reshuffle (a bank or a
-   bust while cards wait) scrambles the deck: any waiter that lost its
-   top seat goes home. Frozen never flips — a bust mid-burst leaves the
-   rest parked for the next window */
+   face-down on the felt, then land as real draws — one per cooldown,
+   first parked first (it sits at the deck's top seat), and each landing
+   draw stamps a fresh ring, so the next waiter waits its own full
+   cooldown. A reshuffle (a bank or a bust while cards wait) scrambles
+   the deck: any waiter that lost its top seat goes home. Frozen never
+   flips — a bust mid-wait leaves the rest parked for the next window */
 function preDropTick(rem){
   if(!preDrops.length||!S.deck.length)return;
   const seats=S.deck.slice(-preDrops.length);
@@ -107,8 +107,7 @@ function preDropTick(rem){
     preDrops=preDrops.filter(id=>seats.includes(id));layout();return;}
   if(rem>0||frozen||boardDealing||pyrUndealt.length)return;
   const tid=S.deck[S.deck.length-1];
-  preDrops.splice(preDrops.indexOf(tid),1);
-  drawCard(null,preDrops.length>0);   /* free while waiters remain: one ring per burst */
+  if(drawCard(null,false))preDrops.splice(preDrops.indexOf(tid),1);
 }
 function resolve(id,h,auto,fresh){
   fresh=fresh||[];
@@ -189,6 +188,17 @@ function resolve(id,h,auto,fresh){
   }
   h.ids.push(id);
   noteHand(h);
+  /* a hand-flicked card slides its momentum off over the felt before
+     the slot flight seats it: the drift holds the card away from
+     layout()'s place() below and hands it back when spent. Autos and
+     rider pulls land the plain way; a park glide mid-run (the pre-drop
+     paying out) is cancelled so the landing owns the card at once */
+  glideCancel(id);
+  if(!auto&&relV){
+    const ge=els[id];
+    if(ge){ge.classList.remove('flat','buried');ge.classList.add('faceup');ge.style.zIndex=960;}
+    releaseGlide(id,relV.x,relV.y,relV.vx,relV.vy,null,null,0,layout);
+  }
   if(twinRide)slam('TWIN','#3E5A78');   /* the pulled twin sat down anyway */
   if(!auto)stress=1;   /* a card you played re-spikes the heart */
   /* per-hand draw record: the Long Hand ladder reads it */
@@ -229,7 +239,7 @@ function resolve(id,h,auto,fresh){
   const pop=()=>{if(!popEl)return;popEl.classList.add('pop');
     setTimeout(()=>popEl.classList.remove('pop'),520);};
   if(c.stk==='tribute'){
-    const g=c.v*ECO.TRIBUTE_X*valueMult();S.score+=g;S.life+=g;
+    const g=c.v*ECO.TRIBUTE_X*payMul(h);S.score+=g;S.life+=g;
     const[x,y]=feltPt(FW/2,FH*.3);float('+'+fmt(g),x,y-26,'#8A6A2F');SFX.stk('tribute','draw',cval(c));
     pop();}
   if(c.stk==='snip')doSnip(c);
@@ -237,7 +247,7 @@ function resolve(id,h,auto,fresh){
   if(c.stk==='whip')doWhip();
   if(c.stk==='encore')doEncore(c);
   if(c.stk==='rake'){
-    const g=ECO.RAKE_PER*outCount()*valueMult();S.score+=g;S.life+=g;
+    const g=ECO.RAKE_PER*outCount()*payMul(h);S.score+=g;S.life+=g;
     const[x,y]=feltPt(FW/2,FH*.3);float('RAKE\n+'+fmt(g),x,y-26,'#3E7A5E');SFX.stk('rake','draw',cval(c));
     pop();}
   if(r.stakesD>0&&r.stakesIds.length){r.stakesD--;if(!r.stakesD){r.spent.push(...r.stakesIds);r.stakesIds=[];}}
@@ -381,6 +391,9 @@ function bust(c,twinId,h,preTh){
      the deck moves no number on the hand it killed */
   const pre={rx:riskyIn(h)+1,n:S.deck.length+1};
   const tot=handParts(h,false,null,pre).total;
+  /* the stack the standing total rode: Siphon's ×10 pays through the
+     very same multipliers, quoted off the same as-faced deck */
+  const bStack=payMul(h,null,false,pre);
   /* the ghost quote, captured before anything the break touches: the total,
      the premium and the threat all read the deck the player faced, the
      chain still stands. The window replays this verbatim */
@@ -409,7 +422,7 @@ function bust(c,twinId,h,preTh){
      buster joins it, the standing table as it died */
   if(h.ids.length>(S.st.bigBustN||0))S.st.bigBustN=h.ids.length;
   h.ids.push(c.id);bustPair=[c.id,twinId];
-  for(const id of h.ids){const k=byId(id);if(k.stk==='siphon')keep+=cval(k)*ECO.SIPHON_X*valueMult();}
+  for(const id of h.ids){const k=byId(id);if(k.stk==='siphon')keep+=cval(k)*ECO.SIPHON_X*bStack;}
   const siph=keep-salv-silver-guard;
   S.st.busts++;S.st.runs++;S.st.streak=0;S.st.hotRun=[0,0,0];S.st.wideRun=0;S.st.row3=0;S.st.sevenRun=0;   /* a bust breaks the hot and wide rows */
   if(h.run.autoDeal)S.st.aBusts=(S.st.aBusts||0)+1;   /* the hand's last card was the autos' deal */
@@ -464,8 +477,15 @@ function bust(c,twinId,h,preTh){
     h.run.grace=L('grace');   /* the ward stands from the shuffle, not the first draw */
     /* the bust cycle: the whole OUT pile rides home, the card that
        landed the bust takes its place till the next bust. The
-       discard is not swept: a ward save waits for a score */
-    const spot=id=>{const e=els[id];return e&&e._sx!=null?{id,x:e._sx,y:e._sy}:null;};
+       discard is not swept: a ward save waits for a score.
+       spot reads the standing pose — except a card still mid-glide
+       (a flick that landed a breath before the bust): its pose is
+       wherever the drift has it, read off the live rect */
+    const frB=$('#felt').getBoundingClientRect();
+    const spot=id=>{const e=els[id];if(!e||e._sx==null)return null;
+      if(fanHeld(id)){const r=e.getBoundingClientRect();
+        return{id,x:r.left-frB.left+r.width/2,y:r.top-frB.top+r.height/2};}
+      return{id,x:e._sx,y:e._sy};};
     const ride=S.out.map(spot).concat(going.map(spot)).filter(Boolean);
     /* the lifts come home too: the shuffle voids the wait, and they fly
        face-down with the sweep */
@@ -516,6 +536,9 @@ function bank(h,auto){
   let s=handParts(h,false,roll).total;
   const house=!h.chain&&L('house');
   if(house)s*=ECO.HOUSE_X;
+  /* the stack every on-bank pay rides: exactly what the payout above
+     rode, House Money included — a pay is a pay */
+  const stack=payMul(h,roll)*(house?ECO.HOUSE_X:1);
   S.score+=s;S.banked+=s;S.life+=s;S.st.bankSum=(S.st.bankSum||0)+s;
   S.st.banks++;S.st.runs++;
   /* the sheet's last-10 strip: every settled hand logs its pay (s),
@@ -537,8 +560,9 @@ function bank(h,auto){
     if(S.st.streak>(S.st.bestStreak||0))S.st.bestStreak=S.st.streak;}
   else S.st.streak=0;
   /* a chain tick wants a bank big enough for the combo: 2 cards, +1 per
-     10 chain (chainReq). Smaller banks are chain-neutral */
+     10 chain (chainReq). A short bank lets the combo slip: chain -1 */
   if(h.ids.length>=chainReq(h.chain)){h.chain++;h.chainScore+=s;}
+  else if(h.chain>0)h.chain--;
   if(risk>S.st.bestRisk)S.st.bestRisk=risk;
   /* hot streaks: consecutive banks past each line — a cold bank breaks
      the row, a bust sweeps it (Nerve Test / Running Hot / High Wire) */
@@ -586,23 +610,23 @@ function bank(h,auto){
   let mint=0,divHits=0,divCards=0;
   for(const id of h.ids){const c=byId(id);
     if(c.stk==='relic'){c.r=(c.r||0)+1;faceOf(c);SFX.stk('relic','bank',cval(c));}
-    if(c.stk==='mint')mint+=cval(c)*ECO.MINT_X*valueMult();
+    if(c.stk==='mint')mint+=cval(c)*ECO.MINT_X*stack;
     if(c.stk==='dividend'){divCards++;
       if(Math.random()<ECO.DIVIDEND_CHANCE)divHits++;}}
   if(mint){S.score+=mint;S.life+=mint;}
   /* Remnant: values parked in the discard pay at the score — read while
-     the pile still stands, copies stack */
+     the pile still stands, copies stack, and the pay rides the stack */
   let rem=0;
   if(S.disc)for(const did of S.disc)if(byId(did).stk==='remnant')
     rem+=cval(byId(did));
-  if(rem){const g=rem*valueMult();S.score+=g;S.life+=g;}
+  if(rem){rem*=stack;S.score+=rem;S.life+=rem;}
   /* Exit: the bench's cut — 2% of the discard's total value pays at the
      score, per copy, read while the pile still stands (the sweep below
      springs it home; Purge's fill lands after, so it pays next bank) */
   let exv=0;
   const exC=h.ids.reduce((a,id)=>a+(byId(id).stk==='exit'?1:0),0);
   if(exC&&S.disc)for(const did of S.disc)exv+=cval(byId(did));
-  if(exv){exv*=ECO.EXIT_PER*exC;const g=exv*valueMult();S.score+=g;S.life+=g;}
+  if(exv){exv*=ECO.EXIT_PER*exC*stack;S.score+=exv;S.life+=exv;}
   /* every fired gamble tallies: Bloom, Kindle and Dividend hits feed
      the gamble goal */
   S.st.hits=(S.st.hits||0)+roll.bloom+roll.kindle+divHits;
@@ -617,8 +641,8 @@ function bank(h,auto){
   if(roll.bloom)flows.push(['bloom','BLOOM\n+'+(ECO.BLOOM_PER*roll.bloom*roll.bl*n).toFixed(2)+'×','#C25B7C']);
   if(roll.kindle)flows.push(['kindle','KINDLE\n+'+(ECO.KINDLE_PER*roll.kindle*(n-1)).toFixed(2)+'×','#C6551F']);
   if(mint)flows.push(['mint','MINT\n+'+fmt(mint),'#2F6B54']);
-  if(rem)flows.push(['remnant','REMNANT\n+'+fmt(rem*valueMult()),'#41618F']);
-  if(exv)flows.push(['exit','EXIT\n+'+fmt(exv*valueMult()),'#2E6E8E']);
+  if(rem)flows.push(['remnant','REMNANT\n+'+fmt(rem),'#41618F']);
+  if(exv)flows.push(['exit','EXIT\n+'+fmt(exv),'#2E6E8E']);
   flows.forEach((f,i)=>setTimeout(()=>{SFX.stk(f[0],'bank');float(f[1],x,y+34,f[2]);},240+i*140));
   /* Dividend hits re-run the scoring: the first payout finishes, a 400ms
      beat, then the table pays again — per hit, a beat apart */
@@ -1301,7 +1325,11 @@ function autoPlay(h){
   const charged=k=>h.ids.find(id=>byId(id).stk===k&&r.spent.indexOf(id)<0);
   const armed=id=>r.armedF===id
     ||r.stakesIds.indexOf(id)>=0;
-  const skill=(k,ok)=>{if(!ok)return;const id=charged(k);
+  /* every skill respects its AUTO-ARM switch (AUTOMATION sheet): an
+     absent flag arms, an explicit false holds the autos' hands — the
+     player's tap is never gated */
+  const skill=(k,ok)=>{if(!ok)return;if(S.set.arm&&S.set.arm[k]===false)return;
+    const id=charged(k);
     if(id==null||armed(id))return;armTrick(id);};
   skill('tell',S.showTop==null);
   skill('defuse',th>=A.defuse||held);

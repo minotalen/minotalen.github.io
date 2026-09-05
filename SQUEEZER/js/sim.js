@@ -96,7 +96,8 @@ function makeRng(seed) {
    One descriptor per roster sticker, in the game's own units. Every
    table occurrence of a sticker's card rides `cyc` (expected times its
    card sits on a table per bank = avgN / effective deck). Fields:
-     add    score per occurrence, x avgCardValue x valueMult, BANKED lane
+     add    score per occurrence, x avgCardValue x the table's full mult
+            stack (stackMul, mirroring the game's payMul), BANKED lane
      side   same, but pays score only (the game's on-draw/on-bank payers
             that never touch the banked meter: tribute, mint, rake...)
      mul    per-card table multiplier (gild/twin) — applied per SEAT
@@ -482,9 +483,9 @@ function runSim(seed, watch, gateIgnored, archKey) {
       const n = copiesNow[k]; if (!n) continue;
       const d = STKD[k]; if (!d) continue;
       const occ = n * c * (d.rate || 1);
-      if (d.relic) bankAdd += n * ECO.RELIC_PER * relicBanks * c * vbar * valueMult() * .5;
+      if (d.relic) bankAdd += n * ECO.RELIC_PER * relicBanks * c * vbar * stackMul() * .5;
       if (d.add) { const add = typeof d.add === 'function' ? d.add(state) : d.add;
-        const pay = add * vbar * valueMult() * occ;
+        const pay = add * vbar * stackMul() * occ;
         if (d.side) { sideAdd += pay; if (d.draw) drawLane += pay; }
         else bankAdd += pay; }
       if (d.frac) { const f = typeof d.frac === 'function' ? d.frac(state) : d.frac;
@@ -514,9 +515,7 @@ function runSim(seed, watch, gateIgnored, archKey) {
     return bad;
   }
 
-  function handScore() {
-    if (!hand.length) return 0;
-    const vm = valueMult();
+  function handBase() {
     let base = 0, nPrime = 0;
     for (let i = 0; i < hand.length; i++) {
       let cv = hand[i]; const k = handStk[i], d = k && STKD[k];
@@ -530,9 +529,19 @@ function runSim(seed, watch, gateIgnored, archKey) {
       base += cv;
     }
     base += 2 * nPrime * Math.max(0, hand.length - 1);   /* Prime: +2 to every other card */
-    return base * vm * (1 + multStep() * (hand.length - 1)) * chainMul() *
+    return base;
+  }
+  /* the full mult stack the table pays through — the game's payMul in
+     its modeled form. Effect payers (tribute, mint, rake, remnant,
+     siphon) ride the very same stack: a pay is a pay */
+  function stackMul() {
+    if (!hand.length) return 1;
+    return valueMult() * (1 + multStep() * (hand.length - 1)) * chainMul() *
       riskMul(riskPct()) *
       (hand.length >= 10 ? 1 + .08 * L('over') : 1);
+  }
+  function handScore() {
+    return hand.length ? handBase() * stackMul() : 0;
   }
   /* chain rate rides the combo (mirrors economy.js): 1% a bank at the
      base, +0.2% a bank to chain 10, +0.1% past it */
@@ -749,9 +758,10 @@ function runSim(seed, watch, gateIgnored, archKey) {
     }
     relicBanks += (copiesNow.relic || 0) * cyc();
     /* a chain tick wants a bank big enough for the combo: 2 cards, +1
-       per 10 chain (mirrors economy.js chainReq). Smaller banks pay
-       chain-neutral */
+       per 10 chain (mirrors economy.js chainReq). A short bank lets
+       the combo slip: chain -1 */
     if (N >= 2 + Math.floor(chain / ECO.CHAIN_STEP_AT)) { chain++; chainScore += s; }
+    else if (chain > 0) chain--;
     avgChain = avgChain * .9 + chain * .1;
     if (chainScore > st.bestChain) st.bestChain = chainScore;
     if (chain > st.bestChainN) st.bestChainN = chain;
@@ -783,9 +793,10 @@ function runSim(seed, watch, gateIgnored, archKey) {
     if (N === 2 && keys.length === 2) st.twoStkBusts++;
     const keep = bs * .05 * L('salv');
     score += keep; life += keep;
-    /* siphon rides the buster; guardian pays flat from the pile; silver
-       covers the cold landing */
-    let bp = (copiesNow.siphon || 0) * cyc() * 10 * vbar * valueMult();
+    /* siphon rides the buster, through the standing table's full mult
+       stack; guardian pays flat from the pile; silver covers the cold
+       landing */
+    let bp = (copiesNow.siphon || 0) * cyc() * 10 * vbar * stackMul();
     if (copiesNow.guardian && rnd() < .33) bp += bs * .5;
     if (M('silver') && r <= .10) bp += bs / riskMul(r);
     if (bp > 0) { score += bp; banked += bp; life += bp; }

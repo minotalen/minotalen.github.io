@@ -92,8 +92,9 @@ function newState(){return{
   dhold:{}, mboost:{},
   shop:{next:0, offers:[], rrP:0, rrT:0}, pick:null, gift:null, rate:0,
   log:[], logSeq:0, logH:'',
-  set:{sound:true, haptic:true, autoDraw:true, autoBank:true, risk:55, stop:95},
-  seen:{cards:false, up:false, shop:false, ach:false, pres:false, tut:false},
+  set:{sound:true, haptic:true, autoDraw:true, autoBank:true, risk:55, stop:95, arm:{}},
+  seen:{cards:false, up:false, shop:false, ach:false, pres:false, tut:false,
+        swd:false},   /* swd: the first swipe-down bank retired the button hint */
   tut:'pyramid', t:Date.now()
 };}
 

@@ -48,6 +48,22 @@ function openAutoPanel(){
   const drawDs=`Deals up to ${dr} card${dr===1?'':'s'} a table, then waits. Stops at the ${ceil?'STOP':'BANK'} line, or a bust it can see.`;
   const bankDs='Banks full tables at the BANK line and busts it can see. A stopped table waits for you.';
   const cls=v=>v>=70?'x':v>=45?'h':v>=20?'m':'';
+  /* AUTO-ARM: the autos' trick policy made explicit — one switch per
+     charged trick the deck actually wears. Captions read the live
+     thresholds, so the sheet can never drift from the policy */
+  const ARMS=['tell','defuse','cull','float','stakes','scrap','twin'];
+  const armCap=k=>({
+    tell:'Arms whenever the top card is hidden.',
+    defuse:`Arms at ${Math.round(ECO.AUTO_SKILL.defuse*100)}% threat.`,
+    cull:'Arms only on a read: a revealed bust, no shield standing.',
+    float:`Arms at ${Math.round(ECO.AUTO_SKILL.float*100)}% threat.`,
+    stakes:`Arms at ${Math.round(ECO.AUTO_SKILL.stakes*100)}% threat.`,
+    scrap:`Arms at ${Math.round(ECO.AUTO_SKILL.scrap*100)}% threat, blind only.`,
+    twin:'Arms at the stop line, the deck\'s thickest moment.'}[k]);
+  const armRows=ARMS.filter(k=>S.cards.some(c=>c.stk===k))
+    .map(k=>{const on=(S.set.arm||{})[k]!==false;
+      return `<div class="row">${stkIcon(k)}<div class="b"><div class="nm">${STK[k].n}</div><div class="ds">${armCap(k)}</div></div>
+    <button class="asw${on?' on':''}" id="aa_${k}" role="switch" aria-checked="${on}"><i></i></button></div>`;}).join('');
   openMo(`<h3>AUTOMATION</h3>
   <div class="row"><div class="b"><div class="nm">Auto-draw</div><div class="ds">${drawDs}</div></div>
     <button class="asw${S.set.autoDraw?' on':''}" id="aswD" role="switch" aria-checked="${!!S.set.autoDraw}"><i></i></button></div>
@@ -65,6 +81,9 @@ function openAutoPanel(){
     <div class="ax" id="arslX" aria-hidden="true"></div>
     <span class="al">BANK</span><b id="arslV">${S.set.risk}%</b>
     <div class="ac" id="arslC"><span class="al">BANK</span><b id="arslVC">${S.set.risk}%</b></div></div>`:''}
+  ${armRows?`<div class="ash"><span>AUTO-ARM</span></div>
+  <p class="note">Auto-draw arms these tricks by policy. Your tap works anytime.</p>
+  ${armRows}`:''}
   <div class="ash"><span>RECORD</span></div>
   <div class="asg">
     <div class="gst"><div class="v" id="asD"></div><div class="l">DEALT</div></div>
@@ -117,6 +136,12 @@ function openAutoPanel(){
     paintAutos();openAutoPanel();};
   if(bk)$('#aswB').onclick=()=>{S.set.autoBank=!S.set.autoBank;buzz(10);save(true);
     paintAutos();openAutoPanel();};
+  /* the per-trick switches flip in place: nothing else in the sheet
+     depends on them, so no rebuild */
+  $$('[id^="aa_"]').forEach(b=>{b.onclick=()=>{const k=b.id.slice(3);
+    S.set.arm=S.set.arm||{};
+    const on=S.set.arm[k]!==false;S.set.arm[k]=!on;buzz(10);save(true);
+    b.classList.toggle('on',!on);b.setAttribute('aria-checked',String(!on));};});
   const dur=s=>s>=3600?`${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`
     :s>=60?`${Math.floor(s/60)}m ${Math.floor(s%60)}s`:`${s||0}s`;
   const paintLedger=()=>{

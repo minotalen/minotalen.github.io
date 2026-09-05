@@ -197,6 +197,18 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
   -webkit-text-stroke:.022em currentcolor}
 #tutTx .ph.bad,#tipTx .ph.bad{color:var(--red)}
 #tutTx .ph .p2,#tipTx .ph .p2{display:block;margin-top:3px;font-size:15px;color:var(--gld)}
+/* the swipe coach: the action line leads a gold chevron that walks the
+   gesture's direction (up before SWIPE UP, a flipped one before SWIPE
+   DOWN). Slight by design: the words name the move, the arrow taps it
+   out, fading at each end of its nudge */
+#tutTx .sar{display:inline-block;width:12px;height:12px;margin-right:7px;
+  vertical-align:-1px;color:var(--gld)}
+#tutTx .sar.dn{transform:rotate(180deg)}
+#tutTx .sar svg{display:block;width:100%;height:100%;fill:none;
+  stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;
+  animation:sarN 1.2s ease-in-out infinite}
+@keyframes sarN{0%,100%{transform:translateY(2.5px);opacity:.3}
+  45%{transform:translateY(-2.5px);opacity:1}}
 #tutTx .pg,#tipTx .pg{display:flex;justify-content:center;align-items:center;gap:7px;margin:7px 0 3px}
 /* the outro's verb chips: DRAW · BANK · BUY */
 #tutTx .tv,#tipTx .tv{display:inline-block;padding:4px 9px;border:1.3px solid var(--line);

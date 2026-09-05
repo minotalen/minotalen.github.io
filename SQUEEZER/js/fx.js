@@ -110,6 +110,7 @@ function fanHome(starts){
   cards.sort((a,b)=>a.x-b.x);                    /* the sweep reads left to right */
   const stag=Math.max(34,Math.min(85,560/cards.length)),t0=performance.now();
   cards.forEach((c,i)=>{
+    glideCancel(c.id);
     c.t0=t0+i*stag;c.e=els[c.id];
     fanHold(c.id,4000);
     /* freeze in place until its turn. rebuildDeck has already filed these
@@ -188,6 +189,146 @@ function fanHome(starts){
   };
   requestAnimationFrame(step);
 }
+/* ---------------- the release glide ----------------
+   a card let go of mid-flick carries the gesture's momentum: friction
+   bleeds the speed off while it slides over the felt, tilting into its
+   own motion — and only then the normal flight takes over. With a
+   target (the pre-flick's park spot, an early lift's drop) the drift
+   eases the last stretch and seats the card exactly there; without one
+   (a drawn card) the spent drift hands back to layout() and the slot
+   flight finishes the trip into the hand. place() stays off mid-glide
+   through the fan-home's hold leases; any other flight (a bank sweep,
+   a bust, a reshuffle) cancels the glide outright and owns the card */
+const GLIDES=new Map();
+function glideCancel(id){
+  const g=GLIDES.get(id);
+  if(!g)return;
+  GLIDES.delete(id);
+  cancelAnimationFrame(g.raf);
+  fanBusy.delete(id);
+}
+/* the slide's wake: cards the fling travels over take a small shove off
+   their spot, then a light underdamped spring eases each back — the
+   felt reads physical, while a card's true pose never moves (place()
+   keeps restamping _sx/_sy; every frame is written from the live base,
+   so a re-layout under the shove is absorbed, not fought). Only seated
+   table cards are fed: hands and the away piles — the deck stack never
+   scatters, the fling is shot out of it */
+const NUDGES=new Map();let nudgeRAF=0,nudgeT=0;
+function nudgePush(id,ax,ay){
+  const e=els[id];if(!e||e._sx==null)return;
+  let n=NUDGES.get(id);
+  if(!n){n={ox:0,oy:0,vx:0,vy:0};NUDGES.set(id,n);}
+  n.vx+=ax;n.vy+=ay;
+  if(!nudgeRAF){nudgeT=performance.now();nudgeRAF=requestAnimationFrame(nudgeStep);}
+}
+function nudgeStep(now){
+  if(BG){NUDGES.clear();nudgeRAF=0;return;}   /* hidden: the felt is dark */
+  const dt=Math.min(.04,Math.max(.001,now-nudgeT))/1000;nudgeT=now;
+  for(const[id,n]of NUDGES){
+    const e=els[id];
+    if(!e||e._sx==null||fanHeld(id)){NUDGES.delete(id);continue;}   /* it flew */
+    n.vx+=(-80*n.ox-6.5*n.vx)*dt;n.vy+=(-80*n.oy-6.5*n.vy)*dt;
+    n.ox+=n.vx*dt;n.oy+=n.vy*dt;
+    if(Math.abs(n.ox)+Math.abs(n.oy)<.3&&Math.abs(n.vx)+Math.abs(n.vy)<2){
+      NUDGES.delete(id);   /* settled: back on its exact rest pose */
+      e.style.transform=`translate(${e._sx.toFixed(1)}px,${e._sy.toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
+      continue;}
+    e.style.transform=`translate(${(e._sx+n.ox).toFixed(1)}px,${(e._sy+n.oy).toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
+  }
+  nudgeRAF=NUDGES.size?requestAnimationFrame(nudgeStep):0;
+}
+/* one drift frame's shove: every seated card inside the slide's radius
+   is pushed radially clear, harder the closer and the faster it passes */
+function wakeFeed(x,y,vx,vy,dt){
+  const R=CUR_CW*1.05,sp=Math.hypot(vx,vy),k=Math.min(1,sp/380)*dt*420;
+  const feed=id=>{
+    if(id===swayId)return;   /* the hover sway owns that card's loop */
+    const e=els[id];
+    if(!e||e._sx==null||fanHeld(id))return;
+    const dx=e._sx-x,dy=e._sy-y,d=Math.hypot(dx,dy);
+    if(d<R&&d>.5)nudgePush(id,dx/d*k*(1-d/R),dy/d*k*(1-d/R));
+  };
+  S.hands.forEach(h=>h.ids.forEach(feed));
+  S.out.forEach(feed);
+  (S.disc||[]).forEach(feed);
+}
+function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
+  glideCancel(id);
+  const e=els[id];
+  if(BG||!e){done&&done();return;}
+  const spd0=Math.hypot(vx,vy),VM=950;
+  if(spd0>VM){vx*=VM/spd0;vy*=VM/spd0;}
+  const g={raf:0};
+  GLIDES.set(id,g);
+  fanHold(id,2600);
+  /* friction per second, the drift's hand-off speed, its time cap, and
+     the settle ease — a slow release skips the drift entirely and just
+     eases into its spot, so a gentle drop never feels laggy. Plenty of
+     fling, capped: ~250px of travel at the hardest flick */
+  const FR=3.8,END=90,MAX=550,T2=210,
+        mnx=CUR_CW/2+8,mny=CUR_CH/2+8,mxx=FW-mnx,mxy=FH-mny;
+  let x=Math.min(mxx,Math.max(mnx,sx)),y=Math.min(mxy,Math.max(mny,sy)),
+      drift=tx==null&&spd0>=90,lt=performance.now(),t0=lt,
+      ex=x,ey=y,er=0,u=0,ld=-1,fm=1;   /* fm: the wall scrubs speed off */
+  /* the start pose frozen: the release pose the caller measured, never
+     a stale one — a card parked by left/top hands its spot over first */
+  e.style.transition='none';
+  e.style.left='0px';e.style.top='0px';
+  e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
+  void e.offsetWidth;
+  e.style.transition='';
+  const tilt=()=>Math.max(-11,Math.min(11,vx*.045));
+  const step=now=>{
+    if(els[id]!==e||GLIDES.get(id)!==g)return;   /* rebuilt or replaced */
+    if(!fanHeld(id)){GLIDES.delete(id);return;}  /* a flight took the card */
+    const dt=Math.min(.04,Math.max(.001,now-lt))/1000;lt=now;
+    if(drift){
+      const f=Math.exp(-FR*fm*dt);vx*=f;vy*=f;
+      x+=vx*dt;y+=vy*dt;
+      /* the felt's rim: a dampened rebound, not a mirror bounce — the
+         card bleeds most of its speed into the wall and crawls after */
+      if(x<mnx){x=mnx;vx=Math.abs(vx)*.22;vy*=.75;fm=1.9;}
+      else if(x>mxx){x=mxx;vx=-Math.abs(vx)*.22;vy*=.75;fm=1.9;}
+      if(y<mny){y=mny;vy=Math.abs(vy)*.22;vx*=.75;fm=1.9;}
+      else if(y>mxy){y=mxy;vy=-Math.abs(vy)*.22;vx*=.75;fm=1.9;}
+      wakeFeed(x,y,vx,vy,dt);
+      let over=Math.hypot(vx,vy)<END||now-t0>MAX;
+      if(!over&&tx!=null){
+        const d=Math.hypot(tx-x,ty-y);
+        if(ld>=0&&d>ld+1)over=true;   /* it passed its spot */
+        ld=d;
+      }
+      if(over){
+        if(tx==null){   /* drawn: layout's slot flight takes the rest */
+          GLIDES.delete(id);fanBusy.delete(id);
+          done&&done();
+          return;
+        }
+        drift=false;ex=x;ey=y;er=tilt();t0=now;
+      }
+      e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${tilt().toFixed(1)}deg)`;
+    }else{
+      if(tx==null){   /* a dead release draws: nothing to slide, seat it */
+        GLIDES.delete(id);fanBusy.delete(id);
+        done&&done();
+        return;
+      }
+      u=Math.min(1,(now-t0)/T2);
+      const k=1-Math.pow(1-u,3);
+      x=ex+(tx-ex)*k;y=ey+(ty-ey)*k;
+      e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${(er+(rr-er)*k).toFixed(1)}deg)`;
+      if(u>=1){   /* seated: the exact park pose, back to the caller */
+        GLIDES.delete(id);fanBusy.delete(id);
+        e.style.transform=`translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) rotate(${(rr||0).toFixed(1)}deg)`;
+        done&&done();
+        return;
+      }
+    }
+    g.raf=requestAnimationFrame(step);
+  };
+  g.raf=requestAnimationFrame(step);
+}
 /* the deck flinches as each card slides home — a quick shuffle-jiggle,
    every card in the stack nudged along its own --jx/--jy (the translate
    property composes with the inline transform, so place() never fights it) */
@@ -214,6 +355,7 @@ function gatherHome(starts,gap){
   if(!cards.length)return;
   const FLY=280,t0=performance.now();
   cards.forEach((c,i)=>{
+    glideCancel(c.id);
     c.t0=t0+i*gap;c.e=els[c.id];c.sx=c.x;c.sy=c.y;c.sr=c.e._sr||0;
     fanHold(c.id,6000);                       /* layout keeps off until landed */
     c.e.style.transition='none';c.e.style.zIndex=900+i;

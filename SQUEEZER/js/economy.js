@@ -200,8 +200,8 @@ function handMult(h,roll){
              +ECO.BLOOM_PER*(roll.bloom||0)*bl*n:0);
 }
 /* combo difficulty: the bank that ticks the chain must grow with it —
-   2 cards at the base, 3 once the chain sits at 10, 4 at 20. Smaller
-   banks still pay, they just never tick */
+   2 cards at the base, 3 once the chain sits at 10, 4 at 20. A short
+   bank still pays but lets the chain slip: -1 */
 const chainReq=ch=>2+Math.floor(ch/ECO.CHAIN_STEP_AT);
 /* Chain Reaction: the per-bank rate itself rides the combo — deep chains
    pay superlinearly, push your luck compounds */
@@ -209,6 +209,37 @@ const chainRate=c=>ECO.CHAIN_PER+ECO.CHAIN_WARM*Math.min(c,ECO.CHAIN_WARM_AT)
   +ECO.CHAIN_HOT*Math.max(0,c-ECO.CHAIN_WARM_AT);
 const chainMul=h=>1+L('chain')*h.chain*chainRate(h.chain);   /* uncapped — long chains pay */
 const overMul=h=>h.ids.length>=ECO.OVER_AT?1+ECO.OVER_PER*L('over'):1;
+/* Tab: the out-pile wage, OUT and gone-for-good alike. Layaway: the
+   bench wage, +5% payout per waiting card, per copy */
+function booksMul(h){
+  let led=1;
+  const tb=h.ids.reduce((a,id)=>a+(byId(id).stk==='tab'?1:0),0);
+  if(tb)led*=1+ECO.TAB_PER*tb*outCount();
+  const lw=h.ids.reduce((a,id)=>a+(byId(id).stk==='layaway'?1:0),0);
+  if(lw&&S.disc&&S.disc.length)led*=1+ECO.LAY_PER*lw*S.disc.length;
+  return led;
+}
+/* the full pay ride: every multiplier a score gain stacks at this
+   instant — value, hand, chain, premium, books, over, rebound, jynx,
+   shiny. handParts multiplies its card base by it, and every +score a
+   CARD EFFECT pays (Tribute, Rake, Siphon, Mint, Remnant, Exit) rides
+   the same stack: a pay is a pay. flat skips the premium (the premium
+   is the wage of risk actually taken, and Float never took any), pre
+   quotes the deck as the player faced it, {rx,n} risky over deck size
+   with the drawn buster still counted — the bust's pays read that view,
+   so pulling the killer out of the deck moves no number on it */
+function payMul(h,roll,flat,pre){
+  if(!h||!h.ids.length)return valueMult();
+  const rx=pre?pre.rx:riskyIn(h);
+  /* Jynx: trouble is income — +2% per risky card in the deck, per Jynx.
+     The deck scan only runs when a Jynx is actually out */
+  const jx=h.ids.reduce((a,id)=>a+(byId(id).stk==='jynx'?1:0),0);
+  const reb=h.run.rebound?(1+.12*M('rebound')):1;
+  return valueMult()*handMult(h,roll)*chainMul(h)
+    *(flat?1:riskPremT(pre?pre.rx/pre.n:threat(h),h))
+    *booksMul(h)*overMul(h)*reb
+    *(jx?1+ECO.JINX_PER*jx*rx:1)*shinyMul(h);
+}
 function handParts(h,flat,roll,pre){
   if(!h.ids.length)return{base:0,total:0,led:1};
   const n=h.ids.length;
@@ -228,27 +259,10 @@ function handParts(h,flat,roll,pre){
      It rides every multiplier, so the mult stickers make it matter */
   const br=h.ids.reduce((a,id)=>a+(byId(id).stk==='brass'?1:0),0);
   if(br)base+=ECO.BRASS_SCORE*br*br*n;
-  /* Tab: the out-pile wage, OUT and gone-for-good alike */
-  let led=1;
-  const tb=h.ids.reduce((a,id)=>a+(byId(id).stk==='tab'?1:0),0);
-  if(tb)led*=1+ECO.TAB_PER*tb*outCount();
-  /* Layaway: the bench wage, +5% payout per waiting card, per copy */
-  const lw=h.ids.reduce((a,id)=>a+(byId(id).stk==='layaway'?1:0),0);
-  if(lw&&S.disc&&S.disc.length)led*=1+ECO.LAY_PER*lw*S.disc.length;
-  /* Jynx: trouble is income — +2% per risky card in the deck, per Jynx.
-     The deck scan only runs when a Jynx is actually out */
-  const jx=h.ids.reduce((a,id)=>a+(byId(id).stk==='jynx'?1:0),0);
-  const reb=h.run.rebound?(1+.12*M('rebound')):1;
-  /* flat skips the premium: the premium is the wage of risk actually
-     taken (a bank), and Float never takes it — it is the exit */
   /* Shiny: holo vinyl holds its own — ×1.1 per shiny on the table,
-     on top of everything else */
-  /* pre = the deck as the player faced it, {rx,n} risky over deck size,
-     the drawn buster still counted. While the buster sits on the table
-     the preview and the bust record quote this view: the draw that
-     killed the hand moves no number on it */
-  const rx=pre?pre.rx:riskyIn(h);
-  const total=base*valueMult()*handMult(h,roll)*chainMul(h)*(flat?1:riskPremT(pre?pre.rx/pre.n:threat(h),h))*led*overMul(h)*reb*(jx?1+ECO.JINX_PER*jx*rx:1)*shinyMul(h);
+     on top of everything else (it rides inside payMul) */
+  const led=booksMul(h);
+  const total=base*payMul(h,roll,flat,pre);
   return{base,total,led};
 }
 /* a hand is bankable while any card on it still holds unbanked value */

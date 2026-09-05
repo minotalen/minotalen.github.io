@@ -33,11 +33,11 @@ const STK = {
   haste:  {n:'Haste',    t:1, pm:2.4688, st:'bolt',   d:'On table: draws come 25% faster.',
            cur:(c,h)=>`now ${curCD().toFixed(2)}s draws`},
   tribute:{n:'Tribute',  t:2, pm:.8333, st:'whale',  d:'On draw: pays ×7 its value straight to score, kept on bust.',
-           cur:(c,h)=>`now +${fmt(c.v*ECO.TRIBUTE_X*valueMult())} a draw`},
+           cur:(c,h)=>`now +${fmt(c.v*ECO.TRIBUTE_X*payMul(h))} a draw`},
   odds:   {n:'Odds',     t:1, pm:.733, st:'shamrock',    d:'On draw: a free extra card comes, 50/50 it pays triple or nothing.'},
   snip:   {n:'Snip',     t:1, pm:.511, st:'peapod',  d:'On draw: a twin of its value waits in the discard till you score.'},
   mint:   {n:'Mint',     t:1, pm:1.022, st:'note',   d:'On bank: ×4 its value to score, on top of the payout.',
-           cur:(c,h)=>`now +${fmt(cval(c)*ECO.MINT_X*valueMult())} a bank`},
+           cur:(c,h)=>`now +${fmt(cval(c)*ECO.MINT_X*payMul(h))} a bank`},
   brass:  {n:'Brass',    t:1, pm:.688, st:'sunflower',  d:'On a table: each Brass pays +5 score per Brass card on table.',
            cur:(c,h)=>`now +${fmt(ECO.BRASS_SCORE*h.ids.length*h.ids.filter(id=>byId(id).stk==='brass').length)} a bank`},
   surge:  {n:'Surge',    t:2, pm:.5499, st:'wave', d:'On a table: +0.20 to the hand multiplier.',
@@ -70,12 +70,12 @@ const STK = {
            cur:(c,h)=>`now +${Math.round(ECO.JINX_PER*riskyIn(h)*100)}%`},
   reverb: {n:'Reverb',   t:2, pm:.6388, st:'ripples',   d:'On draw: the deck\'s top card goes to the discard; if it matches this card\'s value, gain 1 ward.'},
   siphon: {n:'Siphon',   t:2, pm:.4722, st:'whirl',   d:'On a bust: ×10 its value to score.',
-           cur:(c,h)=>`now +${fmt(cval(c)*ECO.SIPHON_X*valueMult())} on bust`},
+           cur:(c,h)=>`now +${fmt(cval(c)*ECO.SIPHON_X*payMul(h))} on bust`},
   vanish: {n:'Vanish',   t:3, st:'dusk',   d:'On bank: this card sits OUT till the next bust.'},
   ledger: {n:'Ledger',   t:3, st:'journal', d:'Each card on the table with a twin OUT pays double.',
            cur:(c,h)=>`now ${h.ids.filter(id=>S.out.some(x=>cval(byId(x))===cval(byId(id)))).length} twins ×2`},
   rake:   {n:'Rake',     t:1, pm:.555, st:'fern',   d:'On draw: +2 score per card OUT.',
-           cur:(c,h)=>`now +${fmt(ECO.RAKE_PER*outCount()*valueMult())} a draw`},
+           cur:(c,h)=>`now +${fmt(ECO.RAKE_PER*outCount()*payMul(h))} a draw`},
   stakes: {n:'Stakes',   t:3, st:'horseshoe',   d:'Arm: next 3 draws pay double premium.'},
   scrap:  {n:'Scrap',    t:3, st:'pick',  d:'Arm: the deck\'s top card goes OUT.'},
   relic:  {n:'Relic',    t:5, pm:6.2, st:'trophy',    d:'On bank: this card gains +5% value.',
@@ -100,7 +100,7 @@ const STK = {
   fallout:{n:'Fallout',  t:5, pm:4.8, st:'comet',   d:'On bank: the whole hand is gone for good.'},
   /* the discard/OUT batch: payers and engines that live off the away piles */
   remnant:{n:'Remnant',  t:2, pm:.9, st:'remnant', d:'On bank: if this card sits in the discard, its value pays too.',
-           cur:(c,h)=>`now +${fmt(cval(c)*valueMult())} a bank`},
+           cur:(c,h)=>`now +${fmt(cval(c)*payMul(h))} a bank`},
   layaway:{n:'Layaway', t:3, pm:.8, st:'layaway', d:'On a table: +5% payout per card in the discard.',
            cur:(c,h)=>`now +${Math.round(ECO.LAY_PER*(S.disc?S.disc.length:0)*100)}%`},
   guardian:{n:'Guardian',t:4, pm:1.5625, st:'guardian', d:'While this card sits OUT, a bust has a 1/3 chance to pay the table out flat. Unique: only one, ever.'},
@@ -110,7 +110,7 @@ const STK = {
   sub:    {n:'Sub',      t:2, pm:1.35, st:'sub', d:'Arm: this card waits in the discard and a random card OUT takes its seat.'},
   exit:   {n:'Exit',     t:2, pm:1.0277, st:'exit', d:'On bank: 2% of the discard\'s total value pays to score.',
            cur:(c,h)=>{const d=S.disc?S.disc.reduce((a,id)=>a+cval(byId(id)),0):0;
-             return d?`now +${fmt(d*ECO.EXIT_PER*valueMult())} a bank`:''}},
+             return d?`now +${fmt(d*ECO.EXIT_PER*payMul(h))} a bank`:''}},
   /* the squeeze batch (2026-09-04): the deck is the victim — Whip
      strips its blanks away, Squeeze reads its pressure into a value,
      Strip trades the table's floor for a ward */
@@ -233,11 +233,12 @@ const LINGO=[
   ['Blank','A deck card that cannot bust you: its value matches nothing on the table, or Purify ate it.'],
   ['The gauge','Risky cards ÷ deck size. It shows the danger and pays the premium.'],
   ['Premium','Extra pay for danger: the hotter the gauge at a bank, the more the table pays. Under 40% risk the table pays 60% to 100%. At 100% risk it pays double.'],
+  ['Effect pays','Tribute, Rake, Siphon, Mint, Remnant and Exit pay their amount through every multiplier the table pays: value, hand mult, chain, premium, the works.'],
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
   ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
   ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
   ['Set aside',"Cull's trade: the card itself goes OUT, a ward stands in its place till it saves a draw."],
-  ['Chain','Consecutive banks on one table without its bust. A bust breaks it.'],
+  ['Chain','Consecutive banks on one table without its bust. A bust breaks it; a bank too small for the combo trims 1.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
   ['Rewrite',"A temp value a table card wears: Swap, Clip, Ghost, Dredge, or Riffle. It lasts while the card stays in play; the printed value comes back when it leaves. Engrave makes one permanent."],
   ['Arm','Tap a trick on the felt to charge it. One arm per card per run; it fires or expires, spent either way.'],
@@ -459,6 +460,9 @@ const ACH = [
   B('b15','Specialist','Buy 3 levels of one upgrade',.05,()=>Math.max(0,...Object.values(S.up)),3),
   B('b16','Outfitted','Buy 10 upgrades in total',.05,()=>Object.values(S.up).reduce((a,b)=>a+b,0),10),
   B('b17','Collage','Bank 3 runs holding 2 different stickers',.10,()=>S.st.stkKinds||0,3),
+  /* the arms ladder's far rung: the autos' own switches (AUTOMATION
+     sheet, AUTO-ARM block) make 100 a season, not a grind */
+  B('b18','Second Nature','Arm 100 tricks',.15,()=>S.st.arms||0,100),
   /* composition bonuses: the loadout is the puzzle — read the gate, then
      spec the stickers that satisfy it */
   B('g61','Twin Town','Bank 3 runs holding two copies of the same sticker',.10,()=>S.st.twinTowns||0,3),

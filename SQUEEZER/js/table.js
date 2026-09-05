@@ -811,7 +811,7 @@ function pileTip(on){
    itself, req included. creq comes from the focused table's chain */
 function chainTipText(creq){
   return `<b>Chain</b>: banks in a row without a bust, each one worth more with Chain Reaction`
-    +`<br>Dots: the next bank needs <b>${creq}</b> cards on the table, +1 every 10 chain, filled dots dealt`;
+    +`<br>Dots: the next bank needs <b>${creq}</b> cards on the table, +1 every 10 chain; a bank under the price loses 1 chain`;
 }
 function chainTip(on){
   const t=$('#chTip');if(!t)return;
@@ -963,7 +963,8 @@ function paint(){
     else pSt('stopmark','display','none');}
   $('#bank').disabled=!canBank(F);
   pHtml('bankS',canBank(F)
-    ?fmt(show)+(S.hands.length>1?`<i> · H${S.focus+1} · hold = bank all</i>`:'<i class="touch-only"> · swipe down</i>')
+    ?fmt(show)+(S.hands.length>1?`<i> · H${S.focus+1} · hold = bank all</i>`
+      :(S.seen.swd?'':'<i class="touch-only"> · swipe down</i>'))
     :'');
   paintHRow();
   paintAutos();
