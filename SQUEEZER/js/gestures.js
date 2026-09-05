@@ -307,15 +307,17 @@ function initInput(){
   initViewSwipe();
 }
 
-/* ---- horizontal swipe between tabs (live drag, fling commit,
-   rubber-band at the locked edges, same gesture on the rail) ---- */
+/* ---- horizontal swipe between tabs: a 10%-of-width dead zone is the
+   trigger — under it the drag is nothing (release cancels), past it the
+   views follow the finger and release flicks the switch. Rubber-band at
+   the locked edges, same gesture on the rail ---- */
 const Views={swiping:false};
 function initViewSwipe(){
   const host=$('#views');
-  let sx=0,sy=0,lx=0,lt=0,vx=0,mode=null,from=null,to=null,dx=0,ate=false;
+  let sx=0,sy=0,mode=null,from=null,to=null,dx=0,ate=false;
   const order=()=>$$('#tabs button').filter(b=>!b.classList.contains('hid')&&!b.classList.contains('lock')).map(b=>b.dataset.v);
   const curV=()=>document.querySelector('.view.on')?.id.slice(2)||'play';
-  const reset=()=>{Views.swiping=false;from=null;to=null;mode=null;dx=0;vx=0;};
+  const reset=()=>{Views.swiping=false;from=null;to=null;mode=null;dx=0;};
 
   /* a swipe that started on a button or row must not also fire its
      click once the finger lifts — no accidental buys or sheet opens */
@@ -335,24 +337,26 @@ function initViewSwipe(){
        holds and vertical swipes stand down the moment a horizontal drag
        engages (killHolds + Views.swiping + the eaten click) */
     if(e.target.closest('#dz,#pped,input'))return;
-    sx=lx=e.clientX;sy=e.clientY;lt=performance.now();
-    mode=null;from=curV();to=null;dx=0;vx=0;
+    sx=e.clientX;sy=e.clientY;
+    mode=null;from=curV();to=null;dx=0;
   });
   host.addEventListener('pointermove',e=>{
     if(from==null)return;
-    const t=performance.now(),dt=Math.max(1,t-lt);
-    vx=(e.clientX-lx)/dt;lx=e.clientX;lt=t;
     const x=e.clientX-sx,y=e.clientY-sy;
     if(!mode){
-      /* symmetric dominance, so a phone's arced swipes still resolve:
-         whichever axis clearly leads takes the gesture — a drift on the
-         other axis alone can never steal it */
-      if(Math.abs(x)>16&&Math.abs(x)>Math.abs(y)*1.2)mode='swipe';
+      /* the dead zone gates the trigger; past it, axis dominance still
+         decides — whichever axis clearly leads takes the gesture, so a
+         phone's arced swipes resolve and a scroll's drift never flips */
+      const W=host.clientWidth;
+      if(Math.abs(x)>W*.1&&Math.abs(x)>Math.abs(y)*1.2)mode='swipe';
       else if(Math.abs(y)>14&&Math.abs(y)>Math.abs(x)*1.2)mode='scroll';
       if(mode!=='swipe')return;
       ate=true;Views.swiping=true;
       if(killHolds)killHolds();          /* bank-all / inspect holds are dead */
-      try{host.setPointerCapture(e.pointerId);}catch(err){}
+      /* touch pointers are implicitly captured to their target already;
+         an explicit retarget onto the host makes iOS drop mid-drag
+         moves (the stuck swipe) — only the mouse needs the capture */
+      if(e.pointerType!=='touch')try{host.setPointerCapture(e.pointerId);}catch(err){}
       const vis=order(),i=vis.indexOf(from);
       if(i<0){from=curV();return;}
       const nx=x<0?vis[i+1]:null, pv=x>0?vis[i-1]:null;
@@ -394,30 +398,20 @@ function initViewSwipe(){
       cur.style.transform='translateX(0)';
       setTimeout(()=>{cur.style.cssText='';},240);
     }else if(mode==='swipe'&&to){
-      /* commit only on a solid drag or a hard fling — the switch snaps
-         into place the moment the finger lifts, so nothing can freeze
-         it part way */
-      const W=host.clientWidth,dst=to,nxt=$('#v-'+to),
-            commit=Math.abs(dx)>W*.32||(Math.abs(vx)>.8&&Math.abs(dx)>56);
-      if(commit)commitTo(cur,dst);
-      else{
-        cur.style.cssText='';
-        nxt.classList.remove('on');nxt.style.cssText='';
-      }
+      /* the dead zone was the decision: past it the release is the
+         flick and the switch snaps into place — nothing can freeze it
+         part way. Under the zone mode never engaged, so this lift is
+         just a tap or a dead drag */
+      commitTo(cur,to);
     }
     reset();
   });
   host.addEventListener('pointercancel',()=>{
     if(from&&mode==='swipe'&&to){
       /* the browser took the pointer back mid-drag (a native pan it
-         claimed despite pan-y, a phone UI gesture): a drag or fling
-         already past the commit bar still lands, the rest snaps back */
-      const W=host.clientWidth,cur=$('#v-'+from),nxt=$('#v-'+to),
-            commit=Math.abs(dx)>W*.32||(Math.abs(vx)>.8&&Math.abs(dx)>56);
-      if(commit)commitTo(cur,to);
-      else{
-        nxt.classList.remove('on');nxt.style.cssText='';cur.style.cssText='';
-      }
+         claimed anyway, a phone UI gesture): the gate was crossed, so
+         the flick still lands */
+      commitTo($('#v-'+from),to);
     }
     else if(from&&mode==='edge')$('#v-'+from).style.cssText='';
     reset();

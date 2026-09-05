@@ -651,6 +651,15 @@ function bank(h,auto){
   /* Rainbow: a full hand with no twins on it */
   if(h.ids.length>=7&&new Set(h.ids.map(id=>cval(byId(id)))).size===h.ids.length)
     S.st.rainbows=(S.st.rainbows||0)+1;
+  /* the pair build: duplicated values only sit in a hand via Twin's
+     pull or a Purify seat. Pairs counts values held twice or more, the
+     stack is the deepest one-value run ever banked (Quadro claims /4,
+     the ladder can claim /8 later) */
+  {const vc={};h.ids.forEach(id=>{const v=cval(byId(id));vc[v]=(vc[v]||0)+1;});
+   const ns=Object.values(vc),pairs=ns.filter(n=>n>=2).length;
+   if(pairs>(S.st.bestPairs||0))S.st.bestPairs=pairs;
+   const stack=Math.max(0,...ns);
+   if(stack>(S.st.bestStack||0))S.st.bestStack=stack;}
   if(h.ids.length>=3&&h.ids.every(id=>S.out.some(o=>cval(byId(o))===cval(byId(id)))))
     S.st.books=(S.st.books||0)+1;
   if(S.rf&&S.rf.length){const homed=h.ids.filter(id=>S.rf.includes(id));

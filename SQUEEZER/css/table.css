@@ -10,7 +10,7 @@
    touch-action first — left auto it claims horizontal drags and fires
    pointercancel, killing the tab swipe everywhere but the felt (which
    is touch-action:none) */
-.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 14px 18px;display:none;
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 14px 18px;--vg:14px;display:none;
   background:var(--paper)}
 /* the drifting sticker teaser lives as a view's first child (z 0) —
    direct content is lifted above it so the stickers float behind */
@@ -319,7 +319,7 @@ body.tsnap .view{animation:none!important}
 #rkc{position:absolute;inset:0;pointer-events:none;clip-path:inset(0 100% 0 0);transition:clip-path .22s ease}
 #rkc .rkl{color:rgba(241,237,225,.8)}
 #rkc b{color:var(--stock)}
-#bank{width:100%;margin-top:10px;height:54px;border:0;border-radius:12px;cursor:pointer;color:var(--stock);
+#bank{width:100%;margin-top:10px;height:var(--railH,54px);border:0;border-radius:12px;cursor:pointer;color:var(--stock);
   font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.14em;display:flex;flex-direction:row;align-items:center;
   justify-content:center;gap:7px;background:linear-gradient(160deg,#39684A,#274D35);transition:transform .1s;
   box-shadow:4px 4px 10px var(--shs),-3px -3px 8px var(--hl),inset 0 1px 0 rgba(255,253,244,.22)}
@@ -380,7 +380,7 @@ body.tsnap .view{animation:none!important}
    table.js's deskK; the readout, gauge, bank and table tags follow at
    readable size ---------- */
 @media (min-width:720px){
-  .view{padding:4px 16px 18px}
+  .view{padding:4px 16px 18px;--vg:16px}
   #v-play{padding:0 12px 4px}
   #rs{font-size:40px}
   #rsl{font-size:9.5px}
@@ -396,7 +396,7 @@ body.tsnap .view{animation:none!important}
   #rk{height:20px}
   #rk .rkl{font-size:9px}
   #rk b{font-size:13px}
-  #bank{height:60px;font-size:17px}
+  #bank{height:var(--railH,60px);font-size:17px}
   #bank .d{font-size:15.5px}
   #bank .s{font-size:22px}
   #bank .s i{font-size:11px}

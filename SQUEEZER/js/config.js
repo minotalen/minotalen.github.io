@@ -351,7 +351,10 @@ const META = {
    A hand can hold each value only once — a second copy of any held value
    busts — so hand size and per-run draws top out near the values you have
    unlocked; the wide and long-hand ladders are scaled to that ceiling
-   (Twin's pull is the one exception, by design).
+   (Twin's pull is the one exception, by design). The pair build lives
+   inside that exception: Twin Twin asks for 2 pairs on one bank, Quadro
+   for the same value 4 times — Twin pulls and Purify seats are the only
+   ways a duplicate lands.
    Milestones sit at the top: purify asks for the first ascension, relic
    for a 250K chain, encore for five straight 100K banks.
    Composition bonuses bank beside them: Twin Town (two of a sticker),
@@ -462,6 +465,12 @@ const ACH = [
   B('g62','The Works','Fire Bloom, Kindle and Dividend in one bank',.15,()=>S.st.works||0,1),
   B('g63','Balanced Books','Bank 3 or more cards with every twin OUT',0,()=>S.st.books||0,1,.15),
   B('g64','Boomerang','Bank 3 cards Fetch brought back',0,()=>S.st.boomerangs||0,3,.10),
+  /* the pair build: the one-value-per-hand law bows to Twin's pull and
+     to a Purify seat, so duplicated values are a spec, not luck. The
+     stat is a record — the deepest one-value stack ever banked — so the
+     ladder rides it: Quadro claims /4, deeper rungs can claim /8 later */
+  B('g78','Twin Twin','Bank a hand with 2 pairs',.05,()=>S.st.bestPairs||0,2),
+  B('g79','Quadro','Bank a hand with the same value 4 times',.20,()=>S.st.bestStack||0,4),
   A('g66','Patched','Change 300 card values','patch',()=>S.st.rewrites||0,300),
   /* the discard/OUT batch: every gate reads a pile-side stat the batch's
      own sticker never feeds (Remnant pays the pile, it does not fill it) */

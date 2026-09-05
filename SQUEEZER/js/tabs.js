@@ -18,6 +18,7 @@ const Tabs={
        (500ms in view, or flung past the 75% line) */
   },
   thumb(){
+    railH();
     const b=$('#tabs button.on');if(!b)return;
     const th=$('#thumb');
     th.style.left=(b.offsetLeft)+'px';th.style.width=(b.offsetWidth)+'px';
@@ -75,6 +76,16 @@ const Tabs={
 };
 $$('#tabs button').forEach(b=>b.onclick=()=>Tabs.go(b.dataset.v,null,true));
 addEventListener('resize',()=>Tabs.thumb());
+
+/* the rail is the height donor: the BANK button reads --railH so the two
+   bottom bars match at every breakpoint. The label's line box is
+   font-metric, so a fixed css height would drift — measure the real box.
+   offsetHeight is undefined in the node harness: the guard keeps it inert */
+function railH(){
+  const r=$('#tabs');
+  if(r&&r.offsetHeight>0&&document.documentElement)
+    document.documentElement.style.setProperty('--railH',r.offsetHeight+'px');
+}
 
 /* ---- wide desktop (>=1024px): the table keeps the stage and one side
    panel takes the right lane. body.wide is the single switch the css

@@ -111,21 +111,28 @@ h2:first-child{margin-top:6px}
 .gst.done .v{color:var(--grn);font-size:13px}
 .gst.done .l{color:var(--grn)}
 /* a claimed goal recedes: slimmer row, one breath of green, tighter chip */
-.row.done{padding:7px 11px;margin-bottom:6px;
+.row.done{margin-bottom:6px;
   background:linear-gradient(150deg,rgba(44,86,60,.10),rgba(44,86,60,.03)),var(--grad)}
 .row.done .gst{padding:6px 9px 5px;min-width:64px}
 /* ...and once its NEW wore off, it folds to the name line — the done
    block reads as a ribbon, never a wall */
-.row.done.sm{padding:4px 11px;margin-bottom:3px}
+.row.done.sm{margin-bottom:3px}
 .row.done.sm .ds{display:none}
 .row.done.sm .gst{min-width:52px;padding:3px 9px 2px}
 /* the unread flag on a met-or-claimed row: same red the nub speaks */
 .ntag{font-family:var(--mono);font-style:normal;font-size:8px;font-weight:800;letter-spacing:.14em;
   color:var(--stock);background:var(--red);border-radius:4px;padding:2px 5px 1px;line-height:1}
-/* GOALS section headers: mono count caps, riding sticky over the stock */
+/* GOALS section headers: mono count caps riding sticky over the stock —
+   solid paper, no alpha: a fading edge let rows ghost through, so the
+   strip closes with a hairline instead. The paper also spans the view's
+   gutters (--vg mirrored as margin+padding): row shadows ride 3-9px
+   past the content box and ghosted beside the strip's l/r otherwise.
+   top:-4px lifts the pin over the view's own 4px top padding — sticky
+   anchors at the content box, and the uncovered padding band let rows
+   ghost over the strip's top edge the same way */
 .gh{font-family:var(--mono);font-size:9px;letter-spacing:.16em;font-weight:800;color:var(--ink2);
-  margin:14px 0 7px;position:sticky;top:0;z-index:2;padding:5px 0 4px;
-  background:linear-gradient(180deg,var(--paper) 72%,rgba(228,223,209,0))}
+  margin:14px calc(var(--vg,14px)*-1) 7px;position:sticky;top:-4px;z-index:2;padding:6px var(--vg,14px) 5px;
+  background:var(--paper);border-bottom:1px solid var(--line)}
 
 /* ---------- DECK tab: value sets + every card as a tappable row ---------- */
 .mc{width:38px;height:53px;border-radius:4px;margin:0 auto;display:grid;place-items:center;position:relative;overflow:hidden;
@@ -668,7 +675,7 @@ h2:first-child{margin-top:6px}
      its tray aligns with the panel's padding, pills fill like a phone.
      Panel rows and rail both hug the lane at 8px so the pane seam is
      one gutter, not padding+gap+padding stacked */
-  body.wide #sideV .view{padding-left:8px;padding-right:8px}
+  body.wide #sideV .view{padding-left:8px;padding-right:8px;--vg:8px}
   body.wide #tabs{margin-left:8px;margin-right:8px;
     margin-bottom:calc(12px + env(safe-area-inset-bottom))}
   /* the compendium opens to the sticker wiki's wide pass */
