@@ -103,13 +103,20 @@ function drawCard(hi,free,auto){
    the deck: any waiter that lost its top seat goes home. Frozen never
    flips — a bust mid-wait leaves the rest parked for the next window */
 function preDropTick(rem){
-  if(!preDrops.length||!S.deck.length)return;
+  if(!preDrops.length)return;
+  /* the stale-park sweep runs even on an empty deck: a waiter that left
+     the top seats (drawn, banked) must lose its flag here too, or it
+     strands as an unplaceable ghost */
   const seats=S.deck.slice(-preDrops.length);
   if(preDrops.some(id=>!seats.includes(id))){
     preDrops=preDrops.filter(id=>seats.includes(id));layout();return;}
+  if(!S.deck.length)return;
   if(rem>0||frozen||boardDealing||pyrUndealt.length)return;
   const tid=S.deck[S.deck.length-1];
-  if(drawCard(null,false))preDrops.splice(preDrops.indexOf(tid),1);
+  /* the splice re-reads the seat AFTER the draw: resolve's un-park may
+     have lifted the waiter already, and a position read before the draw
+     would splice whatever slid into its place */
+  if(drawCard(null,false)){const ti=preDrops.indexOf(tid);if(ti>=0)preDrops.splice(ti,1);}
 }
 function resolve(id,h,auto,fresh){
   fresh=fresh||[];
@@ -117,6 +124,11 @@ function resolve(id,h,auto,fresh){
      the cold-ward gate reads this, never the post-draw deck */
   const preTh=threat(h);
   const i=S.deck.indexOf(id);if(i>=0)S.deck.splice(i,1);
+  /* a parked early lift can be drawn by any raw-top draw (a manual flick
+     the frame the ring clears, the autos) — its park flag must die with
+     the draw, or place() keeps skipping a card the hand already owns:
+     the invisible ghost with a gap in the row */
+  {const pi=preDrops.indexOf(id);if(pi>=0)preDrops.splice(pi,1);}
   if(id===S.showTop)S.showTop=null;     /* the reveal is spent with the card */
   const c=byId(id);S.st.draws++;
   const _s0=S.score;   /* the draw's own pays (Tribute, Rake) ride its log entry */

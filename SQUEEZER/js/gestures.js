@@ -19,6 +19,25 @@ let killHolds=null;
    stale flick. Carries px/s plus the pose the card was released from */
 let relV=null;
 
+/* a release-velocity tracker: a short ring of pointer samples, and the
+   release reads the freshest ~100ms window of motion. Never the whole
+   drag — a fling is its final burst, and the touch stream often goes
+   quiet a beat before pointerup (coalesced moves, the lift itself), so
+   any tap-start displacement fallback points the wrong way at a crawl */
+const mkVel=()=>{
+  const q=[];
+  return{
+    push(x,y){const t=performance.now();
+      if(q.length&&t-q[q.length-1][0]<4)return;   /* same-tick burst collapses */
+      q.push([t,x,y]);if(q.length>9)q.shift();},
+    vel(){if(q.length<2)return null;
+      let i=q.length-1;
+      while(i>0&&q[q.length-1][0]-q[i-1][0]<100)i--;
+      const dt=(q[q.length-1][0]-q[i][0])/1000;
+      if(dt<=.004)return null;   /* a held finger: no fling to read */
+      return[(q[q.length-1][1]-q[i][1])/dt,(q[q.length-1][2]-q[i][2])/dt];}};
+};
+
 /* the pre-flick, swipe form (Pre-Flick): an upward flick while the
    ring runs pulls the deck's next card out face-down to wait on the
    felt — the drag lift without the grab. The shuffled deck is the
@@ -71,6 +90,7 @@ function returnPark(id){
 function initInput(){
   const z=$('#dz');
   let id=null,el=null,sx=0,sy=0,st=0,ly=0,lt=0,vy=0,lx=0,vx=0,moved=false,held=null,heldFired=false,cdL=false;
+  const dvel=mkVel();   /* the release read: the drag's final burst, px/s */
   const top=deckTop;   /* a lift grabs the deck's next card, parked ones sit out */
 
   /* park a lifted deck card on the felt: face-down where it landed,
@@ -99,6 +119,7 @@ function initInput(){
     const c=top();if(c==null)return;
     z.setPointerCapture(e.pointerId);
     sx=e.clientX;sy=e.clientY;ly=e.clientY;lx=e.clientX;st=lt=performance.now();vy=0;vx=0;moved=false;heldFired=false;
+    dvel.push(e.clientX,e.clientY);
     cdL=performance.now()<cdEnd;deckHold=true;
     if(preDrops.length>=flickCap()){id=null;el=null;}   /* every seat is spoken for */
     else{id=c;el=els[c];el.style.transition='none';el.style.zIndex=960;liftGrab=c;
@@ -115,6 +136,7 @@ function initInput(){
     const t=performance.now(),dt=Math.max(1,t-lt);
     vy=(e.clientY-ly)/dt;ly=e.clientY;lt=t;
     vx=(e.clientX-lx)/dt;lx=e.clientX;
+    dvel.push(e.clientX,e.clientY);
     const dx=e.clientX-sx,dy=Math.min(6,e.clientY-sy);
     if(Math.abs(dx)>7||Math.abs(e.clientY-sy)>7){moved=true;if(held){clearTimeout(held);held=null;}}
     if(id==null)return;                     /* a waiting early-lift owns the top seat */
@@ -149,21 +171,27 @@ function initInput(){
           onTable=moved&&Math.hypot(fx-DX,fy-DY)>24&&inR(fr)&&!inR(dr);
     if(cdL){  /* grabbed mid-cooldown: drop on the felt, else back it goes */
       if(onTable){
-        if(preDrops.length<flickCap()){dropEarly(grab,ge,fx,fy,vx*1000,vy*1000);return;}
+        const dv=dvel.vel();
+        if(preDrops.length<flickCap()){dropEarly(grab,ge,fx,fy,dv?dv[0]:0,dv?dv[1]:0);return;}
         SFX.deny();layout();return;}
       layout();if(!moved&&quick)SFX.deny();return;}
     const wants=dy<-26||vy<-.45||(!moved&&quick);
     if(wants){
       /* the flick hands its momentum to the landing: the card slides
          over the felt before the slot flight seats it (resolve reads
-         relV in the same tick, then it dies) */
-      /* the fling originates at the deck's center even on a drag: the
-         card reads as shot out of the stack, not off the finger */
-      relV={x:DX,y:DY,vx:vx*1000,vy:vy*1000};
-      drawCard();
+         relV in the same tick, then it dies). The fling originates at
+         the deck's center even on a drag: the card reads as shot out of
+         the stack, not off the finger. A refused draw (a cooldown an
+         echo stamped mid-grab) sends the card home — never left hanging
+         at the finger's pose */
+      dvel.push(e.clientX,e.clientY);
+      const dv=dvel.vel();
+      relV={x:DX,y:DY,vx:dv?dv[0]:0,vy:dv?dv[1]:0};
+      const ok=drawCard();
       relV=null;
+      if(!ok){layout();if(quick)SFX.deny();}
     }
-    else if(onTable){dropEarly(grab,ge,fx,fy,vx*1000,vy*1000);return;}
+    else if(onTable){const dv=dvel.vel();dropEarly(grab,ge,fx,fy,dv?dv[0]:0,dv?dv[1]:0);return;}
     else{layout();if(wants)SFX.deny();}
   });
   z.addEventListener('pointercancel',cancel);
@@ -175,13 +203,13 @@ function initInput(){
      (or right-click) opens the sticker card, right-click on the bare
      felt ends the turn. A hold never banks — the sheet swallows it; a
      horizontal drag belongs to the tab swipe, not the felt. */
-  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null,
-        fvx=0,fvy=0,flx=0,fly=0,flt=0;   /* the swipe's live velocity, px/ms */
+  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null;
+  const fvel=mkVel();   /* the swipe's release read, px/s */
   Fd.addEventListener('pointerdown',e=>{
     if(e.target.closest('#dz'))return;
     stkTipHide();
     by=e.clientY;bx=e.clientX;bt=performance.now();infoFired=false;
-    flx=e.clientX;fly=e.clientY;flt=performance.now();fvx=0;fvy=0;
+    fvel.push(e.clientX,e.clientY);
     const ce=e.target.closest('.card');
     /* a parked early lift: the finger can carry it — drop it on the
        deck to put it back, anywhere else re-parks it */
@@ -200,9 +228,7 @@ function initInput(){
       infoFired=true;openStkCard(cardP.id);},350);
   });
   Fd.addEventListener('pointermove',e=>{
-    const fdt=Math.max(1,performance.now()-flt);
-    fvx=fvx*.5+((e.clientX-flx)/fdt)*.5;fvy=fvy*.5+((e.clientY-fly)/fdt)*.5;
-    flx=e.clientX;fly=e.clientY;flt=performance.now();
+    fvel.push(e.clientX,e.clientY);
     if(parkP){
       const dx=e.clientX-parkP.x,dy=e.clientY-parkP.y,
             px=parkP.px+dx,py=parkP.py+dy;
@@ -254,16 +280,15 @@ function initInput(){
        Mid-cooldown the Pre-Flick catches it: the next card pulls out
        face-down to wait for the ring (silent without the upgrade, the
        same nothing a swipe has always done on a cooling deck). Either
-       way the release carries the swipe's momentum onto the felt */
+       way the release carries the swipe's final burst onto the felt */
     else if(d<-44&&fast&&!Views.swiping&&!infoFired){
-      const fr=Fd.getBoundingClientRect(),tnow=performance.now(),
-            fresh=tnow-flt<120,
-            rvx=(fresh?fvx:(e.clientX-bx)/Math.max(1,tnow-bt))*1000,
-            rvy=(fresh?fvy:d/Math.max(1,tnow-bt))*1000;
-      relV={x:DX,y:DY,vx:rvx,vy:rvy};
+      const fr=Fd.getBoundingClientRect();
+      fvel.push(e.clientX,e.clientY);   /* the lift point is a sample too */
+      const dv=fvel.vel();
+      relV={x:DX,y:DY,vx:dv?dv[0]:0,vy:dv?dv[1]:0};
       const ok=drawCard();
       relV=null;
-      if(!ok)flickUp(e.clientX-fr.left,e.clientY-fr.top,rvx,rvy);
+      if(!ok)flickUp(e.clientX-fr.left,e.clientY-fr.top,dv?dv[0]:0,dv?dv[1]:0);
     }
   });
   Fd.addEventListener('pointercancel',()=>{

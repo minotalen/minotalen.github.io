@@ -231,7 +231,7 @@ function nudgePush(id,ax,ay){
 }
 function nudgeStep(now){
   if(BG){NUDGES.clear();nudgeRAF=0;return;}   /* hidden: the felt is dark */
-  const dt=Math.min(.04,Math.max(.001,now-nudgeT))/1000;nudgeT=now;
+  const dt=Math.min(.04,Math.max(0,(now-nudgeT)/1000));nudgeT=now;
   for(const[id,n]of NUDGES){
     const e=els[id];
     if(!e||e._sx==null||fanHeld(id)){NUDGES.delete(id);continue;}   /* it flew */
@@ -297,7 +297,11 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
   const step=now=>{
     if(els[id]!==e||GLIDES.get(id)!==g)return;   /* rebuilt or replaced */
     if(!fanHeld(id)){GLIDES.delete(id);return;}  /* a flight took the card */
-    const dt=Math.min(.04,Math.max(.001,now-lt))/1000;lt=now;
+    /* the clamp divides AFTER, never before: clamping the raw
+       millisecond gap against .001-.04 and THEN dividing by 1000 pins
+       every frame at dt=4e-5s — the 400× crawl (the felt's own loops
+       clamp the seconds value itself) */
+    const dt=Math.min(.04,Math.max(0,(now-lt)/1000));lt=now;
     if(drift){
       const f=Math.exp(-FR*fm*dt);vx*=f;vy*=f;
       x+=vx*dt;y+=vy*dt;
