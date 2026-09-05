@@ -55,7 +55,7 @@ const STK = {
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
   burn:   {n:'Burn',     t:2, st:'flame',  d:'On draw: 2 cards of a random deck pair go to the discard.'},
   tell:   {n:'Tell',     t:2, st:'periscope',    d:'Arm: the deck\'s top card flips face-up.'},
-  cull:   {n:'Cull',     t:2, st:'funnel', d:'Arm: the next risky card is set aside till bank.'},
+  cull:   {n:'Cull',     t:2, st:'funnel', d:'Arm: the next risky card is put in discard till bank.'},
   dividend:{n:'Dividend',t:2, st:'salmon',    d:'On bank: 25% chance the table scores again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.25, st:'buoy', d:'On a table: +8% payout per card OUT.',
