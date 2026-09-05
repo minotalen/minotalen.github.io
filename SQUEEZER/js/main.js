@@ -34,7 +34,7 @@ addEventListener('keydown',e=>{
     /* the act row: the first eight keys of the letter row address the
        charged tricks — Q acts the first, W the second, and so on. "Live"
        means the same thing the felt paints: charged, unspent, not
-       already standing (an armed Cull waits, it does not re-arm). Order
+       already standing (an armed Float waits, it does not re-arm). Order
        reads the felt the way it lays out: top band down, value ascending
        within a hand. e.code, not e.key, so every layout maps the same
        physical keys; nothing in the slot is a polite refusal */
@@ -42,7 +42,7 @@ addEventListener('keydown',e=>{
     if(i>=0){
       const acts=[];
       S.hands.forEach(h=>{const r=h.run;
-        const standing=id=>r.armedC===id||r.armedF===id||r.stakesIds.indexOf(id)>=0;
+        const standing=id=>r.armedF===id||r.stakesIds.indexOf(id)>=0;
         [...h.ids].sort((a,b)=>byId(a).v-byId(b).v||a-b).forEach(id=>{
           const c=byId(id);
           if(TRICK[c.stk]&&r.spent.indexOf(id)<0&&!standing(id))acts.push(id);});});

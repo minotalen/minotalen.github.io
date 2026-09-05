@@ -58,7 +58,7 @@ const flickCap=()=>Math.max(1,L('flick'));
    run. wardBreak stamps when a ward ring broke, for the smoke-puff
    animation. */
 const freshRun = ()=>({started:false, grace:0, rebound:false, wardBreak:0,
-                       draws:0, armedC:null, armedF:null,
+                       draws:0, armedF:null,
                        stakesIds:[], stakesD:0, anchWin:[],
                        culled:[], floated:[], spent:[], autoDeal:false});
 function newHand(){return{ids:[], chain:0, chainScore:0, ironUsed:false, rallyUsed:false, run:freshRun()};}

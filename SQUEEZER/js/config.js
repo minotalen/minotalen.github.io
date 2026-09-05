@@ -55,7 +55,7 @@ const STK = {
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
   burn:   {n:'Burn',     t:2, st:'flame',  d:'On draw: 2 cards of a random deck pair go to the discard.'},
   tell:   {n:'Tell',     t:2, st:'periscope',    d:'Arm: the deck\'s top card flips face-up.'},
-  cull:   {n:'Cull',     t:2, st:'funnel', d:'Arm: the next risky card is put in discard till bank.'},
+  cull:   {n:'Cull',     t:2, st:'funnel', d:'Arm: gain 1 ward, this card goes OUT.'},
   dividend:{n:'Dividend',t:2, st:'salmon',    d:'On bank: 25% chance the table scores again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.25, st:'buoy', d:'On a table: +8% payout per card OUT.',
@@ -184,7 +184,7 @@ const STKTYPE = {
   guardian:'insurance',
 };
 const STKTRIG = {
-  cull:'arm → next risky card',
+  cull:'arm → instant',
   stakes:'arm → 3 draws',
   float:'arm → 70% risk', defuse:'arm → instant', scrap:'arm → instant',
   tell:'arm → instant',
@@ -235,8 +235,8 @@ const LINGO=[
   ['Premium','Extra pay for danger: the hotter the gauge at a bank, the more the table pays. Under 40% risk the table pays 60% to 100%. At 100% risk it pays double.'],
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
   ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
-  ['OUT','The exile pile. Scrap, Defuse, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
-  ['Set aside',"Cull's catch: the card waits out your next bank, then shuffles back. Feeds nothing."],
+  ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
+  ['Set aside',"Cull's trade: the card itself goes OUT, a ward stands in its place till it saves a draw."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
   ['Rewrite',"A temp value a table card wears: Swap, Clip, Ghost, Dredge, or Riffle. It lasts while the card stays in play; the printed value comes back when it leaves. Engrave makes one permanent."],

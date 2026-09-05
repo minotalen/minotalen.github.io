@@ -385,7 +385,6 @@ function buffChip(k,mode,n){
 function paintBuffs(){
   const B=$('#buffs');if(!B)return;
   const F=S.hands[Math.min(S.focus,S.hands.length-1)],r=F.run,chips=[];
-  if(r.armedC!=null)chips.push(['cull','armed',1]);
   if(r.armedF!=null)chips.push(['float','armed',1]);
   if(r.stakesD>0)chips.push(['stakes','stakes',r.stakesD]);
   (r.anchWin||[]).forEach(w=>{if(w.left>0)chips.push(['anchor','guard',w.left]);});
@@ -449,7 +448,7 @@ function swayStop(){
    other card on its table dashed */
 function stickerStates(){
   S.hands.forEach(h=>{const r=h.run;
-    const isArmed=id=>r.armedC===id||r.armedF===id
+    const isArmed=id=>r.armedF===id
       ||r.stakesIds.indexOf(id)>=0;
     const aH=aim?S.hands.find(x=>x.ids.indexOf(aim.id)>=0):null;
     h.ids.forEach(id=>{const c=byId(id),e=els[id];if(!e)return;

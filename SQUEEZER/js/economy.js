@@ -14,7 +14,6 @@
 function achV(){let m=1;ACH.forEach(a=>{if(a.v&&has(a.id))m*=1+a.v;});return m;}
 function achS(){let m=1;ACH.forEach(a=>{if(a.s&&has(a.id))m*=1+a.s;});return m;}
 const outCount=()=>S.out.length+(S.gone?S.gone.length:0);   /* OUT + discarded for good */
-const cullCount=()=>S.hands.reduce((a,h)=>a+h.run.culled.length,0);
 
 function valueMult(){
   return (1+ECO.INK_PER*L('value'))

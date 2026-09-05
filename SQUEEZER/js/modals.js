@@ -385,7 +385,7 @@ function openCardSheet(id){
     if(gw)lines.push('GUARDING '+D+' a twin slips back into the deck, '
       +gw.left+' draw'+(gw.left===1?'':'s')+' left');}
   if(a&&TRICK[c.stk]){
-    const armed=r&&(r.armedC===id||r.armedF===id
+    const armed=r&&(r.armedF===id
       ||r.stakesIds.includes(id));
     const used=r&&r.spent.includes(id);
     if(armed)lines.push('ARMED '+D+' waiting on its window');

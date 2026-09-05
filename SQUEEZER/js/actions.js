@@ -178,11 +178,6 @@ function resolve(id,h,auto,fresh){
     r.anchWin=r.anchWin||[];
     const gw=r.anchWin.find(w=>w.left>0&&cval(byId(w.id))===cval(c));
     if(gw)return deflect(id,'SLIPPED');
-    /* Cull intercepts before any insurance: the round leaves the deck */
-    if(r.armedC!=null){
-      const cid=r.armedC;r.armedC=null;r.spent.push(cid);r.culled.push(id);
-      slam('CULL','#46422F');
-      SFX.burn();SFX.stk('cull','act',cval(byId(id)));buzz(18);layout();paint();save();checkFloatAll();return true;}
     /* the ward rider takes the hit first — a pulled card is protected
        outright, so Grace stays in pocket. A ward save (rider or Grace)
        benches the drawn card in the discard */
@@ -1251,8 +1246,23 @@ function armTrick(id){
       SFX.burn();SFX.stk('defuse','act',liveV(v1)?v1:vm);buzz(14);layout();paint();save();}
     checkFloatAll();
     return;}
-  if(c.stk==='cull'){if(r.armedC!=null){SFX.deny();return;}r.armedC=id;}
-  else if(c.stk==='float'){if(r.armedF!=null){SFX.deny();return;}r.armedF=id;}
+  /* Cull: the arm is the whole trick — the card itself takes the OUT
+     seat and a ward stands in its place. The seat is real: it feeds the
+     pile and rides home on the next bust */
+  if(c.stk==='cull'){
+    h.ids.splice(h.ids.indexOf(id),1);
+    revertLeaving([id]);
+    toOut(id);
+    r.grace++;
+    r.spent.push(id);
+    S.st.arms=(S.st.arms||0)+1;
+    slam('CULL','#46422F');
+    const[x,y]=feltPt(FW/2,FH*.3);
+    float('A '+cval(c)+' OUT, 1 WARD',x,y,'#3E7A5E');
+    SFX.burn();SFX.stk('cull','act',cval(c));buzz(18);layout();paint();save();
+    checkFloatAll();
+    return;}
+  if(c.stk==='float'){if(r.armedF!=null){SFX.deny();return;}r.armedF=id;}
   else if(c.stk==='stakes'){if(r.stakesIds.indexOf(id)>=0){SFX.deny();return;}r.stakesIds.push(id);r.stakesD+=ECO.WINDOW_DRAWS;}
   S.st.arms=(S.st.arms||0)+1;
   /* an arm is a commitment: flush now, so no reload ever un-arms it */
@@ -1270,25 +1280,26 @@ function tapCard(id){
 /* ---------------- the autos play their own tricks ----------------
    With Auto-Draw driving, charged stickers arm themselves by policy:
    shields and Cull when the gauge runs hot (or a revealed bust is
-   coming), Stakes while the premium is fat, Float near its pay-out
-   line, Tell whenever the top card is hidden. One arm per card per
-   run — same rules as a tap. */
+   coming — a Cull arm pays its ward on the spot), Stakes while the
+   premium is fat, Float near its pay-out line, Tell whenever the top
+   card is hidden. One arm per card per run — same rules as a tap. */
 function autoHolds(h){
   /* a Tell reveal sits on top: hold the deal while it busts this hand
-     and no shield stands (a set cull, a live Anchor guard, grace) */
+     and no shield stands (grace — a Cull ward reads here — a live
+     Anchor guard) */
   if(S.showTop==null)return false;
   const c=byId(S.showTop),r=h.run;
   if(!c)return false;
   const twin=h.ids.find(x=>byId(x).v===c.v);
   if(!twin||c.stk==='purify'||pureVals(h).has(c.v))return false;
-  return r.armedC==null&&r.grace<=0
+  return r.grace<=0
     &&!(r.anchWin||[]).some(w=>w.left>0&&cval(byId(w.id))===c.v)
     &&!(h.ids.some(x=>{const f=byId(x);return f.stk==='flinch'&&r.spent.indexOf(x)<0&&cval(f)===c.v;}));
 }
 function autoPlay(h){
   const r=h.run,th=threat(h),held=autoHolds(h),A=ECO.AUTO_SKILL;
   const charged=k=>h.ids.find(id=>byId(id).stk===k&&r.spent.indexOf(id)<0);
-  const armed=id=>r.armedC===id||r.armedF===id
+  const armed=id=>r.armedF===id
     ||r.stakesIds.indexOf(id)>=0;
   const skill=(k,ok)=>{if(!ok)return;const id=charged(k);
     if(id==null||armed(id))return;armTrick(id);};
