@@ -37,6 +37,13 @@ body.tsnap .view{animation:none!important}
 .bf{display:flex;align-items:center;gap:1px}
 .bf .stkicon{width:20.25px;height:20.25px;vertical-align:baseline}
 .bf b{font-family:var(--nm);font-size:11px;line-height:1;color:var(--ink);padding-right:1px}
+/* the cull ward's countdown: the window burns a dash-state a draw —
+   big dashes at 3, small at 2, dots on the last — in lightning gold */
+.bf.cward{flex-direction:column;gap:2px}
+.bf.cward .cwd{display:block;width:18px;height:3px;border-radius:2px;
+  background:repeating-linear-gradient(90deg,var(--zap) 0 5px,transparent 5px 7.5px)}
+.bf.cward.wd2 .cwd{background:repeating-linear-gradient(90deg,var(--zap) 0 3px,transparent 3px 5.5px)}
+.bf.cward.wd1 .cwd{background:repeating-linear-gradient(90deg,var(--zap) 0 1.8px,transparent 1.8px 5px)}
 /* the buff tag: the sticker tag's twin — one neumorphic label at one
    fixed spot under the plaque, whichever icon you point at. width:
    max-content escapes the plaque's shrink-to-fit — #buffW is only as
@@ -393,6 +400,7 @@ body.tsnap .view{animation:none!important}
   #buffTip{font-size:12px;max-width:min(276px,calc(100vw - 56px))}
   .bf .stkicon{width:23.3px;height:23.3px}
   .bf b{font-size:12.5px}
+  .bf.cward .cwd{width:21px}
   #rk{height:20px}
   #rk .rkl{font-size:9px}
   #rk b{font-size:13px}

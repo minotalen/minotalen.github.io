@@ -29,6 +29,7 @@
   --grad:linear-gradient(145deg,#F4F0E4,#E6E1D2);      /* raised surface */
   --gradi:linear-gradient(145deg,#E0DBCB,#EFEADD);     /* sunken surface */
   --red:#8E2B1C; --grn:#2C563C; --gld:#8A6A2F; --blu:#2A4761;
+  --zap:#EFC93F;                                        /* lightning: the cull ward's countdown */
   --cw:54px; --ch:76px;
   --nm:"Orbit Num",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   /* mixed letter+digit tokens (chips, tags, the cloud key): one face for

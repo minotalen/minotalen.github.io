@@ -57,7 +57,7 @@ const flickCap=()=>Math.max(1,L('flick'));
    remembers consumed tricks so the sticker dims for the rest of the
    run. wardBreak stamps when a ward ring broke, for the smoke-puff
    animation. */
-const freshRun = ()=>({started:false, grace:0, rebound:false, wardBreak:0,
+const freshRun = ()=>({started:false, grace:0, cullWard:0, rebound:false, wardBreak:0,
                        draws:0, armedF:null,
                        stakesIds:[], stakesD:0, anchWin:[],
                        culled:[], floated:[], spent:[], autoDeal:false});

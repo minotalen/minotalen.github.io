@@ -246,6 +246,7 @@ function place(id,x,y,rot,up,z,out,sc,rest){
     e.style.left='0px';e.style.top='0px';
     e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${rot.toFixed(1)}deg)`+(sc?` scale(${sc})`:'');}
   e._sx=x;e._sy=y;e._sr=rest?0:rot;e._sz=z;   /* the sway loop rebuilds around this spot */
+  e._pt=performance.now();   /* the placement's flight starts now: the glide's wake stands off a card still travelling */
   /* geometry armor: the box itself is stamped inline-important, so no
      stylesheet rule (var drift, min-width, aspect-ratio, another !important)
      can ever render a card at the wrong proportions */
@@ -374,9 +375,15 @@ function buffTipHTML(k,mode,n){
   if(mode==='stakes')return `<b>${a.n}</b> · draws pay double premium — <b>${n}</b> left`;
   if(mode==='guard')return `<b>${a.n}</b> · a drawn twin slips back into the deck — <b>${n}</b> draw${n===1?'':'s'} left`;
   if(mode==='grace')return `<b>${a.n}</b> · the next busting draw benches in the discard — <b>${n}</b> left`;
+  if(mode==='cullward')return `<b>${a.n}</b> · the ward holds <b>${n}</b> more draw${n===1?'':'s'} — a busting one benches in the discard`;
   return `<b>${a.n}</b>: ${a.d.replace(/\.$/,'')}${n>1?` — <b>×${n}</b> here`:''}`;
 }
 function buffChip(k,mode,n){
+  /* Cull's ward: one glyph, never repeated, with the dash countdown —
+     big dashes at 3 draws, small at 2, dots on the last */
+  if(mode==='cullward'){
+    const tip=q(buffTipHTML(k,mode,n));
+    return `<div class="bf cward wd${n}" data-tip="${tip}">${stkIcon(k)}<i class="cwd"></i></div>`;}
   const big=n>=5,reps=big?1:n,tip=q(buffTipHTML(k,mode,n));
   let out='';
   for(let i=0;i<reps;i++)
@@ -389,7 +396,8 @@ function paintBuffs(){
   if(r.armedF!=null)chips.push(['float','armed',1]);
   if(r.stakesD>0)chips.push(['stakes','stakes',r.stakesD]);
   (r.anchWin||[]).forEach(w=>{if(w.left>0)chips.push(['anchor','guard',w.left]);});
-  if(r.grace>0)chips.push(['ward','grace',r.grace]);
+  if(r.cullWard>0)chips.push(['cull','cullward',r.cullWard]);
+  if(r.grace>0)chips.push([r.graceVia||'ward','grace',r.grace]);
   const cnt={};
   F.ids.forEach(id=>{const s=byId(id).stk;if(s&&AURA[s])cnt[s]=(cnt[s]||0)+1;});
   if(!cnt.haste&&S.hands.some(h=>h.ids.some(id=>byId(id).stk==='haste')))cnt.haste=1;
@@ -398,6 +406,7 @@ function paintBuffs(){
   if(B.dataset.b===key)return;
   B.dataset.b=key;
   buffTipHide();                     /* rebuilt under the cursor: the tag must not lie */
+  if(tipPin==='buff')tipPin=null;    /* a rebuilt bar tells a new story: the pin dies with it */
   B.innerHTML=chips.map(c=>buffChip(c[0],c[1],c[2])).join('');
 }
 function buffTipShow(e){
@@ -405,7 +414,21 @@ function buffTipShow(e){
   const el=e.target.closest('.bf');if(!el)return buffTipHide();
   const t=$('#buffTip');t.innerHTML=el.dataset.tip;t.classList.add('on');
 }
-function buffTipHide(){const t=$('#buffTip');if(t)t.classList.remove('on');}
+function buffTipHide(force){if(!force&&tipPin==='buff')return;
+  const t=$('#buffTip');if(t)t.classList.remove('on');}
+/* ---- tap-pin: one tooltip may be pinned at a time ----
+   The felt's hoverables answer a tap the way they answer a hover — the
+   pill rises and STAYS (touch has no hover to lose). A second tap, a
+   tap elsewhere, or opening another tip lets it down. Cards never
+   join: their tap acts, their long-press tells the story */
+let tipPin=null;   /* 'buff' | 'slotX' | 'tkC' */
+const TIP_HIDE={buff:()=>buffTipHide(true),slotX:()=>pileTip(false,true),tkC:()=>chainTip(false,true)};
+function pinTip(k){
+  if(tipPin===k){tipPin=null;TIP_HIDE[k]();return false;}   /* the second tap lets it down */
+  if(tipPin)TIP_HIDE[tipPin]();
+  tipPin=k;return true;
+}
+function unpinTip(){if(tipPin)pinTip(tipPin);}
 /* ---- sticker sway: a hovered card that can still be triggered (a
    charged trick, .live) never sits still — it drifts back and forth
    on two overlapping sines while leaning left and right on two more,
@@ -800,12 +823,13 @@ function setFan(z){fanZone=z===fanZone?null:z;fanHov=null;layout();
 /* the empty bench's tag: the sticker tag's twin, pinned by the
    set-aside slot — hover it while nothing waits there and it names
    what the stack is for. Cards present, the pile speaks for itself */
-function pileTip(on){
-  const t=$('#pileTip');if(!t)return;
+function pileTip(on,force){
+  const t=$('#pileTip');if(!t)return false;
+  if(!on&&!force&&tipPin==='slotX')return false;   /* a pinned tag survives the pointer leaving */
   if(on&&culledAll().length+S.disc.length===0){
-    t.innerHTML='<b>Set aside</b>: Cull\'s catch and Ward saves wait here, home when you score';
-    t.classList.add('on');
-  }else t.classList.remove('on');
+    t.innerHTML='<b>Set aside</b>: Ward saves and cuts wait here, home when you score';
+    t.classList.add('on');return true;}
+  t.classList.remove('on');return false;
 }
 /* the chain counter's twin: hover the token and the combo explains
    itself, req included. creq comes from the focused table's chain */
@@ -813,12 +837,13 @@ function chainTipText(creq){
   return `<b>Chain</b>: banks in a row without a bust, each one worth more with Chain Reaction`
     +`<br>Dots: the next bank needs <b>${creq}</b> cards on the table, +1 every 10 chain; a bank under the price loses 1 chain`;
 }
-function chainTip(on){
-  const t=$('#chTip');if(!t)return;
+function chainTip(on,force){
+  const t=$('#chTip');if(!t)return false;
+  if(!on&&!force&&tipPin==='tkC')return false;   /* a pinned tag survives the pointer leaving */
   if(on){
     const F=S.hands[Math.min(S.focus,S.hands.length-1)];
-    t.innerHTML=chainTipText(chainReq(F.chain));t.classList.add('on');
-  }else t.classList.remove('on');
+    t.innerHTML=chainTipText(chainReq(F.chain));t.classList.add('on');return true;}
+  t.classList.remove('on');return false;
 }
 
 /* ---------------- ward rings ---------------- */

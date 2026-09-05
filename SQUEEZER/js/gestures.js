@@ -187,6 +187,7 @@ function initInput(){
        deck to put it back, anywhere else re-parks it */
     if(ce&&!ce.classList.contains('faceup')&&preDrops.includes(+ce.dataset.cid)){
       const pid=+ce.dataset.cid,pe=els[pid]||ce;
+      glideCancel(pid);   /* its settle glide would fight the carry's writes */
       parkP={id:pid,el:pe,px:pe._pkx||DX,py:pe._pky||DY,x:e.clientX,y:e.clientY};
       pe.style.transition='none';
       pe.style.zIndex=960;
@@ -342,6 +343,21 @@ function initInput(){
      rising card req */
   $('#tkC').addEventListener('pointerenter',()=>chainTip(true));
   $('#tkC').addEventListener('pointerleave',()=>chainTip(false));
+
+  /* tap-pin: the hoverables answer a tap too — the pill rises and
+     STAYS till the next tap (touch owns no hover). Cards never join:
+     their tap acts, their long-press tells the story */
+  BW.addEventListener('click',e=>{
+    if(Views.swiping||!e.target.closest('.bf'))return;
+    if(pinTip('buff'))buffTipShow(e);});
+  $('#slotX').addEventListener('click',()=>{
+    if(Views.swiping)return;
+    if(pinTip('slotX')&&!pileTip(true))unpinTip();});   /* nothing to explain: no pin */
+  $('#tkC').addEventListener('click',()=>{
+    if(Views.swiping)return;
+    if(pinTip('tkC'))chainTip(true);});
+  document.addEventListener('pointerdown',e=>{
+    if(tipPin&&!e.target.closest('#buffs,#slotX,#tkC'))unpinTip();},true);
 
   initViewSwipe();
 }

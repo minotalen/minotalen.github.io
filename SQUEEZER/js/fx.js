@@ -206,6 +206,10 @@ function glideCancel(id){
   GLIDES.delete(id);
   cancelAnimationFrame(g.raf);
   fanBusy.delete(id);
+  /* the glide froze the card's transition; whoever takes over (a plain
+     layout placement, a flight that freezes it again) needs it live */
+  const e=els[id];
+  if(e)e.style.transition='';
 }
 /* the slide's wake: cards the fling travels over take a small shove off
    their spot, then a light underdamped spring eases each back — the
@@ -218,7 +222,10 @@ const NUDGES=new Map();let nudgeRAF=0,nudgeT=0;
 function nudgePush(id,ax,ay){
   const e=els[id];if(!e||e._sx==null)return;
   let n=NUDGES.get(id);
-  if(!n){n={ox:0,oy:0,vx:0,vy:0};NUDGES.set(id,n);}
+  if(!n){n={ox:0,oy:0,vx:0,vy:0};NUDGES.set(id,n);
+    /* the spring writes this card every frame: freeze the stylesheet
+       transform transition or each write trails behind its own ease */
+    e.style.transition='none';}
   n.vx+=ax;n.vy+=ay;
   if(!nudgeRAF){nudgeT=performance.now();nudgeRAF=requestAnimationFrame(nudgeStep);}
 }
@@ -233,19 +240,24 @@ function nudgeStep(now){
     if(Math.abs(n.ox)+Math.abs(n.oy)<.3&&Math.abs(n.vx)+Math.abs(n.vy)<2){
       NUDGES.delete(id);   /* settled: back on its exact rest pose */
       e.style.transform=`translate(${e._sx.toFixed(1)}px,${e._sy.toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
+      e.style.transition='';   /* the freeze was ours; place() flies again */
       continue;}
     e.style.transform=`translate(${(e._sx+n.ox).toFixed(1)}px,${(e._sy+n.oy).toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
   }
   nudgeRAF=NUDGES.size?requestAnimationFrame(nudgeStep):0;
 }
 /* one drift frame's shove: every seated card inside the slide's radius
-   is pushed radially clear, harder the closer and the faster it passes */
+   is pushed radially clear, harder the closer and the faster it passes.
+   A card still flying to a fresh place() pose is skipped — its seat is
+   not settled yet, and freezing its in-flight transition would snap */
 function wakeFeed(x,y,vx,vy,dt){
-  const R=CUR_CW*1.05,sp=Math.hypot(vx,vy),k=Math.min(1,sp/380)*dt*420;
+  const R=CUR_CW*1.05,sp=Math.hypot(vx,vy),k=Math.min(1,sp/380)*dt*480,
+        now=performance.now();
   const feed=id=>{
     if(id===swayId)return;   /* the hover sway owns that card's loop */
     const e=els[id];
     if(!e||e._sx==null||fanHeld(id))return;
+    if(now-(e._pt||0)<450)return;   /* its slot flight is still running */
     const dx=e._sx-x,dy=e._sy-y,d=Math.hypot(dx,dy);
     if(d<R&&d>.5)nudgePush(id,dx/d*k*(1-d/R),dy/d*k*(1-d/R));
   };
@@ -272,12 +284,15 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
       drift=tx==null&&spd0>=90,lt=performance.now(),t0=lt,
       ex=x,ey=y,er=0,u=0,ld=-1,fm=1;   /* fm: the wall scrubs speed off */
   /* the start pose frozen: the release pose the caller measured, never
-     a stale one — a card parked by left/top hands its spot over first */
+     a stale one — a card parked by left/top hands its spot over first.
+     The transition stays OFF for the whole frame-driven glide: the
+     stylesheet's transform ease would trail every per-frame write (the
+     crawl bug), so it is restored only at the exits where a CSS flight
+     or a placement takes the card back */
   e.style.transition='none';
   e.style.left='0px';e.style.top='0px';
   e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
   void e.offsetWidth;
-  e.style.transition='';
   const tilt=()=>Math.max(-11,Math.min(11,vx*.045));
   const step=now=>{
     if(els[id]!==e||GLIDES.get(id)!==g)return;   /* rebuilt or replaced */
@@ -302,6 +317,7 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
       if(over){
         if(tx==null){   /* drawn: layout's slot flight takes the rest */
           GLIDES.delete(id);fanBusy.delete(id);
+          e.style.transition='';   /* arm the ease: the flight to the slot plays from the drift's pose */
           done&&done();
           return;
         }
@@ -311,6 +327,7 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
     }else{
       if(tx==null){   /* a dead release draws: nothing to slide, seat it */
         GLIDES.delete(id);fanBusy.delete(id);
+        e.style.transition='';
         done&&done();
         return;
       }
@@ -321,6 +338,7 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
       if(u>=1){   /* seated: the exact park pose, back to the caller */
         GLIDES.delete(id);fanBusy.delete(id);
         e.style.transform=`translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px) rotate(${(rr||0).toFixed(1)}deg)`;
+        e.style.transition='';
         done&&done();
         return;
       }

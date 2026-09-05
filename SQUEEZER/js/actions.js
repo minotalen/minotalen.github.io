@@ -87,10 +87,12 @@ function drawCard(hi,free,auto){
   if(ok&&!free&&cardHas(byId(id),'promo')){cdEnd=0;
     const[fx,fy]=feltPt(FW/2,FH*.62);float('FREE',fx,fy,'#8A6A2F');}
   /* guard windows burn one draw per real draw, the guard's own landing
-     excepted — an Anchor starts counting with the next card */
+     excepted — an Anchor starts counting with the next card. Cull's
+     ward burns with the same beat: three draws, then it is gone */
   if(ok){const rw=h.run;
     if(rw.anchWin&&rw.anchWin.length)rw.anchWin=rw.anchWin.filter(w=>
-      fresh.indexOf(w)>=0||--w.left>0);}
+      fresh.indexOf(w)>=0||--w.left>0);
+    if(rw.cullWard>0)rw.cullWard--;}
   return ok;
 }
 /* the pre-flick tick, one beat a frame: cards pulled mid-cooldown wait
@@ -181,6 +183,9 @@ function resolve(id,h,auto,fresh){
        outright, so Grace stays in pocket. A ward save (rider or Grace)
        benches the drawn card in the discard */
     if(wardRide){r.wardBreak=performance.now();noteWard(preTh);SFX.stk('ward','act',cval(byId(id)));return deflect(id,'WARDED',true);}
+    /* Cull's ward spends before Grace: its window is burning, use it
+       or lose it */
+    if(r.cullWard>0){r.cullWard=0;r.wardBreak=performance.now();noteWard(preTh);return deflect(id,'WARD',true);}
     if(r.grace>0){r.grace--;r.wardBreak=performance.now();noteWard(preTh);return deflect(id,'WARD',true);}
     const dodge=dodgeOf(h);
     if(Math.random()<Math.min(ECO.DODGE_CAP,dodge))return deflect(id,'SLIPPED');
@@ -1235,7 +1240,7 @@ function armTrick(id){
     h.ids.splice(h.ids.indexOf(low),1);
     revertLeaving([low]);
     toDisc(low);
-    r.grace++;
+    r.grace++;r.graceVia='strip';   /* the chip wears the glyph that paid */
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
     const[x,y]=feltPt(FW/2,FH*.3);
@@ -1277,7 +1282,8 @@ function armTrick(id){
     h.ids.splice(h.ids.indexOf(id),1);
     revertLeaving([id]);
     toOut(id);
-    r.grace++;
+    r.cullWard=3;   /* one ward, a 3-draw window: use it or lose it. A
+                       second arm while a window lives refreshes it */
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
     slam('CULL','#46422F');
@@ -1316,7 +1322,7 @@ function autoHolds(h){
   if(!c)return false;
   const twin=h.ids.find(x=>byId(x).v===c.v);
   if(!twin||c.stk==='purify'||pureVals(h).has(c.v))return false;
-  return r.grace<=0
+  return r.grace<=0&&r.cullWard<=0
     &&!(r.anchWin||[]).some(w=>w.left>0&&cval(byId(w.id))===c.v)
     &&!(h.ids.some(x=>{const f=byId(x);return f.stk==='flinch'&&r.spent.indexOf(x)<0&&cval(f)===c.v;}));
 }

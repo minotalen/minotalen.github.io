@@ -55,7 +55,7 @@ const STK = {
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
   burn:   {n:'Burn',     t:2, pm:.75, st:'flame',  d:'On draw: 2 cards of a random deck pair go to the discard.'},
   tell:   {n:'Tell',     t:2, pm:.8888, st:'periscope',    d:'Arm: the deck\'s top card flips face-up.'},
-  cull:   {n:'Cull',     t:2, pm:1.3333, st:'funnel', d:'Arm: gain 1 ward, this card goes OUT.'},
+  cull:   {n:'Cull',     t:2, pm:1.3333, st:'funnel', d:'Arm: gain 1 ward for 3 draws, this card goes OUT.'},
   dividend:{n:'Dividend',t:2, pm:1.0555, st:'salmon',    d:'On bank: 25% chance the table scores again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.25, st:'buoy', d:'On a table: +8% payout per card OUT.',
@@ -237,7 +237,7 @@ const LINGO=[
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
   ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
   ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
-  ['Set aside',"Cull's trade: the card itself goes OUT, a ward stands in its place till it saves a draw."],
+  ['Set aside',"Cull's trade: the card itself goes OUT, a ward stands for its next 3 draws."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it; a bank too small for the combo trims 1.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
   ['Rewrite',"A temp value a table card wears: Swap, Clip, Ghost, Dredge, or Riffle. It lasts while the card stays in play; the printed value comes back when it leaves. Engrave makes one permanent."],
@@ -256,16 +256,16 @@ const totm=(per,l,u='%')=>l?` (−${+(per*l).toFixed(2)}${u} total)`:'';
    total is 1−f^l and needs its own non-linear helper */
 const totmR=(f,l,u='%')=>l?` (−${+(100*(1-Math.pow(f,l))).toFixed(2)}${u} total)`:'';
 const UPG = {
-  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:20,   g:1.55},
-  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:30, base:30,   g:1.45},
-  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:55,  g:1.85},
+  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:20,   g:1.6},
+  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:50, base:30,   g:1.4},
+  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:55,  g:1.8},
   nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:12, base:130,  g:1.9},
-  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:220,  g:1.8},
+  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:200,  g:1.85},
   chain:  {n:'Chain Reaction', d:l=>'+1% per bank in current chain'+tot(1,l),  max:20, base:100,  g:2.05},
   eye:    {n:"Collector's Eye",d:l=>`+0.1% value per card you own —your ${eyeCount()} cards pay +${(ECO.EYE_PER*l*eyeCount()*100).toFixed(1)}% now`, max:15, base:320, g:1.71},
   auto:   {n:'Auto-Draw',      d:l=>(l?`Draws for you — deals up to ${l} card${l===1?'':'s'} a table, then waits`:'Draws for you — one card a table, then it waits')+(OFFLINE_ON?'. Offline earnings on.':'.') , max:6, base:1000, g:2.1},
   guard:  {n:'Draw Stop',       d:l=>l?`The draw-stop dial reaches ${Math.round(ECO.GUARD_AT[l-1]*100)}% risk.`:'Set where Auto-draw quits.', max:4, base:1000, g:1.6},
-  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:500,  g:1.2},
+  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:500,  g:1.15},
   /* the swipe-up pre-flick: costs pin their own ladder (upCost), the
      level is how many flicked cards may wait on the felt at once */
   flick:  {n:'Pre-Flick',      d:l=>'Swipe up mid-cooldown and the next card waits on the felt'+(l>1?`, up to ${l} at once`:''), max:3, c:l=>[500,1500,5000][l]},
