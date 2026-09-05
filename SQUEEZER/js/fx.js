@@ -120,7 +120,8 @@ function fanHome(starts){
     c.e.style.left='0px';c.e.style.top='0px';   /* flights are transform-positioned */
     const inn=c.e.querySelector('.inn');
     if(inn)inn.style.transition='none';
-    c.e.classList.remove('buried','flat','bust');c.e.classList.add('faceup');
+    c.e.classList.remove('buried','flat','bust');
+    if(!c.down)c.e.classList.add('faceup');   /* a blind lift flies face-down */
     if(inn)inn.style.transition='';
     c.e.style.transform=`translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px)`;
   });
@@ -132,6 +133,9 @@ function fanHome(starts){
     for(const c of cards){
       if(c.done)continue;
       if(els[c.id]!==c.e){c.done=true;fanBusy.delete(c.id);continue;} /* rebuilt underneath us */
+      /* an early lift took the card back out of the stack (a drag grab
+         or a Pre-Flick): the flight yields it where it sits */
+      if(c.id===liftGrab||preDrops.includes(c.id)){c.done=true;fanBusy.delete(c.id);continue;}
       fanHold(c.id,1500);
       if(now<c.t0){live=true;continue;}
       if(!c.go){

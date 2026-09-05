@@ -60,7 +60,7 @@ const TUT_AT={pyramid:()=>null,card:()=>['#slotD'],risk:()=>['#rk'],
 const cheapestUpg=()=>{let m=Infinity;
   for(const id in UPG){
     if(!upOpen(id)||L(id)>=UPG[id].max||upGate(id))continue;
-    m=Math.min(m,Math.ceil(UPG[id].base*Math.pow(UPG[id].g,L(id))));}
+    m=Math.min(m,upCost(UPG[id],L(id)));}
   return m;};
 const TUT_WAIT={upg:()=>S.score>=cheapestCard(),upbuy:()=>S.score>=cheapestUpg()};
 /* an unknown step name can only be a pre-release dev save: restart the

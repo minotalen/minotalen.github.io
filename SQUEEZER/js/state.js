@@ -36,12 +36,22 @@ let oddsNext=null, wardNext=null, twinNext=null;
    before the killer landed (total, premium, threat, chain). paint() replays
    it while the pair is up — the draw that busts moves no digit anywhere. */
 let bustPair=null, newIns=[], bustGhost=null;
-/* the early deck lift: preDrop is the top card pulled out while the draw
-   cooldown still runs and dropped on the felt — it sits face-down where
-   it landed and flips (a real draw) the moment the deck cools. deckHold
-   marks a finger on the deck so the autos never deal that card out from
-   under it. Both are transient: a reload simply returns the card. */
-let preDrop=null, deckHold=false;
+/* the early deck lift: preDrops are cards pulled while the draw cooldown
+   still runs and dropped on the felt (drag the deck, or Pre-Flick's
+   swipe up) — they sit face-down where they landed and flip (real
+   draws) the moment the deck cools. They hold the deck's top seats
+   until then; preDropTick flips them and reclaims any a reshuffle
+   knocked out of place. deckHold marks a finger on the deck so the
+   autos never deal that card out from under it; liftGrab is the card a
+   drag currently holds (flights home yield it). All transient: a
+   reload simply returns the cards. */
+let preDrops=[], deckHold=false, liftGrab=null;
+/* the card a lift would take: the deck's top card that is not already
+   parked on the felt (the parked block owns the tail until it flips) */
+const deckTop=()=>{for(let i=S.deck.length-1;i>=0;i--)if(!preDrops.includes(S.deck[i]))return S.deck[i];return null;};
+/* waiting seats: one without the upgrade (the drag lift, as always),
+   one per Pre-Flick level once owned */
+const flickCap=()=>Math.max(1,L('flick'));
 
 /* Armed tricks hold the carrying card's id (null = not armed); spent[]
    remembers consumed tricks so the sticker dims for the rest of the
@@ -73,6 +83,7 @@ function newState(){return{
       maxDisc:0, inkBanks:0, coldBusts:0, oneOut:0, twoStkBusts:0, pileBanks:0, benchBanks:0,
       bigBustN:0, safeDisc:0, wardLost:0,
       zeroed:0,
+      fiveBanks:0,
       stkBanked:0,
       stkSpent:0, shinyPlaced:0, bestShine:0, bustLog:[], handLog:[],
       aDraws:0, aBanks:0, aBusts:0, aGain:0, aBest:0, aTime:0,

@@ -1,21 +1,69 @@
 /* ==================================================================
    gestures.js — hands: deck flick/hold/early-lift, swipe-down-to-bank,
-   swipe-up-to-draw, and horizontal swipes that drag the views between
-   tabs (the felt included: its taps, holds and vertical swipes stand
-   down the moment a horizontal drag engages; right-click on the bare
-   felt still ends the turn).
-   The deck's top card lifts any time, cooldown included. One pulled
-   early sits face-down where it is dropped on the felt and flips when
-   the deck cools; holding the deck still inspects it.
+   swipe-up-to-draw (mid-cooldown: Pre-Flick parks the card for the
+   ring), and horizontal swipes that drag the views between tabs (the
+   felt included: its taps, holds and vertical swipes stand down the
+   moment a horizontal drag engages; right-click on the bare felt still
+   ends the turn).
+   The deck's top card lifts any time, cooldown included. Cards pulled
+   early sit face-down where they land on the felt and flip when the
+   deck cools; holding the deck still inspects it.
    ================================================================== */
 /* set by initInput once its hold timers exist — a tab swipe calls it to
    kill any hold (bank-all, card inspect) the finger may have started */
 let killHolds=null;
 
+/* the pre-flick, swipe form (Pre-Flick): an upward flick while the
+   ring runs pulls the deck's next card out face-down to wait on the
+   felt — the drag lift without the grab. The shuffled deck is the
+   source, even while the last bank or bust is still flying home */
+function flickUp(x,y){
+  if(!L('flick')||frozen||boardDealing||pyrUndealt.length)return false;
+  if(preDrops.length>=flickCap())return false;
+  const c=deckTop();if(c==null)return false;
+  /* not onto the stack itself: a card parked there reads as dealt-in */
+  const fr=$('#felt').getBoundingClientRect(),dr=$('#dz').getBoundingClientRect();
+  if(fr.left+x>=dr.left&&fr.left+x<=dr.right&&fr.top+y>=dr.top&&fr.top+y<=dr.bottom)return false;
+  const el=els[c];if(!el)return false;
+  const cw=CUR_CW,ch=CUR_CH,
+        px=Math.min(FW-cw/2-8,Math.max(cw/2+8,x)),
+        py=Math.min(FH-ch/2-8,Math.max(ch/2+8,y));
+  /* rest pose hands its spot to a frozen transform first (geometry
+     armor), then the park transform glides the card out of the stack */
+  el.style.transition='none';
+  el.style.left='0px';el.style.top='0px';
+  el.style.transform=`translate(${DX}px,${DY}px)`;
+  void el.offsetWidth;
+  el.style.transition='';
+  el.classList.remove('buried');
+  el.classList.remove('faceup');   /* a card yielded mid-flight flies face-up; the park waits blind */
+  el.style.zIndex=500;
+  el.style.transform=`translate(${px.toFixed(1)}px,${py.toFixed(1)}px) rotate(${(byId(c).j*3).toFixed(1)}deg)`;
+  el._pkx=px;el._pky=py;   /* the pose a carry-drag starts from */
+  preDrops.push(c);
+  SFX.detent();buzz(6);
+  return true;
+}
+
+/* put a waiting card back on the stack: out of the park list, slotted
+   directly beneath the remaining block (the park list keeps owning the
+   deck's tail seats), then layout re-stacks it — the deck flinches */
+function returnPark(id){
+  const i=preDrops.indexOf(id);if(i<0)return;
+  preDrops.splice(i,1);
+  const k=S.deck.indexOf(id);
+  if(preDrops.length&&k>=0){
+    S.deck.splice(k,1);
+    const j=S.deck.indexOf(preDrops[0]);
+    S.deck.splice(j<0?S.deck.length:j,0,id);
+  }
+  layout();SFX.slide();deckJiggle();
+}
+
 function initInput(){
   const z=$('#dz');
   let id=null,el=null,sx=0,sy=0,st=0,ly=0,lt=0,vy=0,moved=false,held=null,heldFired=false,cdL=false;
-  const top=()=>S.deck.length?S.deck[S.deck.length-1]:null;
+  const top=deckTop;   /* a lift grabs the deck's next card, parked ones sit out */
 
   /* park a lifted deck card on the felt: face-down where it landed,
      clamped inside the felt, pinned there until the cooldown clears */
@@ -25,9 +73,11 @@ function initInput(){
           cy=Math.min(FH-ch/2-8,Math.max(ch/2+8,y));
     ce.style.transition='';
     ce.classList.remove('buried');
+    ce.classList.remove('faceup');   /* same as flickUp: the park waits blind */
     ce.style.zIndex=500;
     ce.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px) rotate(${(byId(cid).j*3).toFixed(1)}deg)`;
-    preDrop=cid;
+    ce._pkx=cx;ce._pky=cy;   /* the pose a carry-drag starts from */
+    preDrops.push(cid);
     SFX.detent();buzz(6);
   };
 
@@ -37,8 +87,8 @@ function initInput(){
     z.setPointerCapture(e.pointerId);
     sx=e.clientX;sy=e.clientY;ly=e.clientY;st=lt=performance.now();vy=0;moved=false;heldFired=false;
     cdL=performance.now()<cdEnd;deckHold=true;
-    if(preDrop!=null){id=null;el=null;}   /* a lifted card waits on the felt: the top seat is taken */
-    else{id=c;el=els[c];el.style.transition='none';el.style.zIndex=960;
+    if(preDrops.length>=flickCap()){id=null;el=null;}   /* every seat is spoken for */
+    else{id=c;el=els[c];el.style.transition='none';el.style.zIndex=960;liftGrab=c;
       /* the card may rest in the deck positioned by left/top — hand it
          back to transform positioning for the drag: left/top=0 alone
          would teleport it to the top-left corner */
@@ -62,14 +112,14 @@ function initInput(){
   function cancel(){if(held){clearTimeout(held);held=null;}
     deckHold=false;
     if(id==null)return;
-    const e=el;fanBusy.delete(id);id=null;el=null;
+    const e=el;fanBusy.delete(id);liftGrab=null;id=null;el=null;
     delete e.dataset.rdy;e.style.transition='';layout();}
   z.addEventListener('pointerup',e=>{
     if(held){clearTimeout(held);held=null;}
-    const grab=id,ge=el;id=null;el=null;deckHold=false;
+    const grab=id,ge=el;id=null;el=null;deckHold=false;liftGrab=null;
     if(ge){fanBusy.delete(grab);delete ge.dataset.rdy;ge.style.transition='';}
     if(grab==null){ /* nothing liftable: a polite refusal tick */
-      if(!moved&&!heldFired&&performance.now()-st<260&&(performance.now()<cdEnd||preDrop!=null))SFX.deny();
+      if(!moved&&!heldFired&&performance.now()-st<260&&(performance.now()<cdEnd||preDrops.length>0))SFX.deny();
       return;}
     const dy=e.clientY-sy,quick=performance.now()-st<260;
     /* onboarding: the opening's tap script owns the deck — release,
@@ -77,13 +127,16 @@ function initInput(){
     if(S.tut==='pyramid'){pyrTap();return;}
     /* dropped over the felt, clear of the deck and meaningfully moved:
        the card lands there. A cool deck flips it at once (the pre-drop
-       fires next frame); mid-cooldown it waits face-down for the ring */
+       fires next frame); mid-cooldown it waits face-down for the ring
+       while a seat is free — full seats send it back with a tick */
     const fx=DX+(e.clientX-sx)*.5,fy=DY+Math.min(6,e.clientY-sy)*.9,
           fr=$('#felt').getBoundingClientRect(),dr=$('#dz').getBoundingClientRect(),
           inR=r=>e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom,
           onTable=moved&&Math.hypot(fx-DX,fy-DY)>24&&inR(fr)&&!inR(dr);
     if(cdL){  /* grabbed mid-cooldown: drop on the felt, else back it goes */
-      if(onTable){dropEarly(grab,ge,fx,fy);return;}
+      if(onTable){
+        if(preDrops.length<flickCap()){dropEarly(grab,ge,fx,fy);return;}
+        SFX.deny();layout();return;}
       layout();if(!moved&&quick)SFX.deny();return;}
     const wants=dy<-26||vy<-.45||(!moved&&quick);
     if(wants)drawCard();
@@ -99,12 +152,21 @@ function initInput(){
      (or right-click) opens the sticker card, right-click on the bare
      felt ends the turn. A hold never banks — the sheet swallows it; a
      horizontal drag belongs to the tab swipe, not the felt. */
-  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false;
+  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null;
   Fd.addEventListener('pointerdown',e=>{
     if(e.target.closest('#dz'))return;
     stkTipHide();
     by=e.clientY;bx=e.clientX;bt=performance.now();infoFired=false;
     const ce=e.target.closest('.card');
+    /* a parked early lift: the finger can carry it — drop it on the
+       deck to put it back, anywhere else re-parks it */
+    if(ce&&!ce.classList.contains('faceup')&&preDrops.includes(+ce.dataset.cid)){
+      const pid=+ce.dataset.cid,pe=els[pid]||ce;
+      parkP={id:pid,el:pe,px:pe._pkx||DX,py:pe._pky||DY,x:e.clientX,y:e.clientY};
+      pe.style.transition='none';
+      pe.style.zIndex=960;
+      return;
+    }
     /* pile cards count too, even face-down — a tap fans them out */
     cardP=(ce&&(ce.classList.contains('faceup')||pileOf(+ce.dataset.cid)))
       ?{id:+ce.dataset.cid,x:e.clientX,y:e.clientY}:null;
@@ -112,11 +174,33 @@ function initInput(){
       infoFired=true;openStkCard(cardP.id);},350);
   });
   Fd.addEventListener('pointermove',e=>{
+    if(parkP){
+      const dx=e.clientX-parkP.x,dy=e.clientY-parkP.y,
+            px=parkP.px+dx,py=parkP.py+dy;
+      parkP.el._pkx=px;parkP.el._pky=py;
+      parkP.el.style.transform=`translate(${px.toFixed(1)}px,${py.toFixed(1)}px) rotate(${Math.max(-14,Math.min(14,dx*.09)).toFixed(1)}deg)`;
+      return;
+    }
     if(cardP&&cardT&&Math.hypot(e.clientX-cardP.x,e.clientY-cardP.y)>8){
       clearTimeout(cardT);cardT=0;}
   });
   Fd.addEventListener('pointerup',e=>{
     if(cardT){clearTimeout(cardT);cardT=0;}
+    if(parkP){
+      const p=parkP;parkP=null;by=null;
+      p.el.style.transition='';p.el.style.zIndex=500;
+      if(!preDrops.includes(p.id)){layout();return;}   /* it flipped or flew home mid-carry */
+      const dr=$('#dz').getBoundingClientRect(),
+            over=e.clientX>=dr.left&&e.clientX<=dr.right&&e.clientY>=dr.top&&e.clientY<=dr.bottom;
+      if(over){returnPark(p.id);return;}
+      /* still waiting: it re-parks where the finger left it */
+      const cw=CUR_CW,ch=CUR_CH,
+            px=Math.min(FW-cw/2-8,Math.max(cw/2+8,p.px)),
+            py=Math.min(FH-ch/2-8,Math.max(ch/2+8,p.py));
+      p.px=px;p.py=py;p.el._pkx=px;p.el._pky=py;
+      p.el.style.transform=`translate(${px.toFixed(1)}px,${py.toFixed(1)}px) rotate(${(byId(p.id).j*3).toFixed(1)}deg)`;
+      return;
+    }
     const held=cardP;cardP=null;
     if(by==null)return;
     const d=e.clientY-by,fast=performance.now()-bt<650;by=null;
@@ -133,11 +217,19 @@ function initInput(){
     if(!held&&fanZone&&!infoFired&&Math.hypot(e.clientX-bx,d)<8&&!Views.swiping&&fast
       &&!e.target.closest('.tok.cnt')){setFan(null);return;}
     if(d>44&&fast&&!Views.swiping&&!infoFired)bank(S.hands[S.focus]);
-    /* the felt's other half: a swipe up anywhere off the deck draws */
-    else if(d<-44&&fast&&!Views.swiping&&!infoFired)drawCard();
+    /* the felt's other half: a swipe up anywhere off the deck draws.
+       Mid-cooldown the Pre-Flick catches it: the next card pulls out
+       face-down to wait for the ring (silent without the upgrade, the
+       same nothing a swipe has always done on a cooling deck) */
+    else if(d<-44&&fast&&!Views.swiping&&!infoFired){
+      const fr=Fd.getBoundingClientRect();
+      if(!drawCard())flickUp(e.clientX-fr.left,e.clientY-fr.top);
+    }
   });
   Fd.addEventListener('pointercancel',()=>{
     if(cardT){clearTimeout(cardT);cardT=0;}
+    if(parkP){const p=parkP;parkP=null;
+      p.el.style.transition='';p.el.style.zIndex=500;}
     by=null;cardP=null;});
   Fd.addEventListener('contextmenu',e=>{
     const ce=e.target.closest('.card');
@@ -191,7 +283,10 @@ function initInput(){
   killHolds=()=>{clearTimeout(bT);bT=0;
     if(cardT){clearTimeout(cardT);cardT=0;}
     /* the swipe took the pointer (and its capture): the felt's own
-       up/cancel will never arrive, so nothing may stay half-pressed */
+       up/cancel will never arrive, so nothing may stay half-pressed —
+       a carried waiting card re-parks where it sits */
+    if(parkP){const p=parkP;parkP=null;
+      p.el.style.transition='';p.el.style.zIndex=500;}
     by=null;cardP=null;};
 
   /* the pile counters open their fan too — a small target, but it sits

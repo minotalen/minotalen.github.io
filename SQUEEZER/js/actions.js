@@ -93,6 +93,23 @@ function drawCard(hi,free,auto){
       fresh.indexOf(w)>=0||--w.left>0);}
   return ok;
 }
+/* the pre-flick tick, one beat a frame: cards pulled mid-cooldown wait
+   face-down on the felt until the ring clears, then land as real draws
+   — one per beat, the last one stamps the ring, the rest land free (a
+   whole parked burst drains on one cooldown). A reshuffle (a bank or a
+   bust while cards wait) scrambles the deck: any waiter that lost its
+   top seat goes home. Frozen never flips — a bust mid-burst leaves the
+   rest parked for the next window */
+function preDropTick(rem){
+  if(!preDrops.length||!S.deck.length)return;
+  const seats=S.deck.slice(-preDrops.length);
+  if(preDrops.some(id=>!seats.includes(id))){
+    preDrops=preDrops.filter(id=>seats.includes(id));layout();return;}
+  if(rem>0||frozen||boardDealing||pyrUndealt.length)return;
+  const tid=S.deck[S.deck.length-1];
+  preDrops.splice(preDrops.indexOf(tid),1);
+  drawCard(null,preDrops.length>0);   /* free while waiters remain: one ring per burst */
+}
 function resolve(id,h,auto,fresh){
   fresh=fresh||[];
   /* the gauge as the player faced it, the drawn card still in the deck:
@@ -455,6 +472,15 @@ function bust(c,twinId,h,preTh){
        discard is not swept: a ward save waits for a score */
     const spot=id=>{const e=els[id];return e&&e._sx!=null?{id,x:e._sx,y:e._sy}:null;};
     const ride=S.out.map(spot).concat(going.map(spot)).filter(Boolean);
+    /* the lifts come home too: the shuffle voids the wait, and they fly
+       face-down with the sweep */
+    if(preDrops.length){
+      const fr2=$('#felt').getBoundingClientRect();
+      preDrops.forEach(id=>{const e=els[id];
+        if(e){const r=e.getBoundingClientRect();
+          ride.push({id,x:r.left-fr2.left+r.width/2,y:r.top-fr2.top+r.height/2,down:1});}});
+      preDrops=[];
+    }
     S.out=[];
     toOut(c.id,true);   /* the seat is free: no outed tick */
     bustPair=null;bustGhost=null;rebuildDeck();SFX.shuffle();
@@ -556,6 +582,12 @@ function bank(h,auto){
      warded cards, so they join the same cascade into the deck */
   if(S.disc)S.disc.forEach(id=>{const e=els[id];
     if(e&&e._sx!=null)back.push({id,x:e._sx,y:e._sy});});
+  /* the early lifts come home with the sweep too: a bank is a shuffle,
+     the wait is void — they fly back face-down with the cascade */
+  preDrops.forEach(id=>{const e=els[id];
+    if(e){const r=e.getBoundingClientRect();
+      back.push({id,x:r.left-fr.left+r.width/2,y:r.top-fr.top+r.height/2,down:1});}});
+  preDrops=[];
   let mint=0,divHits=0,divCards=0;
   for(const id of h.ids){const c=byId(id);
     if(c.stk==='relic'){c.r=(c.r||0)+1;faceOf(c);SFX.stk('relic','bank',cval(c));}
@@ -609,6 +641,9 @@ function bank(h,auto){
   /* Papered banks: every stickered card this bank cashed, lifetime —
      Preprint's gate, fed by any placed sticker */
   S.st.stkBanked=(S.st.stkBanked||0)+h.ids.reduce((a,id)=>a+(byId(id).stk?1:0),0);
+  /* Fives banked, lifetime: Centapent's count (shown values, so a
+     rewrite to or from a 5 moves it) */
+  S.st.fiveBanks=(S.st.fiveBanks||0)+h.ids.reduce((a,id)=>a+(cval(byId(id))===5?1:0),0);
   /* Clockwork: the hand ticks through the low trio, a 1 a 2 and a 3 */
   if([1,2,3].every(v=>h.ids.some(id=>cval(byId(id))===v)))S.st.oneTwoThree=(S.st.oneTwoThree||0)+1;
   /* Rainbow: a full hand with no twins on it */

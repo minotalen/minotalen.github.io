@@ -118,6 +118,9 @@ const dodgeOf=h=>ECO.MARKED_PER*L('marked');
 /* a deck's buyable ceiling: the Marked Pendant lifts Marked Deck's ladder
    30 levels to 50, so the slip line can climb to 50% */
 const uMax=id=>id==='marked'&&M('pendant')?UPG.marked.max+20:UPG[id].max;
+/* an upgrade's next price: base×g^level, unless the row pins its own
+   ladder (Pre-Flick's 500 / 1500 / 5000) */
+const upCost=(u,l)=>u.c?u.c(l):Math.ceil(u.base*Math.pow(u.g,l));
 /* the stop dial's ceiling: the deepest line Draw Stop allows, per
    level. The gauge is honest, so this ignores ward/dodge/grace by
    construction */

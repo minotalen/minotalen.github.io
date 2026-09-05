@@ -158,13 +158,11 @@ function frame(ts){
     ch.style.opacity=chvOn?(frozen?.1:.75):0;}
   ch.classList.toggle('off',!chvOn);   /* a hidden arrow pauses its bounce instead of ticking unseen */
   paintWard(now);
-  /* the early lift pays out: a card pulled mid-cooldown and dropped on
-     the felt flips the moment the deck cools — a real draw, ring and
-     all. If it somehow lost the top seat (a reshuffle), it goes home */
-  if(preDrop!=null){
-    if(S.deck[S.deck.length-1]!==preDrop){preDrop=null;layout();}
-    else if(rem<=0&&!frozen&&!boardDealing&&!pyrUndealt.length){preDrop=null;drawCard();}
-  }
+  /* the early lifts pay out: cards pulled mid-cooldown wait face-down
+     on the felt and flip the moment the deck cools — real draws, ring
+     and all. preDropTick also sends home any waiter a reshuffle
+     knocked out of the deck's top seats */
+  preDropTick(rem);
   if(!frozen&&!coldBoot&&!ttlAlive()){
     /* a bank inside the step yields the rest of this frame: the sweep
        owns the moment, the next beat draws */

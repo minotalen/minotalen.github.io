@@ -38,7 +38,7 @@ const STK = {
   snip:   {n:'Snip',     t:1, pm:.511, st:'peapod',  d:'On draw: a twin of its value waits in the discard till you score.'},
   mint:   {n:'Mint',     t:1, pm:1.022, st:'note',   d:'On bank: ×4 its value to score, on top of the payout.',
            cur:(c,h)=>`now +${fmt(cval(c)*ECO.MINT_X*valueMult())} a bank`},
-  brass:  {n:'Brass',    t:1, pm:.688, st:'sunflower',  d:'On a table: each Brass pays +2 score per Brass card on table.',
+  brass:  {n:'Brass',    t:1, pm:.688, st:'sunflower',  d:'On a table: each Brass pays +5 score per Brass card on table.',
            cur:(c,h)=>`now +${fmt(ECO.BRASS_SCORE*h.ids.length*h.ids.filter(id=>byId(id).stk==='brass').length)} a bank`},
   surge:  {n:'Surge',    t:2, st:'wave', d:'On a table: +0.20 to the hand multiplier.',
            cur:(c,h)=>`now +${ECO.SURGE_STEP.toFixed(2)}×`},
@@ -255,24 +255,27 @@ const totm=(per,l,u='%')=>l?` (−${+(per*l).toFixed(2)}${u} total)`:'';
    total is 1−f^l and needs its own non-linear helper */
 const totmR=(f,l,u='%')=>l?` (−${+(100*(1-Math.pow(f,l))).toFixed(2)}${u} total)`:'';
 const UPG = {
-  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:20,   g:1.65},
-  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:30, base:35,   g:1.45},
-  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:60,  g:1.85},
-  nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:12, base:145,  g:2.0},
-  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:300,  g:1.9},
-  chain:  {n:'Chain Reaction', d:l=>'+1% per bank in current chain'+tot(1,l),  max:20, base:280,  g:2.05},
+  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:20,   g:1.55},
+  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:30, base:30,   g:1.45},
+  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:55,  g:1.85},
+  nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:12, base:130,  g:1.9},
+  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:220,  g:1.8},
+  chain:  {n:'Chain Reaction', d:l=>'+1% per bank in current chain'+tot(1,l),  max:20, base:100,  g:2.05},
   eye:    {n:"Collector's Eye",d:l=>`+0.1% value per card you own —your ${eyeCount()} cards pay +${(ECO.EYE_PER*l*eyeCount()*100).toFixed(1)}% now`, max:15, base:320, g:1.71},
   auto:   {n:'Auto-Draw',      d:l=>(l?`Draws for you — deals up to ${l} card${l===1?'':'s'} a table, then waits`:'Draws for you — one card a table, then it waits')+(OFFLINE_ON?'. Offline earnings on.':'.') , max:6, base:1000, g:2.1},
   guard:  {n:'Draw Stop',       d:l=>l?`The draw-stop dial reaches ${Math.round(ECO.GUARD_AT[l-1]*100)}% risk.`:'Set where Auto-draw quits.', max:4, base:1000, g:1.6},
   marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:500,  g:1.2},
-  sleight:{n:'Sleight of Hand',d:l=>'+3% value per card outside the deck'+tot(3,l), max:8,  base:680,  g:2.01},
+  /* the swipe-up pre-flick: costs pin their own ladder (upCost), the
+     level is how many flicked cards may wait on the felt at once */
+  flick:  {n:'Pre-Flick',      d:l=>'Swipe up mid-cooldown and the next card waits on the felt'+(l>1?`, up to ${l} at once`:''), max:3, c:l=>[500,1500,5000][l]},
+  sleight:{n:'Sleight of Hand',d:l=>'+3% value per card outside the deck'+tot(3,l), max:8,  base:680,  g:2.0},
   house:  {n:'House Money',    d:'First bank of a chain pays +25%',            max:1,  base:4800, g:1},
   abank:  {n:'Auto-Bank',      d:'Banks alone at a risk line you set',         max:1,  base:6800, g:1},
-  grace:  {n:'Grace',          d:l=>'+1 ward each run'+tot(1,l,''),                max:2,  base:90000, g:1.7},
+  grace:  {n:'Grace',          d:l=>'+1 ward each run'+tot(1,l,''),                max:2,  base:77700, g:2.2},
   over:   {n:'Overload',       d:l=>'+8% per level while you hold 10+ cards'+tot(8,l), max:5,  base:4000, g:2.01},
   iron:   {n:'Iron Nerve',     d:'A bust keeps the chain, once per chain',    max:3,base:44000,g:1},
-  high:   {n:'High Roller',    d:l=>'+15% value on cards of 8+'+tot(15,l),         max:10, base:3040, g:1.91},
-  split:  {n:'Split',          d:l=>'Deal one more hand, same deck'+tot(1,l,''),   max:4,  base:32000, g:2.3},
+  high:   {n:'High Roller',    d:l=>'+15% value on cards of 8+'+tot(15,l),         max:10, base:8192, g:1.8},
+  split:  {n:'Split',          d:l=>'Deal one more hand, same deck'+tot(1,l,''),   max:3,  base:32000, g:3},
   deep:   {n:'Deep Cuts',      d:l=>'+20% value on cards of 14+'+tot(20,l),        max:10, base:64000,g:2.01}
 };
 
@@ -485,6 +488,7 @@ const ACH = [
   U('u6','Side Deck','Own 20 cards','eye',()=>S.cards.length,20),
   U('u7','Crash Test','Bust 50 times with the autos drawing','guard',()=>S.st.aBusts||0,50),
   U('u8','Graze','Deflect 10 risky cards','marked',()=>S.st.deflects,10),
+  U('u20','Centapent','Bank 100 Fives','flick',()=>S.st.fiveBanks||0,100),
   U('u9','Light Fingers','Put 30 cards out of the deck','sleight',()=>S.st.outed||0,30),
   U('u10','Ten Grand','Bank 10,000 in one run','house',()=>S.st.bestBank,1e4),
   U('u12','Clockwork','Bank 10 hands holding a 1, a 2 and a 3','abank',()=>S.st.oneTwoThree||0,10),
@@ -554,7 +558,7 @@ const ECO = {
   /* the reliable/gamble pairs: each pair shares a job, one pays small
      every bank, the other rolls a chance to pay much bigger */
   MINT_X:4, TRIBUTE_X:7, SIPHON_X:10,
-  BRASS_SCORE:2,                                     /* brass: +2 score per card per Brass, per Brass — copies count each other */
+  BRASS_SCORE:5,                                     /* brass: +2 score per card per Brass, per Brass — copies count each other */
   BLOOM_PER:.10, BLOOM_CHANCE:.5,                    /* bloom: +10% mult per card, 50% per copy */
   SURGE_STEP:.20,                                    /* surge: the reliable mult */
   KINDLE_PER:.40, KINDLE_CHANCE:.40,                 /* kindle: +0.40 mult per other card, 40% */

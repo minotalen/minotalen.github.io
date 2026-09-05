@@ -221,7 +221,7 @@ let CUR_CW=54,CUR_CH=76;   /* layout() refreshes; place() stamps them on every c
 function place(id,x,y,rot,up,z,out,sc,rest){
   const e=els[id];if(!e)return;
   if(fanHeld(id))return;   /* mid-fan: the tween owns this card */
-  if(preDrop===id&&S.deck[S.deck.length-1]===id)return;   /* the early lift: it waits on the felt */
+  if(preDrops.includes(id))return;   /* the early lifts: they wait on the felt */
   /* a face-up card can never rest flat: the 2D pose pins the back on
      (Tell's revealed top, Vantage's standing read) — it keeps the flip */
   if(rest&&up)rest=false;
@@ -602,12 +602,12 @@ function layout(){
       place(id,DX,DY,0,false,10+pyrUndealt.length-1-k,false,null,true);
     });
   }else{
-    /* an early lift parked on the felt still holds the deck's top seat
-       logically, but the visible stack drains without it: the working
+    /* early lifts parked on the felt still hold the deck's top seats
+       logically, but the visible stack drains without them: the working
        top below wears the full edge, and no reveal (Vantage, Tell) may
-       read past the lifted card while it waits */
-    const lifted=preDrop!=null&&S.deck[S.deck.length-1]===preDrop,
-          dlist=lifted?S.deck.slice(0,-1):S.deck;
+       read past a lifted card while it waits */
+    const lifted=preDrops.length>0,
+          dlist=lifted?S.deck.filter(id=>!preDrops.includes(id)):S.deck;
     dlist.forEach((id,i)=>{
       if(fanHeld(id))return;   /* mid-flight: the tween owns this card */
       const k=dlist.length-1-i,e=els[id];

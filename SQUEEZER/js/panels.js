@@ -53,7 +53,7 @@ function buyUpg(id){
   const u=UPG[id];if(!u)return;
   const l=L(id);if(l>=uMax(id))return;
   if(upGate(id)){SFX.deny();return;}   /* a level-gated rung waits on its goal */
-  const cost=Math.ceil(u.base*Math.pow(u.g,l));if(S.score<cost){SFX.deny();return;}
+  const cost=upCost(u,l);if(S.score<cost){SFX.deny();return;}
   S.score-=cost;S.up[id]=l+1;SFX.buy();buzz(12);
   logAct('upg',-cost);
   biFirst('upg');bi('buy',{k:'upg',id,l:l+1,p:biBucket(cost),t:biPlayMin()});
@@ -266,6 +266,7 @@ function ascend(){
     kp:kept.length,cd:S.cards.length,
     pl:(S.st.placed||0)-((S.rst&&S.rst.placed)||0)});
   S.up={};S.cards=[];S.deck=[];S.out=[];S.disc=[];S.gone=[];S.nid=1;S.banked=0;S.pick=null;
+  preDrops=[];liftGrab=null;   /* no waiter survives the shuffle: the ids are minted fresh */
   S.hands=[newHand()];S.focus=0;S.dhold={};S.mboost={};   /* condition ledgers die with the cycle */
   S.score=Math.floor(400*Math.pow(2.15,M('rich'))-400);
   seed(kept);buildEls();rebuildDeck();layout();rollShop(true);cdEnd=0;
@@ -499,7 +500,7 @@ function renderUp(){
   Object.keys(UPG).forEach(id=>{
     const u=UPG[id];
     if(!upOpen(id)&&!L(id)){hid++;return;}
-    const l=L(id),mx=uMax(id),max=l>=mx,cost=Math.ceil(u.base*Math.pow(u.g,l));
+    const l=L(id),mx=uMax(id),max=l>=mx,cost=upCost(u,l);
     const gate=upGate(id);   /* the next level waits on a goal */
     const ds=(typeof u.d==='function'?u.d(l):u.d)   /* descs may speak per level */
       +(gate?`<br>Level ${l+1} · ${gate.n}: ${gate.d}`:'');
@@ -886,7 +887,7 @@ function refreshBuy(){
   $$('#v-cards .buy[data-v]').forEach(b=>{const v=+b.dataset.v;
     b.disabled=S.score<cardCost(v)||tierDone(v)||v>unlockedV();});
   $$('#v-up .buy[data-u]').forEach(b=>{const u=UPG[b.dataset.u],l=L(b.dataset.u);
-    b.disabled=l>=uMax(b.dataset.u)||!!upGate(b.dataset.u)||S.score<Math.ceil(u.base*Math.pow(u.g,l));});
+    b.disabled=l>=uMax(b.dataset.u)||!!upGate(b.dataset.u)||S.score<upCost(u,l);});
   $$('#v-pres .buy[data-m]').forEach(b=>{const m=META[b.dataset.m],l=M(b.dataset.m);
     b.disabled=l>=m.max||!!metaGate(b.dataset.m)||S.shards<Math.ceil(m.c(l));});
   const r=$('#rr');if(r)r.disabled=S.score<rrCost();

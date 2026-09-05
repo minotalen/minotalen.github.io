@@ -175,7 +175,7 @@ function openSet(){
   <div class="ash"><span>CONTROLS</span></div>
   <div class="row"><div class="b"><div class="ds"><b>Draw</b> tap or flick the deck, or swipe up · <b>Bank</b> swipe down · <b>Bank all</b> hold the BANK button<br>
     <b>Tabs</b> swipe sideways, anywhere off the deck · <b>Deck view</b> hold the deck · <b>Split</b> tap a chip<br>
-    Lift the top card early: drop it on the felt and it flips when the draw cooldown clears.<br>
+    Lift the top card early: drop it on the felt and it flips when the draw cooldown clears. Drag a waiting card onto the deck to put it back; a bank sweeps it home.<br>
     Tap a charged trick card to arm it. Hold a face-up card for its story.<br>
     Swap, Clip, Ghost, Dredge and Riffle rewrite table values — every rewrite turns back at the shuffle.<br>
     Keys: <b>Space</b> draw · <b>B</b> bank · <b>F</b> hand · <b>D</b> deck · <b>1-6</b> tabs.</div></div></div>
