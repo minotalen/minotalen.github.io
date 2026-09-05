@@ -53,12 +53,12 @@ function flickUp(x,y,vx,vy){
   const cw=CUR_CW,ch=CUR_CH;
   /* the park lies ON the swipe, never toward the finger's endpoint:
      direction from the release velocity, travel from its momentum
-     (÷3.2, releaseGlide's friction — keep them in step). The flick
+     (the slide-distance formula, in step with releaseGlide's D). The flick
      keeps its own line; only a dead release falls back to the ray from
      the deck through the touch point */
   const sp=Math.hypot(vx||0,vy||0);
   let dx,dy,travel;
-  if(sp>40){dx=vx/sp;dy=vy/sp;travel=Math.min(310,Math.max(70,sp/3.2));}
+  if(sp>40){dx=vx/sp;dy=vy/sp;travel=Math.min(310,Math.max(70,sp*.33));}
   else{const ddx=x-DX,ddy=y-DY,dd=Math.hypot(ddx,ddy)||1;
     dx=ddx/dd;dy=ddy/dd;travel=Math.min(200,Math.max(60,dd));}
   const px=Math.min(FW-cw/2-8,Math.max(cw/2+8,DX+dx*travel)),
@@ -121,12 +121,12 @@ function initInput(){
     SFX.detent();buzz(6);
     if(cdL){
       /* the park continues the drag's momentum: the spot sits along the
-         release ray at the friction travel (÷3.2, releaseGlide's FR),
+         release ray at the slide distance (releaseGlide's D formula),
          so the card slides PAST the finger and settles ahead, never
          easing back to where it was let go */
       const dsp=Math.hypot(vx||0,vy||0);
       let tx2=cx,ty2=cy;
-      if(dsp>60){const travel=Math.min(220,Math.max(50,dsp/3.2));
+      if(dsp>60){const travel=Math.min(220,Math.max(50,dsp*.33));
         tx2=Math.min(FW-cw/2-8,Math.max(cw/2+8,x+vx/dsp*travel));
         ty2=Math.min(FH-ch/2-8,Math.max(ch/2+8,y+vy/dsp*travel));}
       ce._pkx=tx2;ce._pky=ty2;
@@ -161,11 +161,11 @@ function initInput(){
     vy=(e.clientY-ly)/dt;ly=e.clientY;lt=t;
     vx=(e.clientX-lx)/dt;lx=e.clientX;
     dvel.push(e.clientX,e.clientY);
-    const dx=e.clientX-sx,dy=Math.min(6,e.clientY-sy);
+    const dx=e.clientX-sx,dy=Math.min(10,e.clientY-sy);
     if(Math.abs(dx)>7||Math.abs(e.clientY-sy)>7){moved=true;if(held){clearTimeout(held);held=null;}}
     if(id==null)return;                     /* a waiting early-lift owns the top seat */
     const pull=Math.min(1,Math.max(0,-dy/70));
-    el.style.transform=`translate(${DX+dx*.5}px,${DY+dy*.9}px) rotate(${dx*.09}deg) scale(${1+pull*.14})`;
+    el.style.transform=`translate(${DX+dx*.6}px,${DY+dy*.9}px) rotate(${dx*.09}deg) scale(${1+pull*.14})`;
     if(pull>=1&&!el.dataset.rdy){el.dataset.rdy='1';SFX.detent();buzz(6);}
     if(pull<1)delete el.dataset.rdy;
   });
@@ -189,7 +189,7 @@ function initInput(){
        the card lands there. A cool deck flips it at once (the pre-drop
        fires next frame); mid-cooldown it waits face-down for the ring
        while a seat is free — full seats send it back with a tick */
-    const fx=DX+(e.clientX-sx)*.5,fy=DY+Math.min(6,e.clientY-sy)*.9,
+    const fx=DX+(e.clientX-sx)*.6,fy=DY+Math.min(10,e.clientY-sy)*.9,
           fr=$('#felt').getBoundingClientRect(),dr=$('#dz').getBoundingClientRect(),
           inR=r=>e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom,
           onTable=moved&&Math.hypot(fx-DX,fy-DY)>24&&inR(fr)&&!inR(dr);

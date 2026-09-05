@@ -481,7 +481,7 @@ function bust(c,twinId,h,preTh){
     if(guard>0)setTimeout(()=>{float('GUARD\n+'+fmt(guard),x,y+48,'#2A4761');SFX.stk('guardian','bust');},d);}
   logAct('bust',keep,h.run.autoDeal);
   biFirst('bust');
-  paint();save(true);
+  tickScore(true);paint();save(true);
   tutEvent('bust');
   runSoon(()=>{
     /* everyone folds into the sweep home: the busted hand rides the
@@ -538,7 +538,7 @@ function reScore(s){
   spray(x,y,'#3E7A5E',scoreSpk(s));slam(fmt(s),'#3E7A5E');
   SFX.bank(1,1);SFX.stk('dividend','bank');buzz(20);scorePulse();
   float('DIVIDEND',x,y+34,'#3E7A5E');
-  paint();save(true);
+  tickScore(true);paint();save(true);
 }
 function bank(h,auto){
   if(!h.ids.length||frozen||!canBank(h))return;
@@ -601,9 +601,12 @@ function bank(h,auto){
   const dt=Math.max(.6,(performance.now()-runT)/1000);runT=performance.now();
   S.rate=S.rate?S.rate*.85+(s/dt)*.15:s/dt;
   const n=h.ids.length,[x,y]=feltPt(FW/2,FH*.32);
-  /* the slam is the one number of the moment — particles carry the rest */
-  spray(x,y,'#2C563C',scoreSpk(s));slam(house?'HOUSE '+fmt(s):fmt(s),'#2C563C');
-  SFX.bank(n,prem);buzz(20);warm();scorePulse();
+  /* the slam is the one number of the moment — particles carry the rest.
+     the chain is the one stat that escalates, so the moment grows with
+     it: more spray, a taller slam (--slk), rungs over the bank chord */
+  spray(x,y,'#2C563C',scoreSpk(s)+Math.min(h.chain,10)*3);
+  slam(house?'HOUSE '+fmt(s):fmt(s),'#2C563C',1+Math.min(h.chain,12)*.02);
+  SFX.bank(n,prem,h.chain);buzz(20);warm();scorePulse();
   const purge=h.ids.some(id=>byId(id).stk==='purge'),
         fallout=!purge&&h.ids.some(id=>byId(id).stk==='fallout');
   /* snapshot the table where it sits: every card bound for the deck keeps
@@ -762,7 +765,7 @@ function bank(h,auto){
   /* sampled bank: pay + whose hand dealt it. Set-chance verification
      lives in sim.js; the money curve rides the inc snapshots */
   if(Math.random()<.1)bi('bank',{n:biBucket(S.score-_s0),a:auto?1:0});
-  layout();SFX.slide();fanHome(back);checkAch();unlocks();paint();save(true);
+  layout();SFX.slide();fanHome(back);checkAch();unlocks();tickScore(true);paint();save(true);
   checkFloatAll();
   tutEvent('bank');
 }
@@ -1384,7 +1387,7 @@ function fireFloat(h){
   if(s>(S.st.bestFloat||0))S.st.bestFloat=s;
   const[x,y]=feltPt(FW/2,FH*.3);float('+'+fmt(s),x,y,'#2A4761');slam('FLOAT','#2A4761');
   SFX.bank(h.ids.length,1);SFX.stk('float','bank');buzz(20);warm();scorePulse();
-  layout();paint();save(true);
+  layout();tickScore(true);paint();save(true);
 }
 /* Bail: the manual exit. Same zeroing as Float, but you pick the moment
    and the premium rides — it pays what a bank would without being one */
@@ -1397,7 +1400,7 @@ function fireBail(h,c){
   if(s>(S.st.bestFloat||0))S.st.bestFloat=s;
   const[x,y]=feltPt(FW/2,FH*.3);float('+'+fmt(s),x,y,'#2A4761');slam('BAILED','#2A4761');
   SFX.bank(h.ids.length,1);SFX.stk('bail','bank');buzz(20);warm();scorePulse();
-  layout();paint();save(true);
+  layout();tickScore(true);paint();save(true);
 }
 
 /* ---------------- Fetch: three from OUT, one comes home ---------------- */

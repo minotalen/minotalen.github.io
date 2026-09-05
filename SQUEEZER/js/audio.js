@@ -179,14 +179,20 @@ const SFX = (() => {
       nse(.09*J(.4),.05*J(.3),.10*J(.3),2800*J(.15),700*J(.2),2,'bandpass');
       osc(74*J(.1),.01*J(.3),.16*J(.2),'triangle',.10*J(.2),40*J(.1),600); },
     /* understated falling fifth, no fanfare; a fat premium adds one quiet
-       fifth above — warmth for a bank you earned at the edge */
-    bank(n,prem){ if(!on())return;
+       fifth above — warmth for a bank you earned at the edge. The chain
+       stacks rungs on top: one pluck a link, climbing the house scale from
+       the chord's own top (NOTE(15) is the 392 voice), garnish so a burst
+       of banks thins it first — the combo audibly piles up */
+    bank(n,prem,ch){ if(!on())return;
       osc(58*J(.03),0,.24,'sine',.16,44,300);
       osc(392*J(.01),.01,.16,'triangle',.055,392,1500);
       osc(262*J(.01),.11,.30,'triangle',.05,262,1300);
       if((n||0)>=8)osc(196*J(.01),.22,.42,'sine',.05,196,900);
       if((prem||0)>=1.5){osc(330*J(.01),.05,.26,'sine',.032,330,1400);osc(495*J(.01),.07,.30,'sine',.026,495,1600);}
-      nse(0,.14,.05,1600,500,.5); },
+      nse(0,.14,.05,1600,500,.5);
+      const cg=gate(0),links=Math.min(6,Math.ceil(ch||0));
+      for(let i=0;cg&&i<links;i++)
+        osc(NOTE(15+i)*J(.006),.02+i*.045,.09*J(.2),'triangle',.03*cg,NOTE(15+i)*.94,2100); },
     /* the felt's pulse: a soft lub-dub; k = certainty × adrenaline,
        0 means silent, i = pool intensity — a small deck is a small moment */
     heart(k,i){ if(!on())return; const v=i==null?1:i;

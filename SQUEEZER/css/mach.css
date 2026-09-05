@@ -1,0 +1,145 @@
+/* ==================================================================
+   mach.css — the machinations live-economy view (mach.html only).
+   Two columns: left = the compiled economy graph over the current
+   card, the last ten results and the goal row; right = the game
+   itself (its tab rail rides along) over the purchase log. The game
+   files are untouched: mach.js re-lays this page and hooks the live
+   feed through the same globals the game already publishes.
+   ================================================================== */
+
+/* ---- the frame: body becomes a 2×2 grid; #app keeps its own
+   internal layout untouched, it just moves into the top-right cell ---- */
+body.mach{display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(430px,44%);
+  grid-template-rows:minmax(0,63fr) minmax(0,37fr)}
+body.mach #app{grid-column:2;grid-row:1;height:100%;min-height:0;
+  max-width:none;margin:0;border-left:1px solid var(--line)}
+/* belt and braces: the wide lanes belong to index.html. mach.js also
+   unregisters the matchMedia listener — this only catches a stray */
+body.mach.wide #side{display:none}
+body.mach.wide #app{display:flex;max-width:none}
+
+/* ---- left top: the graph ---- */
+#machTop{grid-column:1;grid-row:1;display:flex;flex-direction:column;
+  min-height:0;min-width:0;background:var(--paper)}
+#machBar{flex:none;display:flex;align-items:center;gap:10px;
+  padding:8px 14px 7px;border-bottom:1px solid var(--line)}
+#machBar .mt{font-family:var(--disp);font-weight:800;font-size:11px;
+  letter-spacing:.22em;color:var(--ink2)}
+#machBar .mrate{font-family:var(--nm);font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#machBar .mrate b{color:var(--grn);font-weight:700}
+#machBar .mrate i{color:var(--red);font-style:normal}
+#machBar .msp{flex:1}
+.mspd{display:flex;gap:4px}
+.mspd button{border:0;border-radius:8px;padding:5px 9px;cursor:pointer;
+  background:var(--grad);color:var(--ink3);font-family:var(--nm);font-size:10px;
+  font-weight:700;letter-spacing:.06em;
+  box-shadow:2px 2px 5px var(--shs),-2px -2px 5px var(--hl)}
+.mspd button.on{color:var(--gld);
+  box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.maut{border:0;border-radius:8px;padding:5px 10px;cursor:pointer;
+  background:var(--grad);color:var(--ink3);font-family:var(--ui);font-size:9.5px;
+  font-weight:700;letter-spacing:.16em;
+  box-shadow:2px 2px 5px var(--shs),-2px -2px 5px var(--hl)}
+.maut.on{color:var(--grn);
+  box-shadow:inset 2px 2px 4px rgba(160,150,126,.45),inset -1px -1px 3px var(--hl)}
+.maut:disabled{opacity:.4;cursor:default}
+#machCv{flex:1;min-height:0;width:100%;display:block}
+
+/* ---- left bottom: current card · last 10 · goals ---- */
+#machBot{grid-column:1;grid-row:2;display:grid;min-height:0;min-width:0;
+  grid-template-columns:auto minmax(0,1fr);gap:0 16px;
+  padding:12px 14px 10px;border-top:1px solid var(--line);overflow:auto}
+#mStageWrap{display:flex;flex-direction:column;align-items:center;gap:7px}
+#mStage{--cw:96px;--ch:135px;position:relative;width:calc(var(--cw) + 10px);
+  height:calc(var(--ch) + 10px);border-radius:12px;transition:box-shadow .3s}
+#mStage.bust{box-shadow:inset 0 0 0 2px rgba(142,43,28,.35)}
+#mStage .card{position:absolute;left:calc(50% - var(--cw)/2);top:calc(50% - var(--ch)/2);
+  margin:0;z-index:2;transition:none}
+#mCap{max-width:170px;text-align:center;font-family:var(--ui);font-size:10px;
+  line-height:1.35;color:var(--ink2)}
+#mCap b{color:var(--ink);font-weight:700}
+#mCap .cstk{color:var(--gld)}
+#mCap .ccnd{color:var(--blu)}
+#mSide{display:flex;flex-direction:column;gap:9px;min-width:0;padding-right:4px}
+.mh{font-family:var(--disp);font-weight:800;font-size:9px;letter-spacing:.24em;
+  color:var(--ink3)}
+#mRes{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
+.rchip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px 4px;
+  border-radius:8px;font-family:var(--nm);font-size:10.5px;font-weight:700;
+  background:var(--grad);color:var(--ink2);
+  box-shadow:2px 2px 4px var(--shs),-2px -2px 4px var(--hl)}
+.rchip.bank{color:var(--grn)}
+.rchip.bust{color:var(--red)}
+.rchip.ward{color:var(--blu)}
+.rchip.div{color:#1F6E63}
+.rchip small{font-weight:400;color:var(--ink3);font-size:9px}
+#mGoals{display:flex;flex-direction:column;gap:4px}
+.grow{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;
+  background:var(--grad);box-shadow:2px 2px 4px var(--shs),-2px -2px 4px var(--hl);
+  font-size:11px;min-width:0}
+.grow .gn{font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:38%}
+.grow .gb{flex:1;height:5px;border-radius:3px;background:var(--gradi);
+  box-shadow:inset 1px 1px 2px rgba(160,150,126,.4);overflow:hidden;min-width:30px}
+.grow .gb i{display:block;height:100%;border-radius:3px;background:var(--ink3)}
+.grow .gp{font-family:var(--nm);font-size:9.5px;color:var(--ink3);width:34px;
+  text-align:right;flex:none}
+.grow .gr{font-size:9.5px;color:var(--gld);white-space:nowrap;flex:none;max-width:26%;
+  overflow:hidden;text-overflow:ellipsis}
+.grow.ready{background:linear-gradient(145deg,#F3E7C8,#EEDCA8);cursor:pointer}
+.grow.ready .gn{color:var(--gld)}
+.grow.ready .gb i{background:var(--gld)}
+.grow.ready .gp{color:var(--gld);width:auto}
+.grow.ready:hover{box-shadow:3px 3px 7px var(--shs),-2px -2px 5px var(--hl),0 0 10px rgba(138,106,47,.35)}
+#mGoals .gdone{font-size:10px;color:var(--ink3);padding:2px 8px}
+
+/* ---- right bottom: purchase log ---- */
+#machLog{grid-column:2;grid-row:2;display:flex;flex-direction:column;
+  min-height:0;border-top:1px solid var(--line);border-left:1px solid var(--line);
+  background:var(--gradi);box-shadow:inset 0 3px 8px rgba(160,150,126,.28)}
+#machLog .lhead{flex:none;display:flex;align-items:baseline;gap:10px;
+  padding:9px 14px 6px}
+#machLog .lhead .mt{font-family:var(--disp);font-weight:800;font-size:11px;
+  letter-spacing:.22em;color:var(--ink2)}
+#machLog .lhead .lsub{font-family:var(--nm);font-size:9.5px;color:var(--ink3)}
+#machLog .lbody{flex:1;overflow-y:auto;padding:0 10px 10px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:rgba(70,66,47,.28) transparent}
+#machLog .lbody::-webkit-scrollbar{width:10px}
+#machLog .lbody::-webkit-scrollbar-thumb{border-radius:6px;
+  border:3px solid transparent;background-clip:padding-box;
+  background-color:rgba(70,66,47,.26)}
+.plrow{display:flex;align-items:baseline;gap:8px;padding:4px 6px 4px;
+  border-bottom:1px solid rgba(198,191,171,.4);font-size:11.5px;min-width:0}
+.plrow .plt{font-family:var(--nm);font-size:9px;color:var(--ink3);flex:none;
+  width:34px}
+.plrow .plk{flex:none;font-family:var(--ui);font-size:8px;font-weight:700;
+  letter-spacing:.14em;color:var(--stock);background:var(--ink3);
+  border-radius:4px;padding:2px 5px 2px;min-width:34px;text-align:center}
+.plrow.upg .plk{background:var(--blu)}
+.plrow.stk .plk{background:var(--gld)}
+.plrow.card .plk{background:#5A5642}
+.plrow.asc .plk{background:#7A4A8A}
+.plrow.inc .plk{background:var(--grn)}
+.plrow .pln{flex:1;min-width:0;color:var(--ink);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;font-weight:600}
+.plrow .pln small{color:var(--ink3);font-weight:400}
+.plrow .plc{flex:none;font-family:var(--nm);font-size:11px;font-weight:700;
+  color:var(--gld)}
+.plrow.inc .plc{color:var(--grn)}
+.plrow.asc .plc{color:#7A4A8A}
+.plrow .plb{flex:none;font-family:var(--nm);font-size:9px;color:var(--ink3);
+  width:58px;text-align:right}
+
+/* ---- narrow fallbacks: the game column wins, the viz stacks under ---- */
+@media (max-width:1180px){
+  body.mach{grid-template-columns:minmax(0,1fr) minmax(380px,46%)}
+}
+@media (max-width:860px){
+  body.mach{grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto auto auto auto}
+  body.mach #app{grid-column:1;grid-row:2;border-left:0;border-top:1px solid var(--line)}
+  #machTop{grid-column:1;grid-row:1;height:46dvh}
+  #machBot{grid-column:1;grid-row:3}
+  #machLog{grid-column:1;grid-row:4;height:40dvh;border-left:0}
+}

@@ -1,6 +1,7 @@
 /* ==================================================================
    fx.js — floating text (labels + slams), spray particles, toasts, shake,
-   and the fan-home: banked cards cascade back into the deck
+   the score ticker, and the fan-home: banked cards cascade back into
+   the deck
    ================================================================== */
 /* one handler owns every floating text on screen: quick labels, payout
    flights, the big slams. Each text leases its spot till it dies — a
@@ -29,6 +30,7 @@ function float(t,x,y,c,o){
   if(two)d.innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
   else d.textContent=t;
   d.style.cssText=`left:${x}px;top:${y}px;color:${c||'var(--ink)'}`;
+  if(o.k)d.style.setProperty('--slk',(+o.k).toFixed(3));   /* the slam's own scale */
   /* score gains linger where they landed, then get sucked into the score
      plaque (--fx/--fy carry the delta from the slot they held); plain
      labels (BURNED 3, SNIPPED A 7, …) keep the rise-and-fade */
@@ -43,13 +45,14 @@ function float(t,x,y,c,o){
 }
 /* the slam is the same system's big face: one anchor at screen center —
    at wide the table is the stage, so it centers on the felt instead
-   (where the BUST spray already anchors) */
-function slam(t,c){
+   (where the BUST spray already anchors). k scales the whole arc (the
+   bank slam grows with the chain) */
+function slam(t,c,k){
   let x=innerWidth/2,y=innerHeight*.34;
   if(WIDE_Q&&WIDE_Q.matches&&document.body.classList.contains('wide')){
     const p=feltPt(FW/2,FH*.34);x=p[0];y=p[1];
   }
-  float(t,x,y,c,{big:1});
+  float(t,x,y,c,{big:1,k});
 }
 /* spray: confetti with real physics — launched hot, pulled down by
    gravity, bouncing off the frame's walls, shrinking and fading as they
@@ -91,6 +94,33 @@ function spkStep(now){
 /* the particle budget rides the payout: spare change gets a spare
    burst, six-figure banks get the storm */
 const scoreSpk=s=>Math.round(Math.min(60,12+5.2*Math.log10(1+s)));
+/* ---------------- the score ticker ----------------
+   the plaque's digits roll instead of teleporting: a display value
+   chases S.score on its own rAF while paint() reads it through
+   scoreDisp(), so #hSc keeps one writer. A bank takes the long sweep
+   (tickScore(true)), a passive trickle the short one; a target that
+   moves mid-roll (a rider pay, a spend, a debug add) retargets from
+   wherever the digits stand, so dividends pile onto the same roll */
+let scD=0,scFrom=0,scTo=0,scT0=0,scDur=260,scRaf=0;
+const scoreDisp=()=>scRaf?scD:S.score;
+function tickScore(big){
+  if(S.score===scTo)return;   /* nothing new: a live roll keeps its timing */
+  scTo=S.score;
+  if(BG){scFrom=scD=scTo;scRaf=0;return;}   /* hidden: paint snaps */
+  scFrom=scoreDisp();
+  scT0=performance.now();
+  scDur=big?550:260;
+  if(!scRaf)scRaf=requestAnimationFrame(scStep);
+}
+function scStep(now){
+  if(BG){scRaf=0;scD=S.score;pTxt('hSc',fmt(S.score));return;}
+  if(scTo!==S.score){scFrom=scD;scTo=S.score;scT0=now;}
+  const u=Math.min(1,(now-scT0)/scDur),k=1-Math.pow(1-u,3);
+  scD=scFrom+(scTo-scFrom)*k;
+  pTxt('hSc',fmt(scD));
+  if(u<1){scRaf=requestAnimationFrame(scStep);return;}
+  scRaf=0;
+}
 /* ---------------- the fan-home ---------------- */
 /* a bank pays out, then the table clears itself the way solitaire
    always did: card by card, each launched face-up, arcing under gravity;
@@ -290,16 +320,27 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
       pull=[ax/placed.length,ay/placed.length-10];
     }else pull=[FW/2,(Math.max(38,FH*.05)+FH-116)/2];
   }
-  /* friction per second, the drift's hand-off speed, its time cap, and
-     the settle ease — a slow release skips the drift entirely and just
-     eases into its spot, so a gentle drop never feels laggy. Long slide,
-     crisp exit: low friction carries the card across the felt and the
-     slot flight takes over while it still moves (~150px/s), no crawl */
-  const FR=3.2,END=150,MAX=600,T2=210,
+  /* felt friction is a constant FORCE, not an exponential bleed: speed
+     falls on a straight line, so the flick keeps its energy through the
+     first half and dies gently at the end. The deceleration is derived
+     from the throw so the natural slide scales with it — a hard flick
+     carries ~320px, a soft one just clears the deck */
+  const v0=Math.hypot(vx,vy),
+        D=Math.min(320,Math.max(90,v0*.33)),
+        A=v0*v0/(2*D),   /* px/s² — the hot phase; the floaty tail runs at .45× */
+        END=140,MAX=800,T2=210,
         mnx=CUR_CW/2+8,mny=CUR_CH/2+8,mxx=FW-mnx,mxy=FH-mny;
   let x=Math.min(mxx,Math.max(mnx,sx)),y=Math.min(mxy,Math.max(mny,sy)),
-      drift=tx==null&&spd0>=90,lt=performance.now(),t0=lt,
-      ex=x,ey=y,er=0,u=0,ld=-1,fm=1;   /* fm: the wall scrubs speed off */
+      drift=tx==null&&spd0>=170,lt=performance.now(),t0=lt,
+      ex=x,ey=y,er=0,u=0,ld=-1;
+  /* a sideways drag releases the card away from the deck: a 70ms zip
+     melts it from wherever it sits onto the launch line at the deck
+     center — the flick still reads as shot out of the stack, with no
+     one-frame teleport from the drag pose */
+  const mt=(e.style.transform||'').match(/translate\(([\d.-]+)px,\s*([\d.-]+)px/),
+        pDx=mt?+mt[1]-sx:0,pDy=mt?+mt[2]-sy:0,
+        PRE=70,p0=t0;
+  let pre=Math.hypot(pDx,pDy)>24;
   /* the start pose frozen: the release pose the caller measured, never
      a stale one — a card parked by left/top hands its spot over first.
      The transition stays OFF for the whole frame-driven glide: the
@@ -320,29 +361,43 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
        clamp the seconds value itself) */
     const dt=Math.min(.04,Math.max(0,(now-lt)/1000));lt=now;
     if(drift){
-      const f=Math.exp(-FR*fm*dt);vx*=f;vy*=f;
+      /* two-stage felt: a firm scrub while the throw is hot, then a
+         light tail under 300px/s — the card hangs and drifts the last
+         stretch instead of dying on a straight line */
+      const sp=Math.hypot(vx,vy);
+      if(sp>0){const ns=Math.max(0,sp-(sp>300?A:A*.45)*dt);vx*=ns/sp;vy*=ns/sp;}
       x+=vx*dt;y+=vy*dt;
-      /* the felt's rim: a dampened rebound, not a mirror bounce — the
-         card bleeds most of its speed into the wall and crawls after */
-      if(x<mnx){x=mnx;vx=Math.abs(vx)*.22;vy*=.75;fm=1.9;}
-      else if(x>mxx){x=mxx;vx=-Math.abs(vx)*.22;vy*=.75;fm=1.9;}
-      if(y<mny){y=mny;vy=Math.abs(vy)*.22;vx*=.75;fm=1.9;}
-      else if(y>mxy){y=mxy;vy=-Math.abs(vy)*.22;vx*=.75;fm=1.9;}
+      /* the felt's rim: a lively rebound — the card bounces off at over
+         half its normal speed and skims on along the wall */
+      if(x<mnx){x=mnx;vx=Math.abs(vx)*.6;vy*=.85;}
+      else if(x>mxx){x=mxx;vx=-Math.abs(vx)*.6;vy*=.85;}
+      if(y<mny){y=mny;vy=Math.abs(vy)*.6;vx*=.85;}
+      else if(y>mxy){y=mxy;vy=-Math.abs(vy)*.6;vx*=.85;}
       wakeFeed(x,y,vx,vy,dt);
-      /* the hand's pull lerps in as the flick dies: the velocity bends
-         from the swipe's angle into the pull toward the seated band, so
-         the final hop into the slot CONTINUES the motion instead of
-         restarting from a standstill. Full strength at the hand-off
-         speed, silent above 340px/s */
+      /* the hand's pull steers for the last third — by ROTATING the
+         velocity toward the seated band, never by braking it: the slide
+         keeps its speed while the path curves (a braked bend would
+         U-turn the card before it ever reaches a wall). Only inside the
+         band's doorstep does a light brake dock it */
       if(pull){
-        const sp2=Math.hypot(vx,vy),
-              w=Math.min(1,Math.max(0,(340-sp2)/250));
-        if(w>0){
+        const sp2=Math.hypot(vx,vy);
+        if(sp2>1){
           const dxp=pull[0]-x,dyp=pull[1]-y,dp=Math.hypot(dxp,dyp);
           if(dp>3){
-            const pv=Math.min(sp2*1.15,dp*5);   /* bend, never catapult */
-            vx+=(dxp/dp*pv-vx)*w;
-            vy+=(dyp/dp*pv-vy)*w;
+            const w=Math.min(1,Math.max(0,(450-sp2)/300));
+            if(w>0){
+              const want=Math.atan2(dyp,dxp);
+              let cur=Math.atan2(vy,vx),d=want-cur;
+              while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+              const mx=w*3.5*dt;   /* rad/s of turn authority this frame */
+              cur+=Math.max(-mx,Math.min(mx,d));
+              let nvx=Math.cos(cur)*sp2,nvy=Math.sin(cur)*sp2;
+              if(dp<60){   /* the doorstep: settle speed to a soft dock */
+                const cap=Math.max(sp2*.9,dp*4),ns2=Math.min(sp2,cap);
+                nvx*=ns2/sp2;nvy*=ns2/sp2;
+              }
+              vx=nvx;vy=nvy;
+            }
           }
         }
       }
@@ -361,7 +416,15 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
         }
         drift=false;ex=x;ey=y;er=tilt();t0=now;
       }
-      e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${tilt().toFixed(1)}deg)`;
+      /* the zip: the drag-to-launch melt decays over the first 70ms */
+      let ox=0,oy=0;
+      if(pre){
+        const k=Math.min(1,(now-p0)/PRE);
+        if(k>=1)pre=false;
+        const f=1-k*k*(3-2*k);
+        ox=pDx*f;oy=pDy*f;
+      }
+      e.style.transform=`translate(${(x+ox).toFixed(1)}px,${(y+oy).toFixed(1)}px) rotate(${tilt().toFixed(1)}deg)`;
     }else{
       if(tx==null){   /* a dead release draws: nothing to slide, seat it */
         GLIDES.delete(id);fanBusy.delete(id);

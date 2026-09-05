@@ -256,20 +256,20 @@ const totm=(per,l,u='%')=>l?` (−${+(per*l).toFixed(2)}${u} total)`:'';
    total is 1−f^l and needs its own non-linear helper */
 const totmR=(f,l,u='%')=>l?` (−${+(100*(1-Math.pow(f,l))).toFixed(2)}${u} total)`:'';
 const UPG = {
-  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:20,   g:1.6},
-  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:50, base:30,   g:1.4},
-  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:55,  g:1.8},
-  nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:12, base:130,  g:1.9},
-  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:200,  g:1.85},
+  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:15,   g:1.6},
+  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:50, base:25,   g:1.4},
+  mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:45,  g:1.8},
+  nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:15, base:110,  g:1.9},
+  salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:200,  g:2},
   chain:  {n:'Chain Reaction', d:l=>'+1% per bank in current chain'+tot(1,l),  max:20, base:100,  g:2.05},
   eye:    {n:"Collector's Eye",d:l=>`+0.1% value per card you own —your ${eyeCount()} cards pay +${(ECO.EYE_PER*l*eyeCount()*100).toFixed(1)}% now`, max:15, base:320, g:1.71},
   auto:   {n:'Auto-Draw',      d:l=>(l?`Draws for you — deals up to ${l} card${l===1?'':'s'} a table, then waits`:'Draws for you — one card a table, then it waits')+(OFFLINE_ON?'. Offline earnings on.':'.') , max:6, base:1000, g:2.1},
   guard:  {n:'Draw Stop',       d:l=>l?`The draw-stop dial reaches ${Math.round(ECO.GUARD_AT[l-1]*100)}% risk.`:'Set where Auto-draw quits.', max:4, base:1000, g:1.6},
-  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:500,  g:1.15},
+  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:400,  g:1.15},
   /* the swipe-up pre-flick: costs pin their own ladder (upCost), the
      level is how many flicked cards may wait on the felt at once */
   flick:  {n:'Pre-Flick',      d:l=>'Swipe up mid-cooldown and the next card waits on the felt'+(l>1?`, up to ${l} at once`:''), max:3, c:l=>[500,1500,5000][l]},
-  sleight:{n:'Sleight of Hand',d:l=>'+3% value per card outside the deck'+tot(3,l), max:8,  base:680,  g:2.0},
+  sleight:{n:'Sleight of Hand',d:l=>'+3% value per card outside the deck'+tot(3,l), max:8,  base:600,  g:2.0},
   house:  {n:'House Money',    d:'First bank of a chain pays +25%',            max:1,  base:4800, g:1},
   abank:  {n:'Auto-Bank',      d:'Banks alone at a risk line you set',         max:1,  base:6800, g:1},
   grace:  {n:'Grace',          d:l=>'+1 ward each run'+tot(1,l,''),                max:2,  base:77700, g:2.2},

@@ -12,12 +12,13 @@
    bust    → lose    TWIN = BUST, then the safe road: SWIPE DOWN TO BANK
    wages   → fund    grow score until the DECK tab opens
    buy     → card    buy the first card
-   upg     → grind   BUY ANOTHER CARD, shown only once the wallet can:
-                     the poster and its ring both wait on cheapestCard(),
-                     hiding through the earning stretch between buys
+   upg     → grind   BUY ANOTHER CARD once the wallet can; while it
+                     earns, the poster names the goal instead (UPGRADES
+                     AT N CARDS) and rings the filling UPGRADES pill,
+                     so the stretch reads as a target, not a silence
    upbuy   → power   UPGRADES just opened on its own gate: BUY AN
-                     UPGRADE, likewise hidden until the cheapest open
-                     row is affordable. The purchase closes the run
+                     UPGRADE once a row is affordable; the wait names
+                     the cheapest price. The purchase closes the run
    end               the loop poster, GOT IT closes it
    UPGRADES is never force-opened: unlocks() raises 'upopen' at the
    natural card-count gate and the coach takes it from there.
@@ -68,6 +69,18 @@ const cheapestUpg=()=>{let m=Infinity;
     m=Math.min(m,upCost(UPG[id],L(id)));}
   return m;};
 const TUT_WAIT={upg:()=>S.score>=cheapestCard(),upbuy:()=>S.score>=cheapestUpg()};
+/* the wait posters: while the wallet earns toward the step's buy, the
+   poster names the goal it waits on instead of hiding. The nudge law
+   holds — the unaffordable verb and its buy ring stay gone until the
+   price is met — but the coach keeps speaking: a live BI read had the
+   grind owning ~80% of a run as pure silence */
+const TUT_WAIT_TXT={
+  upg:()=>({h:`UPGRADES AT ${TAB_GATE.up.req} CARDS`}),
+  upbuy:()=>({h:`AN UPGRADE COSTS ${fmtG(cheapestUpg())}`})};
+/* the wait's rings: the filling UPGRADES pill during the grind (its --p
+   fill IS the progress bar), nothing during the upgrade wait (once the
+   view is open the rows speak for themselves) */
+const TUT_AT_WAIT={upg:()=>['#tabs button[data-v="up"]'],upbuy:()=>null};
 /* an unknown step name can only be a pre-release dev save: restart the
    coach rather than carry a rename map (nothing has shipped) */
 
@@ -176,23 +189,26 @@ function tutPaint(){
   const s=S.tut;
   if(!s||s==='done'){box.classList.add('off');tutHi(null);return;}
   /* the coached buys wait on the wallet: until the step's buy is
-     affordable there is nothing to say, so the whole coach steps
-     aside — it walks back in the moment the price is met (paint's
-     tick re-runs this) */
-  if(TUT_WAIT[s]&&!TUT_WAIT[s]()){box.classList.add('off');tutHi(null);return;}
+     affordable the poster names the goal it waits on (never the
+     unaffordable verb), and the ready poster walks back the moment the
+     price is met. paint's tick re-runs this, so the swap is live */
+  const waiting=TUT_WAIT[s]&&!TUT_WAIT[s]();
   if(box.dataset.s!==s){box.dataset.s=s;
     box.classList.remove('in');void box.offsetWidth;box.classList.add('in');
     /* progress rides the bubble itself: the wash sweeps left to right */
     box.style.setProperty('--p',((TUT_N[s]||1)/TUT_N.end*100).toFixed(1)+'%');}
   /* the ring follows the player in: the tab pill from the table, the
-   first buy button once its view is open. paint() re-runs this on its
-   tick, and Tabs.go on every switch */
-  tutHi(TUT_AT[s]?TUT_AT[s]():null);
+   first buy button once its view is open. The wait swaps the seat (the
+   grind's wait rings the filling UPGRADES pill). paint() re-runs this
+   on its tick, and Tabs.go on every switch */
+  const at=(waiting?TUT_AT_WAIT:TUT_AT)[s];
+  tutHi(at?at():null);
   box.classList.remove('off');
   /* the poster re-renders only when its words change. SKIP rides inline
      at the text's end, except on the last bubble, where GOT IT already
      closes the run */
-  const o=TUT_TXT[s]?TUT_TXT[s]():null;
+  const src=waiting?TUT_WAIT_TXT:TUT_TXT;
+  const o=src[s]?src[s]():null;
   const p2=o&&o.p2?(o.arr?`<span class="sar ${o.arr}">${SAR}</span>`:'')+o.p2:'';
   const html=o?`<div class="ph${o.bad?' bad':''}">${o.h}`+
     (p2?`<span class="p2">${p2}</span>`:'')+'</div>'+

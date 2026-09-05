@@ -917,7 +917,7 @@ const pmv={},
   pCls=(id,v)=>{if(pmv['c'+id]===v)return;pmv['c'+id]=v;$('#'+id).className=v;},
   pSt=(id,p,v)=>{v=''+v;const k='s'+id+'.'+p;if(pmv[k]===v)return;pmv[k]=v;$('#'+id).style[p]=v;};
 function paint(){
-  pTxt('hSc',fmt(S.score));pTxt('hSh',fmt(S.shards));
+  tickScore();pTxt('hSc',fmt(scoreDisp()));pTxt('hSh',fmt(S.shards));
   pSt('hShW','display',(S.shards||S.shAll)?'block':'none');
   const F0=S.hands[Math.min(S.focus,S.hands.length-1)];
   /* the bust card never sat down: while its pair is up, the readout, the

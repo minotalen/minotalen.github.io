@@ -504,10 +504,13 @@ h2:first-child{margin-top:6px}
   9%{transform:translate(-50%,-58%) scale(1.07);opacity:1;animation-timing-function:ease-out}
   46%{transform:translate(-50%,-86%) scale(1);opacity:1;animation-timing-function:cubic-bezier(.55,0,.85,.36)}
   100%{transform:translate(calc(-50% + var(--fx,0px)),calc(-50% + var(--fy,0px))) scale(.22);opacity:0}}
-/* the slam face of the same handler: one size up, anchored screen center */
+/* the slam face of the same handler: one size up, anchored screen center.
+   --slk carries a per-slam scale (the chain's rung count grows the bank
+   slam) — read inside the keyframes so the whole arc scales with it */
 .ftx.big{font-size:38px;letter-spacing:-.02em;animation:sl .78s ease-out forwards}
-@keyframes sl{0%{transform:translate(-50%,-50%) scale(2.4);opacity:0}
-16%{transform:translate(-50%,-50%) scale(1);opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-76%)}}
+@keyframes sl{0%{transform:translate(-50%,-50%) scale(calc(2.4*var(--slk,1)));opacity:0}
+16%{transform:translate(-50%,-50%) scale(var(--slk,1));opacity:1}70%{opacity:1}
+100%{opacity:0;transform:translate(-50%,-76%) scale(var(--slk,1))}}
 .spk{position:absolute;width:5px;height:5px;border-radius:1px;will-change:transform,opacity}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:104px;z-index:210;display:flex;flex-direction:column;
   gap:6px;align-items:center;pointer-events:none;width:90%;max-width:400px}
