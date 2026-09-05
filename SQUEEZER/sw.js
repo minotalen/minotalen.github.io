@@ -13,7 +13,7 @@
    the origin check); SKIP also guards the API paths for the day the
    game itself sits on that box under /squeezer/.
    ================================================================== */
-const CACHE='squeezer-v237';
+const CACHE='squeezer-v239';
 const SKIP=/\/(cs|bi)(\/|$)|\/saves\.json$/;
 const STATIC=/\.(css|mjs|js|json|webmanifest|png|svg|jpe?g|webp|gif|ico|woff2?|ttf|otf|html?)$/i;
 

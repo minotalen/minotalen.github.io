@@ -30,9 +30,9 @@ const TIERC = {1:'#4CAF50', 2:'#42A5F5', 3:'#FFB300', 4:'#EF5350', 5:'#BA68C8'};
 const STK = {
   gild:   {n:'Gilded',   t:3, pm:1.25, st:'sapphire',   d:'The table pays ×2.75 for this card.',
            cur:(c,h)=>`now +${fmt((ECO.GILD_X-1)*stkBase(c,h))}`},
-  haste:  {n:'Haste',    t:1, pm:4, st:'bolt',   d:'On table: draws come 25% faster.',
+  haste:  {n:'Haste',    t:1, pm:2.4688, st:'bolt',   d:'On table: draws come 25% faster.',
            cur:(c,h)=>`now ${curCD().toFixed(2)}s draws`},
-  tribute:{n:'Tribute',  t:2, st:'whale',  d:'On draw: pays ×7 its value straight to score, kept on bust.',
+  tribute:{n:'Tribute',  t:2, pm:.8333, st:'whale',  d:'On draw: pays ×7 its value straight to score, kept on bust.',
            cur:(c,h)=>`now +${fmt(c.v*ECO.TRIBUTE_X*valueMult())} a draw`},
   odds:   {n:'Odds',     t:1, pm:.733, st:'shamrock',    d:'On draw: a free extra card comes, 50/50 it pays triple or nothing.'},
   snip:   {n:'Snip',     t:1, pm:.511, st:'peapod',  d:'On draw: a twin of its value waits in the discard till you score.'},
@@ -40,23 +40,23 @@ const STK = {
            cur:(c,h)=>`now +${fmt(cval(c)*ECO.MINT_X*valueMult())} a bank`},
   brass:  {n:'Brass',    t:1, pm:.688, st:'sunflower',  d:'On a table: each Brass pays +5 score per Brass card on table.',
            cur:(c,h)=>`now +${fmt(ECO.BRASS_SCORE*h.ids.length*h.ids.filter(id=>byId(id).stk==='brass').length)} a bank`},
-  surge:  {n:'Surge',    t:2, st:'wave', d:'On a table: +0.20 to the hand multiplier.',
+  surge:  {n:'Surge',    t:2, pm:.5499, st:'wave', d:'On a table: +0.20 to the hand multiplier.',
            cur:(c,h)=>`now +${ECO.SURGE_STEP.toFixed(2)}×`},
   twin:   {n:'Twin',     t:4, pm:3.2, st:'twin',   d:'Arm: pull a card. A twin lands without busting, a blank waits in the discard.'},
-  mirror: {n:'Mirror',   t:2, st:'iceberg',  d:'Worth the highest value on the table.',
+  mirror: {n:'Mirror',   t:2, pm:.6666, st:'iceberg',  d:'Worth the highest value on the table.',
            cur:(c,h)=>`now pays ${fmt(stkBase(c,h))}`},
   ward:   {n:'Ward',     t:1, pm:.911, st:'cactus', d:'On draw: a free extra card that cannot bust you.'},
-  anchor: {n:'Anchor',   t:2, st:'anchor', d:'On draw: for the next 3 draws, a twin of this card slips back into the deck.',
+  anchor: {n:'Anchor',   t:2, pm:1.2777, st:'anchor', d:'On draw: for the next 3 draws, a twin of this card slips back into the deck.',
            cur:(c,h)=>{const w=h&&h.run&&(h.run.anchWin||[]).find(x=>x.id===c.id);
              return w&&w.left>0?'guards '+w.left+' draw'+(w.left===1?'':'s'):''}},
   prime:  {n:'Prime',    t:3, st:'coral',   d:'+2 to every other card on the table.',
            cur:(c,h)=>h.ids.length>1?`now +${ECO.PRIME_ADD} to ${h.ids.length-1}`:''},
   beacon: {n:'Beacon',   t:2, pm:2.25, st:'lighthouse',  d:'Risk premium ×1.5. Unique: only one, ever.',
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
-  burn:   {n:'Burn',     t:2, st:'flame',  d:'On draw: 2 cards of a random deck pair go to the discard.'},
-  tell:   {n:'Tell',     t:2, st:'periscope',    d:'Arm: the deck\'s top card flips face-up.'},
-  cull:   {n:'Cull',     t:2, st:'funnel', d:'Arm: gain 1 ward, this card goes OUT.'},
-  dividend:{n:'Dividend',t:2, st:'salmon',    d:'On bank: 25% chance the table scores again, a beat later.',
+  burn:   {n:'Burn',     t:2, pm:.75, st:'flame',  d:'On draw: 2 cards of a random deck pair go to the discard.'},
+  tell:   {n:'Tell',     t:2, pm:.8888, st:'periscope',    d:'Arm: the deck\'s top card flips face-up.'},
+  cull:   {n:'Cull',     t:2, pm:1.3333, st:'funnel', d:'Arm: gain 1 ward, this card goes OUT.'},
+  dividend:{n:'Dividend',t:2, pm:1.0555, st:'salmon',    d:'On bank: 25% chance the table scores again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.25, st:'buoy', d:'On a table: +8% payout per card OUT.',
            cur:(c,h)=>`now +${Math.round(ECO.TAB_PER*outCount()*100)}%`},
@@ -68,8 +68,8 @@ const STK = {
            cur:(c,h)=>`now +${(ECO.KINDLE_PER*(h.ids.length-1)).toFixed(2)}× a hit`},
   jynx:   {n:'Jynx',     t:3, pm:1.25, st:'hexnut', d:'The table pays +2% per risky card in the deck.',
            cur:(c,h)=>`now +${Math.round(ECO.JINX_PER*riskyIn(h)*100)}%`},
-  reverb: {n:'Reverb',   t:2, st:'ripples',   d:'On draw: the deck\'s top card goes to the discard; if it matches this card\'s value, gain 1 ward.'},
-  siphon: {n:'Siphon',   t:2, st:'whirl',   d:'On a bust: ×10 its value to score.',
+  reverb: {n:'Reverb',   t:2, pm:.6388, st:'ripples',   d:'On draw: the deck\'s top card goes to the discard; if it matches this card\'s value, gain 1 ward.'},
+  siphon: {n:'Siphon',   t:2, pm:.4722, st:'whirl',   d:'On a bust: ×10 its value to score.',
            cur:(c,h)=>`now +${fmt(cval(c)*ECO.SIPHON_X*valueMult())} on bust`},
   vanish: {n:'Vanish',   t:3, st:'dusk',   d:'On bank: this card sits OUT till the next bust.'},
   ledger: {n:'Ledger',   t:3, st:'journal', d:'Each card on the table with a twin OUT pays double.',
@@ -108,7 +108,7 @@ const STK = {
   offering:{n:'Offering',t:2, pm:1.15, st:'offering', d:'Arm: this card leaves for OUT and the chain gains 1.'},
   recycle:{n:'Recycle',  t:3, pm:.9, st:'recycle', d:'On bank: the lowest-value card OUT returns to the deck.'},
   sub:    {n:'Sub',      t:2, pm:1.35, st:'sub', d:'Arm: this card waits in the discard and a random card OUT takes its seat.'},
-  exit:   {n:'Exit',     t:2, pm:1, st:'exit', d:'On bank: 2% of the discard\'s total value pays to score.',
+  exit:   {n:'Exit',     t:2, pm:1.0277, st:'exit', d:'On bank: 2% of the discard\'s total value pays to score.',
            cur:(c,h)=>{const d=S.disc?S.disc.reduce((a,id)=>a+cval(byId(id)),0):0;
              return d?`now +${fmt(d*ECO.EXIT_PER*valueMult())} a bank`:''}},
   /* the squeeze batch (2026-09-04): the deck is the victim — Whip
@@ -553,7 +553,7 @@ const ACH = [
 /* ---------------- economy constants (from sim.js) ---------------- */
 const ECO = {
   CARD_LADDER:[[5],[6,8],[10,13,16],[20,25,30,40],[50,65,80,95,120]], CARD_ANCHOR:50, CARD_ANCHOR_V:5, CARD_STEP:2.113762, CARD_GROW:2.25, // cardCost: tiers 1-5 are hand-set ladders, one price per copy (the 4s pay 20/25/30/40, the 5s open the climb at 50); tiers 6+ run anchor*step^(v-anchorV)*(v/anchorV) with copies spanning one grow factor (step stays past the span so openers never dip under the last copy) — lifetime spend through tier 10 lands on exactly 100,000, millions by the 14s
-  STK_BASE:450, STK_TPOW:2.0, STK_GROW:1.10, STK_INF:.02, // t1 stickers spread 230-460 via pm, sorted by utility (2026-09-02 pass: each opener 60-100 cheaper); deep tiers carry their era in pm: t4 ~16-26K, t5 ~47-72K (income at shelf-open runs ~1.4K/2.8K a min, so payback lands ~14m/~20m); uniques (NONSTACK) price one tier up: haste 1800, beacon 4050; duplicates of a sticker: ×grow per copy owned; every applied sticker adds +3% to the others' price (spread tax)
+  STK_BASE:450, STK_TPOW:2.0, STK_GROW:1.10, STK_INF:.02, // t1 stickers spread 230-460 via pm, sorted by utility (2026-09-02 pass: each opener 60-100 cheaper); t2 the same way (2026-09-05 pass: the flat 1800 broke into 850 at siphon, 2400 at cull; clip still tops the shelf at 2610; surge .5499 not .55 — float 1800×.55 = 990.0000000000001 ceils to 991); deep tiers carry their era in pm: t4 ~16-26K, t5 ~47-72K (income at shelf-open runs ~1.4K/2.8K a min, so payback lands ~14m/~20m); uniques (NONSTACK) carry their own marker, no longer one tier up: haste 1111, beacon 4050; duplicates of a sticker: ×grow per copy owned; every applied sticker adds +3% to the others' price (spread tax)
   ASC_REQ:230000, ASC_REQ_GROW:2.5,                  /* the Nth ascend banks against REQ x 2.5^N (live-service stretch) */
   SHALL_PER:.01,                                     /* shard snowball: +1% value per shard earned, lifetime */
   RISK_COEF:1, RISK_FLOOR:.6, RISK_EVEN:.4, RISK_TOP:2, NERVE_PER:.10, DARING_PER:.08,   /* premium: ×0.6 at 0% risk, breaks even at 40%, ×2 at 100%, steeper past break-even */

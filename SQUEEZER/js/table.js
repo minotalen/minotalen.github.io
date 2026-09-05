@@ -373,6 +373,7 @@ function buffTipHTML(k,mode,n){
   if(mode==='armed')return `<b>${a.n}</b> · armed — ${a.d.replace(/^Arm: /,'')}`;
   if(mode==='stakes')return `<b>${a.n}</b> · draws pay double premium — <b>${n}</b> left`;
   if(mode==='guard')return `<b>${a.n}</b> · a drawn twin slips back into the deck — <b>${n}</b> draw${n===1?'':'s'} left`;
+  if(mode==='grace')return `<b>${a.n}</b> · the next busting draw benches in the discard — <b>${n}</b> left`;
   return `<b>${a.n}</b>: ${a.d.replace(/\.$/,'')}${n>1?` — <b>×${n}</b> here`:''}`;
 }
 function buffChip(k,mode,n){
@@ -388,6 +389,7 @@ function paintBuffs(){
   if(r.armedF!=null)chips.push(['float','armed',1]);
   if(r.stakesD>0)chips.push(['stakes','stakes',r.stakesD]);
   (r.anchWin||[]).forEach(w=>{if(w.left>0)chips.push(['anchor','guard',w.left]);});
+  if(r.grace>0)chips.push(['ward','grace',r.grace]);
   const cnt={};
   F.ids.forEach(id=>{const s=byId(id).stk;if(s&&AURA[s])cnt[s]=(cnt[s]||0)+1;});
   if(!cnt.haste&&S.hands.some(h=>h.ids.some(id=>byId(id).stk==='haste')))cnt.haste=1;
