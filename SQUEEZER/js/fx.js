@@ -213,36 +213,36 @@ function glideCancel(id){
 }
 /* the slide's wake: cards the fling travels over take a small shove off
    their spot, then a light underdamped spring eases each back — the
-   felt reads physical, while a card's true pose never moves (place()
-   keeps restamping _sx/_sy; every frame is written from the live base,
-   so a re-layout under the shove is absorbed, not fought). Only seated
-   table cards are fed: hands and the away piles — the deck stack never
-   scatters, the fling is shot out of it */
+   felt reads physical, while a card's true pose never moves. The offset
+   rides the CSS `translate` PROPERTY (the deckJiggle trick): it composes
+   with the inline transform, so place()'s make-space flights and every
+   other tween keep their own transitions and the shove slides on top —
+   no freezing, no snaps, the row glides while it is being pushed */
 const NUDGES=new Map();let nudgeRAF=0,nudgeT=0;
+function nudgeOff(id){
+  const e=els[id];
+  if(e)e.style.translate='';
+  NUDGES.delete(id);
+}
 function nudgePush(id,ax,ay){
   const e=els[id];if(!e||e._sx==null)return;
   let n=NUDGES.get(id);
-  if(!n){n={ox:0,oy:0,vx:0,vy:0};NUDGES.set(id,n);
-    /* the spring writes this card every frame: freeze the stylesheet
-       transform transition or each write trails behind its own ease */
-    e.style.transition='none';}
+  if(!n){n={ox:0,oy:0,vx:0,vy:0};NUDGES.set(id,n);}
   n.vx+=ax;n.vy+=ay;
   if(!nudgeRAF){nudgeT=performance.now();nudgeRAF=requestAnimationFrame(nudgeStep);}
 }
 function nudgeStep(now){
-  if(BG){NUDGES.clear();nudgeRAF=0;return;}   /* hidden: the felt is dark */
+  if(BG){[...NUDGES.keys()].forEach(nudgeOff);nudgeRAF=0;return;}   /* hidden: the felt is dark */
   const dt=Math.min(.04,Math.max(0,(now-nudgeT)/1000));nudgeT=now;
   for(const[id,n]of NUDGES){
     const e=els[id];
-    if(!e||e._sx==null||fanHeld(id)){NUDGES.delete(id);continue;}   /* it flew */
+    if(!e){NUDGES.delete(id);continue;}   /* rebuilt: nothing to clear */
     n.vx+=(-80*n.ox-6.5*n.vx)*dt;n.vy+=(-80*n.oy-6.5*n.vy)*dt;
     n.ox+=n.vx*dt;n.oy+=n.vy*dt;
     if(Math.abs(n.ox)+Math.abs(n.oy)<.3&&Math.abs(n.vx)+Math.abs(n.vy)<2){
-      NUDGES.delete(id);   /* settled: back on its exact rest pose */
-      e.style.transform=`translate(${e._sx.toFixed(1)}px,${e._sy.toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
-      e.style.transition='';   /* the freeze was ours; place() flies again */
+      nudgeOff(id);   /* settled: the composed offset dies, the pose stays */
       continue;}
-    e.style.transform=`translate(${(e._sx+n.ox).toFixed(1)}px,${(e._sy+n.oy).toFixed(1)}px) rotate(${(e._sr||0).toFixed(1)}deg)`;
+    e.style.translate=`${n.ox.toFixed(1)}px ${n.oy.toFixed(1)}px`;
   }
   nudgeRAF=NUDGES.size?requestAnimationFrame(nudgeStep):0;
 }
@@ -271,14 +271,31 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
   if(BG||!e){done&&done();return;}
   const spd0=Math.hypot(vx,vy),VM=950;
   if(spd0>VM){vx*=VM/spd0;vy*=VM/spd0;}
+  /* a weak flick still rises: under 340px/s the launch gains an upward
+     assist scaled by how weak it is, so a soft swipe still carries up */
+  {const wk=Math.hypot(vx,vy);
+   if(wk<340&&vy>-280)vy-=(vy+280)*(1-wk/340);}
   const g={raf:0};
   GLIDES.set(id,g);
   fanHold(id,2600);
+  /* where the hand wants the card: the seated band, estimated off the
+     cards already placed (the band's center for a first card). The draw
+     drift steers toward this as its flick bleeds off */
+  let pull=null;
+  if(tx==null){
+    const F=S.hands[Math.min(S.focus,S.hands.length-1)];
+    const placed=F.ids.filter(x=>x!==id&&els[x]&&els[x]._sx!=null);
+    if(placed.length){
+      let ax=0,ay=0;placed.forEach(x=>{ax+=els[x]._sx;ay+=els[x]._sy;});
+      pull=[ax/placed.length,ay/placed.length-10];
+    }else pull=[FW/2,(Math.max(38,FH*.05)+FH-116)/2];
+  }
   /* friction per second, the drift's hand-off speed, its time cap, and
      the settle ease — a slow release skips the drift entirely and just
-     eases into its spot, so a gentle drop never feels laggy. Plenty of
-     fling, capped: ~250px of travel at the hardest flick */
-  const FR=3.8,END=90,MAX=550,T2=210,
+     eases into its spot, so a gentle drop never feels laggy. Long slide,
+     crisp exit: low friction carries the card across the felt and the
+     slot flight takes over while it still moves (~150px/s), no crawl */
+  const FR=3.2,END=150,MAX=600,T2=210,
         mnx=CUR_CW/2+8,mny=CUR_CH/2+8,mxx=FW-mnx,mxy=FH-mny;
   let x=Math.min(mxx,Math.max(mnx,sx)),y=Math.min(mxy,Math.max(mny,sy)),
       drift=tx==null&&spd0>=90,lt=performance.now(),t0=lt,
@@ -293,7 +310,7 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
   e.style.left='0px';e.style.top='0px';
   e.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
   void e.offsetWidth;
-  const tilt=()=>Math.max(-11,Math.min(11,vx*.045));
+  const tilt=()=>Math.max(-14,Math.min(14,vx*.055));
   const step=now=>{
     if(els[id]!==e||GLIDES.get(id)!==g)return;   /* rebuilt or replaced */
     if(!fanHeld(id)){GLIDES.delete(id);return;}  /* a flight took the card */
@@ -312,6 +329,23 @@ function releaseGlide(id,sx,sy,vx,vy,tx,ty,rr,done){
       if(y<mny){y=mny;vy=Math.abs(vy)*.22;vx*=.75;fm=1.9;}
       else if(y>mxy){y=mxy;vy=-Math.abs(vy)*.22;vx*=.75;fm=1.9;}
       wakeFeed(x,y,vx,vy,dt);
+      /* the hand's pull lerps in as the flick dies: the velocity bends
+         from the swipe's angle into the pull toward the seated band, so
+         the final hop into the slot CONTINUES the motion instead of
+         restarting from a standstill. Full strength at the hand-off
+         speed, silent above 340px/s */
+      if(pull){
+        const sp2=Math.hypot(vx,vy),
+              w=Math.min(1,Math.max(0,(340-sp2)/250));
+        if(w>0){
+          const dxp=pull[0]-x,dyp=pull[1]-y,dp=Math.hypot(dxp,dyp);
+          if(dp>3){
+            const pv=Math.min(sp2*1.15,dp*5);   /* bend, never catapult */
+            vx+=(dxp/dp*pv-vx)*w;
+            vy+=(dyp/dp*pv-vy)*w;
+          }
+        }
+      }
       let over=Math.hypot(vx,vy)<END||now-t0>MAX;
       if(!over&&tx!=null){
         const d=Math.hypot(tx-x,ty-y);
@@ -723,7 +757,9 @@ function ttlOn(pass){
      Pass mode (the tutorial's opening) arms nothing here: the felt's
      pyrTap owns those, taps anywhere else included */
   if(ttlDoc)document.removeEventListener('pointerdown',ttlDoc,true);
-  ttlDoc=ttlPass?null:()=>ttlClick();
+  /* a press that starts on the felt (deck grab, flick, swipe) reads as
+     play: the title leaves quick. Anywhere else keeps the full walk */
+  ttlDoc=ttlPass?null:e=>ttlClick(!!(e&&e.target&&e.target.closest&&e.target.closest('#felt')));
   if(ttlDoc)document.addEventListener('pointerdown',ttlDoc,true);
   box.classList.add('on');
   /* the drift cast lives in the felt: build it once the box shows */
@@ -752,15 +788,19 @@ function ttlOn(pass){
    (tut.js) gate on this: the title gets the stage to itself first */
 function ttlAlive(){return !!ttlUp;}
 /* the tap the title was waiting for; one that lands while it's already
-   dying queues the pyramid's sweep instead of being lost */
-function ttlClick(){
+   dying queues the pyramid's sweep instead of being lost. A flick press
+   (felt-originated) passes quick: the title vanishes in one short fade
+   and the board deals at once, no letter walk to wait out */
+let ttlQuickFade=false;
+function ttlClick(quick){
   if(ttlKill){if(ttlPass)pyrQueue=true;return;}
-  ttlOff();
+  ttlOff(quick);
 }
-function ttlOff(){
+function ttlOff(quick){
   const box=$('#ttl');
   if(!box||!ttlBs||ttlKill)return;
   biFirst('go');   /* funnel step 0: the first-input moment, once per player */
+  ttlQuickFade=!!quick&&!ttlPass;
   ttlKill=1;
   clearTimeout(ttlKillT);
   ttlKillT=setTimeout(()=>{
@@ -783,37 +823,45 @@ function ttlOff(){
     /* the pads die with their lines: .out points each pad's transition
        at its own wave (title across the whole walk, byline inside it) */
     box.classList.add('out');
-    bs.forEach((el,i)=>{
-      el.style.transition=`opacity ${TTL_FDUR}ms ease ${i*TTL_FDELAY}ms`;
-      el.style.opacity=0;});
-    if(s){s.style.transition=`opacity ${TTL_FDUR}ms ease ${bs.length*TTL_FDELAY+80}ms`;s.style.opacity=0;}
-    /* the drift rides the same wave out: one by one, left to right,
-       the first goes with the first letter and the last is gone with
-       the byline. The float keeps running under the fade until the
-       deal lands and ttlDriftFade sinks the layer for good */
-    if(ttlFly&&ttlFly.length){
-      const fs=ttlFly.slice().sort((a,b)=>a.x-b.x),
-            end=bs.length*TTL_FDELAY+80+TTL_FDUR,
-            step=fs.length>1?(end-TTL_FDUR)/(fs.length-1):0;
-      fs.forEach((f,i)=>{
-        f.el.style.transition=`opacity ${TTL_FDUR}ms ease ${Math.round(i*step)}ms`;
-        f.el.style.opacity=0;});
+    if(ttlQuickFade){
+      /* the flick exit: one short joint fade, the deal arms at once */
+      const wave='opacity .2s ease';
+      bs.forEach(el=>{el.style.transition=wave;el.style.opacity=0;});
+      if(s){s.style.transition=wave;s.style.opacity=0;}
+      if(ttlFly)ttlFly.forEach(f=>{f.el.style.transition=wave;f.el.style.opacity=0;});
+    }else{
+      bs.forEach((el,i)=>{
+        el.style.transition=`opacity ${TTL_FDUR}ms ease ${i*TTL_FDELAY}ms`;
+        el.style.opacity=0;});
+      if(s){s.style.transition=`opacity ${TTL_FDUR}ms ease ${bs.length*TTL_FDELAY+80}ms`;s.style.opacity=0;}
+      /* the drift rides the same wave out: one by one, left to right,
+         the first goes with the first letter and the last is gone with
+         the byline. The float keeps running under the fade until the
+         deal lands and ttlDriftFade sinks the layer for good */
+      if(ttlFly&&ttlFly.length){
+        const fs=ttlFly.slice().sort((a,b)=>a.x-b.x),
+              end=bs.length*TTL_FDELAY+80+TTL_FDUR,
+              step=fs.length>1?(end-TTL_FDUR)/(fs.length-1):0;
+        fs.forEach((f,i)=>{
+          f.el.style.transition=`opacity ${TTL_FDUR}ms ease ${Math.round(i*step)}ms`;
+          f.el.style.opacity=0;});
+      }
     }
     /* arm the intro now, deal it at halfway: no draw slips through the
        crossfade, and the pyramid grows out of the dying text. The drift
        is already bound to the felt, so it just keeps floating under the
-       cards while they come out */
+       cards while they come out. The quick exit deals almost at once */
     if(ttlPass)pyrArm();else if(dealIds().length)boardDealing=true;
     setTimeout(()=>{
       if(ttlPass)pyrDealGo();else boardDeal();
-    },TTL_HALF);
+    },ttlQuickFade?70:TTL_HALF);
     ttlKillT=setTimeout(()=>{
-      ttlBs=null;ttlAmp=null;
+      ttlBs=null;ttlAmp=null;ttlQuickFade=false;
       const bb=$('#ttl');if(bb)bb.classList.add('gone');
       /* boot's offline report waited here rather than share the screen
          with the title (the modal sits under it in z) */
       if(welPend){const o=welPend;welPend=null;openWelcome(o);}
-    },bs.length*TTL_FDELAY+TTL_FDUR+300);
+    },ttlQuickFade?420:bs.length*TTL_FDELAY+TTL_FDUR+300);
   },0);   /* a click cancels the entrance outright: mid-landing letters
              snap to their ink pose and the L-to-R fade starts at once */
 }

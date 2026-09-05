@@ -4,7 +4,7 @@
    ring), and horizontal swipes that drag the views between tabs (the
    felt included: its taps, holds and vertical swipes stand down the
    moment a horizontal drag engages; right-click on the bare felt still
-   ends the turn).
+   banks the focused hand).
    The deck's top card lifts any time, cooldown included. Cards pulled
    early sit face-down where they land on the felt and flip when the
    deck cools; holding the deck still inspects it.
@@ -50,9 +50,19 @@ function flickUp(x,y,vx,vy){
   const fr=$('#felt').getBoundingClientRect(),dr=$('#dz').getBoundingClientRect();
   if(fr.left+x>=dr.left&&fr.left+x<=dr.right&&fr.top+y>=dr.top&&fr.top+y<=dr.bottom)return false;
   const el=els[c];if(!el)return false;
-  const cw=CUR_CW,ch=CUR_CH,
-        px=Math.min(FW-cw/2-8,Math.max(cw/2+8,x)),
-        py=Math.min(FH-ch/2-8,Math.max(ch/2+8,y));
+  const cw=CUR_CW,ch=CUR_CH;
+  /* the park lies ON the swipe, never toward the finger's endpoint:
+     direction from the release velocity, travel from its momentum
+     (÷3.2, releaseGlide's friction — keep them in step). The flick
+     keeps its own line; only a dead release falls back to the ray from
+     the deck through the touch point */
+  const sp=Math.hypot(vx||0,vy||0);
+  let dx,dy,travel;
+  if(sp>40){dx=vx/sp;dy=vy/sp;travel=Math.min(310,Math.max(70,sp/3.2));}
+  else{const ddx=x-DX,ddy=y-DY,dd=Math.hypot(ddx,ddy)||1;
+    dx=ddx/dd;dy=ddy/dd;travel=Math.min(200,Math.max(60,dd));}
+  const px=Math.min(FW-cw/2-8,Math.max(cw/2+8,DX+dx*travel)),
+        py=Math.min(FH-ch/2-8,Math.max(ch/2+8,DY+dy*travel));
   /* rest pose hands its spot to a frozen transform first (geometry
      armor), then the park transform glides the card out of the stack.
      A real flick lets it slide the momentum off over the felt before
@@ -107,11 +117,25 @@ function initInput(){
     ce.classList.remove('buried');
     ce.classList.remove('faceup');   /* same as flickUp: the park waits blind */
     ce.style.zIndex=500;
-    ce._pkx=cx;ce._pky=cy;   /* the pose a carry-drag starts from */
     preDrops.push(cid);
     SFX.detent();buzz(6);
-    if(cdL)releaseGlide(cid,x,y,vx||0,vy||0,cx,cy,byId(cid).j*3,layout);
-    else ce.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px) rotate(${(byId(cid).j*3).toFixed(1)}deg)`;
+    if(cdL){
+      /* the park continues the drag's momentum: the spot sits along the
+         release ray at the friction travel (÷3.2, releaseGlide's FR),
+         so the card slides PAST the finger and settles ahead, never
+         easing back to where it was let go */
+      const dsp=Math.hypot(vx||0,vy||0);
+      let tx2=cx,ty2=cy;
+      if(dsp>60){const travel=Math.min(220,Math.max(50,dsp/3.2));
+        tx2=Math.min(FW-cw/2-8,Math.max(cw/2+8,x+vx/dsp*travel));
+        ty2=Math.min(FH-ch/2-8,Math.max(ch/2+8,y+vy/dsp*travel));}
+      ce._pkx=tx2;ce._pky=ty2;
+      releaseGlide(cid,x,y,vx||0,vy||0,tx2,ty2,byId(cid).j*3,layout);
+    }
+    else{
+      ce._pkx=cx;ce._pky=cy;   /* cool deck: a one-frame waypoint, the payout lands it */
+      ce.style.transform=`translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px) rotate(${(byId(cid).j*3).toFixed(1)}deg)`;
+    }
   };
 
   z.addEventListener('pointerdown',e=>{
@@ -201,14 +225,16 @@ function initInput(){
 
   /* the felt: swipe down banks, swipe up draws, tap arms a trick, hold
      (or right-click) opens the sticker card, right-click on the bare
-     felt ends the turn. A hold never banks — the sheet swallows it; a
-     horizontal drag belongs to the tab swipe, not the felt. */
-  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null;
+     felt banks the focused hand. A hold never banks — the sheet
+     swallows it; a horizontal drag belongs to the tab swipe, not the
+     felt. */
+  const Fd=$('#felt');let by=null,bx=0,bt=0,cardP=null,cardT=0,infoFired=false,parkP=null,bMouse=false;
   const fvel=mkVel();   /* the swipe's release read, px/s */
   Fd.addEventListener('pointerdown',e=>{
     if(e.target.closest('#dz'))return;
     stkTipHide();
     by=e.clientY;bx=e.clientX;bt=performance.now();infoFired=false;
+    bMouse=e.pointerType==='mouse';
     fvel.push(e.clientX,e.clientY);
     const ce=e.target.closest('.card');
     /* a parked early lift: the finger can carry it — drop it on the
@@ -299,13 +325,17 @@ function initInput(){
   Fd.addEventListener('contextmenu',e=>{
     const ce=e.target.closest('.card');
     if(ce&&ce.classList.contains('faceup')){e.preventDefault();openStkCard(+ce.dataset.cid);return;}
-    /* right-click on the felt ends the turn: every hand over the line
-       banks at once, the hold-the-BANK gesture in mouse form. This
-       fires after pointerup, so an open press (by!=null — also how a
-       touch long-press arrives) never triggers it; onboarding keeps
-       its own script */
-    if(frozen||by!=null||(S.tut&&S.tut!=='done'&&S.tut!=='end'))return;
-    e.preventDefault();bankAll();
+    /* right-click on the felt banks the focused hand — the swipe-down
+       bank in mouse form; holding the BANK button stays the bank-all.
+       The open-press block (by!=null) guards the touch long-press, whose
+       finger is genuinely still down — but Safari never fires pointerup
+       for the right button (WebKit bug 6595), so a mouse press looks
+       open here too and stands the block down. Onboarding keeps its own
+       script */
+    if(frozen||(by!=null&&!bMouse)||(S.tut&&S.tut!=='done'&&S.tut!=='end'))return;
+    if(cardT){clearTimeout(cardT);cardT=0;}
+    if(parkP){parkP.el.style.transition='';parkP.el.style.zIndex=500;parkP=null;}
+    e.preventDefault();bank(S.hands[S.focus]);
   });
   /* mouse hover over a stickered card: the neumorphic tag slides in
      below it — touch never sees this, long-press opens the sheet.

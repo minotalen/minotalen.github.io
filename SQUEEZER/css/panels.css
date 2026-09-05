@@ -621,7 +621,7 @@ h2:first-child{margin-top:6px}
      the close button fit one viewport. .set phones just stack */
   #sh.set{max-width:872px;max-height:92dvh;padding-top:14px;padding-bottom:14px}
   #sh.set h3{margin-bottom:5px}
-  #sh.set .setcols{display:grid;grid-template-columns:1fr 1fr;column-gap:26px}
+  #sh.set .setcols{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
   #sh.set .scol{display:flex;flex-direction:column}
   #sh.set .dscord{margin-top:auto}
   #sh.set .scol>.ash:first-child{margin-top:2px}

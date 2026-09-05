@@ -280,7 +280,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 @media (min-width:1024px){
   body.wide #app{max-width:1280px;display:grid;
     grid-template-columns:minmax(0,1fr) minmax(360px,45%);
-    column-gap:10px;grid-template-rows:auto minmax(0,1fr)}
+    grid-template-rows:auto minmax(0,1fr)}
   /* the money plaques read over the table, not over the panel */
   body.wide #hud{grid-column:1;padding-top:max(12px,env(safe-area-inset-top))}
   body.wide #views{grid-column:1;grid-row:2}

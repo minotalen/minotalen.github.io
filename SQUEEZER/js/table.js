@@ -793,17 +793,21 @@ function boardDeal(){
     ids.forEach(id=>{fanBusy.delete(id);stashParked.delete(id);});layout();
     boardDealing=false;ttlDriftFade();return;}
   boardDealing=true;   /* the draw holds until the board has dealt out */
-  const gap=Math.max(36,Math.min(110,1500/ids.length));
+  /* a flick dismissed the title: the deal sprints too, no cinematic gap */
+  const qk=ttlQuickFade;ttlQuickFade=false;
+  const head=qk?50:180,
+        gap=qk?Math.max(22,Math.min(55,700/ids.length))
+              :Math.max(36,Math.min(110,1500/ids.length));
   ids.forEach((id,i)=>boardDealT.push(setTimeout(()=>{
     fanBusy.delete(id);stashParked.delete(id);
     layout();               /* its slot lifts it out of the deck, flip and all */
     SFX.draw(byId(id).v);
-  },180+i*gap)));
+  },head+i*gap)));
   boardDealT.push(setTimeout(()=>{
     SFX.shuffle();boardDealing=false;
     stashParked.clear();
     ttlDriftFade();   /* the board is out: the drift sinks away */
-  },180+ids.length*gap+240));
+  },head+ids.length*gap+(qk?140:240)));
 }
 /* ---- pile fans ----
    the OUT and SET stacks read as piles; tap one and its cards glide up
