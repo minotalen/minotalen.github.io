@@ -790,7 +790,12 @@ let fanZone=null,fanHov=null;
 const culledAll=()=>S.hands.reduce((a,h)=>a.concat(h.run.culled),[]);
 const pileOf=id=>S.out.indexOf(id)>=0?'out'
   :culledAll().indexOf(id)>=0||(S.disc&&S.disc.indexOf(id)>=0)?'culled':null;
-function setFan(z){fanZone=z===fanZone?null:z;fanHov=null;layout();}
+function setFan(z){fanZone=z===fanZone?null:z;fanHov=null;layout();
+  /* the piles' first fan-open is the curiosity moment: one poster
+     names the pile and its return rule (a mid-chain tap stays armed,
+     the coach owns that stretch) */
+  if(fanZone==='out')coach('out');
+  else if(fanZone==='culled')coach('disc');}
 /* the empty bench's tag: the sticker tag's twin, pinned by the
    set-aside slot — hover it while nothing waits there and it names
    what the stack is for. Cards present, the pile speaks for itself */
@@ -968,6 +973,9 @@ function paintHRow(){
   if(S.hands.length<2){if(R.innerHTML){R.innerHTML='';pmv['x-hrow']='';
     requestAnimationFrame(layout);}   /* the rail let go: the felt grew under stale anchors */
     return;}
+  /* the first paint of a second table names the rail once; on a phone
+     this waits for the TABLE visit, the chips live on the felt */
+  if(tableUp())coach('split');
   const html=S.hands.map((h,i)=>{
     /* the busted hand mid-window quotes its ghost: the buster never sat
        down, so the chip holds the card count, gauge and chain it had */

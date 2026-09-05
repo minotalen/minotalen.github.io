@@ -37,8 +37,9 @@ function buyCard(v){
   /* bought away from the table: it owes the felt a show-and-tuck */
   newIns.push(nc.id);
   layout();SFX.buy();buzz(12);
-  if(hits.length)toast(`A ${v} joins the deck\n`+
+  if(hits.length){toast(`A ${v} joins the deck\n`+
     hits.map(k=>COND[k].n.toUpperCase()+': '+COND[k].d).join('\n'),'plus');
+    coach('cond');}   /* the toast names the quirk, the poster teaches the class */
   else toast(`A ${v} joins the deck`,'plus');
   checkAch();unlocks();paint();renderCards();save(true);
   /* the deck-build itself is a purchase stream: first buy is a funnel
@@ -110,10 +111,10 @@ function pickOffers(p){
     for(const ti of tiers){r-=ECO.TIER_W[ti-1];if(r<=0){t=ti;break;}}
     const k=byT[t][rndi(byT[t].length)];
     seen.add(k);
-    /* one roll in ten comes off the press shiny: holo vinyl, double price.
-       The press only runs once the cold-bust bar is met (shinyUn) —
-       cosmetic vinyl with a ×1.1 per shiny on its table */
-    const shy=shinyUn()&&Math.random()<ECO.SHINY_CHANCE;
+    /* the press's holo pass: SHINY_CHANCE base, Luster raises it
+       (shinyChance, economy.js). Locked stock never rolls shiny
+       (shinyUn) — cosmetic vinyl with a ×1.1 per shiny on its table */
+    const shy=shinyUn()&&Math.random()<shinyChance();
     out.push({k,price:stkPrice(k)*(shy?2:1),shy:shy?1:0,sold:false});
   }
   /* de-bolt rides a lucky roll once the spend gate is met (deboltUn,
@@ -139,6 +140,7 @@ function buyStk(i){
   if(!cs)return;
   S.score-=o.price;o.sold=true;
   S.st.stkSpent=(S.st.stkSpent||0)+o.price;   /* the de-bolt gate reads this */
+  if(o.shy)S.st.shinyBought=(S.st.shinyBought||0)+1;   /* Shine Collector reads buys */
   logAct('stk',-o.price);
   biFirst('stk');bi('buy',{k:'stk',id:o.k,p:biBucket(o.price),t:biPlayMin()});
   S.pick={k:o.k,shy:o.shy||0,ids:cs.map(c=>c.id)};
@@ -218,7 +220,7 @@ function placeStk(id,px,py,rot){
     SFX.slap();buzz(34);
     toast(`${STK[c.stk].n} slapped onto a ${c.v}`
       +(rip?'\nRIPPED: on draw: pays 1 ward, then deals 2 more cards':''),rip?'alert':'spark');
-    if(rip)setTimeout(()=>SFX.rip(),90);
+    if(rip){coach('cond');setTimeout(()=>SFX.rip(),90);}
     if(el){const r=el.getBoundingClientRect();
       spray(r.left+r.width*x/100,r.top+r.height*y/100,'#B9B2A0',18);
       el.insertAdjacentHTML('beforeend',`<i class="sring" style="left:${x}%;top:${y}%"></i>`);
@@ -569,6 +571,7 @@ function renderUp(){
       C2('wards lost','wardLost','Wards spent holding a bust back: Grace, Ward\'s rider, Rip scars, Strip.')])
     +G('stickers',[
       C2('stickers placed','placed','Stickers slapped onto cards.'),
+      C2('shinies bought','shinyBought','Holo vinyl bought off the shelf.'),
       C2('shinies placed','shinyPlaced','Holo vinyl that landed on a card.'),
       C('different',cmpDiff(),'Different stickers in play. The compendium opens at '+CMP_AT+'.')]);
   $('#v-up').innerHTML=h;fillUp('#v-up','up');
@@ -595,6 +598,9 @@ function renderPick(){
   /* the deal flips take ~.8s; the first-time drag nudge starts after
      they land and loops until a real hand grabs the pad */
   if(!S.seen.pickDrag)setTimeout(startPNudge,900);
+  /* the words for the nudge's move, once ever: the first grab closes
+     the poster with the do marker (the pad is the taught thing) */
+  coach('stk');
 }
 /* ---- first-time drag nudge ----
    one singleton ghost vinyl repeats the move for new hands: peels off
@@ -731,7 +737,7 @@ function renderShop(){
   if(!p.length)h+=`<p class="note">Nothing yet. Goals unlock the stock (GOALS tab).</p>`;
   else{
     const left=Math.max(0,S.shop.next-Date.now());
-    h+=`<p class="note">Buy stickers here to put on your cards and make them better! After you buy a sticker, select one of 3 cards to apply it to.<br>Stock rotates · restock in <b class="tmr">${Math.floor(left/60000)}m ${Math.floor(left%60000/1000)}s</b>.</p>`;
+    h+=`<p class="note">Buy a sticker, drag it onto a card.<br>Stock rotates · restock in <b class="tmr">${Math.floor(left/60000)}m ${Math.floor(left%60000/1000)}s</b>.</p>`;
     S.shop.offers.forEach((o,i)=>{
       if(o.k!=='debolt'&&!STK[o.k])return;   /* stale key from an older roster */
       if(o.k==='debolt'){         /* the lucky roll: one strip, this stock only */
@@ -797,31 +803,71 @@ function renderShop(){
     b.dataset.i==='gift'?claimGift():buyStk(+b.dataset.i));
   const r=$('#rr');if(r)r.onclick=reroll;
 }
+/* the GOALS order freezes for the visit: rows never swap under your
+   thumb while the game ticks on. Switching into the tab recomputes it,
+   every render inside the visit reuses it */
+let ACH_SEQ=null,ACH_FRESH=true;
+/* categories in reading order: score bonuses lead, then the upgrade
+   rows, then sticker stock tier by tier, shard rows close. Empty
+   categories drop out */
+function achCats(){
+  const cats=[{n:'BONUS',list:[]},{n:'UPGRADES',list:[]}];
+  for(let t=1;t<=5;t++)cats.push({n:'STICKERS T'+t,list:[]});
+  cats.push({n:'SHARD UPGRADES',list:[]});
+  ACH.filter(a=>!(a.stk&&STK_OFF[a.stk])).forEach(a=>{
+    if('v' in a||'s' in a)cats[0].list.push(a);
+    else if(a.up)cats[1].list.push(a);
+    else if(a.meta)cats[6].list.push(a);
+    else cats[1+(STK[a.stk]?STK[a.stk].t:1)].list.push(a);
+  });
+  return cats.filter(c=>c.list.length);
+}
 function renderAch(){
+  const prog=a=>{let c=0;try{c=a.g();}catch(e){}return Math.min(c,a.t);};
+  const fresh=a=>(has(a.id)||S.ready.indexOf(a.id)>=0)&&!S.rseen[a.id];
+  if(ACH_FRESH||!ACH_SEQ){
+    ACH_FRESH=false;
+    /* within a category: the claim button leads, achieved rows ride
+       under it (unseen first), the live game sorts by how close it is */
+    const rank=a=>has(a.id)?1:prog(a)>=a.t?0:2;
+    ACH_SEQ=achCats().map(c=>({...c,list:[...c.list].sort((x,y)=>
+      rank(x)-rank(y)||(fresh(y)?1:0)-(fresh(x)?1:0)
+      ||prog(y)/y.t-prog(x)/x.t)}));
+  }
   /* benched stickers' gates are hidden with their stickers; the counts
      read the live roster only */
   const LIVE=ACH.filter(a=>!(a.stk&&STK_OFF[a.stk]));
   let h=`<h2>GOALS · ${LIVE.filter(a=>has(a.id)).length}/${LIVE.length}</h2><p class="note">Goals unlock new upgrades and stickers once you complete them.</p>`;
-  const prog=a=>{let c=0;try{c=a.g();}catch(e){}return Math.min(c,a.t);};
-  const rank=a=>has(a.id)?2:prog(a)>=a.t?0:1;   /* claimable first */
-  const list=[...LIVE].sort((a,b)=>rank(a)-rank(b));
-  list.forEach(a=>{
-    const ok=has(a.id),c=prog(a);
-    const rw=a.stk?`${ic('spark')} ${stkN(a.stk)}${STK[a.stk]?' · T'+STK[a.stk].t+' sticker':' · sticker'}`
-      :a.up?`${ic('zap')} ${UPG[a.up]?UPG[a.up].n:a.up}${a.lv>1?' '+a.lv+' · upgrade level':' · upgrade row'}`
-      :a.meta?`${ic('gem')} ${META[a.meta]?META[a.meta].n:a.meta}${a.lv>1?' '+a.lv+' · shard upgrade level':' · shard upgrade'}`
-      :a.s?`+${Math.round(a.s*100)}% shards`:`+${Math.round(a.v*100)}% value`;
-    if(!ok&&c>=a.t){          /* met — the bonus waits on the claim */
-      h+=`<div class="row pf pg" data-pk="${a.id}" style="--p:100%"><div class="b"><div class="nm">${ic('star')} ${a.n} <span class="tag">${rw}</span></div>
+  ACH_SEQ.forEach(cat=>{
+    h+=`<h3 class="gh">${cat.n} · ${cat.list.filter(a=>has(a.id)).length}/${cat.list.length}</h3>`;
+    cat.list.forEach(a=>{
+      const ok=has(a.id),c=prog(a),nw=fresh(a);
+      /* the full tag names the reward for the taking; once taken, the
+         tier and row noise is gone — a long done tag wrapped the row */
+      const rw=a.stk?`${ic('spark')} ${stkN(a.stk)}${STK[a.stk]?' · T'+STK[a.stk].t+' sticker':' · sticker'}`
+        :a.up?`${ic('zap')} ${UPG[a.up]?UPG[a.up].n:a.up}${a.lv>1?' '+a.lv+' · upgrade level':' · upgrade row'}`
+        :a.meta?`${ic('gem')} ${META[a.meta]?META[a.meta].n:a.meta}${a.lv>1?' '+a.lv+' · shard upgrade level':' · shard upgrade'}`
+        :a.s?`+${Math.round(a.s*100)}% shards`:`+${Math.round(a.v*100)}% value`;
+      const rwS=a.stk?`${ic('spark')} ${stkN(a.stk)}`
+        :a.up?`${ic('zap')} ${UPG[a.up]?UPG[a.up].n:a.up}${a.lv>1?' '+a.lv:''}`
+        :a.meta?`${ic('gem')} ${META[a.meta]?META[a.meta].n:a.meta}${a.lv>1?' '+a.lv:''}`
+        :a.s?`+${Math.round(a.s*100)}% shards`:`+${Math.round(a.v*100)}% value`;
+      const nwTag=nw?' <i class="ntag">NEW</i>':'';
+      if(!ok&&c>=a.t){          /* met — the bonus waits on the claim */
+        h+=`<div class="row pf pg${nw?' nw':''}" data-id="${a.id}" data-pk="${a.id}" style="--p:100%"><div class="b"><div class="nm">${ic('star')} ${a.n} <span class="tag">${rw}</span>${nwTag}</div>
+          <div class="ds">${a.d}</div></div>
+          <button class="buy" data-cl="${a.id}">CLAIM</button></div>`;return;}
+      if(ok){                   /* claimed — compact once the NEW wore off */
+        h+=`<div class="row done${nw?' nw':''}${S.rseen[a.id]?' sm':''}" data-id="${a.id}"><div class="b"><div class="nm">${ic('star')} ${a.n} <span class="tag">${rwS}</span>${nwTag}</div>${S.rseen[a.id]?'':`<div class="ds">${a.d}</div>`}</div>
+          <div class="gst done"><div class="v">${ic('check')}</div></div></div>`;return;}
+      h+=`<div class="row pf pg" data-id="${a.id}" data-pk="${a.id}" style="--p:${(c/a.t*100).toFixed(1)}%"><div class="b"><div class="nm">${ic('star-o')} ${a.n} <span class="tag">${rw}</span></div>
         <div class="ds">${a.d}</div></div>
-        <button class="buy" data-cl="${a.id}">CLAIM</button></div>`;return;}
-    const st=ok?`<div class="gst done"><div class="v">${ic('check')}</div></div>`
-      :`<div class="gst"><div class="v">${fmtG(c)}<i>/</i>${fmtG(a.t)}</div></div>`;
-    h+=`<div class="row${ok?' done':' pf pg'}"${ok?'':` data-pk="${a.id}" style="--p:${(c/a.t*100).toFixed(1)}%"`}><div class="b"><div class="nm">${ok?ic('star'):ic('star-o')} ${a.n} <span class="tag">${rw}</span></div>
-      <div class="ds">${a.d}</div></div>${st}</div>`;});
-  /* gates that met leave the shop's PROGRESS block for here, so their
-     done state keeps a home: full stock, the compendium (its OPEN button
-     rides along, it is the book's only entry) */
+        <div class="gst"><div class="v">${fmtG(c)}<i>/</i>${fmtG(a.t)}</div></div></div>`;});
+  });
+  /* the back room: gates that met leave the shop's PROGRESS block for
+     here, so their done state keeps a home — full stock, the compendium
+     (its OPEN button rides along, it is the book's only entry) */
+  h+=`<h3 class="gh">MORE</h3>`;
   if(tierOf()>=5)h+=`<div class="row"><div class="b"><div class="nm">${ic('stack')} Full stock</div>
     <div class="ds">The Fixer sells everything, tier 5 deep.</div></div>
     <div class="gst done"><div class="v">${ic('check')}</div></div></div>`;
@@ -845,15 +891,59 @@ function renderAch(){
   for(let i=log.length-1;i>=0&&log[i]<ECO.SHINY_COLD;i--)cold++;
   h+=shinyUn()
     ?`<div class="row"><div class="b"><div class="nm">Shiny stock</div>
-      <div class="ds">Unlocked. 10% of rolls come out shiny: holo vinyl, double price. Each shiny on a table pays ×${ECO.SHINY_X.toFixed(2)} per shiny there.</div></div>
+      <div class="ds">Unlocked. ${Math.round(shinyChance()*100)}% of rolls come out shiny: holo vinyl, double price. Each shiny on a table pays ×${ECO.SHINY_X.toFixed(2)} per shiny there.</div></div>
       <div class="gst done"><div class="v">${ic('check')}</div></div></div>`
     :`<div class="row pf pg" data-pk="shiny" style="--p:${(cold/5*100).toFixed(1)}%"><div class="b">
       <div class="nm">${ic('lock')} Shiny stock</div>
-      <div class="ds">Bust 5 times in a row under ${Math.round(ECO.SHINY_COLD*100)}% risk. The press then runs a holo pass: 10% of rolls come out shiny, double price.</div></div>
+      <div class="ds">Bust 5 times in a row under ${Math.round(ECO.SHINY_COLD*100)}% risk. The press then runs a holo pass: ${Math.round(shinyChance()*100)}% of rolls come out shiny, double price.</div></div>
       <div class="gst"><div class="v">${cold}<i>/</i>5</div><div class="l">COLD</div></div></div>`;
   $('#v-ach').innerHTML=h;fillUp('#v-ach','ach');
   $$('#v-ach .buy[data-cl]').forEach(b=>b.onclick=()=>claimAch(b.dataset.cl));
   const cg=$('#v-ach #cmpGo');if(cg)cg.onclick=openComp;
+  achWatch();
+}
+/* the de-new clock: an achieved row goes quiet once it has held the
+   viewport half a second, or been flung past the 75% line. A de-newed
+   done row compacts to its name line */
+let ACH_WATCH_ON=false;
+function deNew(r){
+  if(r.dataset.id)S.rseen[r.dataset.id]=1;
+  r.classList.remove('nw');r._t0=0;
+  if(r.classList.contains('done'))r.classList.add('sm');
+  save();
+}
+function achWatch(){
+  if(ACH_WATCH_ON)return;ACH_WATCH_ON=true;
+  const step=()=>{
+    ACH_WATCH_ON=false;
+    const view=$('#v-ach');
+    if(!view||!view.classList.contains('on'))return;
+    const rows=$$('#v-ach .row.nw');
+    if(!rows.length)return;
+    const H=innerHeight;
+    rows.forEach(r=>{
+      const b=r.getBoundingClientRect();
+      if(b.bottom<H*.75){deNew(r);return;}   /* flung past */
+      if(b.top<H&&b.bottom>0){
+        r._t0=r._t0||performance.now();
+        if(performance.now()-r._t0>=500)deNew(r);
+      }else r._t0=0;                          /* off-screen: the clock resets */
+    });
+    if($$('#v-ach .row.nw').length){ACH_WATCH_ON=true;requestAnimationFrame(step);}
+  };
+  requestAnimationFrame(step);
+}
+/* a tap on GOALS while already there jumps to the next unread row —
+   the badge feed's second act. Arrival (arrive) takes the same jump
+   only when the row is below the fold: what's already on screen stays
+   where the landing put it */
+function achCenter(arrive){
+  const view=$('#v-ach');
+  if(!view||typeof view.scrollTo!=='function')return;
+  const r=view.querySelector('.row.nw');if(!r)return;
+  const top=r.offsetTop||0,h=r.offsetHeight||0;
+  if(arrive&&top+h>view.scrollTop&&top<view.scrollTop+view.clientHeight)return;
+  view.scrollTo({top:Math.max(0,top+h/2-view.clientHeight/2)});
 }
 function renderPres(){
   const g=shardGain(),req=ascReq(),pc=Math.min(100,S.banked/req*100);

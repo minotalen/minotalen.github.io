@@ -5,7 +5,12 @@
 
 /* ---------- views ---------- */
 #views{flex:1;position:relative;min-height:0;touch-action:pan-y;overflow:hidden}
-.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 14px 18px;display:none;
+/* pan-y must sit on .view itself, not just the #views parent: each view
+   is the scroller, and a phone browser reads the scroller's own
+   touch-action first — left auto it claims horizontal drags and fires
+   pointercancel, killing the tab swipe everywhere but the felt (which
+   is touch-action:none) */
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 14px 18px;display:none;
   background:var(--paper)}
 /* the drifting sticker teaser lives as a view's first child (z 0) —
    direct content is lifted above it so the stickers float behind */

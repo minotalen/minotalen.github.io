@@ -158,3 +158,72 @@ function tutPaint(){
     const x=$('#tutX');if(x)x.onclick=tutDone;
     const go=$('#tutGo');if(go)go.onclick=tutDone;}
 }
+
+/* ---------------- one-shot tips ---------------- */
+/* the chain teaches the loop; these posters teach the table's
+   furniture the moment it is first touched: the OUT and discard
+   piles on their first fan-open, the sticker drag at the pick
+   stage, the first condition, the hand rail at two tables. Same
+   placard, same voice, chain-done only (the FTUE owns the opening).
+   Seen once per save: shown = taught, never re-armed. Any tap
+   closes one — the tap's own action still fires — or SKIP does.
+   The closing mode rides the first-event family: tip:<id> reached,
+   tip:<id>:do (the tap hit the taught thing first, where one
+   exists), :skip (the button), :tap (anything else). No new event
+   names, so the box whitelist never hears about it */
+const TIP_TXT={
+  out:  {h:'OUT',                    p2:'HOME ON A BUST'},
+  disc: {h:'DISCARD',                p2:'HOME ON A BANK'},
+  stk:  {h:'ONE PER CARD, FOR GOOD', p2:'DRAG IT ONTO A CARD',act:'#pped,#prow .pcard'},
+  cond: {h:'CONDITIONS',             p2:'HOLD A CARD TO READ ITS QUIRK'},
+  split:{h:'TWO TABLES, ONE DECK',   p2:'TAP H1 OR H2 TO SWITCH',act:'.hchip'}
+};
+const tipKey=id=>'tip'+id[0].toUpperCase()+id.slice(1);
+/* the split poster waits for the felt: the chips it names live on the
+   table, so on a phone it fires on the next TABLE visit (a wide
+   desktop never loses the table). The body guard is the harness:
+   its document.body has no classList */
+const tableUp=()=>viewOn('play')||
+  !!(typeof document!=='undefined'&&document.body&&document.body.classList&&
+     document.body.classList.contains('wide'));
+let tipId=null;
+const tipCap=e=>{
+  if(!tipId)return;
+  let m='tap';
+  const el=e&&e.target;
+  if(el&&el.closest){
+    if(el.closest('#tipX'))m='skip';
+    else{const t=TIP_TXT[tipId];if(t&&t.act&&el.closest(t.act))m='do';}}
+  coachOff(m);};
+function coach(id){
+  const t=TIP_TXT[id];if(!t)return;
+  if(S.seen[tipKey(id)])return;          /* shown = taught */
+  if(S.tut!=='done')return;              /* the chain owns the opening */
+  if(BG)return;                          /* a hidden tab never teaches */
+  S.seen[tipKey(id)]=1;
+  biFirst('tip:'+id);
+  save();
+  if(tipId)coachOff('tap');              /* one placard at a time */
+  tipId=id;
+  const box=$('#tip');if(!box)return;
+  box.classList.remove('off');
+  const bx=$('#tipBox');
+  if(bx){bx.classList.remove('in');void bx.offsetWidth;bx.classList.add('in');}
+  const tx=$('#tipTx');
+  if(tx){
+    tx.innerHTML=`<div class="ph">${t.h}<span class="p2">${t.p2}</span></div>`+
+      '<button id="tipX">SKIP</button>';
+    tx.classList.remove('swp');void tx.offsetWidth;tx.classList.add('swp');
+    const x=$('#tipX');if(x)x.onclick=()=>coachOff('skip');
+  }
+  /* capture, no stopPropagation: the closing tap's action still fires */
+  document.removeEventListener('pointerdown',tipCap,true);
+  document.addEventListener('pointerdown',tipCap,true);
+}
+function coachOff(m){
+  if(!tipId)return;
+  biFirst('tip:'+tipId+':'+m);
+  tipId=null;
+  const box=$('#tip');if(box)box.classList.add('off');
+  if(document.removeEventListener)document.removeEventListener('pointerdown',tipCap,true);
+}

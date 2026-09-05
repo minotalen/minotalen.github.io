@@ -13,9 +13,9 @@ const Tabs={
     $$('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
     this.thumb();
     const b=$(`#tabs button[data-v="${v}"]`),n=b&&b.querySelector('.nub');if(n)n.remove();
-    /* landing on GOALS counts as reading the dot: every goal waiting
-       here is seen, so only a later fresh goal brings the nub back */
-    if(v==='ach')S.ready.forEach(id=>S.rseen[id]=1);
+    /* landing on GOALS kills the dot, but the rows keep their own NEW
+       badges until actually read — panels.js achWatch de-news them
+       (500ms in view, or flung past the 75% line) */
   },
   thumb(){
     const b=$('#tabs button.on');if(!b)return;
@@ -35,11 +35,21 @@ const Tabs={
        included, at once (no entrance wait) */
     if(v!=='play'&&ttlAlive())ttlOff(true);
     const cur=document.querySelector('.view.on'),next=$('#v-'+v);
-    if(!next||cur===next){this.fixTab(v);return;}
+    if(!next||cur===next){
+      this.fixTab(v);
+      /* a re-tap on GOALS while already there centers the next unread row */
+      if(v==='ach'&&cur&&cur.id==='v-ach'&&typeof achCenter==='function')achCenter();
+      return;
+    }
     let d=dir;
     if(!d){const i=TAB_ORDER.indexOf(cur.id.slice(2)),j=TAB_ORDER.indexOf(v);
       d=j>i?'r':'l';}
-    this.fixTab(v);this.render(v);
+    this.fixTab(v);
+    if(v==='ach'&&typeof ACH_FRESH!=='undefined')ACH_FRESH=true;   /* the order computes per visit, then freezes */
+    this.render(v);
+    /* arrival takes the jump too — but only when the next unread row sits
+       below the fold; a badge already on screen needs no yank */
+    if(v==='ach'&&typeof achCenter==='function')achCenter(true);
     if(v==='shop')biFirst('shop');
     /* the drift belongs to the table: leaving play sinks it, even
        mid-intro — it never tours the other tabs */

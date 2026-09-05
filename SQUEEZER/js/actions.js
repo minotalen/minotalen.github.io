@@ -460,8 +460,8 @@ function bust(c,twinId,h,preTh){
   tutEvent('bust');
   runSoon(()=>{
     /* everyone folds into the sweep home: the busted hand rides the
-       same cascade as the OUT pile, face-up till each card tucks under
-       the deck. The buster is not riding — it takes its seat in OUT */
+       same cascade as the OUT pile, face-up over the arc and back-down
+       into the tuck. The buster is not riding — it takes its seat in OUT */
     const going=h.ids.filter(id=>id!==c.id);
     revertLeaving(going);   /* the sweep flies printed faces */
     h.ids=[];
@@ -634,6 +634,8 @@ function bank(h,auto){
      that this bank finally cashed */
   const sk=h.ids.map(id=>byId(id).stk).filter(Boolean);
   if(new Set(sk).size<sk.length)S.st.twinTowns=(S.st.twinTowns||0)+1;
+  /* Collage: the widest sticker spread one bank has held */
+  if(new Set(sk).size>(S.st.stkKinds||0))S.st.stkKinds=new Set(sk).size;
   /* No Small Change: a real hand with no small cards on it */
   if(h.ids.length>=3&&h.ids.every(id=>cval(byId(id))>=3))S.st.richBanks=(S.st.richBanks||0)+1;
   /* Inked Up: a real hand where every card wears a sticker */
@@ -839,7 +841,9 @@ function bumpRewrite(c){
 }
 const cardPt=c=>{const e=els[c.id];return e&&e._sx!=null?feltPt(e._sx,e._sy-34):null;};
 /* the card turns over in place; an apply spins forward, the
-   shuffle-revert spins back — the face swaps at the edge-on moment */
+   shuffle-revert spins back — the face swaps at the edge-on moment.
+   A card leaving in a sweep never spins: fanHome strips the class at
+   launch and the flight half-turns it to the back instead */
 function flipCard(c,back){
   const e=els[c.id];
   if(!e||!e.classList||!e.classList.contains('faceup')){faceOf(c);return;}

@@ -62,6 +62,8 @@ const deboltUn=()=>stkSpent()>=ECO.DEBOLT_AT;
    sat under SHINY_COLD risk. bustLog holds those last 5, capped */
 const shinyUn=()=>{const l=S.st.bustLog||[];
   return l.length>=5&&Math.max.apply(null,l)<ECO.SHINY_COLD;};
+/* the roll: SHINY_CHANCE base, SHINY_PER a level on Luster (shards) */
+const shinyChance=()=>ECO.SHINY_CHANCE+ECO.SHINY_PER*M('luster');
 const shinyN=h=>h.ids.reduce((a,id)=>a+((byId(id)||{}).shy?1:0),0);
 const shinyMul=h=>Math.pow(ECO.SHINY_X,shinyN(h));
 /* the rip's unlock: the press only tears stock for a player who has set

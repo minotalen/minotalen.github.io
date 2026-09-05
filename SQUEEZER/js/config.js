@@ -305,7 +305,8 @@ const META = {
   preprint:{n:'Preprint',   d:l=>l?`Start each ascension with ${l} random stickers on the deck`:'Start each ascension with a random sticker on the deck', max:6, c:l=>Math.ceil(6*Math.pow(1.60,l))},
   rally:  {n:'Rally',        d:'A bust keeps the chain, once more per chain',   max:2,  c:l=>Math.ceil(20*Math.pow(2.0,l))},
   silver: {n:'Silver Lining',d:'A bust under 10% risk pays the table out flat', max:1,  c:()=>45},
-  pendant:{n:'Marked Pendant',d:'Marked Deck slips up to 50%, not 30%',          max:1,  c:()=>18}
+  pendant:{n:'Marked Pendant',d:'Marked Deck slips up to 50%, not 30%',          max:1,  c:()=>18},
+  luster: {n:'Luster',       d:l=>'+5% to the shiny roll, forever'+tot(5,l),     max:5,  c:l=>Math.ceil(25*Math.pow(5,l))}
 };
 
 /* goals: A = unlocks a sticker, U = unlocks an upgrade, B = permanent bonus
@@ -449,6 +450,12 @@ const ACH = [
   B('b12','Cycle','Ascend 5 times',0,()=>S.asc,5,.25),
   B('b13','Committed','Arm 10 tricks',.10,()=>S.st.arms||0,10),
   B('b14','Juggler','Hold cards on 3 tables at once',.10,()=>S.st.maxTables||0,3),
+  /* the first-hour score rows: deliberate plays, not milestones the buy
+     ladder walks you past — the upgrade pair is build commitment,
+     Collage is the first loadout */
+  B('b15','Specialist','Buy 3 levels of one upgrade',.05,()=>Math.max(0,...Object.values(S.up)),3),
+  B('b16','Outfitted','Buy 10 upgrades in total',.05,()=>Object.values(S.up).reduce((a,b)=>a+b,0),10),
+  B('b17','Collage','Bank 3 runs holding 2 different stickers',.10,()=>S.st.stkKinds||0,3),
   /* composition bonuses: the loadout is the puzzle — read the gate, then
      spec the stickers that satisfy it */
   B('g61','Twin Town','Bank 3 runs holding two copies of the same sticker',.10,()=>S.st.twinTowns||0,3),
@@ -508,7 +515,9 @@ const ACH = [
      Silver Lining reads cold WARDS (the discipline it insures), Rally
      reads the chain record. One or two ways into a gate is the point:
      the gate names a build, the player specs it. sim.js goals times
-     every gate against the ascend minute */
+     every gate against the ascend minute. Shine Collector reads buys,
+     not placements: the roll rate is Luster's own effect, so its gate
+     counts what the shelf sold */
   SU('m1','Jackpot','Bank exactly 7 cards on 3 consecutive turns','prodigy',()=>S.st.bestSeven||0,3),
   SU('m2','Tempo','Draw 8,500 cards','quick',()=>S.st.draws,8500),
   SU('m3','Hard Times','Bust a hand worth 4,000','rich',()=>Math.round(S.st.bestBust),4000),
@@ -528,7 +537,8 @@ const ACH = [
   SU('m16','Four Corners','Hold cards on 4 tables at once','union',()=>S.st.maxTables||0,4),
   SU('m17','Long Haul','Bank 10 in a row with 5 or more cards','rally',()=>S.st.bestWide||0,10),
   SU('m18','Nerves of Ice','Ward off 40 risky cards under 10% risk','silver',()=>S.st.coldWards||0,40),
-  SU('m19','Marked Man','Deflect 120 risky cards','pendant',()=>S.st.deflects,120)
+  SU('m19','Marked Man','Deflect 120 risky cards','pendant',()=>S.st.deflects,120),
+  SU('m20','Shine Collector','Buy 3 shiny stickers','luster',()=>S.st.shinyBought||0,3)
 ];
 
 /* ---------------- economy constants (from sim.js) ---------------- */
@@ -570,8 +580,9 @@ const ECO = {
   DEBOLT_MIN:1000, DEBOLT_FRAC:.5, DEBOLT_CHANCE:.10, DEBOLT_AT:25000,
   /* shiny stock: unlocks on 5 busts in a row under SHINY_COLD risk, then
      SHINY_CHANCE of rolls come off the press holo at double price. Each
-     shiny on a table pays ×SHINY_X per shiny there */
-  SHINY_CHANCE:.10, SHINY_X:1.1, SHINY_COLD:.30,
+     shiny on a table pays ×SHINY_X per shiny there. Luster (shards)
+     adds SHINY_PER a level on top of the base */
+  SHINY_CHANCE:.05, SHINY_PER:.05, SHINY_X:1.1, SHINY_COLD:.30,
   /* the rip: RIP_CHANCE of applies tear the stock into the RIPPED
      condition (one apply in a hundred, sticker and all) — but only
      once a card has been set to 0 (rippedUn, economy.js). The buy-roll

@@ -173,34 +173,40 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 #tut{position:absolute;left:10px;right:10px;top:10px;margin:0 auto;max-width:400px;
   z-index:120;pointer-events:none}
 #tut.off{display:none}
-#tutBox{pointer-events:none;padding:11px 13px 12px;border-radius:12px;transition:--p .7s var(--sp);
+/* the one-shot tips wear the same placard, freed from the felt: they
+   fire in side views too, so this one sits at body level, top-center.
+   No gold progress wash — a tip is one beat, not a climb */
+#tip{position:fixed;left:50%;transform:translateX(-50%);top:14px;
+  max-width:400px;width:calc(100% - 20px);z-index:160;pointer-events:none}
+#tip.off{display:none}
+#tutBox,#tipBox{pointer-events:none;padding:11px 13px 12px;border-radius:12px;transition:--p .7s var(--sp);
   background:linear-gradient(90deg,rgba(138,106,47,.16) var(--p,0%),transparent 0),var(--grad);
   box-shadow:4px 4px 11px var(--shs),-3px -3px 8px var(--hl)}
-#tutBox.in{animation:tutin .32s var(--sp)}
+#tutBox.in,#tipBox.in{animation:tutin .32s var(--sp)}
 @keyframes tutin{from{opacity:0;transform:translateY(-9px)}}
 /* flow-root: the floated SKIP must count toward the text's height, or
    it hangs across the bubble's bottom edge when it drops a line */
-#tutTx{display:flow-root;color:var(--ink2)}
-#tutTx.swp{animation:tutsw .45s ease}
+#tutTx,#tipTx{display:flow-root;color:var(--ink2)}
+#tutTx.swp,#tipTx.swp{animation:tutsw .45s ease}
 @keyframes tutsw{from{opacity:.15}}
 /* the poster: one loud line (optionally a gold second line), one tiny
    sub. All centered, all Orbit for the head — the bubble is a placard,
    not a paragraph, and it never illustrates: the felt is the picture */
-#tutTx .ph{font-family:var(--disp);font-weight:800;font-size:17px;
+#tutTx .ph,#tipTx .ph{font-family:var(--disp);font-weight:800;font-size:17px;
   letter-spacing:.05em;line-height:1.18;color:var(--ink);text-align:center;
   -webkit-text-stroke:.022em currentcolor}
-#tutTx .ph.bad{color:var(--red)}
-#tutTx .ph .p2{display:block;margin-top:3px;font-size:15px;color:var(--gld)}
-#tutTx .pg{display:flex;justify-content:center;align-items:center;gap:7px;margin:7px 0 3px}
+#tutTx .ph.bad,#tipTx .ph.bad{color:var(--red)}
+#tutTx .ph .p2,#tipTx .ph .p2{display:block;margin-top:3px;font-size:15px;color:var(--gld)}
+#tutTx .pg,#tipTx .pg{display:flex;justify-content:center;align-items:center;gap:7px;margin:7px 0 3px}
 /* the outro's verb chips: DRAW · BANK · BUY */
-#tutTx .tv{display:inline-block;padding:4px 9px;border:1.3px solid var(--line);
+#tutTx .tv,#tipTx .tv{display:inline-block;padding:4px 9px;border:1.3px solid var(--line);
   border-radius:8px;background:var(--grad);font-family:var(--ui);font-weight:700;
   font-size:10px;letter-spacing:.14em;color:var(--ink)}
-#tutTx b{color:var(--ink)}
+#tutTx b,#tipTx b{color:var(--ink)}
 /* SKIP rides the text: inline at its end, floated right — it sits on the
    last line's right edge, dropping to its own right-aligned line only
    when there is no room */
-#tutX{pointer-events:auto;float:right;display:inline-block;margin:5px 0 3px 12px;border:0;
+#tutX,#tipX{pointer-events:auto;float:right;display:inline-block;margin:5px 0 3px 12px;border:0;
   background:none;padding:2px 3px;font-family:var(--nm);font-size:8.5px;
   letter-spacing:.2em;color:var(--ink3);font-weight:700;cursor:pointer}
 #tutTx .tgo{pointer-events:auto;display:block;clear:both;width:100%;margin-top:9px;padding:11px;

@@ -7,12 +7,12 @@
 <meta name="theme-color" content="#E4DFD1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=221">
-<link rel="apple-touch-icon" href="icons/icon-192.png?v=221">
-<link rel="manifest" href="manifest.json?v=221">
-<link rel="stylesheet" href="css/base.css?v=221">
-<link rel="stylesheet" href="css/table.css?v=221">
-<link rel="stylesheet" href="css/panels.css?v=221">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=227">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=227">
+<link rel="manifest" href="manifest.json?v=227">
+<link rel="stylesheet" href="css/base.css?v=227">
+<link rel="stylesheet" href="css/table.css?v=227">
+<link rel="stylesheet" href="css/panels.css?v=227">
 </head>
 <body>
 <!-- the shiny vinyl: one gradient the whole document's stickers reference.
@@ -79,6 +79,9 @@
 
 <div id="fx"></div>
 <div id="toast"></div>
+<!-- the one-shot tips: the tut chain's placard, freed from the felt —
+     these fire in side views too, so the node sits at body level -->
+<div id="tip" class="off"><div id="tipBox"><div id="tipTx"></div></div></div>
 <div id="mo"><div id="sh"></div></div>
 <div id="cmp"></div>
 <div id="biBar" role="dialog" aria-label="Anonymous statistics">
@@ -91,24 +94,24 @@
 </div>
 
 <!-- component scripts: shared top-level scope, load order matters -->
-<script src="js/config.js?v=221"></script>
-<script src="js/icons.js?v=221"></script>
-<script src="js/state.js?v=221"></script>
-<script src="js/cloud.js?v=221"></script>
-<script src="js/economy.js?v=221"></script>
-<script src="js/audio.js?v=221"></script>
-<script src="js/fx.js?v=221"></script>
-<script src="js/stickers.js?v=221"></script>
-<script src="js/table.js?v=221"></script>
-<script src="js/actions.js?v=221"></script>
-<script src="js/gestures.js?v=221"></script>
-<script src="js/tabs.js?v=221"></script>
-<script src="js/panels.js?v=221"></script>
-<script src="js/modals.js?v=221"></script>
-<script src="js/compendium.js?v=221"></script>
-<script src="js/tut.js?v=221"></script>
-<script src="js/telemetry.js?v=221"></script>
-<script src="js/main.js?v=221"></script>
+<script src="js/config.js?v=227"></script>
+<script src="js/icons.js?v=227"></script>
+<script src="js/state.js?v=227"></script>
+<script src="js/cloud.js?v=227"></script>
+<script src="js/economy.js?v=227"></script>
+<script src="js/audio.js?v=227"></script>
+<script src="js/fx.js?v=227"></script>
+<script src="js/stickers.js?v=227"></script>
+<script src="js/table.js?v=227"></script>
+<script src="js/actions.js?v=227"></script>
+<script src="js/gestures.js?v=227"></script>
+<script src="js/tabs.js?v=227"></script>
+<script src="js/panels.js?v=227"></script>
+<script src="js/modals.js?v=227"></script>
+<script src="js/compendium.js?v=227"></script>
+<script src="js/tut.js?v=227"></script>
+<script src="js/telemetry.js?v=227"></script>
+<script src="js/main.js?v=227"></script>
 <script>
 /* PWA: offline shell + install prompt (sw.js). Top-level documents
    only: the itch embed is a cross-origin iframe that can never own a

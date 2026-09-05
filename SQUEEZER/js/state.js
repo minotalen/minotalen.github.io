@@ -79,13 +79,13 @@ function newState(){return{
       row3:0, bestRow3:0,
       db2Run:0, db2Best:0, db2N:0,
       spread:0, bigBanks:0, rainbows:0, bothPiles:0, oneTwoThree:0,
-      discarded:0, twinTowns:0, works:0, books:0, boomerangs:0,
+      discarded:0, twinTowns:0, works:0, books:0, boomerangs:0, stkKinds:0,
       maxDisc:0, inkBanks:0, coldBusts:0, oneOut:0, twoStkBusts:0, pileBanks:0, benchBanks:0,
       bigBustN:0, safeDisc:0, wardLost:0,
       zeroed:0,
       fiveBanks:0,
       stkBanked:0,
-      stkSpent:0, shinyPlaced:0, bestShine:0, bustLog:[], handLog:[],
+      stkSpent:0, shinyPlaced:0, shinyBought:0, bestShine:0, bustLog:[], handLog:[],
       aDraws:0, aBanks:0, aBusts:0, aGain:0, aBest:0, aTime:0,
       bankSum:0, bustSum:0},
   dhold:{}, mboost:{},
@@ -100,7 +100,7 @@ function newState(){return{
    player has ascended. S.rst is their snapshot taken at each ascend;
    the run half is always the live counter minus the snapshot */
 const RUN_KEYS=['runs','draws','banks','busts','arms','hits','rewrites',
-  'deflects','slips','outed','discarded','placed','shinyPlaced','bankSum','bustSum'];
+  'deflects','slips','outed','discarded','placed','shinyPlaced','shinyBought','bankSum','bustSum'];
 function snapRun(p){const o={};
   for(const k of RUN_KEYS)o[k]=(p&&p.st&&p.st[k])||0;
   o.life=(p&&p.life)||0;return o;}
@@ -219,6 +219,11 @@ function ingestSave(str){try{let p=JSON.parse(str);
     if(!Array.isArray(p.hands)||!p.hands.length)p.hands=[newHand()];
     if(!Array.isArray(p.gone))p.gone=[];   /* Fallout's discard-for-good pile */
     if(!Array.isArray(p.disc))p.disc=[];   /* Ward saves, home on the next score */
+    /* per-goal NEW badges postdate old saves: everything claimed before
+       the feed existed counts as already read, or a veteran's first
+       visit lights the whole tab up at once */
+    if(p.ach&&p.ach.length&&!p.rseenV2){
+      p.rseen=p.rseen||{};p.ach.forEach(id=>{p.rseen[id]=1;});p.rseenV2=1;}
     /* the value ledgers postdate old saves: banked value starts at what
        this cycle already banked, bust value starts at zero, nothing ever
        counted it. A save that already ascended snapshots here, so the

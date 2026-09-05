@@ -376,6 +376,16 @@ function initViewSwipe(){
     cur.style.transform=`translateX(${dx*.6}px)`;
     nxt.style.transform=`translateX(${(dx<0?W:-W)+dx*.6}px)`;
   },{passive:false});
+  /* land the drag on `dst`: the switch snaps instantly, content renders
+     after the class flip — shared by pointerup and pointercancel */
+  const commitTo=(cur,dst)=>{
+    cur.style.cssText='';
+    cur.classList.remove('on');
+    Tabs.fixTab(dst);
+    if(dst!=='play')Tabs.render(dst);
+    else requestAnimationFrame(layout);
+    save();
+  };
   host.addEventListener('pointerup',()=>{
     if(from==null)return;
     const cur=$('#v-'+from);
@@ -389,14 +399,8 @@ function initViewSwipe(){
          it part way */
       const W=host.clientWidth,dst=to,nxt=$('#v-'+to),
             commit=Math.abs(dx)>W*.32||(Math.abs(vx)>.8&&Math.abs(dx)>56);
-      if(commit){
-        cur.style.cssText='';nxt.style.cssText='';
-        cur.classList.remove('on');
-        Tabs.fixTab(dst);
-        if(dst!=='play')Tabs.render(dst);
-        else requestAnimationFrame(layout);
-        save();
-      }else{
+      if(commit)commitTo(cur,dst);
+      else{
         cur.style.cssText='';
         nxt.classList.remove('on');nxt.style.cssText='';
       }
@@ -404,10 +408,20 @@ function initViewSwipe(){
     reset();
   });
   host.addEventListener('pointercancel',()=>{
-    if(from&&mode==='swipe'&&to){const cur=$('#v-'+from),nxt=$('#v-'+to);
-      nxt.classList.remove('on');nxt.style.cssText='';cur.style.cssText='';}
+    if(from&&mode==='swipe'&&to){
+      /* the browser took the pointer back mid-drag (a native pan it
+         claimed despite pan-y, a phone UI gesture): a drag or fling
+         already past the commit bar still lands, the rest snaps back */
+      const W=host.clientWidth,cur=$('#v-'+from),nxt=$('#v-'+to),
+            commit=Math.abs(dx)>W*.32||(Math.abs(vx)>.8&&Math.abs(dx)>56);
+      if(commit)commitTo(cur,to);
+      else{
+        nxt.classList.remove('on');nxt.style.cssText='';cur.style.cssText='';
+      }
+    }
     else if(from&&mode==='edge')$('#v-'+from).style.cssText='';
-    reset();});
+    reset();
+  });
 
   /* the rail itself: a short horizontal fling across the buttons moves
      one tab over — taps still tap */

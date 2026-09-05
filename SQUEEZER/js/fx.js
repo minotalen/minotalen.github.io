@@ -93,9 +93,10 @@ function spkStep(now){
 const scoreSpk=s=>Math.round(Math.min(60,12+5.2*Math.log10(1+s)));
 /* ---------------- the fan-home ---------------- */
 /* a bank pays out, then the table clears itself the way solitaire
-   always did: card by card, each launched, arcing under gravity to one
-   bounce off the deck line, then tucked in UNDER the stack with a short
-   glide. layout() keeps its hands off them mid-flight (see place) */
+   always did: card by card, each launched face-up, arcing under gravity;
+   at the apex each card half-turns to its back, so the bounce off the
+   deck line and the tuck UNDER the stack land face-down — no flip snap
+   at rest. layout() keeps its hands off them mid-flight (see place) */
 /* holds are leases, not claims: each live tick renews a short expiry,
    so a tween that dies mid-flight (an exception anywhere in step)
    can never pin a card at a stale pose — layout reclaims it */
@@ -114,13 +115,14 @@ function fanHome(starts){
     /* freeze in place until its turn. rebuildDeck has already filed these
        cards into the deck, so layout() flattened them into rest pose —
        undo that with the face flip muted: no flip plays at launch, the
-       card flies face-up and turns face-down only as it tucks under the
-       stack */
+       card flies face-up and half-turns at the apex below. A revert spin
+       queued this same tick (the sweep lifted a rewritten card) never
+       plays: the flight's own turn home replaces it */
     c.e.style.transition='none';c.e.style.zIndex=900;
     c.e.style.left='0px';c.e.style.top='0px';   /* flights are transform-positioned */
     const inn=c.e.querySelector('.inn');
     if(inn)inn.style.transition='none';
-    c.e.classList.remove('buried','flat','bust');
+    c.e.classList.remove('buried','flat','bust','rev','revb');
     if(!c.down)c.e.classList.add('faceup');   /* a blind lift flies face-down */
     if(inn)inn.style.transition='';
     c.e.style.transform=`translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px)`;
@@ -150,6 +152,10 @@ function fanHome(starts){
         c.vy+=c.g*dt;c.x+=c.vx*dt;c.y+=c.vy*dt;
         if(c.x<28){c.x=28;c.vx=Math.abs(c.vx);}
         else if(c.x>FW-28){c.x=FW-28;c.vx=-Math.abs(c.vx);}
+        if(!c.td&&c.vy>0){                        /* the apex half-turn: face-up over the top */
+          c.td=true;                              /* of the arc, back-down on the fall */
+          if(!c.down)c.e.classList.remove('faceup');
+        }
         if(c.y>=DY){
           c.y=DY;c.tk=true;c.e.style.zIndex=9;    /* from here it rides under the stack */
           c.vy=Math.abs(c.vy)<110?0:-c.vy*.38;

@@ -114,6 +114,18 @@ h2:first-child{margin-top:6px}
 .row.done{padding:7px 11px;margin-bottom:6px;
   background:linear-gradient(150deg,rgba(44,86,60,.10),rgba(44,86,60,.03)),var(--grad)}
 .row.done .gst{padding:6px 9px 5px;min-width:64px}
+/* ...and once its NEW wore off, it folds to the name line — the done
+   block reads as a ribbon, never a wall */
+.row.done.sm{padding:4px 11px;margin-bottom:3px}
+.row.done.sm .ds{display:none}
+.row.done.sm .gst{min-width:52px;padding:3px 9px 2px}
+/* the unread flag on a met-or-claimed row: same red the nub speaks */
+.ntag{font-family:var(--mono);font-style:normal;font-size:8px;font-weight:800;letter-spacing:.14em;
+  color:var(--stock);background:var(--red);border-radius:4px;padding:2px 5px 1px;line-height:1}
+/* GOALS section headers: mono count caps, riding sticky over the stock */
+.gh{font-family:var(--mono);font-size:9px;letter-spacing:.16em;font-weight:800;color:var(--ink2);
+  margin:14px 0 7px;position:sticky;top:0;z-index:2;padding:5px 0 4px;
+  background:linear-gradient(180deg,var(--paper) 72%,rgba(228,223,209,0))}
 
 /* ---------- DECK tab: value sets + every card as a tappable row ---------- */
 .mc{width:38px;height:53px;border-radius:4px;margin:0 auto;display:grid;place-items:center;position:relative;overflow:hidden;
@@ -499,6 +511,9 @@ h2:first-child{margin-top:6px}
 .ts .tx i{font-style:normal;font-size:10.5px;line-height:1.35;color:var(--ink2)}
 .ts .e{display:inline-flex}
 .ts .e .gi{width:15px;height:15px}
+/* the unlock toast shows the vinyl itself: sized past the shared icon
+   slots, then nudged over the 24-box's empty rim */
+.ts .e .stkicon{width:30px;height:30px;flex:none;transform:scale(1.15)}
 @keyframes ti{from{transform:translateY(12px) scale(.92);opacity:0}}
 
 /* ---------- sticker compendium: the HUD ? opens the full-page book.
@@ -624,6 +639,7 @@ h2:first-child{margin-top:6px}
   .ts{font-size:13.5px}
   .ts .tx i{font-size:12px}
   .ts .e .gi{width:17px;height:17px}
+  .ts .e .stkicon{width:34px;height:34px}
   #cmpH,#cmpB{max-width:598px}
   #cmpT{font-size:17px}
   #cmpS{font-size:9.5px}
