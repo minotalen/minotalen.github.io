@@ -328,6 +328,9 @@ function initViewSwipe(){
   host.addEventListener('pointerdown',e=>{
     ate=false;
     if($('#mo').classList.contains('on'))return;
+    /* drag-to-switch is a touch gesture: a mouse never swipes — desktop
+       switches by rail (wide mode below keeps its felt intact) */
+    if(e.pointerType==='mouse')return;
     /* wide desktop: the table never leaves the stage, so there is no
        lane to drag — the felt's taps, holds and vertical swipes (a
        separate handler) all stand; the panel switches by rail */
