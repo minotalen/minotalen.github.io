@@ -383,8 +383,10 @@ function initViewSwipe(){
   /* land the drag on `dst`: the switch snaps instantly, content renders
      after the class flip — shared by pointerup and pointercancel */
   const commitTo=(cur,dst)=>{
+    const nxt=$('#v-'+dst);
     cur.style.cssText='';
     cur.classList.remove('on');
+    nxt.style.cssText='';   /* or the fresh view stays parked where the finger left it */
     Tabs.fixTab(dst);
     if(dst!=='play')Tabs.render(dst);
     else requestAnimationFrame(layout);

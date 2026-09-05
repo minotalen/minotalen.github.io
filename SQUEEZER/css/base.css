@@ -215,18 +215,27 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
   box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl)}
 #tutTx .tgo:active{background:var(--gradi);
   box-shadow:inset 3px 3px 6px rgba(160,150,126,.45),inset -2px -2px 5px var(--hl)}
-/* the coach's pointer: a breathing gold outline. Outline only, so the
-   target's own raised shadow (the BANK button's) is never clobbered */
-.tutG{outline:2px solid var(--gld);outline-offset:3px;border-radius:11px;
-  animation:tutP 1.5s ease-in-out infinite}
-@keyframes tutP{0%,100%{outline-offset:3px;outline-color:var(--gld)}
-  50%{outline-offset:7px;outline-color:rgba(138,106,47,.45)}}
-/* the BANK button sits flush above the tab rail: an outside ring's
-   widest breath is exactly what the rail slices off. Its ring draws
-   inside instead, breathing on color alone, so nothing clips */
-#bank.tutG{outline-offset:-4px;animation:tutPB 1.5s ease-in-out infinite}
-@keyframes tutPB{0%,100%{outline-color:var(--gld)}
-  50%{outline-color:rgba(138,106,47,.45)}}
+/* the coach's pointer: a comet of light lapping the target. The rings
+   are fixed overlays tut.js measures each frame, so nothing clips
+   them: not #rk's overflow, not the rail above #bank. A faint
+   breathing gold band keeps the target marked between laps; the
+   rotating conic sweep is the flash that says look here. .tutG stays
+   on the targets as a bare DOM marker (no visuals of its own) */
+.tutR{position:fixed;left:0;top:0;z-index:940;pointer-events:none;
+  padding:2.5px;opacity:0;visibility:hidden;
+  transition:opacity .25s,visibility 0s .25s;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude}
+.tutR.on{opacity:1;visibility:visible;transition:opacity .25s}
+.tutR b{position:absolute;inset:0;border-radius:inherit;background:var(--gld);
+  animation:tutBr 1.6s ease-in-out infinite}
+.tutR i{position:absolute;left:50%;top:50%;
+  background:conic-gradient(from 0deg,rgba(138,106,47,0) 0 62%,
+    rgba(138,106,47,.55) 80%,#C79A44 90%,#FFF3D0 97%,rgba(255,243,208,0) 100%);
+  animation:tutLap 2.4s linear infinite}
+@keyframes tutLap{to{transform:rotate(1turn)}}
+@keyframes tutBr{0%,100%{opacity:.3}50%{opacity:.55}}
 
 /* ---------- desktop: the phone-stage frame breathes out. 15% wider
    app; the felt cards ride table.js's matching 15% (deskK); text and

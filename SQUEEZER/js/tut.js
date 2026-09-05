@@ -109,12 +109,55 @@ function tutDone(){
   const frm=S.tut==='end'?'end':S.tut;
   S.tut='done';S.seen.tut=true;tutHi(null);tutPaint();save(true);
   bi('tut',{k:'done',d:1,t:biPlayMin(),frm,dr:tutDr,bn:tutBn,bu:tutBu});}
+/* ---------------- the shine rings ---------------- */
+/* the old breathing outline retired for a comet of light lapping each
+   ringed target. The rings are the two fixed .tutR nodes in index.html
+   (fixed: nothing clips them), and this rAF pass re-measures their
+   target every frame, so tab slides, lane moves and felt relayouts
+   are followed for free. Two seats cover every step: the most a step
+   ever rings is deck + bank. The $ null checks keep the harness,
+   whose DOM is a stub, inert */
+let tutRAF=0;
+function tutRingPaint(){
+  tutRAF=0;let live=0;
+  ['#tutR0','#tutR1'].forEach(id=>{
+    const r=$(id),el=r&&r._t;
+    if(!r)return;
+    const b=el&&el.isConnected?el.getBoundingClientRect():null;
+    if(!b||b.width<4||b.height<4){r.classList.remove('on');return;}
+    live++;
+    const e=5.5;                        /* 3px gap + 2.5px band */
+    r.style.left=(b.left-e)+'px';r.style.top=(b.top-e)+'px';
+    r.style.width=(b.width+2*e)+'px';r.style.height=(b.height+2*e)+'px';
+    const rad=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
+    r.style.borderRadius=Math.min(rad+e,(b.height+2*e)/2)+'px';
+    /* the comet's square only has to clear the box's far corner */
+    const d=Math.ceil(Math.max(b.width,b.height)*2.6),f=r.lastElementChild;
+    f.style.width=d+'px';f.style.height=d+'px';
+    f.style.margin=(-d/2)+'px 0 0 '+(-d/2)+'px';
+    r.classList.add('on');});
+  if(live)tutRAF=requestAnimationFrame(tutRingPaint);
+}
+function tutRingSeats(){
+  let seated=0;
+  ['#tutR0','#tutR1'].forEach((id,i)=>{
+    const r=$(id);if(!r)return;
+    const el=tutHiEls[i]||null;
+    if(r._t!==el){r._t=el;if(!el)r.classList.remove('on');}
+    if(el)seated++;});
+  if(seated&&!tutRAF)tutRAF=requestAnimationFrame(tutRingPaint);
+}
 function tutHi(sel){
   const sig=(sel||[]).join('|');
-  if(sig===tutHiSig)return;   /* re-ringing the same targets restarts the pulse */
-  tutHiSig=sig;
-  tutHiEls.forEach(e=>e.classList.remove('tutG'));tutHiEls=[];
-  (sel||[]).forEach(s=>{const e=$(s);if(e){e.classList.add('tutG');tutHiEls.push(e);}});
+  if(sig!==tutHiSig){
+    tutHiSig=sig;
+    tutHiEls.forEach(e=>e.classList.remove('tutG'));tutHiEls=[];
+    (sel||[]).forEach(s=>{const e=$(s);if(e){e.classList.add('tutG');tutHiEls.push(e);}});
+    tutRingSeats();
+  }else if(tutHiEls.length&&!tutRAF)
+    /* the loop dies while every target is unmeasurable (its view slid
+       away); one comes back, the ring fades back in with it */
+    tutRAF=requestAnimationFrame(tutRingPaint);
 }
 function tutPaint(){
   const box=$('#tut');if(!box)return;

@@ -7,12 +7,12 @@
 <meta name="theme-color" content="#E4DFD1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=233">
-<link rel="apple-touch-icon" href="icons/icon-192.png?v=233">
-<link rel="manifest" href="manifest.json?v=233">
-<link rel="stylesheet" href="css/base.css?v=233">
-<link rel="stylesheet" href="css/table.css?v=233">
-<link rel="stylesheet" href="css/panels.css?v=233">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=235">
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=235">
+<link rel="manifest" href="manifest.json?v=235">
+<link rel="stylesheet" href="css/base.css?v=235">
+<link rel="stylesheet" href="css/table.css?v=235">
+<link rel="stylesheet" href="css/panels.css?v=235">
 </head>
 <body>
 <!-- the shiny vinyl: one gradient the whole document's stickers reference.
@@ -82,6 +82,10 @@
 <!-- the one-shot tips: the tut chain's placard, freed from the felt —
      these fire in side views too, so the node sits at body level -->
 <div id="tip" class="off"><div id="tipBox"><div id="tipTx"></div></div></div>
+<!-- the coach's shine: two fixed rings tut.js measures over the ringed
+     targets every frame; fixed so table clipping never bites -->
+<div class="tutR" id="tutR0"><b></b><i></i></div>
+<div class="tutR" id="tutR1"><b></b><i></i></div>
 <div id="mo"><div id="sh"></div></div>
 <div id="cmp"></div>
 <div id="biBar" role="dialog" aria-label="Anonymous statistics">
@@ -94,24 +98,24 @@
 </div>
 
 <!-- component scripts: shared top-level scope, load order matters -->
-<script src="js/config.js?v=233"></script>
-<script src="js/icons.js?v=233"></script>
-<script src="js/state.js?v=233"></script>
-<script src="js/cloud.js?v=233"></script>
-<script src="js/economy.js?v=233"></script>
-<script src="js/audio.js?v=233"></script>
-<script src="js/fx.js?v=233"></script>
-<script src="js/stickers.js?v=233"></script>
-<script src="js/table.js?v=233"></script>
-<script src="js/actions.js?v=233"></script>
-<script src="js/gestures.js?v=233"></script>
-<script src="js/tabs.js?v=233"></script>
-<script src="js/panels.js?v=233"></script>
-<script src="js/modals.js?v=233"></script>
-<script src="js/compendium.js?v=233"></script>
-<script src="js/tut.js?v=233"></script>
-<script src="js/telemetry.js?v=233"></script>
-<script src="js/main.js?v=233"></script>
+<script src="js/config.js?v=235"></script>
+<script src="js/icons.js?v=235"></script>
+<script src="js/state.js?v=235"></script>
+<script src="js/cloud.js?v=235"></script>
+<script src="js/economy.js?v=235"></script>
+<script src="js/audio.js?v=235"></script>
+<script src="js/fx.js?v=235"></script>
+<script src="js/stickers.js?v=235"></script>
+<script src="js/table.js?v=235"></script>
+<script src="js/actions.js?v=235"></script>
+<script src="js/gestures.js?v=235"></script>
+<script src="js/tabs.js?v=235"></script>
+<script src="js/panels.js?v=235"></script>
+<script src="js/modals.js?v=235"></script>
+<script src="js/compendium.js?v=235"></script>
+<script src="js/tut.js?v=235"></script>
+<script src="js/telemetry.js?v=235"></script>
+<script src="js/main.js?v=235"></script>
 <script>
 /* PWA: offline shell + install prompt (sw.js). Top-level documents
    only: the itch embed is a cross-origin iframe that can never own a
