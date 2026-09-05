@@ -8,7 +8,7 @@
    ================================================================== */
 /* boot errors surface as data-cmperr on <html> — readable without console */
 addEventListener('error',e=>{document.documentElement.dataset.cmperr=(e.message||'x').slice(0,90);});
-const CMP_TY={value:'Value',table:'Table mult',payer:'Score payer',
+const CMP_TY={value:'Value',table:'Table boost',payer:'Score payer',
   insurance:'Insurance',aura:'Aura',trick:'Armed trick',
   out:'OUT engine','out-pay':'OUT payoff',discard:'Discard engine',
   'disc-pay':'Discard payoff'};

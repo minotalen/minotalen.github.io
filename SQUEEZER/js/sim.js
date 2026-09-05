@@ -31,7 +31,7 @@ const fs = require('fs');
    from js/config.js so identity never drifts from the game ---- */
 const SS = { st: {}, asc: 0, cards: { length: 0 }, _owned: {} };
 const { ACH, STK, STKTYPE, ECO, META, NONSTACK, STK_OFF } = new Function('S', 'ownedOf',
-  fs.readFileSync(__dirname + '/js/config.js', 'utf8') +
+  fs.readFileSync(__dirname + (fs.existsSync(__dirname + '/js/config.js') ? '/js/config.js' : '/config.js'), 'utf8') +
   '\n;return {ACH,STK,STKTYPE,ECO,META,NONSTACK,STK_OFF};')(SS, v => SS._owned[v] || 0);
 /* benched stickers never stock, never gate — but their mechanics stay
    modeled for placed copies */
@@ -170,6 +170,16 @@ const STKD = {
   whip:    {role:'disc',   disc:1, safe:1, trick:{at:0,kind:'whip'}},
   strip:   {role:'ins',    dodge:.04, trick:{at:0,kind:'strip'}},
   squeeze: {role:'rewrite',trick:{at:0,kind:'squeeze'}, addC:3, rewrites:1, bigRw:.5},
+  /* the fuse batch (2026-09-05): Windfall doubles inside the draw step
+     (a rewrite with a gamble's cadence), Redline pays the flat standing
+     score past the line, Tempo stamps the chain onto its own worth,
+     Barter and Recast re-seat cards from the piles, riding the Sub and
+     Draft tactics */
+  windfall:{role:'rewrite',addC:1, rewrites:.17, bigRw:.15},
+  redline: {role:'pay',    frac:()=>.35},
+  tempo:   {role:'pay',    addC:2},
+  barter:  {role:'out',    trick:{at:0,kind:'sub'}},
+  recast:  {role:'disc',   trick:{at:0,kind:'draft'}},
 };
 
 /* rough per-bank pay fraction of one copy, for RANKING shop offers —
@@ -1341,7 +1351,7 @@ if (process.argv[2] === 'week') {
   /* stats the model still cannot tick: shiny vinyl, composition shots,
      multi-table play, per-arm identity */
   const GATED = new Set(['works','books','twinTowns','boomerangs','db2Best','db2N',
-    'boardVals','maxTables','shinyPlaced','shinyBought','bestShine','drafted','fetches','recharges','inspects']);
+    'boardVals','maxTables','shinyPlaced','shinyBought','bestShine','drafted','fetches','recharges','inspects','effectBusts']);
   const ENGINE = new Set(['bestChain','bestStreak','bestBank','bestFloat']);   /* jackpot records still read low: random sticker seats, no aimed Gild, one table */
   /* who else can produce each gated stat, for the texture count */
   const METHODS = {
@@ -1352,16 +1362,17 @@ if (process.argv[2] === 'week') {
     stkDraws:['draft','ward'],
     stkBanked:['haste','odds','snip','mint','brass','ward','rake','swap'],
     benchBanks:['ward','snip','burn','reverb','echo','draft','purge','twin','sub','encore'],
-    rewrites:['swap','clip','ghost','dredge','riffle','engrave','patch'],
-    bigRewrites:['swap','ghost','dredge','riffle','engrave','patch'],
+    rewrites:['swap','clip','ghost','dredge','riffle','engrave','patch','windfall','tempo'],
+    bigRewrites:['swap','ghost','dredge','riffle','engrave','patch','windfall'],
     bestFloat:['float','bail'],
     hits:['bloom','dividend','kindle'],
     deflects:['ward','anchor'],
     bothPiles:['defuse','ward','snip','burn','reverb','echo','twin'],
-    discarded:['ward','snip','defuse','burn','reverb','echo','draft','purge','twin','encore'],
-    maxDisc:['ward','snip','defuse','burn','reverb','echo','draft','purge','encore'],
+    discarded:['ward','snip','defuse','burn','reverb','echo','draft','purge','twin','encore','barter'],
+    maxDisc:['ward','snip','defuse','burn','reverb','echo','draft','purge','encore','barter'],
     safeDisc:['whip','burn','draft','defuse','reverb','snip'],
     wardLost:['strip','ward','reverb'],
+    effectBusts:['sub','draft','barter','recast'],
     oneOut:['scrap','vanish','defuse','offering','flinch'],
     pileBanks:['defuse','ward','snip','burn','reverb','echo','scrap','vanish','purge','draft','twin'],
   };
@@ -1417,6 +1428,7 @@ if (process.argv[2] === 'week') {
     stkBanked:[['table','value'],['out']],
     safeDisc:[['discard','disc-pay'],['out']],
     wardLost:[['insurance'],[]],
+    effectBusts:[['trick'],['out','discard','insurance']],   /* the swap-in's own bust: Barter files as a trick, Recast works the bench */
     bigBustN:[['trick','insurance'],[]],   /* Squeeze files as a trick: the width feat rides its own type */
     recharges:[['trick'],[]],
     wreckSaves:[['insurance'],[]],

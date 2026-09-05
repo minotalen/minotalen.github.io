@@ -137,6 +137,10 @@ function resolve(id,h,auto,fresh){
   if(auto){S.st.aDraws=(S.st.aDraws||0)+1;h.run.autoDeal=true;}else h.run.autoDeal=false;
   ttlOff();   /* the first-load title's whole job ends at the first real draw */
   const r=h.run;
+  /* Redline's fuse burns one draw at a time, any draw, swap-ins included:
+     a fuse that runs out pays after the landing below, a busting draw
+     starves it with the hand */
+  if(r.redT)for(const f of r.redT)f.left--;
   /* the ward rider protects exactly one draw: the extra card a Ward
      pulls. Spent whether or not it was needed */
   const wardRide=wardNext===h;if(wardRide)wardNext=null;
@@ -167,6 +171,21 @@ function resolve(id,h,auto,fresh){
       c.nb=(c.nb||0)+1;faceOf(c);
       const[nx,ny]=feltPt(FW/2,FH*.3);
       float('NEAR MINT '+cval(c),nx,ny,'#3E7A5E');SFX.detent();buzz(10);}
+  }
+  /* Windfall: the double lands inside the draw step, BEFORE the bust read
+     — a doubled table card can hand-make the twin this very draw dies on.
+     Unstickered table cards only (its own fresh face never qualifies),
+     the print capped at the ceiling like every rewrite */
+  if(c.stk==='windfall'&&Math.random()<ECO.WINDFALL_CH){
+    const pool=h.ids.filter(x=>!byId(x).stk);
+    if(pool.length){
+      const t=byId(pool[rndi(pool.length)]);
+      t.cv=Math.max(ECO.CVAL_MIN,Math.min(MAXV,cval(t)*2));
+      bumpRewrite(t);
+      flipCard(t);
+      const p=cardPt(t);if(p)float('×2 · '+t.cv,p[0],p[1],'#C6551F');
+      SFX.stk('windfall','act',t.cv);buzz(12);
+    }
   }
   const p=pureVals(h),twin=h.ids.find(x=>cval(byId(x))===cval(c));
   const safe=!twin||c.stk==='purify'||p.has(cval(c));
@@ -263,6 +282,12 @@ function resolve(id,h,auto,fresh){
   if(c.stk==='burn')doBurn();
   if(c.stk==='whip')doWhip();
   if(c.stk==='encore')doEncore(c);
+  /* Tempo: the combo is the worth — its landing stamps the chain count
+     onto its value, a rewrite like any other, till it leaves the table */
+  if(c.stk==='tempo'&&h.chain>0){
+    c.cv=Math.max(ECO.CVAL_MIN,Math.min(MAXV,cval(c)+h.chain));bumpRewrite(c);
+    flipCard(c);
+    SFX.stk('tempo','draw',cval(c));buzz(8);}
   if(c.stk==='rake'){
     const g=ECO.RAKE_PER*outCount()*payMul(h);S.score+=g;S.life+=g;
     const[x,y]=feltPt(FW/2,FH*.3);float('RAKE\n+'+fmt(g),x,y-26,'#3E7A5E');SFX.stk('rake','draw',cval(c));
@@ -272,6 +297,30 @@ function resolve(id,h,auto,fresh){
   biFirst('draw');
   layout();paint();save();
   checkFloatAll();
+  /* Redline's fuse: every copy burns its own fuse; one that runs out with
+     the gauge past the line pays the flat standing score on the spot (the
+     same pay Silver Lining makes, no premium, no rolls). Under the line
+     it dies quiet, and the landing draw itself never counts against the
+     fresh fuse it opens */
+  if(r.redT&&r.redT.length){
+    const due=r.redT.filter(f=>f.left<=0);
+    if(due.length){
+      r.redT=r.redT.filter(f=>f.left>0);
+      if(threat(h)>ECO.REDLINE_AT){
+        const s=handParts(h,true).total*due.length;
+        S.score+=s;S.life+=s;
+        const[rx,ry]=feltPt(FW/2,FH*.38);
+        spray(rx,ry,'#C6551F',scoreSpk(s));
+        float('REDLINE\n+'+fmt(s),rx,ry,'#C6551F');
+        SFX.stk('redline','bank');buzz(18);scorePulse();save();
+      }
+    }
+  }
+  if(c.stk==='redline'){
+    r.redT=[...(r.redT||[]),{left:ECO.REDLINE_DRAWS}];
+    const[x2,y2]=feltPt(FW/2,FH*.24);
+    float('REDLINE\n'+ECO.REDLINE_DRAWS+' DRAWS',x2,y2,'#C6551F');
+    SFX.stk('redline','arm',cval(c));buzz(10);}
   /* Anchor's guard opens on its landing: for the next few draws, any
      card that twins the Anchor's own value slips back into the deck
      instead of busting the hand. The landing draw itself never counts
@@ -442,6 +491,9 @@ function bust(c,twinId,h,preTh){
   for(const id of h.ids){const k=byId(id);if(k.stk==='siphon')keep+=cval(k)*ECO.SIPHON_X*bStack;}
   const siph=keep-salv-silver-guard;
   S.st.busts++;S.st.runs++;S.st.streak=0;S.st.hotRun=[0,0,0];S.st.wideRun=0;S.st.row3=0;S.st.sevenRun=0;   /* a bust breaks the hot and wide rows */
+  /* the seat-taker's bust: a swap-in (Sub, Draft, Barter, Recast) died on
+     the table it joined — its own ladder (Bad Trades) */
+  if(effSwap)S.st.effectBusts=(S.st.effectBusts||0)+1;
   if(h.run.autoDeal)S.st.aBusts=(S.st.aBusts||0)+1;   /* the hand's last card was the autos' deal */
   /* Snake Eyes: consecutive busts landed on the pair of 2s — any other
      bust breaks the row, banks ride through. The buster sits OUT till the
@@ -925,6 +977,10 @@ function revertLeaving(ids){
 /* Clip and Ghost tap → aim: pick a target on the same table. Tapping
    the carrier again, any felt tap, a draw or a bank all stand down */
 let aim=null;
+/* a swap-in flight (Sub, Draft's keep, Barter, Recast): the seat-taker
+   resolves by the draw rules, so it can bust — those busts are their own
+   stat (Bad Trades), tallied in bust() while this flag stands */
+let effSwap=false;
 function startAim(c){
   if(aim)cancelAim();
   aim={id:c.id};
@@ -941,6 +997,26 @@ function aimTap(tid){
   if(!c||!h||!t||th!==h||frozen||h.run.spent.indexOf(a.id)>=0){
     if(t)SFX.deny();
     stickerStates();return;}
+  /* Barter: the picked card benches to the discard and a random card OUT
+     takes its seat by the resolve rules — the swap can bust, that is the
+     price of the trade. The OUT pile can empty between arm and tap: the
+     deny leaves the arm unspent */
+  if(c.stk==='barter'){
+    if(!S.out.length){SFX.deny();stickerStates();return;}
+    const rid=S.out.splice(rndi(S.out.length),1)[0];
+    h.ids.splice(h.ids.indexOf(tid),1);
+    revertLeaving([tid]);
+    toDisc(tid);
+    h.run.spent.push(a.id);
+    S.st.arms=(S.st.arms||0)+1;
+    SFX.stk('barter','act',cval(byId(rid)));buzz(12);
+    layout();paint();save();
+    effSwap=true;
+    resolve(rid,h);
+    effSwap=false;
+    checkFloatAll();
+    return;
+  }
   if(c.stk==='engrave'){
     /* nothing shown to keep: the trigger stays charged */
     if(t.cv==null){SFX.deny();stickerStates();return;}
@@ -1122,6 +1198,11 @@ function armTrick(id){
     openDredge(picks,h,c);
     SFX.detent();buzz(10);layout();paint();save();
     return;}
+  if(c.stk==='barter'){
+    /* the OUT pile is the trade's far side: an empty pile denies the tap,
+       unspent */
+    if(!S.out.length){SFX.deny();return;}
+    startAim(c);return;}
   if(c.stk==='clip'||c.stk==='ghost'||c.stk==='patch'||c.stk==='engrave'){startAim(c);return;}
   /* Draft: two off the top, face up. Keep one — it lands by the same
      resolve rules, so a kept twin still busts, you were warned — and
@@ -1183,8 +1264,22 @@ function armTrick(id){
     S.st.arms=(S.st.arms||0)+1;
     SFX.stk('sub','act',cval(byId(rid)));buzz(12);
     layout();paint();save();
+    effSwap=true;
     resolve(rid,h);
+    effSwap=false;
     checkFloatAll();
+    return;}
+  /* Recast: three from the discard face up, one re-seats on this table
+     by the resolve rules (a twin still busts), the carrier leaves for
+     OUT. Fewer than three benched denies, unspent */
+  if(c.stk==='recast'){
+    if((S.disc||[]).length<3){SFX.deny();return;}
+    const pool=S.disc.slice(),picks=[];
+    for(let i=0;i<3;i++)picks.push(pool.splice(rndi(pool.length),1)[0]);
+    r.spent.push(id);
+    S.st.arms=(S.st.arms||0)+1;
+    openRecast(picks,h,c);
+    SFX.detent();buzz(10);layout();paint();save();
     return;}
   /* Bail: the manual exit — pays the table in full, premium included,
      then zeroes it. Not a bank: no chain tick, no reshuffle, no OUT
@@ -1447,7 +1542,9 @@ function pickDraft(i){
   const[x,y]=feltPt(FW/2,FH*.44);float('DRAFTED',x,y,'#3C7C9E');
   SFX.stk('draft','act',byId(keep).v);buzz(12);
   layout();paint();save();
+  effSwap=true;
   resolve(keep,d.h);
+  effSwap=false;
   checkFloatAll();
 }
 /* close without choosing: both cards return to the top, the arm wasted */
@@ -1455,4 +1552,33 @@ function closeDraft(){
   const d=draftCtx;
   if(d)S.deck.push(...d.ids);
   draftCtx=null;closeMo();layout();paint();
+}
+
+/* ---------------- Recast: three benched, one re-seats ---------------- */
+let recastCtx=null;
+function openRecast(picks,h,c){
+  recastCtx={picks,h,id:c.id};
+  openMo(`<h3>RECAST</h3><p class="note">Three from the discard. Tap one: it lands on this table
+    by the normal rules, so a twin still busts. This card goes OUT.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin:14px 0">
+      ${picks.map((id,i)=>`<button onclick="pickRecast(${i})" style="background:none;border:0;padding:0;cursor:pointer">${mini(byId(id).v,byId(id).stk,byId(id).r,id,byId(id))}</button>`).join('')}</div>
+    <p class="stkline">close without choosing and the arm is wasted</p>
+    <button class="close" onclick="closeMo()">CLOSE</button>`);
+}
+function pickRecast(i){
+  const d=recastCtx;if(!d||frozen)return;
+  recastCtx=null;
+  const pick=d.picks[i],c=byId(d.id),h=d.h;
+  closeMo();
+  if(pick==null||!c||!S.hands.some(x=>x.ids.indexOf(c.id)>=0))return;
+  const ex=S.disc.indexOf(pick);if(ex>=0)S.disc.splice(ex,1);
+  const xi=h.ids.indexOf(c.id);if(xi>=0)h.ids.splice(xi,1);
+  revertLeaving([c.id]);
+  toOut(c.id);
+  SFX.stk('recast','act',cval(byId(pick)));buzz(12);
+  layout();paint();save();
+  effSwap=true;
+  resolve(pick,h);
+  effSwap=false;
+  checkFloatAll();
 }

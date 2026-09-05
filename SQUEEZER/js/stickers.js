@@ -63,6 +63,12 @@ const SHP = {
   /* Whip: the lash — a tapered crescent, thick at the handle, thin at
      the crack (2026-09-04 squeeze batch) */
   whip: '<path d="M3.2 20.8Q4.6 11.8 11 6.6Q15 3.4 20.8 3.2Q20.4 5.4 14.6 9.4Q8.8 13.6 8.4 20.8Z"/>',
+  /* Tempo: one chain link, an elongated capsule — the combo made vinyl
+     (2026-09-05 fuse batch) */
+  tempo: '<path d="M9 7.6L15 7.6a4.4 4.4 0 1 1 0 8.8L9 16.4a4.4 4.4 0 1 1 0-8.8ZM9.4 11a1 1 0 1 0 0 2L14.6 13a1 1 0 1 0 0-2Z"/>',
+  /* Barter: two corner brackets facing across the middle — the trade
+     (2026-09-05 fuse batch) */
+  barter: '<path d="M4 6H13.4V9.2H7.2V15.4H4ZM20 18H10.6V14.8H16.8V8.6H20Z"/>',
   /* --- t4 · red, the danger --- */
   megaphone: '<path d="M6.2 17.8V5.8A12 12 0 0 1 18.2 17.8Z"/>',
   bin: '<path d="M7 3.8H17A2.4 2.4 0 0 1 19.4 6.2V17.8A2.4 2.4 0 0 1 17 20.2H7A2.4 2.4 0 0 1 4.6 17.8V6.2A2.4 2.4 0 0 1 7 3.8ZM14.4 10.6H9.6A1.4 1.4 0 0 0 8.2 12A1.4 1.4 0 0 0 9.6 13.4H14.4A1.4 1.4 0 0 0 15.8 12A1.4 1.4 0 0 0 14.4 10.6Z"/>',
@@ -74,6 +80,14 @@ const SHP = {
   /* Strip: the peeled band — a slanted ribbon torn off the stock
      (2026-09-04 squeeze batch) */
   strip: '<path d="M3.4 10.4L9.4 6.4L20.6 9.2L20.6 13.6L14.6 17.6L3.4 14.8Z"/>',
+  /* Windfall: the doubled worth — one lens, two arcs meeting at a point
+     at each end (2026-09-05 fuse batch) */
+  windfall: '<path d="M12 3.4C16.4 7.6 16.4 16.4 12 20.6C7.6 16.4 7.6 7.6 12 3.4Z"/>',
+  /* Redline: the needle past the mark — a spike into the corner, a
+     pivot dot behind it (2026-09-05 fuse batch) */
+  redline: '<path d="M19.6 4.8L8.8 15.6L12.4 19.4ZM4.1 18.2A1.7 1.7 0 1 1 7.5 18.2A1.7 1.7 0 1 1 4.1 18.2Z"/>',
+  /* Recast: the card lifted back out of the tray (2026-09-05 fuse batch) */
+  recast: '<path d="M4 14V18.5H20V14H17V15.5H7V14ZM8.8 8.6A3.2 3.2 0 1 1 15.2 8.6A3.2 3.2 0 1 1 8.8 8.6Z"/>',
   /* --- t5 · violet, the arcane --- */
   crystal: '<path d="M12 2.6L17.2 8.2V15.8L12 21.4 6.8 15.8V8.2Z"/>',
   trophy: '<path d="M12 2.6L21.4 12 12 21.4 2.6 12ZM12 8.2L8.2 12 12 15.8 15.8 12Z"/>',

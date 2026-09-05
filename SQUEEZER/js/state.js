@@ -81,7 +81,7 @@ function newState(){return{
       spread:0, bigBanks:0, rainbows:0, bothPiles:0, oneTwoThree:0,
       discarded:0, twinTowns:0, works:0, books:0, boomerangs:0, stkKinds:0,
       maxDisc:0, inkBanks:0, coldBusts:0, oneOut:0, twoStkBusts:0, pileBanks:0, benchBanks:0,
-      bigBustN:0, safeDisc:0, wardLost:0,
+      bigBustN:0, safeDisc:0, wardLost:0, effectBusts:0,
       bestPairs:0, bestStack:0,
       zeroed:0,
       fiveBanks:0,

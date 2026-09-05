@@ -80,7 +80,7 @@ const STK = {
   scrap:  {n:'Scrap',    t:3, pm:.9876, st:'pick',  d:'Arm: the deck\'s top card goes OUT.'},
   relic:  {n:'Relic',    t:5, pm:6.2, st:'trophy',    d:'On bank: this card gains +5% value.',
            cur:(c,h)=>`now +${Math.round((c.r||0)*ECO.RELIC_PER*100)}%`},
-  purge:  {n:'Purge',    t:4, pm:2.8, st:'bin',    d:'On bank: the whole hand waits in the discard.'},
+  purge:  {n:'Purge',    t:4, pm:2.8, st:'bin',    d:'On bank: discard your hand.'},
   encore: {n:'Encore',   t:5, pm:5.8, st:'curtain',   d:'On draw: your deck and discard pile swap.',
            cur:(c,h)=>S.disc&&S.disc.length?`now ${S.disc.length} in the discard`:''},
   float:  {n:'Float',    t:4, pm:2.2, st:'buoyring', d:'Arm: at 70% risk the table pays out flat and zeroes. No premium.'},
@@ -116,7 +116,17 @@ const STK = {
      Strip trades the table's floor for a ward */
   whip:   {n:'Whip',    t:3, pm:1.35, st:'whip',  d:'On draw and on arm: the deck\'s first safe card goes to the discard.'},
   strip:  {n:'Strip',   t:4, pm:2.2,  st:'strip', d:'Arm: the table\'s lowest card leaves to the discard; gain 1 ward.'},
-  squeeze:{n:'Squeeze', t:5, pm:5.6,  st:'squeeze', d:'Arm: peeks at 5 deck cards, becomes the sum of the risky ones.'}
+  squeeze:{n:'Squeeze', t:5, pm:5.6,  st:'squeeze', d:'Arm: peeks at 5 deck cards, becomes the sum of the risky ones.'},
+  /* the fuse batch (2026-09-05): Windfall doubles before the bust reads,
+     Redline pays the standing score past the hot line, Tempo rides the
+     chain, Barter and Recast seat cards from the piles — and a swap-in
+     busts by the draw rules like every landing (effectBusts counts them) */
+  windfall:{n:'Windfall',t:4, pm:2.4, st:'windfall', d:'On draw: 1 in 6, a random unstickered card on the table doubles its value.'},
+  redline:{n:'Redline', t:4, pm:2.3,  st:'redline', d:'On draw: wait 3 draws, then over 70% risk the standing score pays out.'},
+  tempo:  {n:'Tempo',   t:3, pm:1.1,  st:'tempo',  d:'On draw: worth +1 per chain link, till it leaves the table.',
+           cur:(c,h)=>`now +${(h&&h.chain)||0} a draw`},
+  barter: {n:'Barter',  t:3, pm:1.15, st:'barter', d:'Arm: pick a card for the discard, a random card OUT takes its seat. The swap can bust.'},
+  recast: {n:'Recast',  t:4, pm:2.5,  st:'recast', d:'Arm: pick 1 of 3 from the discard, it lands on this table. This card goes OUT.'}
 };
 for(const k in STK) STK[k].c = TIERC[STK[k].t];
 const STKKEYS = Object.keys(STK);
@@ -134,9 +144,10 @@ const STK_OFF = {gild:1, float:1, bail:1, fallout:1};
    the tap like Scrap/Tell, Clip/Ghost/Patch ask for a target before they
    spend, Dredge and Fetch deal their picks out of the piles */
 const TRICK = {cull:1, stakes:1, float:1, defuse:1, scrap:1, tell:1,
-               swap:1, clip:1, ghost:1, dredge:1, riffle:1, patch:1,
+               swap:1, clip:1, ghost:1, patch:1, dredge:1, riffle:1,
                fetch:1, bail:1, draft:1, engrave:1, echo:1, twin:1,
-               offering:1, sub:1, squeeze:1, whip:1, strip:1};
+               offering:1, sub:1, squeeze:1, whip:1, strip:1,
+               barter:1, recast:1};
 /* auras that apply once no matter how many copies sit on the tables */
 const NONSTACK = {beacon:1, haste:1, guardian:1};
 /* the in-game sticker compendium (compendium.js) opens once this many
@@ -149,17 +160,24 @@ const CMP_AT = 10;
    and trigger caption per sticker. Unlisted stickers read as
    value / on the table. */
 const STKTYPE = {
-  gild:'value', twin:'value', prime:'value', mirror:'value', odds:'value',
+  gild:'value', prime:'value', mirror:'value', odds:'value', relic:'value',
   surge:'table', bloom:'table', kindle:'table', brass:'table', variety:'table',
-  jynx:'table',
+  jynx:'table',   /* the table bucket bends what the table pays, not just the
+                     mult: surge/variety/bloom/kindle add mult, jynx rides the
+                     payout at +2% per risky deck card, brass pays a flat wage
+                     into the base — the label reads Table boost, not mult */
+  twin:'trick',   /* draft's sibling: an armed deck pull — the twin lands
+                     bust-proof, the blank benches; the pull is the engine */
   tribute:'payer', mint:'payer', dividend:'payer',
   siphon:'payer',   /* pays on bust, never decides survival — insurance's law */
   rake:'out-pay',   /* +2 a card per OUT — Tab and Ledger's little sibling */
   ledger:'out-pay', tab:'out-pay',
   ward:'insurance', anchor:'insurance', purify:'insurance',
   strip:'insurance',   /* the point is the ward it stands; the bench is the price */
+  cull:'insurance',    /* same law: the 3-draw ward window is the point, the
+                          self-exile is the price */
   haste:'aura', beacon:'aura',
-  cull:'trick', stakes:'trick', float:'trick',
+  stakes:'trick', float:'trick',
   /* type = engine, not trigger: the rewriter tricks (Swap/Clip/Ghost/
      Patch/Dredge/Riffle/Engrave/Squeeze) only rewrite what a table card is
      worth, while Scrap/Fetch/Defuse work the deck and its piles — cuts
@@ -182,6 +200,11 @@ const STKTYPE = {
   offering:'out', sub:'out', recycle:'out', flinch:'out', fallout:'out',
   remnant:'disc-pay', exit:'disc-pay', layaway:'disc-pay',
   guardian:'insurance',
+  /* the fuse batch: Barter works OUT both ways but its point is the
+     trade itself, Recast's payload is the discard card taking the seat,
+     Redline pays the standing score (a payer, never survival insurance) */
+  windfall:'value', redline:'payer', tempo:'value',
+  barter:'trick', recast:'discard',
 };
 const STKTRIG = {
   cull:'arm → instant',
@@ -205,6 +228,9 @@ const STKTRIG = {
   offering:'arm → instant', recycle:'on bank', sub:'arm → swap from OUT',
   exit:'on bank',
   squeeze:'arm → scan 5', whip:'on draw + arm', strip:'arm → instant',
+  windfall:'1 in 6 on draw', redline:'on draw, 3-draw fuse',
+  tempo:'on draw, chain-scaled', barter:'arm → trade via OUT',
+  recast:'arm → pick from discard',
 };
 
 /* the lil compendium: the game's own words, one line each. It renders
@@ -235,8 +261,8 @@ const LINGO=[
   ['Premium','Extra pay for danger: the hotter the gauge at a bank, the more the table pays. Under 40% risk the table pays 60% to 100%. At 100% risk it pays double.'],
   ['Effect pays','Tribute, Rake, Siphon, Mint, Remnant and Exit pay their amount through every multiplier the table pays: value, hand mult, chain, premium, the works.'],
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
-  ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck."],
-  ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank.'],
+  ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Barter's trade, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck; Recast deals one back to the table."],
+  ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering, a Recast and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1/3 shot any bust pays flat; Recycle runs the lowest card home each bank; Barter seats a random one on its trade.'],
   ['Set aside',"Cull's trade: the card itself goes OUT, a ward stands for its next 3 draws."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it; a bank too small for the combo trims 1.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
@@ -256,8 +282,8 @@ const totm=(per,l,u='%')=>l?` (−${+(per*l).toFixed(2)}${u} total)`:'';
    total is 1−f^l and needs its own non-linear helper */
 const totmR=(f,l,u='%')=>l?` (−${+(100*(1-Math.pow(f,l))).toFixed(2)}${u} total)`:'';
 const UPG = {
-  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:15,   g:1.6},
-  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:50, base:25,   g:1.4},
+  speed:  {n:'Swift Hands',    d:l=>'−5% of remaining draw cooldown'+totmR(.95,l), max:20, base:17,   g:1.85},
+  value:  {n:'Sharp Ink',      d:l=>'+5% value on every card'+tot(5,l),            max:50, base:28,   g:1.42},
   mult:   {n:'Momentum',       d:l=>'+0.05 to the per-card multiplier step'+tot(.05,l,''), max:25, base:45,  g:1.8},
   nerve:  {n:'Nerve',          d:l=>'make risk multiplier 10% more effective'+tot(10,l),          max:15, base:110,  g:1.9},
   salv:   {n:'Salvage',        d:l=>'Keep 5% of the table when you bust'+tot(5,l), max:10, base:200,  g:2},
@@ -475,7 +501,16 @@ const ACH = [
      ladder rides it: Quadro claims /4, deeper rungs can claim /8 later */
   B('g78','Twin Twin','Bank a hand with 2 pairs',.05,()=>S.st.bestPairs||0,2),
   B('g79','Quadro','Bank a hand with the same value 4 times',.20,()=>S.st.bestStack||0,4),
-  A('g66','Patched','Change 300 card values','patch',()=>S.st.rewrites||0,300),
+  /* the fuse batch: Windfall reads the gamble ladder one rung over
+     Dividend, Redline owns the hot line's far season, Barter's stat is
+     the swap busts themselves (Sub and Draft feed it first), Recast
+     climbs the safe-cut ladder past Whip, Tempo rides the chain row */
+  A('g80','Double Down','Bank 25 gamble hits','windfall',()=>S.st.hits||0,25),
+  A('g81','Heatwave','Bank over 70% risk, 70 banks in a row','redline',()=>S.st.hot70||0,70),
+  A('g82','Bad Trades','Bust 10 hands on a card effect','barter',()=>S.st.effectBusts||0,10),
+  A('g83','Cold Storage','Send 100 safe cards to the discard','recast',()=>S.st.safeDisc||0,100),
+  A('g84','Keeping Time','Bank 9 runs in a row, no bust','tempo',()=>S.st.bestChainN||0,9),
+  A('g66','Patched','Change 500 card values','patch',()=>S.st.rewrites||0,500),
   /* the discard/OUT batch: every gate reads a pile-side stat the batch's
      own sticker never feeds (Remnant pays the pile, it does not fill it) */
   A('g67','On the Shelf','Have 4 cards in the discard at once','remnant',()=>S.st.maxDisc||0,4),
@@ -589,6 +624,11 @@ const ECO = {
   KINDLE_PER:.40, KINDLE_CHANCE:.40,                 /* kindle: +0.40 mult per other card, 40% */
   DIVIDEND_CHANCE:.25,                               /* dividend: 25% to score the table again */
   VAR_PER:.10, JINX_PER:.02,
+  /* the fuse batch (2026-09-05): Windfall's double resolves inside the
+     draw step (before the bust read, so it can hand-make the twin), a
+     Redline fuse burns REDLINE_DRAWS draws then pays the flat standing
+     score past REDLINE_AT risk */
+  WINDFALL_CH:1/6, REDLINE_DRAWS:3, REDLINE_AT:.70,
   CVAL_MIN:1,                                        /* the rewrite floor: no shown value ever leaves the deck's range, so a cheap rewriter can never do Purify's job */
   /* de-bolt rides shop rolls only after DEBOLT_AT has gone to stickers,
      lifetime: buys and strips both count */

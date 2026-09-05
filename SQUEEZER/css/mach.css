@@ -46,10 +46,23 @@ body.mach.wide #app{display:flex;max-width:none}
 .maut:disabled{opacity:.4;cursor:default}
 #machCv{flex:1;min-height:0;width:100%;display:block}
 
-/* ---- left bottom: current card · last 10 · goals ---- */
-#machBot{grid-column:1;grid-row:2;display:grid;min-height:0;min-width:0;
+/* ---- left bottom: current card · last 10 · goals (a chart panel
+   opens above them when any number is clicked) ---- */
+#machBot{grid-column:1;grid-row:2;display:flex;flex-direction:column;
+  min-height:0;min-width:0;border-top:1px solid var(--line)}
+#mChart{display:none;flex:none;flex-direction:column;border-bottom:1px solid var(--line)}
+#mChart.on{display:flex}
+#mChart .cht{display:flex;align-items:center;gap:10px;padding:8px 14px 2px}
+#mChart .cht .mt2{font-family:var(--disp);font-weight:800;font-size:10px;
+  letter-spacing:.2em;color:var(--ink2)}
+#mChart .cht .msp{flex:1}
+#mChartX{border:0;background:var(--grad);color:var(--ink3);cursor:pointer;
+  border-radius:7px;padding:3px 8px;font-size:10px;
+  box-shadow:2px 2px 4px var(--shs),-2px -2px 4px var(--hl)}
+#mChartCv{width:100%;height:128px;display:block}
+#mBotGrid{flex:1;min-height:0;display:grid;min-width:0;
   grid-template-columns:auto minmax(0,1fr);gap:0 16px;
-  padding:12px 14px 10px;border-top:1px solid var(--line);overflow:auto}
+  padding:12px 14px 10px;overflow:auto}
 #mStageWrap{display:flex;flex-direction:column;align-items:center;gap:7px}
 #mStage{--cw:96px;--ch:135px;position:relative;width:calc(var(--cw) + 10px);
   height:calc(var(--ch) + 10px);border-radius:12px;transition:box-shadow .3s}
@@ -61,35 +74,36 @@ body.mach.wide #app{display:flex;max-width:none}
 #mCap b{color:var(--ink);font-weight:700}
 #mCap .cstk{color:var(--gld)}
 #mCap .ccnd{color:var(--blu)}
-#mSide{display:flex;flex-direction:column;gap:9px;min-width:0;padding-right:4px}
+#mSide{display:flex;flex-direction:column;gap:7px;min-width:0;padding-right:4px}
 .mh{font-family:var(--disp);font-weight:800;font-size:9px;letter-spacing:.24em;
   color:var(--ink3)}
-#mRes{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
-.rchip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px 4px;
-  border-radius:8px;font-family:var(--nm);font-size:10.5px;font-weight:700;
-  background:var(--grad);color:var(--ink2);
-  box-shadow:2px 2px 4px var(--shs),-2px -2px 4px var(--hl)}
-.rchip.bank{color:var(--grn)}
-.rchip.bust{color:var(--red)}
-.rchip.ward{color:var(--blu)}
-.rchip.div{color:#1F6E63}
-.rchip small{font-weight:400;color:var(--ink3);font-size:9px}
-#mGoals{display:flex;flex-direction:column;gap:4px}
-.grow{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;
+/* the last-10 strip is the AUTOMATION sheet's own .a10 (panels.css):
+   the id here only guards the layout box. Every number is a chart
+   door: dotted underline + pointer */
+.mn{cursor:pointer;border-bottom:1px dotted rgba(70,66,47,.55)}
+.plrow[data-m]{cursor:pointer}
+.plrow[data-m]:hover{background:rgba(255,253,244,.55)}
+.plrow.unl .plk{background:var(--grn)}
+.a10 .c{cursor:pointer}
+.a10 .c:hover em{color:var(--gld)}
+/* goal rows: .grr/.gbar on purpose — panels.css owns .gr (absolute
+   river chip) and .gb (rotated card back) and they leak otherwise */
+#mGoals{display:flex;flex-direction:column;gap:3px}
+.grow{display:flex;align-items:center;gap:7px;padding:2px 7px;border-radius:7px;
   background:var(--grad);box-shadow:2px 2px 4px var(--shs),-2px -2px 4px var(--hl);
-  font-size:11px;min-width:0}
+  font-size:10.5px;min-width:0;line-height:1.5}
 .grow .gn{font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis;max-width:38%}
-.grow .gb{flex:1;height:5px;border-radius:3px;background:var(--gradi);
+  text-overflow:ellipsis;max-width:40%}
+.grow .gbar{flex:1;height:4px;border-radius:2px;background:var(--gradi);
   box-shadow:inset 1px 1px 2px rgba(160,150,126,.4);overflow:hidden;min-width:30px}
-.grow .gb i{display:block;height:100%;border-radius:3px;background:var(--ink3)}
-.grow .gp{font-family:var(--nm);font-size:9.5px;color:var(--ink3);width:34px;
+.grow .gbar i{display:block;height:100%;border-radius:2px;background:var(--ink3)}
+.grow .gp{font-family:var(--nm);font-size:9px;color:var(--ink3);width:32px;
   text-align:right;flex:none}
-.grow .gr{font-size:9.5px;color:var(--gld);white-space:nowrap;flex:none;max-width:26%;
+.grow .grr{font-size:9px;color:var(--gld);white-space:nowrap;flex:none;max-width:26%;
   overflow:hidden;text-overflow:ellipsis}
 .grow.ready{background:linear-gradient(145deg,#F3E7C8,#EEDCA8);cursor:pointer}
 .grow.ready .gn{color:var(--gld)}
-.grow.ready .gb i{background:var(--gld)}
+.grow.ready .gbar i{background:var(--gld)}
 .grow.ready .gp{color:var(--gld);width:auto}
 .grow.ready:hover{box-shadow:3px 3px 7px var(--shs),-2px -2px 5px var(--hl),0 0 10px rgba(138,106,47,.35)}
 #mGoals .gdone{font-size:10px;color:var(--ink3);padding:2px 8px}
