@@ -292,3 +292,23 @@ function coachOff(m){
   const box=$('#tip');if(box)box.classList.add('off');
   if(document.removeEventListener)document.removeEventListener('pointerdown',tipCap,true);
 }
+
+/* ---------------- TAP ANYWHERE means the page ---------------- */
+/* the pyramid beat's one verb cannot stop at the felt: the poster
+   promises anywhere, but only the felt and deck zones route their taps
+   to pyrTap (gestures.js), so a press on the HUD, the rail or any
+   other chrome answered nothing. This capture hands the whole page's
+   press to pyrTap and stops the event, so no zone handler meets a
+   down this already owns — and the pointerup dies the same way,
+   because the gather sets the sweep's cooldown hold, and a zone up
+   after that reads as a polite-refusal deny tick over the sweep.
+   SKIP keeps its click: its press passes untouched on both ends */
+if(document.addEventListener){
+  const pyrHit=e=>{
+    if(S.tut!=='pyramid')return;
+    const el=e.target;
+    if(el&&el.closest&&el.closest('#tutX'))return;
+    e.stopPropagation();};
+  document.addEventListener('pointerdown',e=>{pyrHit(e);pyrTap();},true);
+  document.addEventListener('pointerup',pyrHit,true);
+}

@@ -822,8 +822,8 @@ function ttlOn(pass){
   /* the title never eats a click: the box is pointer-through, and the
      dismissal rides a document-capture tap — so the pointerdown that
      hides the letters still plays (draws, taps a tab, opens the sheet).
-     Pass mode (the tutorial's opening) arms nothing here: the felt's
-     pyrTap owns those, taps anywhere else included */
+     Pass mode (the tutorial's opening) arms nothing here: tut.js's
+     document capture routes every press to pyrTap, felt included */
   if(ttlDoc)document.removeEventListener('pointerdown',ttlDoc,true);
   /* a press that starts on the felt (deck grab, flick, swipe) reads as
      play: the title leaves quick. Anywhere else keeps the full walk */
