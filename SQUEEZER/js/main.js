@@ -97,7 +97,7 @@ addEventListener('visibilitychange',()=>{
     if(bgInt){clearInterval(bgInt);bgInt=0;}
     if(bgRel){try{bgRel();}catch(e){}bgRel=null;}
     lastAct=performance.now();   /* the return starts a fresh idle minute */
-    layout();paint();
+    layout();paint();refreshCards();   /* hidden-tab autos moved cards */
     if(bgTally){
       const t=bgTally;bgTally=null;
       const dt=Date.now()-t.t,
@@ -178,7 +178,7 @@ function frame(ts){
     if(pool().length&&Date.now()>=S.shop.next)rollShop();
     checkAch();unlocks();
     if($('#v-shop').classList.contains('on')&&!S.pick)renderShop();
-    if($('#v-cards').classList.contains('on'))paintRisk();
+    if($('#v-cards').classList.contains('on')){paintRisk();refreshCards();}
     refreshBuy();}
   requestAnimationFrame(frame);
 }

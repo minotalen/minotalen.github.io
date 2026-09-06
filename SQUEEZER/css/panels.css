@@ -171,10 +171,12 @@ h2:first-child{margin-top:6px}
   letter-spacing:.06em;color:var(--ink);text-transform:uppercase}
 .gb span{align-self:center;font-size:14cqw;line-height:1.35;color:var(--ink2)}
 .gbl{color:var(--ink3)}
-/* dimmed: on a table (.gt) or outside the deck (.go) */
+/* dimmed: on a table (.gt) or in an away pile (.go out, .gx discard,
+   .gg gone for good — the deepest dim) */
 .gcard.gt{opacity:.55;filter:grayscale(.3)}
 .gcard.go{opacity:.3;filter:grayscale(.55)}
 .gcard.gx{opacity:.55;filter:grayscale(.45)}
+.gcard.gg{opacity:.2;filter:grayscale(.7)}
 /* risky right now: a deck card whose value matches a table. Slight pink
    wash on the paper and a soft glow, eased in and out as hands move.
    Both faces carry it so the glow survives the flip; the base shadow

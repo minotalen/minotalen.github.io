@@ -142,6 +142,10 @@ body.tsnap .view{animation:none!important}
 .tok.ch i.on{background:var(--ink3);box-shadow:1px 1px 2px var(--sh),-1px -1px 2px var(--hl)}
 .tok.ch.short{background:var(--sh);color:var(--ink2);
   box-shadow:inset 2px 2px 4px var(--shs),inset -2px -2px 4px var(--hl)}
+/* the tick: one lean-in per bank that grew the combo, so the chain's
+   home on the felt announces its own growth (tkPop, fx.js) */
+.tok.ch.tkp{animation:tkp .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tkp{40%{transform:scale(1.14)}}
 /* the pile counters: the deck badge's letterpress twin, one bare
    amount, quiet until a pile holds two or more — a lone card is its
    own count */

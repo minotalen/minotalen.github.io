@@ -522,6 +522,11 @@ function shake(){if(BG)return;const a=$('#app');a.classList.remove('shake');void
 function warm(){if(BG)return;const g=$('#glowG');if(!g)return;g.classList.remove('on');void g.offsetWidth;g.classList.add('on');}
 function scorePulse(){if(BG)return;const m=$('#hSc').closest('.mny');if(!m)return;
   m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse');}
+/* the chain tick's half of the bank moment: the CHAIN token leans in
+   once, so the combo's home on the felt announces its own growth */
+function tkPop(){if(BG)return;const t=$('#tkC');if(!t)return;
+  t.classList.remove('tkp');void t.offsetWidth;t.classList.add('tkp');
+  setTimeout(()=>t.classList.remove('tkp'),480);}
 /* the heartbeat's visual half: one soft swell of the red wash per beat,
    in lockstep with the thump — peak rides threat × adrenaline × deck size,
    so it fades out with the sound */

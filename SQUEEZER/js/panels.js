@@ -430,7 +430,7 @@ function gcell(c,dim,rv){
       <span${a?'':' class="gbl"'}>${a?a.d:'no sticker yet'}</span></div>
   </div></div>`;
 }
-let cardF='all';   /* the YOUR CARDS grid filter: all / d(eck) / t(ables) / o(ut) */
+let cardF='all';   /* the YOUR CARDS grid filter: all / d(eck) / t(ables) / o(ut) / x / g(one) */
 const NUMW=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
   'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen','Twenty'];
 const ANW=new Set(['Eight','Eleven','Eighteen']);   /* vowel-sound names take "an" */
@@ -447,24 +447,26 @@ function renderCards(){
       <div class="b"><div class="nm">Buy a${ANW.has(NUMW[v])?'n':''} ${NUMW[v]||v}</div></div>
       <button class="buy" data-v="${v}" ${S.score<cost?'disabled':''}>${fmt(cost)}</button></div>`;
   }
-  /* every card you own as a flip grid: dimmed ones sit on a table or outside.
-     Filter chips: the discard pile (OUT + gone for good) is one tap away */
+  /* every card you own as a flip grid: dimmed ones sit on a table or
+     in an away pile. Filter chips: each pile is one tap away, gone
+     cards (Fallout) never ride home */
   const tbl=new Set();S.hands.forEach(hd=>hd.ids.forEach(id=>tbl.add(id)));
   const out=new Set(S.out);S.hands.forEach(hd=>hd.run.culled.forEach(id=>out.add(id)));
-  (S.gone||[]).forEach(id=>out.add(id));
+  const gone=new Set(S.gone||[]);
   const disc=new Set(S.disc||[]);
-  const loc=c=>tbl.has(c.id)?'t':out.has(c.id)?'o':disc.has(c.id)?'x':'d';
+  const loc=c=>tbl.has(c.id)?'t':out.has(c.id)?'o':disc.has(c.id)?'x':gone.has(c.id)?'g':'d';
   const all=[...S.cards].sort((a,b)=>a.v-b.v||a.id-b.id);
   const list=cardF==='all'?all:all.filter(c=>loc(c)===cardF);
   const nd=all.filter(c=>loc(c)==='d').length;
   const nx=all.filter(c=>loc(c)==='x').length;
+  const ng=all.filter(c=>loc(c)==='g').length;
   const chip=(f,l,n)=>`<button class="cchip${cardF===f?' on':''}" data-f="${f}">${l} · ${n}</button>`;
   const rv=riskyVals();
-  const dim=c=>tbl.has(c.id)?' gt':out.has(c.id)?' go':disc.has(c.id)?' gx':'';
+  const dim=c=>tbl.has(c.id)?' gt':out.has(c.id)?' go':disc.has(c.id)?' gx':gone.has(c.id)?' gg':'';
   h+=`<h2>YOUR CARDS · ${S.cards.length}</h2>
     <div class="chips" style="margin-bottom:8px" id="cf">
-      ${chip('all','all',all.length)}${chip('d','face-down',nd)}${chip('t','on tables',tbl.size)}${chip('o','out',out.size)}${chip('x','discarded',nx)}</div>
-    <p class="note">Tap or hover a card to read its sticker. Out cards get shuffled back on the next bust; discarded cards are shuffled back on bank. A pink glow marks cards that would bust a table if drawn now.</p>
+      ${chip('all','all',all.length)}${chip('d','face-down',nd)}${chip('t','on tables',tbl.size)}${chip('o','out',out.size)}${chip('x','discarded',nx)}${chip('g','gone',ng)}</div>
+    <p class="note">Tap or hover a card to read its sticker. Out cards get shuffled back on the next bust; discarded cards are shuffled back on bank; gone cards never come back. A pink glow marks cards that would bust a table if drawn now.</p>
     <div id="dgrid">`+list.map(c=>gcell(c,dim(c),rv)).join('')+`</div>`;
   $('#v-cards').innerHTML=h;fillUp('#v-cards','cards');
   condPaintGrid($('#v-cards'));
@@ -472,6 +474,24 @@ function renderCards(){
   /* a tap opens the card sheet: the flip stays on hover */
   $$('#v-cards .gcard').forEach(g=>g.onclick=()=>openCardSheet(+g.dataset.id));
   $$('#v-cards #cf .cchip').forEach(b=>b.onclick=()=>{cardF=b.dataset.f;renderCards();});
+  cardsSig=cardsSigNow();
+}
+/* the grid rides the live tables: draws, busts and banks move cards
+   between the deck, the tables and the away piles while the CARDS tab
+   is open — on the phone with the autos running, on the desktop
+   permanently, wide mode keeps the panel beside the felt. renderCards
+   resets the tap-flips, so it only runs when a card actually moved:
+   the signature reads every pile the grid's locations read */
+let cardsSig='';
+const cardsSigNow=()=>S.hands.map(h=>h.ids.join('.')+'+'+h.run.culled.join('.')).join('|')
+  +'#'+S.out.join('.')+'#'+(S.disc||[]).join('.')+'#'+(S.gone||[]).join('.')+'#'+S.cards.length;
+function refreshCards(){
+  const v=$('#v-cards');
+  if(!v||!v.classList.contains('on')||document.hidden)return;
+  if(cardsSigNow()===cardsSig)return;
+  const keep=new Set($$('#v-cards .gcard.flip').map(g=>g.dataset.id));
+  renderCards();
+  keep.forEach(id=>{const g=v.querySelector(`.gcard[data-id="${id}"]`);if(g)g.classList.add('flip');});
 }
 /* the pink tint rides the live hands: autos draw and bank while the tab
    is open, so re-tint in place instead of re-rendering, which would

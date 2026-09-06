@@ -58,7 +58,7 @@ top.innerHTML=
   '<div class="mrate" id="mWant"></div><div class="msp"></div>'+
   '<div class="mspd" id="mSpd"><button data-s="1" class="on">1\u00d7</button>'+
   '<button data-s="2">2\u00d7</button><button data-s="4">4\u00d7</button>'+
-  '<button data-s="8">8\u00d7</button></div>'+
+  '<button data-s="8">8\u00d7</button><button data-s="16">16\u00d7</button></div>'+
   '<button class="maut on" id="mRun" title="run / halt the sim brain">RUN</button>'+
   '<button class="maut" id="mBrain" title="cycle the archetype: risk line, boosts, sticker tastes"></button></div>'+
   '<canvas id="machCv"></canvas>';
@@ -226,7 +226,7 @@ function machAct(a,n){
   if(a==='meta'){
     let id=null;for(const k in S.meta)if(S.meta[k]!==(metaMirror[k]||0))id=k;
     metaMirror=Object.assign({},S.meta);
-    tok('eUp',1,'#7A4A8A',{sp:2});E.eUp.fl=.6;
+    tok('eMeta',1,'#7A4A8A',{sp:2});E.eMeta.fl=1;N.shards.p=1;
     const m=id&&META[id];
     const nm=document.createDocumentFragment();
     nm.append(document.createTextNode(m?m.n:'Shard upgrade'));
@@ -252,7 +252,8 @@ function machAct(a,n){
     logRow('stk','STRIP','De-bolt',n,S.score,'stk');machDirty=true;return;}
   if(a==='asc'){
     toks.length=0;
-    N.banked.p=1;
+    N.banked.p=1;N.shards.p=1;
+    tok('eAsc',3,'#7A4A8A',{sp:1.5,r:4});E.eAsc.fl=1;
     const nm=document.createDocumentFragment();
     nm.append(document.createTextNode('Ascension'));
     mk('small','',nm).textContent=' +'+fmt(n||0)+' shards';
@@ -266,6 +267,7 @@ const _deflect=typeof deflect==='function'?deflect:null;
 if(_deflect)deflect=function(id,label,disc){
   try{
     tok('eWard',1,'#2A4761',{sp:2.2,r:4});N.wards.p=1;
+    tok('eSave',1,'#5A5642',{sp:1.8,r:4});N.disc.p=1;
     machDirty=true;
   }catch(e){}
   return _deflect(id,label,disc);
@@ -400,32 +402,42 @@ const DW=1000,DH=580;
 const INK='#46422F',INK3='#8A8471',PAPER='rgba(228,223,209,.88)';
 
 const N={
+  goals: {x:60,y:55,r:30,label:'GOALS',col:'#8A6A2F'},
+  hunt:  {x:52,y:142,w:96,h:24,label:'HUNT',chip:true,gold:true},
   deck:  {x:150,y:150,r:46,label:'DECK',col:'#5A5642'},
   wards: {x:430,y:115,r:27,label:'WARDS',col:'#2A4761'},
   hand:  {x:430,y:300,r:54,label:'ON TABLE',col:'#5A5642'},
-  away:  {x:255,y:462,r:40,label:'AWAY',col:'#8E2B1C'},
+  risk:  {x:252,y:298,w:96,h:26,label:'RISK',chip:true},
+  chain: {x:630,y:178,w:104,h:26,label:'CHAIN',chip:true,gold:true},
+  out:   {x:150,y:462,r:36,label:'OUT',col:'#8E2B1C'},
+  disc:  {x:365,y:462,r:36,label:'DISCARD',col:'#2A4761'},
+  cards: {x:60,y:300,w:112,h:44,label:'BUY CARD',col:'#5A5642'},
   score: {x:840,y:300,r:60,label:'SCORE',col:'#2C563C',money:true},
-  banked:{x:840,y:495,r:33,label:'BANKED',col:'#8A6A2F',money:true},
   upg:   {x:688,y:88,w:108,h:44,label:'UPGRADES',col:'#2A4761'},
   shop:  {x:938,y:88,w:108,h:44,label:'STICKERS',col:'#8A6A2F'},
-  cards: {x:72,y:470,w:112,h:44,label:'BUY CARD',col:'#5A5642'},
-  risk:  {x:252,y:298,w:96,h:26,label:'RISK',chip:true},
-  chain: {x:630,y:178,w:104,h:26,label:'CHAIN',chip:true},
+  banked:{x:840,y:495,r:33,label:'BANKED',col:'#8A6A2F',money:true},
+  shards:{x:958,y:495,r:30,label:'SHARDS',col:'#7A4A8A',money:true},
+  meta:  {x:948,y:388,w:84,h:36,label:'META',col:'#7A4A8A'},
+  asc:   {x:735,y:540,r:20,label:'ASCEND',col:'#8E2B1C',drain:true},
 };
 const E={
   eDraw:{seg:[[196,176],[280,190],[330,235],[380,270]],col:'#5A5642',lab:[.48,0,-15]},
   eBank:{seg:[[486,282],[590,268],[690,272],[776,292]],col:'#2C563C',lab:[.5,0,-15]},
-  eBust:{seg:[[386,338],[352,388],[322,412],[290,430]],col:'#8E2B1C',lab:[.5,20,8]},
-  eCyc: {seg:[[213,438],[150,370],[148,270],[158,204]],col:'#8A8471',lab:[.42,-18,0]},
+  eBust:{seg:[[386,338],[330,392],[258,428],[190,450]],col:'#8E2B1C',lab:[.42,18,10]},
+  eCyc: {seg:[[168,430],[192,330],[186,250],[172,202]],col:'#8A8471',lab:[.42,-19,0]},
+  eSave:{seg:[[404,346],[388,386],[376,412],[368,428]],col:'#2A4761',lab:null,dash:true},
+  eAsc: {seg:[[872,478],[898,462],[916,458],[934,470]],col:'#7A4A8A',lab:null},
+  eMeta:{seg:[[948,463],[948,444],[948,428],[948,408]],col:'#7A4A8A',lab:null},
   eUp:  {seg:[[796,248],[772,196],[752,158],[736,120]],col:'#2A4761',lab:[.5,17,0]},
   eStk: {seg:[[876,250],[906,196],[922,158],[934,120]],col:'#8A6A2F',lab:[.52,19,0]},
-  eCard:{seg:[[798,356],[600,556],[330,542],[128,474]],col:'#5A5642',lab:[.52,0,-14]},
-  eCard2:{seg:[[72,448],[80,330],[110,240],[132,196]],col:'#5A5642',lab:null},
+  eCard:{seg:[[798,356],[600,556],[330,532],[118,308]],col:'#5A5642',lab:[.52,0,-14]},
+  eCard2:{seg:[[60,278],[70,240],[100,214],[118,192]],col:'#5A5642',lab:null},
   eWard:{seg:[[430,146],[430,182],[430,216],[430,242]],col:'#2A4761',lab:null,dash:true},
   eGhost:{seg:[[640,286],[710,370],[780,430],[818,470]],col:'#8A6A2F',lab:null,ghost:true},
 };
 /* state-connection dashes: chip → edge midpoint */
-const DASHES=[['risk','eBust'],['chain','eBank']];
+const DASHES=[['risk','eBust','#8E2B1C'],['chain','eBank','#8A6A2F'],
+  ['hunt','eBank','#8A6A2F']];
 function bpt(s,t){const u=1-t;
   return [u*u*u*s[0][0]+3*u*u*t*s[1][0]+3*u*t*t*s[2][0]+t*t*t*s[3][0],
           u*u*u*s[0][1]+3*u*u*t*s[1][1]+3*u*t*t*s[2][1]+t*t*t*s[3][1]];}
@@ -455,7 +467,11 @@ function readState(){
   R.handCap=Math.max(8,(L('auto')||1)*S.hands.length);
   R.fsum=fsum();R.tables=S.hands.length;
   R.wards=wardsN();
-  R.away=awayN();
+  R.outn=S.out.length;R.discn=S.disc?S.disc.length:0;
+  R.ml=Object.values(S.meta||{}).reduce((a,b)=>a+b,0);
+  R.goalsN=S.ach.length;
+  R.cd=clamp(1-Math.max(0,cdEnd-pn())/((cdLen||1)*1000),0,1);
+  R.huntN=BRAIN.hunt?String(BRAIN.hunt.g.n):'';
   R.chain=h?h.chain:0;
   R.risk=h?Math.round(threat(h)*100):0;
   R.prem=h?riskPrem(h):1;
@@ -580,14 +596,34 @@ function conv(k,sub){
   txt(n.label,n.x+7,n.y,'800 9px "Orbit",system-ui,sans-serif',INK);
   if(sub)txt(sub,n.x,n.y+h/2+12,'400 9.5px "Orbit",system-ui,sans-serif',INK3);
 }
+function drainN(k,sub){
+  const n=N[k];
+  ctx.beginPath();ctx.arc(n.x,n.y,n.r,-.5,5.4);
+  ctx.lineWidth=2;ctx.strokeStyle=n.col;ctx.stroke();
+  ctx.beginPath();ctx.arc(n.x,n.y,3,0,7);ctx.fillStyle=n.col;ctx.fill();
+  txt(n.label,n.x,n.y-n.r-11,'800 9px "Orbit",system-ui,sans-serif',INK3);
+  if(sub)txt(sub,n.x,n.y+n.r+12,'400 9.5px "Orbit",system-ui,sans-serif',INK3);
+}
+function legend(){
+  const items=[['#5A5642','cards'],['#2C563C','value'],['#8E2B1C','bust'],
+    ['#2A4761','wards'],['#8A6A2F','spend'],['#7A4A8A','shards']];
+  let x=262;
+  for(const it of items){
+    ctx.beginPath();ctx.arc(x,572,3.5,0,7);ctx.fillStyle=it[0];ctx.fill();
+    txt(it[1],x+9,572,'700 9px "Orbit",system-ui,sans-serif',INK3,'left');
+    x+=36+it[1].length*6.4;
+  }
+}
 function chipN(k,text){
   const n=N[k],w=n.w,h=n.h;
   ctx.setLineDash([3,3]);
   rr2(n.x-w/2,n.y-h/2,w,h,12);
   ctx.fillStyle=PAPER;ctx.fill();
-  ctx.strokeStyle='rgba(142,43,28,.65)';ctx.lineWidth=1.3;ctx.stroke();
+  ctx.strokeStyle=n.gold?'rgba(138,106,47,.7)':'rgba(142,43,28,.65)';
+  ctx.lineWidth=1.3;ctx.stroke();
   ctx.setLineDash([]);
-  txt(text,n.x,n.y+.5,'700 10px "Orbit",system-ui,sans-serif','#8E2B1C');
+  txt(text,n.x,n.y+.5,'700 10px "Orbit",system-ui,sans-serif',
+    n.gold?'#8A6A2F':'#8E2B1C');
 }
 function draw(){
   fit();
@@ -596,6 +632,10 @@ function draw(){
   const s=Math.min(w/DW,h/DH),ox=(w-DW*s)/2,oy=(h-DH*s)/2;
   cv._view={s,ox,oy};
   ctx.setTransform(dpr*s,0,0,dpr*s,ox*dpr,oy*dpr);
+  /* the machinations dot grid */
+  ctx.fillStyle='rgba(70,66,47,.06)';
+  for(let gy=14;gy<DH;gy+=26)for(let gx=14;gx<DW;gx+=26)
+    ctx.fillRect(gx-1,gy-1,2,2);
   E.eDraw.text=R.drawMin+'/min';
   E.eBank.text='+'+fmt(R.incMin)+'/min';
   E.eBust.text=R.bustMin+'/min';
@@ -606,7 +646,7 @@ function draw(){
   ctx.globalAlpha=.65;
   for(const dk of DASHES){
     const n=N[dk[0]],p=bpt(E[dk[1]].seg,.5);
-    ctx.setLineDash([3,3]);ctx.strokeStyle='#8E2B1C';ctx.lineWidth=1;
+    ctx.setLineDash([3,3]);ctx.strokeStyle=dk[2]||'#8E2B1C';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(n.x,n.y+h2(n));ctx.lineTo(p[0],p[1]);ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -618,21 +658,31 @@ function draw(){
     ctx.fillStyle=k.col;ctx.fill();
     ctx.lineWidth=1;ctx.strokeStyle='rgba(21,20,14,.35)';ctx.stroke();
   }
+  pool('goals',String(R.goalsN),'of '+ACH.length,ACH.length?R.goalsN/ACH.length:0);
   pool('deck',String(R.deckN),R.deckN+' of '+R.deckMax,R.deckN/R.deckMax);
+  if(R.cd>0&&R.cd<1){   /* the deck's cooldown, a gold gauge inside the pool */
+    ctx.beginPath();ctx.arc(N.deck.x,N.deck.y,36,-Math.PI/2,-Math.PI/2+R.cd*6.2832);
+    ctx.lineWidth=2.5;ctx.strokeStyle='#C79A44';ctx.stroke();
+  }
   pool('wards',String(R.wards),null,clamp(R.wards/5,0,1));
   pool('hand',String(R.handN),(R.tables>1?R.tables+'\u00d7 ':'')+'\u03a3 '+fmt(R.fsum),
     clamp(R.handN/R.handCap,0,1));
-  pool('away',String(R.away),'out '+S.out.length+' \u00b7 disc '+(S.disc?S.disc.length:0),
-    clamp(R.away/Math.max(1,R.deckMax),0,1));
+  pool('out',String(R.outn),'rides home on a bust',clamp(R.outn/Math.max(1,R.deckMax),0,1));
+  pool('disc',String(R.discn),'backs on the shuffle',clamp(R.discn/Math.max(1,R.deckMax),0,1));
   pool('score',fmt(dScore),R.incMin>0?'+'+fmt(R.incMin)+'/min':'income idle',0);
   pool('banked',fmt(dBanked),Math.floor(clamp(S.banked/Math.max(1,R.req),0,1)*100)+'% to ASC',
     clamp(S.banked/Math.max(1,R.req),0,1));
+  pool('shards',fmt(S.shards),'the META wallet',0);
   conv('upg','L'+R.upL+' owned');
   conv('shop','tier '+R.tier+' stock');
   conv('cards','\u2212'+fmt(R.next));
+  conv('meta','L'+R.ml+' owned');
+  drainN('asc','at '+fmt(R.req)+' banked');
   chipN('risk','RISK '+R.risk+'% \u00b7 \u00d7'+R.prem.toFixed(2));
   chipN('chain','CHAIN '+R.chain+' \u00b7 \u00d7'+R.cmul.toFixed(2));
+  chipN('hunt',R.huntN?'HUNT: '+(R.huntN.length>12?R.huntN.slice(0,12)+'\u2026':R.huntN):'HUNT \u2014');
   edge('eGhost');
+  legend();
 }
 function h2(n){return n.h?n.h/2:(n.r||0);}
 
@@ -1062,7 +1112,17 @@ function playTick(dt){
   const h=S.hands[0];
   if(h){
     if(canBank(h)&&wantBank(threat(h),h))bank(h,true);
-    else if(pn()>=cdEnd&&!deckHold&&S.deck.length)drawCard(0,null,true);
+    else if(pn()>=cdEnd&&!deckHold&&S.deck.length){
+      /* high warp: one tick of sim time spans several cooldowns, so the
+         deal runs until the line, the cap or the deck stops it */
+      let n=0;
+      do{
+        drawCard(0,null,true);n++;
+        const h2=S.hands[0];
+        if(!h2||frozen)break;
+      }while(n<10&&pn()>=cdEnd&&S.deck.length&&S.hands[0].ids.length<8
+        &&!wantBank(threat(S.hands[0]),S.hands[0]));
+    }
   }
   /* a pending sticker pick places itself on the first blank */
   if(S.pick){
@@ -1070,7 +1130,9 @@ function playTick(dt){
     if(id!=null){try{placeStk(id,50,50);}catch(e){}}
   }
   BRAIN.beat+=dt;
-  if(BRAIN.beat>=.6){BRAIN.beat=0;buyBeat();}
+  let beats=0;
+  while(BRAIN.beat>=.6&&beats<10){BRAIN.beat-=.6;buyBeat();beats++;}
+  if(BRAIN.beat<0)BRAIN.beat=0;
   BRAIN.goalClock+=dt;
   if(BRAIN.goalClock>=5){BRAIN.goalClock=0;huntTick();}
   /* ascend when the banked meter funds the next wanted shard row */
@@ -1097,7 +1159,10 @@ const METRICS={
   deck:{l:'DECK PILE',g:()=>S.deck.length},
   hand:{l:'TABLE VALUE',g:()=>R.fsum},
   wards:{l:'WARDS',g:()=>R.wards},
-  away:{l:'AWAY PILE',g:()=>R.away},
+  outn:{l:'OUT PILE',g:()=>R.outn},
+  discn:{l:'DISCARD',g:()=>R.discn},
+  ml:{l:'META LEVELS',g:()=>R.ml},
+  goals:{l:'GOALS CLAIMED',g:()=>R.goalsN},
   upg:{l:'UPGRADE LEVELS',g:()=>R.upL},
   stk:{l:'STICKERS PLACED',g:()=>S.st.placed||0},
   drawmin:{l:'DRAWS /MIN',g:()=>R.drawMin},
@@ -1162,10 +1227,11 @@ document.getElementById('mChartX').addEventListener('click',()=>{
   document.getElementById('mChart').classList.remove('on');});
 
 /* graph hit-testing: pools, converters, chips, then edge labels */
-const N_METRIC={deck:'deck',wards:'wards',hand:'hand',away:'away',score:'score',
-  banked:'banked',upg:'upg',shop:'stk',cards:'deck',risk:'risk',chain:'chain'};
+const N_METRIC={deck:'deck',wards:'wards',hand:'hand',out:'outn',disc:'discn',
+  score:'score',banked:'banked',shards:'shards',meta:'ml',goals:'goals',
+  hunt:'goals',upg:'upg',shop:'stk',cards:'deck',risk:'risk',chain:'chain',asc:'banked'};
 const E_METRIC={eDraw:'drawmin',eBank:'incmin',eBust:'bustmin',eUp:'spend',
-  eStk:'spend',eCard:'spend'};
+  eStk:'spend',eCard:'spend',eMeta:'ml',eAsc:'banked'};
 function hitMetric(x,y){
   for(const k in E){const ed=E[k];
     if(!ed._lp)continue;
@@ -1228,7 +1294,7 @@ setInterval(()=>{
   if(!document.hidden)BG=SPD>=4;
   playTick(.25*SPD);
   readState();
-  const snap=[S.score,S.banked,S.deck.length,R.handN,R.fsum,R.wards,R.away,
+  const snap=[S.score,S.banked,S.deck.length,R.handN,R.fsum,R.wards,R.outn,R.discn,
     R.chain,R.risk,Object.keys(els).length];
   let changed=snap.length!==prev.length;
   if(!changed)for(let i=0;i<snap.length;i++)if(snap[i]!==prev[i]){changed=true;break;}

@@ -66,11 +66,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
 .mny .l{font-size:8px;letter-spacing:.22em;color:var(--ink3);font-weight:700}
 .mny .v{font-family:var(--disp);font-size:19px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
 .mny.s .v{color:var(--gld)}
-/* one soft gold ring when a bank lands — a breath, not a fanfare; the
-   plaque itself leans in a touch (transform-only, one short keyframe) */
-.mny.pulse{animation:mp .7s ease}
-@keyframes mp{30%{transform:scale(1.045);
-  box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl),0 0 13px rgba(138,106,47,.42)}}
+/* one soft gold ring when a bank lands — a breath, not a fanfare. The
+   plaque's lean-in rides its own track so it LANDS with the digits (the
+   ticker's big sweep is 550ms): the ring snaps on the pay, the body
+   springs past its lean as the roll arrives and settles under it */
+.mny.pulse{animation:mp .7s ease,mpt .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mp{30%{box-shadow:3px 3px 8px var(--shs),-3px -3px 8px var(--hl),0 0 13px rgba(138,106,47,.42)}}
+@keyframes mpt{68%{transform:scale(1.055)}}
 #hud .gap{flex:1}
 .ic{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;color:var(--ink2);
   border:0;background:var(--grad);cursor:pointer;transition:box-shadow .12s;

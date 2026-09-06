@@ -366,6 +366,7 @@ function resolve(id,h,auto,fresh){
       wardNext=h2;const ok=drawCard(eh,true,true);
       if(ok)S.st.stkDraws=(S.st.stkDraws||0)+1;else wardNext=null;echoD--;pendEnd(h);},280);}
   tutEvent('draw');
+  refreshCards();
   return true;
 }
 /* Ward saves bench the card: the drawn round waits in the discard, home
@@ -405,7 +406,7 @@ function deflect(id,label,disc){
   if(disc)wardFlight(id);else slipBack(id);
   layout();
   slam(label,'#2C563C');
-  SFX.buy();buzz(26);paint();save();return true;
+  SFX.buy();buzz(26);paint();refreshCards();save();return true;
 }
 /* the dodge's return, better than a bounce: the round is filed back into
    the deck at a random depth — a real shuffle, the top included — so it
@@ -530,7 +531,8 @@ function bust(c,twinId,h,preTh){
     if(salv>0){setTimeout(()=>float('SALVAGE\n+'+fmt(salv),x,y+48,'#8A6A2F'),d);d+=140;}
     if(siph>0){setTimeout(()=>{float('SIPHON\n+'+fmt(siph),x,y+48,'#8A6A2F');SFX.stk('siphon','bust');},d);d+=140;}
     if(silver>0)setTimeout(()=>float('SILVER\n+'+fmt(silver),x,y+48,'#2A4761'),d);
-    if(guard>0)setTimeout(()=>{float('GUARD\n+'+fmt(guard),x,y+48,'#2A4761');SFX.stk('guardian','bust');},d);}
+    if(guard>0)setTimeout(()=>{float('GUARD\n+'+fmt(guard),x,y+48,'#2A4761');SFX.stk('guardian','bust');},d);
+    scorePulse();}   /* something survived: the plaque answers the salvage */
   logAct('bust',keep,h.run.autoDeal);
   biFirst('bust');
   tickScore(true);paint();save(true);
@@ -568,7 +570,7 @@ function bust(c,twinId,h,preTh){
     S.out=[];
     toOut(c.id,true);   /* the seat is free: no outed tick */
     bustPair=null;bustGhost=null;rebuildDeck();SFX.shuffle();
-    frozen=false;layout();paint();SFX.slide();fanHome(ride);},950);}
+    frozen=false;layout();paint();SFX.slide();fanHome(ride);refreshCards();},950);}
 /* the gamble stickers roll once per bank, per copy: hits ride the total,
    misses sit. Busts, Float and the readout never roll */
 function rollStk(h){
@@ -630,7 +632,7 @@ function bank(h,auto){
   else S.st.streak=0;
   /* a chain tick wants a bank big enough for the combo: 2 cards, +1 per
      10 chain (chainReq). A short bank lets the combo slip: chain -1 */
-  if(h.ids.length>=chainReq(h.chain)){h.chain++;h.chainScore+=s;}
+  if(h.ids.length>=chainReq(h.chain)){h.chain++;h.chainScore+=s;tkPop();}
   else if(h.chain>0)h.chain--;
   if(risk>S.st.bestRisk)S.st.bestRisk=risk;
   /* hot streaks: consecutive banks past each line — a cold bank breaks
@@ -818,6 +820,7 @@ function bank(h,auto){
      lives in sim.js; the money curve rides the inc snapshots */
   if(Math.random()<.1)bi('bank',{n:biBucket(S.score-_s0),a:auto?1:0});
   layout();SFX.slide();fanHome(back);checkAch();unlocks();tickScore(true);paint();save(true);
+  refreshCards();
   checkFloatAll();
   tutEvent('bank');
 }
