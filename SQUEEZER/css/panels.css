@@ -678,10 +678,11 @@ h2:first-child{margin-top:6px}
   body.wide #tabs button[data-v="play"]{display:none}
   /* the rail sits under the sidebar (tabs.js moved it into #side):
      its tray aligns with the panel's padding, pills fill like a phone.
-     Panel rows and rail both hug the lane at 8px so the pane seam is
-     one gutter, not padding+gap+padding stacked */
-  body.wide #sideV .view{padding-left:8px;padding-right:8px;--vg:8px}
-  body.wide #tabs{margin-left:8px;margin-right:8px;
+     Panel rows and rail hug the lane at 12px — the same rhythm the
+     felt wears on the table lane, so the stage's left and right
+     edges match — and share one gutter, not padding+gap+padding */
+  body.wide #sideV .view{padding-left:12px;padding-right:12px;--vg:12px}
+  body.wide #tabs{margin-left:12px;margin-right:12px;
     margin-bottom:calc(12px + env(safe-area-inset-bottom))}
   /* the compendium opens to the sticker wiki's wide pass */
   body.wide #cmpH,body.wide #cmpB{max-width:900px}

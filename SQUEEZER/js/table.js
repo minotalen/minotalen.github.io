@@ -371,11 +371,11 @@ const AURA={haste:1,beacon:1,purify:1};
 const q=s=>s.replace(/"/g,'&quot;');
 function buffTipHTML(k,mode,n){
   const a=STK[k];
-  if(mode==='armed')return `<b>${a.n}</b> · armed — ${a.d.replace(/^Arm: /,'')}`;
-  if(mode==='stakes')return `<b>${a.n}</b> · draws pay double premium — <b>${n}</b> left`;
+  if(mode==='armed')return `<b>${a.n}</b> · armed — ${a.d.replace(/^(Arm|Tap) to /,'')}`;
+  if(mode==='stakes')return `<b>${a.n}</b> · draws pay double risk reward — <b>${n}</b> left`;
   if(mode==='guard')return `<b>${a.n}</b> · a drawn twin slips back into the deck — <b>${n}</b> draw${n===1?'':'s'} left`;
   if(mode==='grace')return `<b>${a.n}</b> · the next busting draw benches in the discard — <b>${n}</b> left`;
-  if(mode==='cullward')return `<b>${a.n}</b> · the ward holds <b>${n}</b> more draw${n===1?'':'s'} — a busting one benches in the discard`;
+  if(mode==='cullward')return `<b>${a.n}</b> · one ward, <b>${n}</b> draw${n===1?'':'s'} left — a busting draw benches in the discard`;
   return `<b>${a.n}</b>: ${a.d.replace(/\.$/,'')}${n>1?` — <b>×${n}</b> here`:''}`;
 }
 function buffChip(k,mode,n){

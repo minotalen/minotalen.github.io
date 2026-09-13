@@ -285,8 +285,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;op
   body.wide #app{max-width:1280px;display:grid;
     grid-template-columns:minmax(0,1fr) minmax(360px,45%);
     grid-template-rows:auto minmax(0,1fr)}
-  /* the money plaques read over the table, not over the panel */
-  body.wide #hud{grid-column:1;padding-top:max(12px,env(safe-area-inset-top))}
+  /* the money plaques read over the table, not over the panel; the
+     12px sides match the felt's lane padding so the header, felt and
+     panel all share one edge rhythm */
+  body.wide #hud{grid-column:1;padding:max(12px,env(safe-area-inset-top)) 12px 9px}
   body.wide #views{grid-column:1;grid-row:2}
   /* the sidebar's content drops in level with the HUD plaques, not
      the app's very top edge */

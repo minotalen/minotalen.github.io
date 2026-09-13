@@ -10,7 +10,10 @@
    touch-action first — left auto it claims horizontal drags and fires
    pointercancel, killing the tab swipe everywhere but the felt (which
    is touch-action:none) */
-.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 14px 18px;--vg:14px;display:none;
+/* one horizontal rhythm per tier: the view rows, the play view's felt
+   column, the HUD plaques and the tab rail all wear the same inset
+   (12px here, 14px at 720+, 12px wide) so no block reads wider */
+.view{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 12px 18px;--vg:12px;display:none;
   background:var(--paper)}
 /* the drifting sticker teaser lives as a view's first child (z 0) —
    direct content is lifted above it so the stickers float behind */
@@ -24,7 +27,7 @@
 body.tsnap .view{animation:none!important}
 @keyframes sir{from{transform:translateX(46px);opacity:0}}
 @keyframes sil{from{transform:translateX(-46px);opacity:0}}
-#v-play{padding:0 10px 4px;display:none;flex-direction:column;min-height:0}
+#v-play{padding:0 12px 4px;display:none;flex-direction:column;min-height:0}
 #v-play.on{display:flex;animation:none}
 
 /* ---------- buff bar: active sticker buffs on the felt's top right,
@@ -391,8 +394,8 @@ body.tsnap .view{animation:none!important}
    table.js's deskK; the readout, gauge, bank and table tags follow at
    readable size ---------- */
 @media (min-width:720px){
-  .view{padding:4px 16px 18px;--vg:16px}
-  #v-play{padding:0 12px 4px}
+  .view{padding:4px 14px 18px;--vg:14px}
+  #v-play{padding:0 14px 4px}
   #rs{font-size:40px}
   #rsl{font-size:9.5px}
   .tm{font-size:11px}

@@ -66,7 +66,7 @@ const P = {
   CARD_LADDER: [[5], [6, 8], [10, 13, 16], [20, 25, 30, 40], [50, 65, 80, 95, 120]], CARD_ANCHOR: 50, CARD_ANCHOR_V: 5, CARD_STEP: 2.113762, CARD_GROW: 2.25,
   STK_BASE: 450, STK_GROW: 1.1, STK_INF: 0.03,
   ASC_REQ: 230000,
-  RISK_COEF: 1.0, RISK_FLOOR: 0.6, RISK_EVEN: 0.4, RISK_TOP: 2.0, HAND_CAP: 8,
+  RISK_COEF: 1.0, RISK_FLOOR: 0.5, RISK_EVEN: 0.5, RISK_TOP: 1.5, HAND_CAP: 8,
   CD: 3.5, SPEED_PER: 0.95,
   /* ---- v6 player layer ----
      BOOST = how hard an archetype favors its rows at buy time; the
@@ -440,15 +440,11 @@ function runSim(seed, watch, gateIgnored, archKey) {
   const premMul = () => 1 + (copiesNow.beacon ? .5 * presence() : 0) + (stakesD > 0 ? 1 : 0);
   const riskMul = r => {
     const m = (P.RISK_COEF + .10 * L('nerve') + .08 * M('daring')) * premMul();
-    return r <= P.RISK_EVEN
-      ? P.RISK_FLOOR + r * (1 - P.RISK_FLOOR) / P.RISK_EVEN * m
-      : 1 + (r - P.RISK_EVEN) * (P.RISK_TOP - 1) / (1 - P.RISK_EVEN) * m;
+    return P.RISK_FLOOR + r * (P.RISK_TOP - P.RISK_FLOOR) * m;
   };
   const rMulAt = (r, l) => {
     const m = P.RISK_COEF + .10 * l;
-    return r <= P.RISK_EVEN
-      ? P.RISK_FLOOR + r * (1 - P.RISK_FLOOR) / P.RISK_EVEN * m
-      : 1 + (r - P.RISK_EVEN) * (P.RISK_TOP - 1) / (1 - P.RISK_EVEN) * m;
+    return P.RISK_FLOOR + r * (P.RISK_TOP - P.RISK_FLOOR) * m;
   };
   function factorOf(oid) {
     const l = up[oid], b = bustRate();

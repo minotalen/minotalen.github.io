@@ -36,7 +36,7 @@ function compRows(){
       <div class="b">
         <div class="nm">${s.n} <span class="tag t${s.t}">T${s.t}</span>${NONSTACK[k]?' <span class="cns">UNIQUE</span>':''}<span class="cpr">${fmt(stkPrice(k))}</span></div>
         <div class="ds">${s.d}</div>
-        <div class="cmeta">${CMP_TY[ty]} · ${STKTRIG[k]||'on the table'}${TRICK[k]?' · one arm per run':''}${NONSTACK[k]?' · only one, ever':''}</div>
+        <div class="cmeta">${CMP_TY[ty]} · ${STKTRIG[k]||'standing'}${TRICK[k]?' · one arm per run':''}${NONSTACK[k]?' · only one, ever':''}</div>
         ${g?`<div class="cgoal"><b>${g.n}</b> ${g.d}</div>`:''}
       </div>
     </div>`;}).join('');

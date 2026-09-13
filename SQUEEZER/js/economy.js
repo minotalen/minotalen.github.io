@@ -149,11 +149,10 @@ function riskPremT(t,h){
   const bea=h.ids.some(id=>byId(id).stk==='beacon')?1.5:1;
   const stk=h.run.stakesD>0?2:1;
   const m=(ECO.RISK_COEF+ECO.NERVE_PER*L('nerve')+ECO.DARING_PER*M('daring'))*bea*stk;
-  /* the premium line: ×0.6 at 0% risk, break-even at 40%, ×2 at 100%.
-     Nerve, daring, beacon and stakes scale both slopes past those marks */
-  return t<=ECO.RISK_EVEN
-    ? ECO.RISK_FLOOR+t*(1-ECO.RISK_FLOOR)/ECO.RISK_EVEN*m
-    : 1+(t-ECO.RISK_EVEN)*(ECO.RISK_TOP-1)/(1-ECO.RISK_EVEN)*m;
+  /* the risk reward line: one straight rise, ×0.5 at 0% risk, face
+     value at the halfway gauge, ×1.5 at 100%. Nerve, daring, beacon
+     and stakes scale the slope */
+  return ECO.RISK_FLOOR+t*(ECO.RISK_TOP-ECO.RISK_FLOOR)*m;
 }
 const riskPrem=h=>riskPremT(threat(h),h);
 function cardValue(c,ctx){
