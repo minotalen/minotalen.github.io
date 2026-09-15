@@ -361,7 +361,7 @@ function openBgModal(dt,banks,busts,draws,gain){
     ?`${Math.floor(dt/3600000)}h ${Math.floor(dt%3600000/60000)}m`
     :`${Math.floor(dt/60000)}m ${Math.floor(dt%60000/1000)}s`;
   openMo(`<h3>WHILE YOU WERE OUT</h3>
-  <p class="note">The autos played for <b class="tmr">${dur}</b>, live rate, no offline discount.</p>
+  <p class="note">The autos played for <b class="tmr">${dur}</b>.</p>
   <div style="text-align:center;margin:16px 0"><div style="font-family:var(--disp);font-size:36px;font-weight:800;letter-spacing:-.02em;color:var(--gld)">+${fmt(gain)}</div>
   <div style="font-size:8.5px;letter-spacing:.22em;color:var(--ink3);font-weight:700;margin-top:4px">SCORE COLLECTED</div></div>
   <p class="note">${banks} bank${banks===1?'':'s'}${D}${draws} card${draws===1?'':'s'} dealt${busts?`${D}${busts} bust${busts===1?'':'s'}`:''}</p>

@@ -74,12 +74,17 @@ function buyMeta(id){
   logAct('meta',-cost);
   bi('buy',{k:'meta',id,p:biBucket(cost),t:biPlayMin()});
 }
+/* the stock rolled but the list has not painted it yet: the 1s tick
+   renders once from this, never mid-apply (a rebuild there used to
+   tear the pick stage down under the slap) */
+let shopDirty=false;
 function rollShop(quiet){
   /* the free rotation also resets the restock-now price to base: the
      ×1.2 escalation only prices reroll-spam inside one stock window */
   const p=pool();S.shop.offers=[];S.shop.rrP=ECO.RESTOCK_NOW;S.shop.rrT=Date.now();
   S.shop.next=Date.now()+shopGap();
   if(p.length)S.shop.offers=pickOffers(p);
+  shopDirty=true;
   /* the tick rolls stock before the tab itself unlocks: stay silent
      until STICKER SHOP is open (S.seen.shop) */
   if(!quiet&&p.length&&S.seen.shop)toast('Sticker shop restocked','spark');
@@ -222,7 +227,9 @@ function placeStk(id,px,py,rot){
       +(rip?'\nRIPPED: on draw: pays 1 ward, then deals 2 more cards':''),rip?'alert':'spark');
     if(rip){coach('cond');setTimeout(()=>SFX.rip(),90);}
     if(el){const r=el.getBoundingClientRect();
-      spray(r.left+r.width*x/100,r.top+r.height*y/100,'#B9B2A0',18);
+      /* a stage torn down early (tab out) leaves el detached: its rect
+         is zeros and the spray would burst at the viewport corner */
+      if(r.width)spray(r.left+r.width*x/100,r.top+r.height*y/100,'#B9B2A0',18);
       el.insertAdjacentHTML('beforeend',`<i class="sring" style="left:${x}%;top:${y}%"></i>`);
       /* the flash tears from the outer edge, the same geometry the
          placed card will wear: seeded edge, spot along it, inward swing */
@@ -551,7 +558,7 @@ function renderUp(){
   const CV=(l,r,t,tip)=>(r>0||t>0)
     ?`<span class="chip"${tip?` title="${tip}"`:''}>${l} <b>${split?fmt(r)+' / '+fmt(t):fmt(t)}</b></span>`:'';
   h+=`<h2>YOUR NUMBERS</h2>
-    <p class="note">The full ledger: what the tables are doing this second, the records you have set, and everything the game has counted since the first hand. A goal keeps its own progress on its row in GOALS.${split?' Two numbers on a chip: this run / all runs.':''}</p>`
+    <p class="note">What the tables are doing this second, and the records you have set. A goal keeps its own progress on its row in GOALS.${split?' Two numbers on a chip: this run / all runs.':''}</p>`
     +G('right now',[
       C('card value','×'+valueMult().toFixed(2),'What one card pays, every multiplier stacked: ink, upgrades, shards, goals.'),
       C('draw cooldown',baseCD().toFixed(2)+'s','Seconds between draws, before any Haste.'),
@@ -745,6 +752,7 @@ function initPickDrag(){
 }
 function renderShop(){
   if(S.pick){renderPick();return;}
+  shopDirty=false;
   const p=pool(),tO=tierOf(),placedN=S.cards.filter(c=>c.stk).length;
   const diff=new Set(S.cards.filter(c=>c.stk).map(c=>c.stk)).size;
   let h=`<h2>STICKER SHOP</h2>`;
@@ -892,7 +900,7 @@ function renderAch(){
     <div class="ds">The Fixer sells everything, tier 5 deep.</div></div>
     <div class="gst done"><div class="v">${ic('check')}</div></div></div>`;
   if(cmpDiff()>=CMP_AT)h+=`<div class="row"><div class="b"><div class="nm">${ic('book')} Sticker compendium</div>
-    <div class="ds">The full sticker reference, open.</div></div>
+    <div class="ds">Every sticker and what it does.</div></div>
     <button class="buy" id="cmpGo">OPEN</button></div>`;
   /* de-bolt is not a goal, but its gate lives here: the shop stocks the
      strip on 10% rolls once enough has gone to stickers */
@@ -1000,6 +1008,13 @@ function refreshBuy(){
     b.disabled=l>=uMax(b.dataset.u)||!!upGate(b.dataset.u)||S.score<upCost(u,l);});
   $$('#v-pres .buy[data-m]').forEach(b=>{const m=META[b.dataset.m],l=M(b.dataset.m);
     b.disabled=l>=m.max||!!metaGate(b.dataset.m)||S.shards<Math.ceil(m.c(l));});
+  /* shop stock rides the same in-place flips: a bank mid-visit lights
+     the rows a full re-render no longer refreshes every second */
+  $$('#v-shop .buy[data-i]').forEach(b=>{const i=b.dataset.i;
+    if(i==='gift')return;
+    const o=S.shop.offers[+i];
+    b.disabled=!o||o.sold||(o.k!=='debolt'&&S.score<o.price)||
+      (NONSTACK[o.k]&&S.cards.some(cc=>cc.stk===o.k&&!cc.osk));});
   const r=$('#rr');if(r)r.disabled=S.score<rrCost();
   const a=$('#asc');if(a)a.disabled=shardGain()<1;
 }

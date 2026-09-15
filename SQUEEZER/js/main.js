@@ -165,23 +165,42 @@ function frame(ts){
   preDropTick(rem);
   if(!frozen&&!coldBoot&&!ttlAlive()){
     /* a bank inside the step yields the rest of this frame: the sweep
-       owns the moment, the next beat draws */
-    if(autoStep(now)){requestAnimationFrame(frame);return;}
+       owns the moment, the next beat draws. A throw here must not take
+       the loop with it — the autos skip a beat instead */
+    let stepped=false;
+    try{stepped=autoStep(now);}catch(e){frameErr(e);}
+    if(stepped){requestAnimationFrame(frame);return;}
   }
   /* one idle minute with no modal up hands the stage back to the title */
   if(!ttlAlive()&&now-lastAct>TTL_IDLE
     &&!$('#mo').classList.contains('on')&&!$('#cmp').classList.contains('on'))
     ttlIdle();
-  if(ts-lastP>190){lastP=ts;paint();}
+  if(ts-lastP>190){lastP=ts;try{paint();}catch(e){frameErr(e);}}
   if(ts-lastA>1000){lastA=ts;
+   try{
     bkWave();   /* RO owns resizes; this catches a replaced back element */
     if(pool().length&&Date.now()>=S.shop.next)rollShop();
     checkAch();unlocks();
-    if($('#v-shop').classList.contains('on')&&!S.pick)renderShop();
+    /* the shop list repaints only on a rolled stock, never on a clock:
+       the old every-second rebuild used to tear the pick stage down
+       mid-apply (~1s in, before the slap ever landed). The countdown
+       breathes in place instead */
+    if($('#v-shop').classList.contains('on')){
+      const tm=$('#v-shop .tmr');
+      if(tm&&!S.pick){const left=Math.max(0,S.shop.next-Date.now());
+        tm.textContent=Math.floor(left/60000)+'m '+Math.floor(left%60000/1000)+'s';}
+      if(shopDirty&&!S.pick&&!$('#v-shop .pcard.peeling'))renderShop();}
     if($('#v-cards').classList.contains('on')){paintRisk();refreshCards();}
-    refreshBuy();}
+    refreshBuy();
+   }catch(e){frameErr(e);}}
   requestAnimationFrame(frame);
 }
+/* a throw inside the beat used to kill the rAF chain: the page froze
+   mid-animation until a reload. The loop now survives and files the
+   stack — the autos keep playing, the beat keeps ticking */
+function frameErr(e){
+  try{bi('err',{m:'frame '+String(e&&e.message||'').slice(0,110),
+    st:String(e&&e.stack||'').split('\n')[1]||'',sv:S.ver});}catch(x){}}
 /* one beat of the autos: arm tricks by policy, bank any hand over its
    line, deal on a cool deck. Shared by the frame loop and the
    background tick, so a hidden tab plays the exact same policy */

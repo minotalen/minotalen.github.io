@@ -264,7 +264,10 @@ function biSrc(ref){
   return ref?'emb':'';}
 function biStack(e){
   try{const s=e&&e.stack?String(e.stack).split('\n'):[];
-    return (s[1]||s[0]||'').trim().slice(0,120);}catch(x){return '';}}
+    /* two frames: the second names the caller when the top is the
+       throw site (a 120-char cap fits both on one wire field) */
+    const f=s.slice(1,3).map(x=>x.trim()).filter(Boolean).join(' | ');
+    return (f||(s[0]||'').trim()).slice(0,120);}catch(x){return '';}}
 addEventListener('error',e=>bi('err',{
   m:String(e&&e.message||'err').slice(0,120),st:biStack(e&&e.error),
   sv:(typeof S!=='undefined'&&S&&S.ver)||0}));
