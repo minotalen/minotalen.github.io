@@ -88,7 +88,7 @@ function drawCard(hi,free,auto){
     const[fx,fy]=feltPt(FW/2,FH*.62);float('FREE',fx,fy,'#8A6A2F');}
   /* guard windows burn one draw per real draw, the guard's own landing
      excepted — an Anchor starts counting with the next card. Cull's
-     ward burns with the same beat: three draws, then it is gone */
+     ward burns with the same beat: one draw, then it is gone */
   if(ok){const rw=h.run;
     if(rw.anchWin&&rw.anchWin.length)rw.anchWin=rw.anchWin.filter(w=>
       fresh.indexOf(w)>=0||--w.left>0);
@@ -694,7 +694,7 @@ function bank(h,auto){
   if(S.disc)for(const did of S.disc)if(byId(did).stk==='remnant')
     rem+=cval(byId(did));
   if(rem){rem*=stack;S.score+=rem;S.life+=rem;}
-  /* Exit: the bench's cut — 2% of the discard's total value pays at the
+  /* Exit: the bench's cut — 5% of the discard's total value pays at the
      score, per copy, read while the pile still stands (the sweep below
      springs it home; Purge's fill lands after, so it pays next bank) */
   let exv=0;
@@ -739,6 +739,8 @@ function bank(h,auto){
   /* Fives banked, lifetime: Centapent's count (shown values, so a
      rewrite to or from a 5 moves it) */
   S.st.fiveBanks=(S.st.fiveBanks||0)+h.ids.reduce((a,id)=>a+(cval(byId(id))===5?1:0),0);
+  /* Ones banked, lifetime: Haircut's count, the same shown-value read */
+  S.st.oneBanks=(S.st.oneBanks||0)+h.ids.reduce((a,id)=>a+(cval(byId(id))===1?1:0),0);
   /* Clockwork: the hand ticks through the low trio, a 1 a 2 and a 3 */
   if([1,2,3].every(v=>h.ids.some(id=>cval(byId(id))===v)))S.st.oneTwoThree=(S.st.oneTwoThree||0)+1;
   /* Rainbow: a full hand with no twins on it */
@@ -783,9 +785,9 @@ function bank(h,auto){
   /* Two Pockets: banks cashed with both away piles fed — read before
      the discard rides home */
   if(S.out.length&&S.disc&&S.disc.length)S.st.pileBanks=(S.st.pileBanks||0)+1;
-  /* Rain Check: banks cashed with the bench fed — 3+ waiting, same
+  /* Rain Check: banks cashed with the bench fed — 5+ waiting, same
      pre-sweep read */
-  if(S.disc&&S.disc.length>=3)S.st.benchBanks=(S.st.benchBanks||0)+1;
+  if(S.disc&&S.disc.length>=5)S.st.benchBanks=(S.st.benchBanks||0)+1;
   /* Recycle: a banked hand wearing one runs the cheapest card ALREADY
      OUT home — the pile drains one a bank, but a landing of this bank's
      own (Vanish, Fallout) is never undone in the same
@@ -1294,16 +1296,14 @@ function armTrick(id){
     layout();paint();save();
     checkFloatAll();
     return;}
-  /* Fetch: look at 3 from OUT, send one back to the deck. Closing the
+  /* Fetch: the whole of OUT laid out, one card comes home. Closing the
      reveal without choosing wastes the arm — committed, like every
      trick; an empty OUT pile denies the tap, unspent */
   if(c.stk==='fetch'){
     if(!S.out.length){SFX.deny();return;}
-    const pool=S.out.slice(),picks=[];
-    for(let i=0;i<3&&pool.length;i++)picks.push(pool.splice(rndi(pool.length),1)[0]);
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
-    openFetch(picks);
+    openFetch(S.out.slice());
     SFX.detent();buzz(10);layout();paint();save();
     return;}
   /* Echo: scan the deck's top 3, twins of its value leave for the
@@ -1395,7 +1395,7 @@ function armTrick(id){
     h.ids.splice(h.ids.indexOf(id),1);
     revertLeaving([id]);
     toOut(id);
-    r.cullWard=3;   /* one ward, a 3-draw window: use it or lose it. A
+    r.cullWard=1;   /* one ward, a 1-draw window: use it or lose it. A
                        second arm while a window lives refreshes it */
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;
@@ -1501,12 +1501,12 @@ function fireBail(h,c){
   layout();tickScore(true);paint();save(true);
 }
 
-/* ---------------- Fetch: three from OUT, one comes home ---------------- */
+/* ---------------- Fetch: the whole of OUT, one comes home ---------------- */
 let fetchCtx=null;
 function openFetch(picks){
   fetchCtx=picks;
-  openMo(`<h3>FETCH</h3><p class="note">Three from OUT. Tap one: it returns to the deck, on top.</p>
-    <div style="display:flex;gap:12px;justify-content:center;margin:14px 0">
+  openMo(`<h3>FETCH</h3><p class="note">The whole of OUT. Tap one: it returns to the deck, on top.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:420px;margin:14px auto">
       ${picks.map((id,i)=>`<button onclick="pickFetch(${i})" style="background:none;border:0;padding:0;cursor:pointer">${mini(byId(id).v,byId(id).stk,byId(id).r,id,byId(id))}</button>`).join('')}</div>
     <p class="stkline">close without choosing and the arm is wasted</p>
     <button class="close" onclick="closeMo()">CLOSE</button>`);

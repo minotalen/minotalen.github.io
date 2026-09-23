@@ -35,7 +35,7 @@ const STK = {
   tribute:{n:'Tribute',  t:2, pm:.7888, st:'whale',  d:'When drawn, pays ×7 its value straight to score.',
            cur:(c,h)=>`now +${fmt(c.v*ECO.TRIBUTE_X*payMul(h))} a draw`},
   odds:   {n:'Odds',     t:1, pm:.6777, st:'shamrock',    d:'When drawn, pulls a free card. 1 in 2 it lands worth ×3, else worth nothing.'},
-  snip:   {n:'Snip',     t:1, pm:.477, st:'peapod',  d:'When drawn, cuts a twin to the discard.'},
+  snip:   {n:'Snip',     t:1, pm:.477, st:'peapod',  d:'When drawn, discard a twin of this card.'},
   mint:   {n:'Mint',     t:1, pm:.9555, st:'note',   d:'When banked, pays an extra ×4 its value.',
            cur:(c,h)=>`now +${fmt(cval(c)*ECO.MINT_X*payMul(h))} a bank`},
   brass:  {n:'Brass',    t:1, pm:.6444, st:'sunflower',  d:'+5 score per card, per Brass.',
@@ -45,7 +45,7 @@ const STK = {
   twin:   {n:'Twin',     t:4, pm:3.2, st:'twin',   d:'Tap to draw a card: twins land without busting, blanks go to the discard.'},
   mirror: {n:'Mirror',   t:2, pm:.6444, st:'iceberg',  d:'Worth the highest value on table.',
            cur:(c,h)=>`now pays ${fmt(stkBase(c,h))}`},
-  ward:   {n:'Ward',     t:1, pm:.8555, st:'cactus', d:'When drawn, pulls a free card that cannot bust you.'},
+  ward:   {n:'Ward',     t:2, pm:.8555, st:'cactus', d:'When drawn, pulls a free card that cannot bust you.'},
   anchor: {n:'Anchor',   t:2, pm:1.2444, st:'anchor', d:'When drawn, its twins slip back into the deck for the next 3 draws.',
            cur:(c,h)=>{const w=h&&h.run&&(h.run.anchWin||[]).find(x=>x.id===c.id);
              return w&&w.left>0?'guards '+w.left+' draw'+(w.left===1?'':'s'):''}},
@@ -53,9 +53,9 @@ const STK = {
            cur:(c,h)=>h.ids.length>1?`now +${ECO.PRIME_ADD} to ${h.ids.length-1}`:''},
   beacon: {n:'Beacon',   t:2, pm:2.25, st:'lighthouse',  d:'Risk reward ×1.5. Unique.',
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
-  burn:   {n:'Burn',     t:2, pm:.7055, st:'flame',  d:'When drawn, cuts both cards of a random pair to the discard.'},
+  burn:   {n:'Burn',     t:2, pm:.7055, st:'flame',  d:'When drawn, discard a random pair.'},
   tell:   {n:'Tell',     t:2, pm:.8777, st:'periscope',    d:'Tap to flip the deck\'s top card face-up.'},
-  cull:   {n:'Cull',     t:2, pm:1.3111, st:'funnel', d:'Tap to send this card OUT; 1 ward stands for the next 3 draws.'},
+  cull:   {n:'Cull',     t:2, pm:1.3111, st:'funnel', d:'Tap to send this card OUT; prevent bust on the next turn.'},
   dividend:{n:'Dividend',t:2, pm:1.0361, st:'salmon',    d:'When banked, 1 in 4 chance the table pays again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.2049, st:'buoy', d:'+8% payout per card in OUT.',
@@ -68,8 +68,8 @@ const STK = {
            cur:(c,h)=>`now +${(ECO.KINDLE_PER*(h.ids.length-1)).toFixed(2)}× a hit`},
   jynx:   {n:'Jynx',     t:3, pm:1.1728, st:'hexnut', d:'+2% payout per risky card in the deck.',
            cur:(c,h)=>`now +${Math.round(ECO.JINX_PER*riskyIn(h)*100)}%`},
-  reverb: {n:'Reverb',   t:2, pm:.5972, st:'ripples',   d:'When drawn, cuts the deck\'s top card to the discard. A twin pays 1 ward.'},
-  siphon: {n:'Siphon',   t:2, pm:.4444, st:'whirl',   d:'When its table busts, pays ×10 its value.',
+  reverb: {n:'Reverb',   t:2, pm:.5972, st:'ripples',   d:'When drawn, discard a card. If it\'s a twin of this card, gain 1 ward.'},
+  siphon: {n:'Siphon',   t:2, pm:.4444, st:'whirl',   d:'On bust, score this card\'s value ×10.',
            cur:(c,h)=>`now +${fmt(cval(c)*ECO.SIPHON_X*payMul(h))} on bust`},
   vanish: {n:'Vanish',   t:3, pm:.8765, st:'dusk',   d:'When banked, goes OUT till the next bust.'},
   ledger: {n:'Ledger',   t:3, pm:.9135, st:'journal', d:'Each table card with a twin in OUT pays double.',
@@ -92,10 +92,10 @@ const STK = {
   variety:{n:'Variety',  t:3, pm:1.232, st:'crown', d:'+0.10 mult per stickered card, itself included.',
            cur:(c,h)=>`now +${Math.round(ECO.VAR_PER*h.ids.filter(id=>byId(id).stk).length*100)}% mult`},
   dredge: {n:'Dredge',   t:4, pm:3.6, st:'bucket', d:'Tap to pick 1 of 2 OUT cards: this card becomes its copy till it leaves.'},
-  fetch:  {n:'Fetch',    t:4, pm:2.6, st:'arrow',  d:'Tap to pick 1 of 3 OUT cards: it returns to the deck, on top.'},
+  fetch:  {n:'Fetch',    t:4, pm:2.6, st:'arrow',  d:'Tap to pick an OUT card: it returns to the top of the deck.'},
   riffle: {n:'Riffle',   t:5, pm:5.4, st:'orb', d:'Tap to peek at 3 deck cards: this card becomes the sum of the lowest 2, till it leaves.'},
   bail:   {n:'Bail',     t:5, pm:6.4, st:'tophat',   d:'Tap to cash out: the table pays in full, risk reward included, then zeroes.'},
-  draft:  {n:'Draft',    t:4, pm:2.8, st:'cherries',   d:'Tap to flip the deck\'s top 2, keep 1: it lands, the other to the discard. A twin still busts.'},
+  draft:  {n:'Draft',    t:4, pm:2.8, st:'cherries',   d:'Tap to flip 2 cards from the deck, keep one, discard the other. A twin still busts.'},
   engrave:{n:'Engrave',  t:4, pm:3.4, st:'plate', d:'Tap to pick a table card: its shown value becomes permanent.'},
   fallout:{n:'Fallout',  t:5, pm:4.8, st:'comet',   d:'When banked, the whole hand is gone for good.'},
   /* the discard/OUT batch: payers and engines that live off the away piles */
@@ -107,8 +107,8 @@ const STK = {
   flinch: {n:'Flinch',   t:3, pm:1.0864, st:'flinch', d:'A drawn twin goes OUT instead of busting. Once per run.'},
   offering:{n:'Offering',t:2, pm:1.1222, st:'offering', d:'Tap to send this card OUT; the chain gains 1.'},
   recycle:{n:'Recycle',  t:3, pm:.9, st:'recycle', d:'When banked, the lowest card in OUT returns to the deck.'},
-  sub:    {n:'Sub',      t:2, pm:1.3416, st:'sub', d:'Tap to send this card to the discard; a random OUT card lands. A twin still busts.'},
-  exit:   {n:'Exit',     t:2, pm:1.0055, st:'exit', d:'When banked, pays 2% of the discard\'s total value.',
+  sub:    {n:'Sub',      t:2, pm:1.3416, st:'sub', d:'Tap to discard this card; add a random OUT card to table. Can still bust.'},
+  exit:   {n:'Exit',     t:4, pm:1.8055, st:'exit', d:'When banked, pays 5% of the discard\'s total value.',
            cur:(c,h)=>{const d=S.disc?S.disc.reduce((a,id)=>a+cval(byId(id)),0):0;
              return d?`now +${fmt(d*ECO.EXIT_PER*payMul(h))} a bank`:''}},
   /* the squeeze batch (2026-09-04): the deck is the victim — Whip
@@ -134,8 +134,9 @@ const STKKEYS = Object.keys(STK);
    the shop never stocks them, their gates never show or ready, the docs
    page grays them — but the mechanics stay live for placed copies, and
    one flag brings each back. Gild and the float pair (Float, Bail — the
-   zero-the-table exits) and Fallout wait on a rework */
-const STK_OFF = {gild:1, float:1, bail:1, fallout:1};
+   zero-the-table exits) and Fallout wait on a rework; Stakes, Bloom and
+   Kindle benched 2026-09-24 */
+const STK_OFF = {gild:1, float:1, bail:1, fallout:1, stakes:1, bloom:1, kindle:1};
 /* retired in the roster trim: bridge, trim, tithe, foil, reprint, heavy,
    wreck, cue. load() blanks any placed copy on an old save, the same
    road charm/peek took in v6 */
@@ -174,7 +175,7 @@ const STKTYPE = {
   ledger:'out-pay', tab:'out-pay',
   ward:'insurance', anchor:'insurance', purify:'insurance',
   strip:'insurance',   /* the point is the ward it stands; the bench is the price */
-  cull:'insurance',    /* same law: the 3-draw ward window is the point, the
+  cull:'insurance',    /* same law: the next-turn ward is the point, the
                           self-exile is the price */
   haste:'aura', beacon:'aura',
   stakes:'trick', float:'trick',
@@ -262,7 +263,7 @@ const LINGO=[
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
   ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Barter's trade, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck; Recast deals one back to the table."],
    ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering, a Recast and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1 in 3 shot any bust pays flat; Recycle runs the lowest card home each bank; Barter seats a random one on its trade.'],
-  ['Set aside',"Cull's trade: the card itself goes OUT, 1 ward saves a bust within the next 3 draws."],
+  ['Set aside',"Cull's trade: the card itself goes OUT, 1 ward prevents a bust on the next draw."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it; a bank too small for the combo trims 1.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
   ['Rewrite',"A temp value a table card wears: Swap, Clip, Ghost, Dredge, Riffle, Tempo, or Windfall. It lasts while the card stays in play; the printed value comes back when it leaves. Engrave makes one permanent."],
@@ -326,12 +327,12 @@ const META = {
   storage:{n:'Cold Storage', d:l=>'+6% value per level per card outside'+tot(6,l),  max:6,  c:l=>Math.ceil(6*Math.pow(1.50,l))},
   press:  {n:'The Press',    d:l=>'Cards cost 6% less per level'+totm(6,l),         max:8,  c:l=>Math.ceil(5*Math.pow(1.50,l))},
   vantage:{n:'Vantage',      d:'The next card peeks face-up on the table',      max:1,  c:()=>24},
-  stall:  {n:'Corner Stall', d:'The Fixer stocks a fourth slot',                max:1,  c:()=>16},
-  union:  {n:'Union Card',   d:'The Fixer stocks a fifth slot',                 max:1,  c:()=>36},
+  stall:  {n:'Corner Stall', d:'The Fixer stocks a fourth slot',                max:1,  c:()=>30},
+  union:  {n:'Union Card',   d:'The Fixer stocks a fifth slot',                 max:1,  c:()=>100},
   preprint:{n:'Preprint',   d:l=>l?`Start each ascension with ${l} random stickers on the deck`:'Start each ascension with a random sticker on the deck', max:6, c:l=>Math.ceil(6*Math.pow(1.60,l))},
   rally:  {n:'Rally',        d:'A bust keeps the chain, once more per chain',   max:2,  c:l=>Math.ceil(20*Math.pow(2.0,l))},
   silver: {n:'Silver Lining',d:'A bust under 10% risk pays the table out flat', max:1,  c:()=>45},
-  pendant:{n:'Marked Pendant',d:'Marked Deck slips up to 50%, not 30%',          max:1,  c:()=>18},
+  pendant:{n:'Marked Pendant',d:'Marked Deck slips up to 50%, not 30%',          max:1,  c:()=>20},
   luster: {n:'Luster',       d:l=>'+5% to the shiny roll, forever'+tot(5,l),     max:5,  c:l=>Math.ceil(25*Math.pow(5,l))}
 };
 
@@ -343,20 +344,21 @@ const META = {
    gates. Ladders per pillar (t1 → t5) —
    wide hands (swap 4 → odds 5 → surge 6; b10 Deep Diver 12; Twin
    lands past the ceiling once it pulls),
-   banks (mint: 10 runs of 3+ cards),
+   banks (mint: 10 runs of 3+ cards; snip: 10 Ones banked; windfall:
+   25,000 in one run),
    bank quality (ward: 3+ cards, every card worth 3+),
    pile pairs (defuse: 3 OUT and 3 in the discard at once),
-   chains (brass 6 → bloom's wide rows; b11 12),
+   chains (brass 6 → dividend 7 → tempo 9; b11 12),
    wide rows (haste: 3+ cards, 6 banks in a row; u16 Teflon 15 at
    3+ cards; bloom: 5+ cards, 3 banks),
    hot streaks (beacon 7 → stakes 7; float's row is benched with
    its sticker),
-   costly busts (tribute 600 → siphon 1,500),
+   costly busts (tribute 600 → siphon 1,000),
    the out pile at once (scrap 6 → ledger 8 → draft 10; fallout's 16 is
    benched with its sticker), cumulative, voluntary only
    (burn 150; the bust cycle's buster seat is the game's own doing,
    counts for nothing),
-   discards (rake 8 → snip 15 → purge 500; ward saves and cuts feed
+   discards (rake 8 → purge 500; ward saves and cuts feed
    them), discard depth (remnant 4 → layaway 8 in the discard at
    once; exit's fed benches ride the same cutters), safe cuts (whip
    50: Burn's pairs, Draft's spares, Defuse's second, Reverb's take
@@ -372,8 +374,8 @@ const META = {
    arming (cull 15 → tell 20), out-running banks (vanish 5 at
    3 out → fetch 5 at 5 out → tab 6 at 6 out),
    lifetime draws (reverb 500), sticker draws (echo: 150 via effects;
-   draft and ward feed it),
-   gambles (kindle: 10 hits, Bloom and Dividend teach).
+   draft and ward feed it). The gamble pillar died with Bloom and
+   Kindle: Dividend now rides the chain row, Windfall the big bank.
    A hand can hold each value only once — a second copy of any held value
    busts — so hand size and per-run draws top out near the values you have
    unlocked; the wide and long-hand ladders are scaled to that ceiling
@@ -384,8 +386,7 @@ const META = {
    Milestones sit at the top: purify asks for the first ascension, relic
    for a 250K chain, encore for five straight 100K banks.
    Composition bonuses bank beside them: Twin Town (two of a sticker),
-   The Works (all
-   three gambles, one bank), Balanced Books (every twin OUT),
+   Full House (three pairs, one hand), Balanced Books (every twin OUT),
    Boomerang (Fetch's card finally cashed).
    U-goals open UPGRADES rows one rung below the matching sticker ladder —
    the upgrade teaches the mechanic, the sticker rewards mastering it.
@@ -427,13 +428,13 @@ const ACH = [
   A('g14','Second Verse','Draw 1000 cards','reverb',()=>S.st.draws,500),
   A('g15','On a Roll','Bank 5 cards or more on 3 banks in a row','bloom',()=>S.st.bestWide||0,3),
   A('g16','Reborn','Ascend once','purify',()=>S.asc,1),
-  A('g17','Reckless','Bust a hand worth 1,500','siphon',()=>Math.round(S.st.bestBust),1500),
+  A('g17','Reckless','Bust a hand worth 1,000','siphon',()=>Math.round(S.st.bestBust),1000),
   A('g18','Escape Artist','Bank 5 runs with 3 cards out','vanish',()=>S.st.outBanks,5),
   A('g19','Off the Books','Have 8 cards out of the deck at once','ledger',()=>S.st.maxOut,8),
   A('g20','Heirloom','Bank 250,000 across one chain','relic',()=>S.st.bestChain,250000),
   A('g21','Arms Race','Arm 15 tricks','cull',()=>S.st.arms||0,15),
   A('g22','Full Bin','Send 500 cards to the discard','purge',()=>S.st.discarded||0,500),
-  A('g23','Haircut','Send 15 cards to the discard','snip',()=>S.st.discarded||0,15),
+  A('g23','Haircut','Bank 10 Ones','snip',()=>S.st.oneBanks||0,10),
   A('g24','Card Sense','Charge 20 tricks','tell',()=>S.st.arms||0,20),
   A('g25','Scorched Earth','Put 150 cards out of the deck','burn',()=>S.st.outed||0,150),
   A('g26','Six Out','Have 6 cards out of the deck at once','scrap',()=>S.st.maxOut,6),
@@ -442,7 +443,7 @@ const ACH = [
   A('g29','Evidence Locker','Have 3 cards OUT and 3 in the discard at once','defuse',()=>S.st.bothPiles||0,3),
   A('g30','Payday','Bank 10 runs holding 3 or more cards','mint',()=>S.st.bigBanks||0,10),
   A('g32','Six Straight','Bank 6 runs in a row, no bust','brass',()=>S.st.bestChainN,6),
-  A('g37','Double or Nothing','Bank 6 gamble hits','dividend',()=>S.st.hits||0,6),
+  A('g37','Repeat Business','Bank 7 runs in a row, no bust','dividend',()=>S.st.bestChainN||0,7),
   A('g38','Running Tabs','Bank 6 runs with 6 cards out','tab',()=>S.st.fleetBanks||0,6),
   A('g40','Off Cuts','Send 8 cards to the discard','rake',()=>S.st.discarded||0,8),
   A('g41','Four Wide','Hold 4 cards at once','swap',()=>S.st.bigHand,4),
@@ -491,7 +492,7 @@ const ACH = [
   /* composition bonuses: the loadout is the puzzle — read the gate, then
      spec the stickers that satisfy it */
   B('g61','Twin Town','Bank 3 runs holding two copies of the same sticker',.10,()=>S.st.twinTowns||0,3),
-  B('g62','The Works','Fire Bloom, Kindle and Dividend in one bank',.15,()=>S.st.works||0,1),
+  B('g62','Full House','Bank a hand with 3 pairs',.15,()=>S.st.bestPairs||0,3),
   B('g63','Balanced Books','Bank 3 or more cards with every twin OUT',0,()=>S.st.books||0,1,.15),
   B('g64','Boomerang','Bank 3 cards Fetch brought back',0,()=>S.st.boomerangs||0,3,.10),
   /* the pair build: the one-value-per-hand law bows to Twin's pull and
@@ -500,11 +501,12 @@ const ACH = [
      ladder rides it: Quadro claims /4, deeper rungs can claim /8 later */
   B('g78','Twin Twin','Bank a hand with 2 pairs',.05,()=>S.st.bestPairs||0,2),
   B('g79','Quadro','Bank a hand with the same value 4 times',.20,()=>S.st.bestStack||0,4),
-  /* the fuse batch: Windfall reads the gamble ladder one rung over
-     Dividend, Redline owns the hot line's far season, Barter's stat is
-     the swap busts themselves (Sub and Draft feed it first), Recast
-     climbs the safe-cut ladder past Whip, Tempo rides the chain row */
-  A('g80','Double Down','Bank 25 gamble hits','windfall',()=>S.st.hits||0,25),
+  /* the fuse batch: Windfall banks the one-run score (the gamble ladder
+     died with Bloom and Kindle, 09-24), Redline owns the hot line's far
+     season, Barter's stat is the swap busts themselves (Sub and Draft
+     feed it first), Recast climbs the safe-cut ladder past Whip, Tempo
+     rides the chain row */
+  A('g80','Paydirt','Bank 25,000 in one run','windfall',()=>S.st.bestBank,25000),
   A('g81','Heatwave','Bank over 70% risk, 70 banks in a row','redline',()=>S.st.hot70||0,70),
   A('g82','Bad Trades','Bust 10 hands on a card effect','barter',()=>S.st.effectBusts||0,10),
   A('g83','Cold Storage','Send 100 safe cards to the discard','recast',()=>S.st.safeDisc||0,100),
@@ -518,10 +520,10 @@ const ACH = [
   A('g70','One Out','Put a card worth 1 out of the deck','offering',()=>S.st.oneOut||0,1),
   A('g71','Paper Cut','Bust a 2-card hand, both cards stickered','recycle',()=>S.st.twoStkBusts||0,1),
    A('g72','Two Pockets','Bank 10 runs with a card in the discard and a card OUT','sub',()=>S.st.pileBanks||0,10),
-  /* Exit: the bench's payoff rung — feeds the discard-pay family's
-     early era, the mirror of Vanish's OUT banks. Its gate reads fed
+  /* Exit: the bench's payoff rung — feeds the discard-pay family from
+     the t4 shelf, the mirror of Vanish's OUT banks. Its gate reads fed
      benches, which any cutter or save feeds */
-  A('g73','Rain Check','Bank 5 runs with 3 cards in the discard','exit',()=>S.st.benchBanks||0,5),
+  A('g73','Rain Check','Bank 10 runs with 5+ cards in the discard','exit',()=>S.st.benchBanks||0,10),
   /* Layaway: the bench-depth rung, one ladder above Remnant's shelf */
   A('g74','Will Call','Have 8 cards in the discard at once','layaway',()=>S.st.maxDisc||0,8),
   /* the squeeze batch: the gates read what the deck and the shields
@@ -591,7 +593,7 @@ const ACH = [
 /* ---------------- economy constants (from sim.js) ---------------- */
 const ECO = {
   CARD_LADDER:[[5],[6,8],[10,13,16],[20,25,30,40],[50,65,80,95,120]], CARD_ANCHOR:50, CARD_ANCHOR_V:5, CARD_STEP:2.113762, CARD_GROW:2.25, // cardCost: tiers 1-5 are hand-set ladders, one price per copy (the 4s pay 20/25/30/40, the 5s open the climb at 50); tiers 6+ run anchor*step^(v-anchorV)*(v/anchorV) with copies spanning one grow factor (step stays past the span so openers never dip under the last copy) — lifetime spend through tier 10 lands on exactly 100,000, millions by the 14s
-  STK_BASE:450, STK_TPOW:2.0, STK_GROW:1.10, STK_INF:.02, // t1 stickers spread 215-430 via pm, sorted by utility (2026-09-02 pass: each opener 60-100 cheaper; 2026-09-05 pass: a notch lower, rungs re-spaced); t2 the same way (2026-09-05 pass: 800 at siphon, clip tops the shelf at 2570, the tight pairs split — reverb/mirror 1075/1160, tell/remnant 1580/1710, cull/sub 2360/2415; surge .5222 not .55 — float 1800×.55 = 990.0000000000001 ceils to 991); t3's flat shelf broke up (2026-09-05 pass: the seven 4050s spread 3550-4380, vanish cheapest to kindle dearest, flinch holds the 4400 rung, the 5063 quartet spread 4600-4990, ghost cheapest to variety dearest); deep tiers carry their era in pm: t4 ~16-26K, t5 ~47-72K (income at shelf-open runs ~1.4K/2.8K a min, so payback lands ~14m/~20m); uniques (NONSTACK) carry their own marker, no longer one tier up: haste 1111, beacon 4050; duplicates of a sticker: ×grow per copy owned; every applied sticker adds +3% to the others' price (spread tax)
+  STK_BASE:450, STK_TPOW:2.0, STK_GROW:1.10, STK_INF:.02, // t1 stickers spread 215-430 via pm, sorted by utility (2026-09-02 pass: each opener 60-100 cheaper; 2026-09-05 pass: a notch lower, rungs re-spaced); t2 the same way (2026-09-05 pass: 800 at siphon, clip tops the shelf at 2570, the tight pairs split — reverb/mirror 1075/1160, tell/remnant 1580/1710, cull/sub 2360/2415; surge .5222 not .55 — float 1800×.55 = 990.0000000000001 ceils to 991); t3's flat shelf broke up (2026-09-05 pass: the seven 4050s spread 3550-4380, vanish cheapest to kindle dearest, flinch holds the 4400 rung, the 5063 quartet spread 4600-4990, ghost cheapest to variety dearest); deep tiers carry their era in pm: t4 13-26K, t5 ~47-72K (income at shelf-open runs ~1.4K/2.8K a min, so payback lands ~14m/~20m); 2026-09-24 pass: Ward up to t2 (1540, under tell), Exit up to t4 at 13k — the tier's floor, now 5% a bank; uniques (NONSTACK) carry their own marker, no longer one tier up: haste 1111, beacon 4050; duplicates of a sticker: ×grow per copy owned; every applied sticker adds +3% to the others' price (spread tax)
   ASC_REQ:230000, ASC_REQ_GROW:2.5,                  /* the Nth ascend banks against REQ x 2.5^N (live-service stretch) */
   SHALL_PER:.01,                                     /* shard snowball: +1% value per shard earned, lifetime */
   RISK_COEF:1, RISK_FLOOR:.5, RISK_EVEN:.5, RISK_TOP:1.5, NERVE_PER:.10, DARING_PER:.08,   /* risk reward: one straight line — ×0.5 at 0% risk, face value at the halfway gauge (RISK_EVEN), ×1.5 at 100% */
@@ -660,13 +662,13 @@ const ECO = {
      each purchase resets it ×1.2 from what you paid */
   RESTOCK_NOW:500, RESTOCK_FLOOR:300, RESTOCK_DECAY:.99, RESTOCK_G:1.2,
   /* deeper shop tiers open by stickers placed: t2 at 5, t3 at 12, t4 at 20, t5 at 30 */
-  TIER_AT:[5,12,20,30],
+  TIER_AT:[5,15,25,40],
   /* the pay-mult ladder rode the tiers (Gild ×2.75); Gild is benched
      with its sticker, and Twin's ×3.5 went with the pull rework */
   GILD_X:2.75, PRIME_ADD:2,
   RELIC_PER:.05,                                       /* Relic: +5% value per bank it rides */
   /* the away-pile wages: Tab +8% a card OUT, Rake +2 a draw per OUT,
-     Exit 2% of the bench's total value, Layaway +5% payout per bench card */
-  TAB_PER:.08, RAKE_PER:2, EXIT_PER:.02, LAY_PER:.05,
+     Exit 5% of the bench's total value, Layaway +5% payout per bench card */
+  TAB_PER:.08, RAKE_PER:2, EXIT_PER:.05, LAY_PER:.05,
   TAB_REQ:{cards:25, ach:25, up:60, shop:300, pres:100000}
 };

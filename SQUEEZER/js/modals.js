@@ -82,7 +82,7 @@ function openAutoPanel(){
     <span class="al">BANK</span><b id="arslV">${S.set.risk}%</b>
     <div class="ac" id="arslC"><span class="al">BANK</span><b id="arslVC">${S.set.risk}%</b></div></div>`:''}
   ${armRows?`<div class="ash"><span>AUTO-ARM</span></div>
-  <p class="note">Auto-draw arms these tricks by policy. Your tap works anytime.</p>
+  <p class="note">Auto-draw arms these on its own. Your tap works anytime.</p>
   ${armRows}`:''}
   <div class="ash"><span>RECORD</span></div>
   <div class="asg">
@@ -225,7 +225,7 @@ function openSet(){
     <button class="buy flat" id="csGo">LOAD</button></div>
     <div class="ds" id="csL">Type its key to load a game here.</div></div></div>
   <div class="ash dgr"><span>DANGER</span></div>
-  <div class="row"><div class="b"><div class="nm">Delete save</div><div class="ds">Everything here, and your cloud key rotates. The old backup retires, it is not lost.</div></div>
+  <div class="row"><div class="b"><div class="nm">Delete save</div><div class="ds">Everything here, and your cloud key rotates.</div></div>
     <button class="buy rd" id="sW">WIPE</button></div>
   <div class="row"><div class="b"><div class="nm">Delete cloud copy</div><div class="ds">Erases the online backup. Auto-sync turns off. No undo.</div></div>
     <button class="buy rd" id="csDel">DELETE</button></div>
@@ -366,6 +366,15 @@ function openBgModal(dt,banks,busts,draws,gain){
   <div style="font-size:8.5px;letter-spacing:.22em;color:var(--ink3);font-weight:700;margin-top:4px">SCORE COLLECTED</div></div>
   <p class="note">${banks} bank${banks===1?'':'s'}${D}${draws} card${draws===1?'':'s'} dealt${busts?`${D}${busts} bust${busts===1?'':'s'}`:''}</p>
   <button class="close" onclick="closeMo()">COLLECT</button>`);
+}
+/* the claim reveal: one sheet lists what a claim (single or CLAIM ALL)
+   just granted and where it landed — the unlock list stays up until
+   dismissed instead of dying in a two-second toast */
+function openUnlockSheet(got){
+  if(BG||!got||!got.length)return;
+  openMo(`<h3>UNLOCKED${got.length>1?' · '+got.length:''}</h3>`
+    +got.map(u=>`<div class="row">${u.lead||''}<div class="b"><div class="nm">${u.icn?ic(u.icn)+' ':''}${u.nm}</div>${u.sub?`<div class="ds">${u.sub}</div>`:''}</div></div>`).join('')
+    +`<button class="close" onclick="closeMo()">NICE</button>`);
 }
 
 /* ---------------- sticker card: hold / right-click a table card ----------------

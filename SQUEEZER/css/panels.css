@@ -83,6 +83,9 @@ h2:first-child{margin-top:6px}
 .buy{border:0;border-radius:8px;background:var(--grad);color:var(--ink2);font-family:var(--mono);font-weight:700;
   font-size:11.5px;padding:11px 9px;min-width:76px;cursor:pointer;transition:box-shadow .12s,background .15s,color .15s;
   box-shadow:3px 3px 8px var(--shs),-3px -3px 7px var(--hl)}
+/* the goals tab's one-stroke claim: the whole row is the button */
+.row.clall{padding:4px}
+.row.clall .buy{flex:1;min-width:0}
 /* affordable: the price key lights up — tinted wash, colored price, one soft
    ring. Out of reach: the key sinks, the price grays. No HUD comparing */
 .buy:where(:not(:disabled):not(.g):not(.rd):not(.flat)){color:var(--grn);

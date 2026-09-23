@@ -330,21 +330,49 @@ function checkAch(){
     &&!b.classList.contains('on')&&!b.querySelector('.nub')){
     const n=document.createElement('span');n.className='nub';b.appendChild(n);}
 }
-function claimAch(id){
-  const a=ACH.find(x=>x.id===id);
-  if(!a||has(id)||(a.stk&&STK_OFF[a.stk]))return;
-  let c=0;try{c=a.g();}catch(e){}
-  if(c<a.t)return;
-  S.ach.push(id);
-  bi('goal',{id,st:1,t:biPlayMin()});
-  const sk=STK[a.stk];
-  const w=a.stk?`Sticker unlocked · ${sk?sk.n:a.stk}${sk&&sk.t>tierOf()?' · tier '+sk.t+' stock':''}`
-    :a.up?`Upgrade unlocked · ${UPG[a.up]?UPG[a.up].n:a.up}${a.lv>1?' level '+a.lv:''}`
-    :a.meta?`Shard upgrade unlocked · ${META[a.meta]?META[a.meta].n:a.meta}${a.lv>1?' level '+a.lv:''}`
-    :a.s?`+${Math.round(a.s*100)}% shards`:`+${Math.round(a.v*100)}% card value`;
-  toast(`${a.n}\n${w}`,'star',sk?stkIcon(a.stk):null);
+const goalMet=a=>{let c=0;try{c=a.g();}catch(e){}return c>=a.t;};
+/* where a claimed sticker's stock stands: 'rotation' = eligible for
+   future restocks, 'tier' = the placed-sticker gate still holds it,
+   'placed' = an owned unique */
+function stkStock(a){
+  const sk=STK[a.stk];if(!sk)return null;
+  if(NONSTACK[a.stk]&&S.cards.some(c=>c.stk===a.stk||c.osk===a.stk))return 'placed';
+  return sk.t>tierOf()?'tier':'rotation';
+}
+/* the claim's state half: flip the goal, fire its BI event */
+function claimOne(a){
+  S.ach.push(a.id);
+  bi('goal',{id:a.id,st:1,t:biPlayMin()});
+  return a;
+}
+/* the sheet row for what a claim granted: the reward leads, the
+   where-line says which tab holds it */
+function unlockInfo(a){
+  if(a.stk){const sk=STK[a.stk],st=stkStock(a);
+    return {lead:sk?stkIcon(a.stk,0):null,nm:stkN(a.stk),
+      sub:st==='tier'?`Stocks at tier ${sk.t}`:st==='placed'?'Already placed':'Joins the stock rotation'};}
+  if(a.up){const u=UPG[a.up];
+    return {icn:'zap',nm:u?u.n:a.up,sub:`UPGRADES tab${a.lv>1?' · level '+a.lv:''}`};}
+  if(a.meta){const m=META[a.meta];
+    return {icn:'gem',nm:m?m.n:a.meta,sub:`ASCEND tab${a.lv>1?' · level '+a.lv:''}`};}
+  if(a.s)return{icn:'spark',nm:`+${Math.round(a.s*100)}% shards`};
+  return{icn:'spark',nm:`+${Math.round(a.v*100)}% card value`};
+}
+const afterClaim=got=>{
   SFX.goal();buzz(30);
   checkAch();paint();renderAch();renderUp();renderShop();renderPres();refreshBuy();save(true);
+  openUnlockSheet(got.map(unlockInfo));};
+function claimAch(id){
+  const a=ACH.find(x=>x.id===id);
+  if(!a||has(id)||(a.stk&&STK_OFF[a.stk])||!goalMet(a))return;
+  afterClaim([claimOne(a)]);
+}
+/* one stroke for every met goal: each still fires its own BI event,
+   the sheet lists what landed where */
+function claimAll(){
+  const list=ACH.filter(a=>!has(a.id)&&!(a.stk&&STK_OFF[a.stk])&&goalMet(a));
+  if(!list.length)return;
+  afterClaim(list.map(claimOne));
 }
 /* tab gating: one locked tab rides the rail at a time — the next gate
    in the chain, each visible once the previous one opens. Its fill
@@ -584,7 +612,7 @@ function renderUp(){
       C2('hands played','runs','A run is one hand on one table: it ends at the bank or the bust.'),
       C2('cards drawn','draws','Every card off the deck, drawn by you or dealt by the autos.'),
       C2('banks','banks','Hands cashed in.'),
-      CV('banked value',S.banked,n('bankSum'),'Everything that ever counted toward an ascend: banks, Float and Bail exits, flat bust pays, offline gains.'),
+      CV('banked value',S.banked,n('bankSum'),'Counts toward an ascend: banks, Float and Bail exits, flat bust pays, offline gains.'),
       C2('busts','busts','Hands that drew a twin and died.'),
       CV('bust value',run('bustSum'),n('bustSum'),'Standing value lost to busts: what the hand was worth when it died.'),
       C2('tricks armed','arms','Trick stickers charged. Armed is spent, whether it fired or not.'),
@@ -866,6 +894,10 @@ function renderAch(){
      read the live roster only */
   const LIVE=ACH.filter(a=>!(a.stk&&STK_OFF[a.stk]));
   let h=`<h2>GOALS · ${LIVE.filter(a=>has(a.id)).length}/${LIVE.length}</h2><p class="note">Goals unlock new upgrades and stickers once you complete them.</p>`;
+  /* two or more met goals earn the one-stroke claim; a single met row
+     keeps its own button right there */
+  const cl=LIVE.filter(a=>!has(a.id)&&goalMet(a));
+  if(cl.length>1)h+=`<div class="row clall"><button class="buy g" id="clAll">CLAIM ALL · ${cl.length}</button></div>`;
   ACH_SEQ.forEach(cat=>{
     h+=`<h3 class="gh">${cat.n} · ${cat.list.filter(a=>has(a.id)).length}/${cat.list.length}</h3>`;
     cat.list.forEach(a=>{
@@ -927,6 +959,7 @@ function renderAch(){
       <div class="gst"><div class="v">${cold}<i>/</i>5</div><div class="l">COLD</div></div></div>`;
   $('#v-ach').innerHTML=h;fillUp('#v-ach','ach');
   $$('#v-ach .buy[data-cl]').forEach(b=>b.onclick=()=>claimAch(b.dataset.cl));
+  const ca=$('#v-ach #clAll');if(ca)ca.onclick=claimAll;
   const cg=$('#v-ach #cmpGo');if(cg)cg.onclick=openComp;
   achWatch();
 }

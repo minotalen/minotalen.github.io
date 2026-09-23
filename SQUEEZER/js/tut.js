@@ -36,9 +36,9 @@ let tutHiEls=[],tutHiSig='';
 const SAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15 12 8l7 7"/></svg>';
 const TUT_TXT={
   pyramid:()=>({h:'YOUR DECK',p2:'TAP ANYWHERE'}),
-  card:()=>({h:'CARD = SCORE',p2:'SWIPE UP TO DRAW',arr:'up'}),
+  card:()=>({h:'CARD = SCORE',p2:'TAP DECK ORSWIPE UP TO DRAW',arr:'up'}),
   risk:()=>({h:'MORE CARDS, MORE RISK',p2:'→ HIGHER MULTI'}),
-  bust:()=>({h:'TWIN = BUST',p2:'SWIPE DOWN TO BANK',arr:'dn',bad:1}),
+  bust:()=>({h:'TWIN (2nd copy) → BUST',p2:'SWIPE DOWN TO BANK',arr:'dn',bad:1}),
   wages:()=>({h:`BANK ${TAB_GATE.cards.req} SCORE`}),
   buy:()=>({h:'BUY A CARD'}),
   upg:()=>({h:'BUY ANOTHER CARD'}),

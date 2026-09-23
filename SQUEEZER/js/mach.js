@@ -800,7 +800,7 @@ const MODELED=new Set(['draws','banks','runs','busts','aBusts','bigHand','bestBa
   'bigRewrites','hits','stkDraws','maxOut','outBanks','deepBanks','fleetBanks','outed','discarded',
   'maxDisc','bothPiles','bestRisky','bigStk','inkBanks','pileBanks','benchBanks','oneOut','twoStkBusts',
   'stkBanked','bestFloat','placed','owned','sets','asc','bestSeven',
-  'bigBustN','safeDisc','wardLost','fiveBanks','stkKinds','upMax','upSum',
+  'bigBustN','safeDisc','wardLost','fiveBanks','oneBanks','stkKinds','upMax','upSum',
   'bestPairs','bestStack']);
 const ORDER=['value','speed','mult','nerve','chain','eye','marked','flick','salv',
   'sleight','over','high','house','grace','deep','iron','abank','auto','guard'];

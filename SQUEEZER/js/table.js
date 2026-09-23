@@ -380,7 +380,7 @@ function buffTipHTML(k,mode,n){
 }
 function buffChip(k,mode,n){
   /* Cull's ward: one glyph, never repeated, with the dash countdown —
-     big dashes at 3 draws, small at 2, dots on the last */
+     the 1-draw window renders as dots */
   if(mode==='cullward'){
     const tip=q(buffTipHTML(k,mode,n));
     return `<div class="bf cward wd${n}" data-tip="${tip}">${stkIcon(k)}<i class="cwd"></i></div>`;}

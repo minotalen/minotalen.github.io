@@ -332,7 +332,7 @@ const MODELED = new Set(['draws','banks','runs','busts','aBusts','bigHand','best
   'bigRewrites','hits','stkDraws','maxOut','outBanks','deepBanks','fleetBanks','outed','discarded',
   'maxDisc','bothPiles','bestRisky','bigStk','inkBanks','pileBanks','benchBanks','oneOut','twoStkBusts',
   'stkBanked','bestFloat','placed','owned','sets','asc','bestSeven',
-  'bigBustN','safeDisc','wardLost','fiveBanks','stkKinds','upMax','upSum',
+  'bigBustN','safeDisc','wardLost','fiveBanks','oneBanks','stkKinds','upMax','upSum',
   'bestPairs','bestStack']);
 /* records the model structurally under-reads (random sticker seats, one
    table, no jackpot milking): gates on them fall back to the show floor */
@@ -407,7 +407,7 @@ function runSim(seed, watch, gateIgnored, archKey) {
     rewrites:0, bigRewrites:0, hits:0, stkDraws:0, maxOut:0, outBanks:0, deepBanks:0,
     fleetBanks:0, outed:0, discarded:0, maxDisc:0, bothPiles:0, bestRisky:0, bigStk:0,
     inkBanks:0, pileBanks:0, benchBanks:0, oneOut:0, twoStkBusts:0, stkBanked:0, bestFloat:0, sevenRun:0, bestSeven:0,
-    bigBustN:0, safeDisc:0, wardLost:0, fiveBanks:0, stkKinds:0, bestPairs:0, bestStack:0 };
+    bigBustN:0, safeDisc:0, wardLost:0, fiveBanks:0, oneBanks:0, stkKinds:0, bestPairs:0, bestStack:0 };
   let hotRun = [0, 0, 0], wideRun = 0, streak = 0, chain = 0, chainScore = 0;
   let hand = [], handStk = [];            /* parallel: sticker key per drawn card */
   let score = 0, banked = 0, life = 0;
@@ -722,6 +722,7 @@ function runSim(seed, watch, gateIgnored, archKey) {
     if (N >= 7) st.rainbows++;
     if ([1, 2, 3].every(v => hand.includes(v))) st.oneTwoThree++;
     for (const v of hand) if (v === 5) st.fiveBanks++;   /* Centapent: shown fives cashed */
+    for (const v of hand) if (v === 1) st.oneBanks++;    /* Haircut: the same shown-value read */
     /* the pair build: landed twins repeat values — pairs counts values
        held twice or more, the stack the deepest one-value run (Quadro) */
     { const vc = {}; for (const v of hand) vc[v] = (vc[v] || 0) + 1;
@@ -754,7 +755,7 @@ function runSim(seed, watch, gateIgnored, archKey) {
     if (outHeld >= 5) st.deepBanks++;
     if (outHeld >= 6) st.fleetBanks++;
     if (outHeld && discSize) st.pileBanks++;
-    if (discSize >= 3) st.benchBanks++;
+    if (discSize >= 5) st.benchBanks++;
     discSize = 0;                        /* the score homes the discard */
     /* Purge benches the banked hand here — after the sweep, so its cards
        wait out one FULL score, not this one */
@@ -1565,7 +1566,8 @@ if (process.argv[2] === 'week') {
   if (process.argv[2] === 'goals') { printGoals({ rows, late, fits, urows, ascMed, asc2Med, asc3Med, summary }); }
   else {
     const html = htmlReport({ rows, late, fits, urows, ascMed, asc2Med, asc3Med, summary, det, WIN });
-    fs.writeFileSync(__dirname + '/game-docs/balance.html', html);
+    const docsDir = fs.existsSync(__dirname + '/game-docs') ? '/game-docs' : '/../game-docs';
+    fs.writeFileSync(__dirname + docsDir + '/balance.html', html);
     console.log('game-docs/balance.html written — ' + html.length + ' bytes');
   }
 
