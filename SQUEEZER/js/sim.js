@@ -821,7 +821,7 @@ function runSim(seed, watch, gateIgnored, archKey) {
   }
 
   /* ---- the ascend ---- */
-  const METAPRIO = ['prodigy','quick','head','rich','keeper','press','daring','trader','storage','fortune','preprint','rebound','dreamer','silver','vantage','stall','union','rally'];
+  const METAPRIO = ['prodigy','quick','head','rich','keeper','press','daring','trader','storage','fortune','preprint','rebound','dreamer','silver','stall','union','rally'];
   function spendShards() {
     let bought = true;
     while (bought && shards > 0) {

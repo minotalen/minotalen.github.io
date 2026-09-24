@@ -291,7 +291,7 @@ const UPG = {
   eye:    {n:"Collector's Eye",d:l=>`+0.1% value per card you own —your ${eyeCount()} cards pay +${(ECO.EYE_PER*l*eyeCount()*100).toFixed(1)}% now`, max:15, base:320, g:1.71},
   auto:   {n:'Auto-Draw',      d:l=>(l?`Draws for you — deals up to ${l} card${l===1?'':'s'} a table, then waits`:'Draws for you — one card a table, then it waits')+(OFFLINE_ON?'. Offline earnings on.':'.') , max:6, base:1000, g:2.1},
   guard:  {n:'Draw Stop',       d:l=>l?`The draw-stop dial reaches ${Math.round(ECO.GUARD_AT[l-1]*100)}% risk.`:'Set where Auto-draw quits.', max:4, base:1000, g:1.6},
-  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:400,  g:1.15},
+  marked: {n:'Marked Deck',    d:l=>'1% chance a twin slips past you'+tot(1,l),    max:30, base:400,  g:1.25},
   /* the swipe-up pre-flick: costs pin their own ladder (upCost), the
      level is how many flicked cards may wait on the felt at once */
   flick:  {n:'Pre-Flick',      d:l=>'Swipe up mid-cooldown and the next card waits on the felt'+(l>1?`, up to ${l} at once`:''), max:3, c:l=>[500,1500,5000][l]},
@@ -326,7 +326,6 @@ const META = {
   rebound:{n:'Rebound',      d:l=>'After a bust: next bank +12% per level'+tot(12,l), max:4,  c:l=>Math.ceil(8*Math.pow(1.80,l))},
   storage:{n:'Cold Storage', d:l=>'+6% value per level per card outside'+tot(6,l),  max:6,  c:l=>Math.ceil(6*Math.pow(1.50,l))},
   press:  {n:'The Press',    d:l=>'Cards cost 6% less per level'+totm(6,l),         max:8,  c:l=>Math.ceil(5*Math.pow(1.50,l))},
-  vantage:{n:'Vantage',      d:'The next card peeks face-up on the table',      max:1,  c:()=>24},
   stall:  {n:'Corner Stall', d:'The Fixer stocks a fourth slot',                max:1,  c:()=>30},
   union:  {n:'Union Card',   d:'The Fixer stocks a fifth slot',                 max:1,  c:()=>100},
   preprint:{n:'Preprint',   d:l=>l?`Start each ascension with ${l} random stickers on the deck`:'Start each ascension with a random sticker on the deck', max:6, c:l=>Math.ceil(6*Math.pow(1.60,l))},
@@ -582,7 +581,6 @@ const ACH = [
   SU('m12','Two Timer','Bust on the pair of 2s 20 times','rebound',()=>S.st.db2N||0,20),
   SU('m13','Print Run','Bank 550 stickered cards','preprint',()=>S.st.stkBanked||0,550),
   SU('m14','Double Prints','Bank 10 runs holding two copies of the same sticker','stall',()=>S.st.twinTowns||0,10),
-  SU('m15','Cold Case','Have 8 cards OUT and 8 in the discard at once','vantage',()=>S.st.bothPiles||0,8),
   SU('m16','Four Corners','Hold cards on 4 tables at once','union',()=>S.st.maxTables||0,4),
   SU('m17','Long Haul','Bank 10 in a row with 5 or more cards','rally',()=>S.st.bestWide||0,10),
   SU('m18','Nerves of Ice','Ward off 40 risky cards under 10% risk','silver',()=>S.st.coldWards||0,40),

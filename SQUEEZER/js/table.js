@@ -10,7 +10,6 @@ let FW=0, FH=0, DX=0, DY=0, OX=0, OY=0, CX=0;
 const hueOf=v=>200-(v-1)*(195/19);
 const inkOf=v=>`hsl(${hueOf(v)} 44% 30%)`;
 const tintOf=v=>`hsl(${hueOf(v)} 42% 46%)`;
-const topFaceUp=()=>M('vantage')>0;
 const HAND_SC=[1,.94,.8,.7,.62];
 /* desktop: the app frame runs 15% wider (css min-width:720px blocks) and
    every felt size and anchor scales with it. Guarded: the node harness
@@ -223,7 +222,7 @@ function place(id,x,y,rot,up,z,out,sc,rest){
   if(fanHeld(id))return;   /* mid-fan: the tween owns this card */
   if(preDrops.includes(id))return;   /* the early lifts: they wait on the felt */
   /* a face-up card can never rest flat: the 2D pose pins the back on
-     (Tell's revealed top, Vantage's standing read) — it keeps the flip */
+     (Tell's revealed top) — it keeps the flip */
   if(rest&&up)rest=false;
   /* rest: a card parked in the deck is placed by left/top with NO
      transform at all — the least machinery a card can render through,
@@ -629,16 +628,16 @@ function layout(){
       place(id,DX,DY,0,false,10+pyrUndealt.length-1-k,false,null,true);
     });
   }else{
-    /* early lifts parked on the felt still hold the deck's top seats
+      /* early lifts parked on the felt still hold the deck's top seats
        logically, but the visible stack drains without them: the working
-       top below wears the full edge, and no reveal (Vantage, Tell) may
+       top below wears the full edge, and no reveal (Tell) may
        read past a lifted card while it waits */
     const lifted=preDrops.length>0,
           dlist=lifted?S.deck.filter(id=>!preDrops.includes(id)):S.deck;
     dlist.forEach((id,i)=>{
       if(fanHeld(id))return;   /* mid-flight: the tween owns this card */
       const k=dlist.length-1-i,e=els[id];
-      const top=k===0&&!lifted&&(topFaceUp()||id===S.showTop||cardHas(byId(id),'glass'));
+      const top=k===0&&!lifted&&(id===S.showTop||cardHas(byId(id),'glass'));
       if(e)stripStates(e);   /* place() below owns the .flat rest flag */
       if(e&&!fanHeld(id))e.classList.toggle('buried',k>0);   /* only the top card wears its full edge */
       /* dead flat: one card looks like one card; the jiggle sells the stack */

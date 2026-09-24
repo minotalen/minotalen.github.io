@@ -806,7 +806,7 @@ const ORDER=['value','speed','mult','nerve','chain','eye','marked','flick','salv
   'sleight','over','high','house','grace','deep','iron','abank','auto','guard'];
 /* the sim's shard-row priority, completed with any newer META rows */
 const METAPRIO0=['prodigy','quick','head','rich','keeper','press','daring','trader',
-  'storage','fortune','preprint','rebound','dreamer','silver','vantage','stall','union','rally'];
+  'storage','fortune','preprint','rebound','dreamer','silver','stall','union','rally'];
 const METAPRIO=METAPRIO0.filter(k=>META[k])
   .concat(Object.keys(META).filter(k=>METAPRIO0.indexOf(k)<0));
 
