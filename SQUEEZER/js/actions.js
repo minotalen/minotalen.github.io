@@ -331,6 +331,14 @@ function resolve(id,h,auto,fresh){
     r.anchWin.push(w);fresh.push(w);
     const[ax,ay]=feltPt(FW/2,FH*.24);
     float('GUARD '+ECO.ANCHOR_DRAWS+' DRAWS',ax,ay,'#3E5A78');SFX.stk('anchor','arm',cval(c));buzz(10);}
+  /* Tell fires on the landing: the deck's top card flips face-up the
+     moment Tell lands — no tap, the landing is the whole trigger. The
+     read dies with the drawn card, a cut, or the reshuffle; a second
+     Tell lands quiet while a reveal already stands */
+  if(c.stk==='tell'&&S.showTop==null&&S.deck.length){
+    S.showTop=S.deck[S.deck.length-1];
+    toast('Tell\nThe top card shows its face','eye');
+    SFX.stk('tell','arm',cval(byId(S.showTop)));buzz(10);layout();paint();save(true);}
   /* Reverb's cut: a beat after it lands, the deck's next card is benched
      to the discard. If it was this card's own twin, the near-bust pays
      a ward — the flight shows the cut face-up either way */
@@ -1172,16 +1180,6 @@ function armTrick(id){
     float('SCRAPPED A '+byId(tid).v,x,y,'#8E2B1C');
     SFX.burn();SFX.stk('scrap','act',byId(tid).v);buzz(18);layout();paint();save();
     return;}
-  /* Tell fires on the arm too: the top card flips face-up and stays
-     that way until it is drawn, scrapped or the deck reshuffles */
-  if(c.stk==='tell'){
-    if(!S.deck.length){SFX.deny();return;}
-    S.showTop=S.deck[S.deck.length-1];
-    r.spent.push(id);
-    S.st.arms=(S.st.arms||0)+1;
-    toast('Tell\nThe top card shows its face','eye');
-    SFX.detent();SFX.stk('tell','arm',cval(byId(S.showTop)));buzz(10);layout();paint();save(true);
-    return;}
   /* the value modifiers: Swap, Riffle and Squeeze fire on the tap,
      Dredge deals its two picks from OUT, and the aim tricks wait for a
      target. Denials (empty deck / OUT pile, no floor to copy, no risky
@@ -1424,8 +1422,9 @@ function tapCard(id){
    With Auto-Draw driving, charged stickers arm themselves by policy:
    shields and Cull when the gauge runs hot (or a revealed bust is
    coming — a Cull arm pays its ward on the spot), Stakes while the
-   premium is fat, Float near its pay-out line, Tell whenever the top
-   card is hidden. One arm per card per run — same rules as a tap. */
+   premium is fat, Float near its pay-out line. One arm per card per
+   run — same rules as a tap. Tell arms nobody: its reveal fired the
+   moment it landed, and the hold below still reads it */
 function autoHolds(h){
   /* a Tell reveal sits on top: hold the deal while it busts this hand
      and no shield stands (grace — a Cull ward reads here — a live
@@ -1450,7 +1449,6 @@ function autoPlay(h){
   const skill=(k,ok)=>{if(!ok)return;if(S.set.arm&&S.set.arm[k]===false)return;
     const id=charged(k);
     if(id==null||armed(id))return;armTrick(id);};
-  skill('tell',S.showTop==null);
   skill('defuse',th>=A.defuse||held);
   /* Cull spends the card itself, so the autos play it only on a read:
      a revealed bust incoming with no shield standing. Any earlier arm

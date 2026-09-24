@@ -345,18 +345,21 @@ function claimOne(a){
   bi('goal',{id:a.id,st:1,t:biPlayMin()});
   return a;
 }
-/* the sheet row for what a claim granted: the reward leads, the
-   where-line says which tab holds it */
+/* the sheet row for what a claim granted: the reward leads, the text
+   line is the unlocked thing's own rules text (sticker line, upgrade
+   or shard description, the goal's line for plain +% payouts), and
+   the where-line says which tab holds it */
 function unlockInfo(a){
+  const txt=(d,l)=>{try{return typeof d==='function'?d(l):d;}catch(e){return null;}};
   if(a.stk){const sk=STK[a.stk],st=stkStock(a);
-    return {lead:sk?stkIcon(a.stk,0):null,nm:stkN(a.stk),
+    return {lead:sk?stkIcon(a.stk,0):null,nm:stkN(a.stk),txt:sk?sk.d:null,
       sub:st==='tier'?`Stocks at tier ${sk.t}`:st==='placed'?'Already placed':'Joins the stock rotation'};}
   if(a.up){const u=UPG[a.up];
-    return {icn:'zap',nm:u?u.n:a.up,sub:`UPGRADES tab${a.lv>1?' · level '+a.lv:''}`};}
+    return {icn:'zap',nm:u?u.n:a.up,txt:u?txt(u.d,a.lv||1):null,sub:`UPGRADES tab${a.lv>1?' · level '+a.lv:''}`};}
   if(a.meta){const m=META[a.meta];
-    return {icn:'gem',nm:m?m.n:a.meta,sub:`ASCEND tab${a.lv>1?' · level '+a.lv:''}`};}
-  if(a.s)return{icn:'spark',nm:`+${Math.round(a.s*100)}% shards`};
-  return{icn:'spark',nm:`+${Math.round(a.v*100)}% card value`};
+    return {icn:'gem',nm:m?m.n:a.meta,txt:m?txt(m.d,a.lv||1):null,sub:`ASCEND tab${a.lv>1?' · level '+a.lv:''}`};}
+  if(a.s)return{icn:'spark',nm:`+${Math.round(a.s*100)}% shards`,txt:a.d};
+  return{icn:'spark',nm:`+${Math.round(a.v*100)}% card value`,txt:a.d};
 }
 const afterClaim=got=>{
   SFX.goal();buzz(30);
@@ -812,9 +815,15 @@ function renderShop(){
     h+=`<div class="row"><div class="b"><div class="nm">Restock now</div>
       <div class="ds">Skip the wait. The price cools 1%/min; each buy reheats it ×1.2.</div></div>
       <button class="buy" id="rr" ${S.score<rc?'disabled':''}>${fmt(rc)}</button></div>`;}
-  /* the meta block sits just under the stock: tier depth, the compendium,
-     the de-bolt gate. A met gate leaves for the GOALS tab, so the block
-     only renders while something here is still open */
+  /* unlocked, the book gets its own row right under the stock — the same
+     spot its gate row holds while it is still locked */
+  if(diff>=CMP_AT)h+=`<div class="row"><div class="b"><div class="nm">${ic('book')} Sticker compendium</div>
+    <div class="ds">Every sticker and what it does.</div></div>
+    <button class="buy" id="cmpGo">OPEN</button></div>`;
+  /* the meta block sits just under that: tier depth, the compendium and
+     de-bolt gates. A met gate leaves the block (the compendium's gate
+     becomes the OPEN row above), so it only renders while something here
+     is still open */
   let prog='';
   if(tO<5){
     const base=tO===1?0:ECO.TIER_AT[tO-2],next=ECO.TIER_AT[tO-1];
@@ -858,6 +867,7 @@ function renderShop(){
   $$('#v-shop .buy[data-i]').forEach(b=>b.onclick=()=>
     b.dataset.i==='gift'?claimGift():buyStk(+b.dataset.i));
   const r=$('#rr');if(r)r.onclick=reroll;
+  const cg=$('#cmpGo');if(cg)cg.onclick=openComp;
 }
 /* the GOALS order freezes for the visit: rows never swap under your
    thumb while the game ticks on. Switching into the tab recomputes it,
@@ -869,11 +879,11 @@ let ACH_SEQ=null,ACH_FRESH=true;
 function achCats(){
   const cats=[{n:'BONUS',list:[]},{n:'UPGRADES',list:[]}];
   for(let t=1;t<=5;t++)cats.push({n:'STICKERS T'+t,list:[]});
-  cats.push({n:'SHARD UPGRADES',list:[]});
+  const SH=cats.push({n:'SHARD UPGRADES',list:[]})-1;
   ACH.filter(a=>!(a.stk&&STK_OFF[a.stk])).forEach(a=>{
     if('v' in a||'s' in a)cats[0].list.push(a);
     else if(a.up)cats[1].list.push(a);
-    else if(a.meta)cats[6].list.push(a);
+    else if(a.meta)cats[SH].list.push(a);
     else cats[1+(STK[a.stk]?STK[a.stk].t:1)].list.push(a);
   });
   return cats.filter(c=>c.list.length);
@@ -925,15 +935,12 @@ function renderAch(){
         <div class="gst"><div class="v">${fmtG(c)}<i>/</i>${fmtG(a.t)}</div></div></div>`;});
   });
   /* the back room: gates that met leave the shop's PROGRESS block for
-     here, so their done state keeps a home — full stock, the compendium
-     (its OPEN button rides along, it is the book's only entry) */
+     here, so their done state keeps a home — full stock. The compendium
+     opens from its own row under the shop stock now */
   h+=`<h3 class="gh">MORE</h3>`;
   if(tierOf()>=5)h+=`<div class="row"><div class="b"><div class="nm">${ic('stack')} Full stock</div>
     <div class="ds">The Fixer sells everything, tier 5 deep.</div></div>
     <div class="gst done"><div class="v">${ic('check')}</div></div></div>`;
-  if(cmpDiff()>=CMP_AT)h+=`<div class="row"><div class="b"><div class="nm">${ic('book')} Sticker compendium</div>
-    <div class="ds">Every sticker and what it does.</div></div>
-    <button class="buy" id="cmpGo">OPEN</button></div>`;
   /* de-bolt is not a goal, but its gate lives here: the shop stocks the
      strip on 10% rolls once enough has gone to stickers */
   const spent=stkSpent();
@@ -960,7 +967,6 @@ function renderAch(){
   $('#v-ach').innerHTML=h;fillUp('#v-ach','ach');
   $$('#v-ach .buy[data-cl]').forEach(b=>b.onclick=()=>claimAch(b.dataset.cl));
   const ca=$('#v-ach #clAll');if(ca)ca.onclick=claimAll;
-  const cg=$('#v-ach #cmpGo');if(cg)cg.onclick=openComp;
   achWatch();
 }
 /* the de-new clock: an achieved row goes quiet once it has held the
@@ -997,11 +1003,18 @@ function achWatch(){
 /* a tap on GOALS while already there jumps to the next unread row —
    the badge feed's second act. Arrival (arrive) takes the same jump
    only when the row is below the fold: what's already on screen stays
-   where the landing put it */
+   where the landing put it. Two or more met goals claim at once, so
+   the jump lands on the CLAIM ALL bar at the top instead of past it;
+   a single met goal still takes its own row */
 function achCenter(arrive){
   const view=$('#v-ach');
   if(!view||typeof view.scrollTo!=='function')return;
-  const r=view.querySelector('.row.nw');if(!r)return;
+  const met=ACH.filter(a=>!has(a.id)&&!(a.stk&&STK_OFF[a.stk])&&goalMet(a));
+  if(met.length>1){view.scrollTo({top:0});return;}
+  const r=met.length===1
+    ?view.querySelector(`.row[data-id="${met[0].id}"]`)
+    :view.querySelector('.row.nw');
+  if(!r)return;
   const top=r.offsetTop||0,h=r.offsetHeight||0;
   if(arrive&&top+h>view.scrollTop&&top<view.scrollTop+view.clientHeight)return;
   view.scrollTo({top:Math.max(0,top+h/2-view.clientHeight/2)});

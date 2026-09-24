@@ -54,7 +54,7 @@ const STK = {
   beacon: {n:'Beacon',   t:2, pm:2.25, st:'lighthouse',  d:'Risk reward ×1.5. Unique.',
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
   burn:   {n:'Burn',     t:2, pm:.7055, st:'flame',  d:'When drawn, discard a random pair.'},
-  tell:   {n:'Tell',     t:2, pm:.8777, st:'periscope',    d:'Tap to flip the deck\'s top card face-up.'},
+  tell:   {n:'Tell',     t:2, pm:.8777, st:'periscope',    d:'When drawn, the deck\'s top card flips face-up.'},
   cull:   {n:'Cull',     t:2, pm:1.3111, st:'funnel', d:'Tap to send this card OUT; 1 ward stands for the next 3 draws.'},
   dividend:{n:'Dividend',t:2, pm:1.0361, st:'salmon',    d:'When banked, 1 in 4 chance the table pays again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
@@ -134,17 +134,19 @@ const STKKEYS = Object.keys(STK);
    the shop never stocks them, their gates never show or ready, the docs
    page grays them — but the mechanics stay live for placed copies, and
    one flag brings each back. Gild and the float pair (Float, Bail — the
-   zero-the-table exits) and Fallout wait on a rework; Stakes, Bloom and
-   Kindle benched 2026-09-24 */
-const STK_OFF = {gild:1, float:1, bail:1, fallout:1, stakes:1, bloom:1, kindle:1};
+   zero-the-table exits) and Fallout wait on a rework; Stakes, Bloom,
+   Kindle and Patch benched 2026-09-24 */
+const STK_OFF = {gild:1, float:1, bail:1, fallout:1, stakes:1, bloom:1, kindle:1,
+                 patch:1};
 /* retired in the roster trim: bridge, trim, tithe, foil, reprint, heavy,
    wreck, cue. load() blanks any placed copy on an old save, the same
    road charm/peek took in v6 */
 /* tricks: tap-to-arm, one arm per card per run, fires or expires — committed.
    The value modifiers ride the same rails: Swap/Riffle/Defuse fire on
-   the tap like Scrap/Tell, Clip/Ghost/Patch ask for a target before they
-   spend, Dredge and Fetch deal their picks out of the piles */
-const TRICK = {cull:1, stakes:1, float:1, defuse:1, scrap:1, tell:1,
+   the tap like Scrap, Clip/Ghost/Patch ask for a target before they
+   spend, Dredge and Fetch deal their picks out of the piles.
+   Tell left the set (2026-09-24): its reveal fires on the draw, no arm */
+const TRICK = {cull:1, stakes:1, float:1, defuse:1, scrap:1,
                swap:1, clip:1, ghost:1, patch:1, dredge:1, riffle:1,
                fetch:1, bail:1, draft:1, engrave:1, echo:1, twin:1,
                offering:1, sub:1, squeeze:1, whip:1, strip:1,
@@ -185,7 +187,9 @@ const STKTYPE = {
      to OUT, a discard rider, and the tap-time bank when both cuts came
      back safe. Dredge reads OUT but moves nothing, so it stays a
      trick, not an OUT engine */
-  defuse:'out', scrap:'out', tell:'trick', fetch:'out', bail:'trick',
+  defuse:'out', scrap:'out', fetch:'out', bail:'trick',
+  tell:'trick',   /* the reveal, not a tap trick anymore: it fires on the
+                     draw — the family keeps its voice and its shelf */
   draft:'trick', engrave:'trick',
   swap:'trick', clip:'trick', ghost:'trick', patch:'trick',
   dredge:'trick', riffle:'trick', squeeze:'trick',
@@ -210,7 +214,7 @@ const STKTYPE = {
 const STKTRIG = {
   cull:'tap', stakes:'tap, 3 draws',
   float:'tap, 70% line', defuse:'tap', scrap:'tap',
-  tell:'tap',
+  tell:'when drawn',
   swap:'tap', dredge:'tap, pick from OUT', riffle:'tap',
   clip:'tap, pick a table card', ghost:'tap, pick a table card', patch:'tap, pick a table card',
   fetch:'tap, pick from OUT',

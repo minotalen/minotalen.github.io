@@ -51,9 +51,8 @@ function openAutoPanel(){
   /* AUTO-ARM: the autos' trick policy made explicit — one switch per
      charged trick the deck actually wears. Captions read the live
      thresholds, so the sheet can never drift from the policy */
-  const ARMS=['tell','defuse','cull','float','stakes','scrap','twin'];
+  const ARMS=['defuse','cull','float','stakes','scrap','twin'];
   const armCap=k=>({
-    tell:'Arms whenever the top card is hidden.',
     defuse:`Arms at ${Math.round(ECO.AUTO_SKILL.defuse*100)}% threat.`,
     cull:'Arms only on a read: a revealed bust, no shield standing.',
     float:`Arms at ${Math.round(ECO.AUTO_SKILL.float*100)}% threat.`,
@@ -368,12 +367,12 @@ function openBgModal(dt,banks,busts,draws,gain){
   <button class="close" onclick="closeMo()">COLLECT</button>`);
 }
 /* the claim reveal: one sheet lists what a claim (single or CLAIM ALL)
-   just granted and where it landed — the unlock list stays up until
-   dismissed instead of dying in a two-second toast */
+   just granted, its own rules text, and where it landed — the unlock
+   list stays up until dismissed instead of dying in a two-second toast */
 function openUnlockSheet(got){
   if(BG||!got||!got.length)return;
   openMo(`<h3>UNLOCKED${got.length>1?' · '+got.length:''}</h3>`
-    +got.map(u=>`<div class="row">${u.lead||''}<div class="b"><div class="nm">${u.icn?ic(u.icn)+' ':''}${u.nm}</div>${u.sub?`<div class="ds">${u.sub}</div>`:''}</div></div>`).join('')
+    +got.map(u=>`<div class="row">${u.lead||''}<div class="b"><div class="nm">${u.icn?ic(u.icn)+' ':''}${u.nm}</div>${u.txt?`<div class="ds">${u.txt}</div>`:''}${u.sub?`<div class="ds">${u.sub}</div>`:''}</div></div>`).join('')
     +`<button class="close" onclick="closeMo()">NICE</button>`);
 }
 
