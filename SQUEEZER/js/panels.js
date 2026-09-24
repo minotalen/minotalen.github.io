@@ -1007,10 +1007,17 @@ function achCenter(arrive){
   view.scrollTo({top:Math.max(0,top+h/2-view.clientHeight/2)});
 }
 function renderPres(){
-  const g=shardGain(),req=ascReq(),pc=Math.min(100,S.banked/req*100);
+  /* the bar never pegs: under the req it reads banked/req, past it the
+     fill walks this shard's segment, lo (the floor it sits on) to next
+     (the banked amount where floor(shard formula) ticks +1) */
+  const g=shardGain(),req=ascReq(),k=(1+.12*M('fortune'))*achS(),
+        over=S.banked>=req,
+        lo=over?req*Math.pow(g/(ECO.SHARDS_BASE*k),2):0,
+        next=over?req*Math.pow((g+1)/(ECO.SHARDS_BASE*k),2):req,
+        pc=Math.max(0,Math.min(100,(S.banked-lo)/(next-lo)*100));
   let h=`<h2>ASCEND</h2><p class="note">Burn it down. You lose cards, upgrades and score. You keep shards, everything they bought, every goal, and Keeper cards.</p>
   <div class="row pf pd" data-pk="asc" style="--p:${pc.toFixed(1)}%"><div class="b"><div class="nm">Shards waiting</div>
-    <div class="ds">Banked this cycle: ${fmt(S.banked)} / ${fmt(req)}</div></div>
+    <div class="ds">${over?`Next shard at ${fmt(Math.ceil(next))} · ${fmt(Math.ceil(next)-S.banked)} banked to go`:`${fmt(S.banked)} / ${fmt(req)} to the first shard`}</div></div>
     <button class="buy g" id="asc" ${g<1?'disabled':''}>+${g} ${ic('gem')}</button></div>
   <div class="chips"><span class="chip">ascensions <b>${S.asc}</b></span>
     <span class="chip">shards earned <b>${S.shAll}</b></span>
