@@ -55,7 +55,7 @@ const STK = {
            cur:(c,h)=>`now ×${riskPrem(h).toFixed(2)}`},
   burn:   {n:'Burn',     t:2, pm:.7055, st:'flame',  d:'When drawn, discard a random pair.'},
   tell:   {n:'Tell',     t:2, pm:.8777, st:'periscope',    d:'Tap to flip the deck\'s top card face-up.'},
-  cull:   {n:'Cull',     t:2, pm:1.3111, st:'funnel', d:'Tap to send this card OUT; prevent bust on the next turn.'},
+  cull:   {n:'Cull',     t:2, pm:1.3111, st:'funnel', d:'Tap to send this card OUT; 1 ward stands for the next 3 draws.'},
   dividend:{n:'Dividend',t:2, pm:1.0361, st:'salmon',    d:'When banked, 1 in 4 chance the table pays again, a beat later.',
            cur:(c,h)=>`now 25% of ${fmt(handParts(h).total)}`},
   tab:    {n:'Tab',      t:3, pm:1.2049, st:'buoy', d:'+8% payout per card in OUT.',
@@ -175,7 +175,7 @@ const STKTYPE = {
   ledger:'out-pay', tab:'out-pay',
   ward:'insurance', anchor:'insurance', purify:'insurance',
   strip:'insurance',   /* the point is the ward it stands; the bench is the price */
-  cull:'insurance',    /* same law: the next-turn ward is the point, the
+  cull:'insurance',    /* same law: the 3-draw ward window is the point, the
                           self-exile is the price */
   haste:'aura', beacon:'aura',
   stakes:'trick', float:'trick',
@@ -263,7 +263,7 @@ const LINGO=[
   ['Floated','Paid out once, now worth 0. Float and Bail zero the table; floated cards keep their multiplier seat till a bust clears them.'],
   ['Discard',"A Ward save, Snip's cut, Whip's cut, Defuse's second, Burn's pair, Reverb's take, Echo's scan, Draft's spare, a Twin's blank, Sub's carrier, Barter's trade, Strip's lowest or a Purged hand joins the set-aside pile, home when you score. A bust leaves it be. A Remnant in the pile pays its value at the score; Encore trades the pile for the deck; Recast deals one back to the table."],
    ['OUT','The exile pile. Scrap, Defuse, Cull\'s own card, Vanish, Exit, a Flinch match, an Offering, a Recast and the card that landed the bust sit here. Every bust brings the pile home and deals the buster out in its place, so one card always sits out. They feed Tab and Rake; Ledger doubles a table card whose twin sits here; Guardian watches from the pile, a 1 in 3 shot any bust pays flat; Recycle runs the lowest card home each bank; Barter seats a random one on its trade.'],
-  ['Set aside',"Cull's trade: the card itself goes OUT, 1 ward prevents a bust on the next draw."],
+  ['Set aside',"Cull's trade: the card itself goes OUT, 1 ward saves a bust within the next 3 draws."],
   ['Chain','Consecutive banks on one table without its bust. A bust breaks it; a bank too small for the combo trims 1.'],
   ['Run',"One hand's life: from its first card till a bank or a bust clears it."],
   ['Rewrite',"A temp value a table card wears: Swap, Clip, Ghost, Dredge, Riffle, Tempo, or Windfall. It lasts while the card stays in play; the printed value comes back when it leaves. Engrave makes one permanent."],

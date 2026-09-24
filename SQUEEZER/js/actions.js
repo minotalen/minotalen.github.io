@@ -88,7 +88,7 @@ function drawCard(hi,free,auto){
     const[fx,fy]=feltPt(FW/2,FH*.62);float('FREE',fx,fy,'#8A6A2F');}
   /* guard windows burn one draw per real draw, the guard's own landing
      excepted — an Anchor starts counting with the next card. Cull's
-     ward burns with the same beat: one draw, then it is gone */
+     ward burns with the same beat: three draws, then it is gone */
   if(ok){const rw=h.run;
     if(rw.anchWin&&rw.anchWin.length)rw.anchWin=rw.anchWin.filter(w=>
       fresh.indexOf(w)>=0||--w.left>0);
@@ -1395,7 +1395,7 @@ function armTrick(id){
     h.ids.splice(h.ids.indexOf(id),1);
     revertLeaving([id]);
     toOut(id);
-    r.cullWard=1;   /* one ward, a 1-draw window: use it or lose it. A
+    r.cullWard=3;   /* one ward, a 3-draw window: use it or lose it. A
                        second arm while a window lives refreshes it */
     r.spent.push(id);
     S.st.arms=(S.st.arms||0)+1;

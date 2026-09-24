@@ -379,11 +379,14 @@ function buffTipHTML(k,mode,n){
   return `<b>${a.n}</b>: ${a.d.replace(/\.$/,'')}${n>1?` — <b>×${n}</b> here`:''}`;
 }
 function buffChip(k,mode,n){
-  /* Cull's ward: one glyph, never repeated, with the dash countdown —
-     the 1-draw window renders as dots */
+  /* Cull's ward: one badge per standing draw, so a fresh arm shows 3 —
+     each badge carries the shared countdown tip */
   if(mode==='cullward'){
     const tip=q(buffTipHTML(k,mode,n));
-    return `<div class="bf cward wd${n}" data-tip="${tip}">${stkIcon(k)}<i class="cwd"></i></div>`;}
+    let out='';
+    for(let i=0;i<n;i++)
+      out+=`<div class="bf" data-tip="${tip}">${stkIcon(k)}</div>`;
+    return out;}
   const big=n>=5,reps=big?1:n,tip=q(buffTipHTML(k,mode,n));
   let out='';
   for(let i=0;i<reps;i++)
